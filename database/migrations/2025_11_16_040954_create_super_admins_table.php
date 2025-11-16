@@ -11,7 +11,11 @@ return new class extends Migration {
             $table->integer('nivel_acceso')->nullable();
 
             $table->primary('user_id');
-            $table->foreign('user_id')->references('id_usuario')->on('usuarios')->cascadeOnDelete();
+
+            $table->foreign('user_id')
+                ->references('id_usuario')
+                ->on('usuarios')
+                ->cascadeOnDelete();
         });
     }
 

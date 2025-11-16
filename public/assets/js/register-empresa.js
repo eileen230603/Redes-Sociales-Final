@@ -11,7 +11,7 @@ document.getElementById('formEmpresa').addEventListener('submit', async (e) => {
   const data = {
     tipo_usuario: 'Empresa',
     nombre_usuario: e.target.nombre_usuario.value.trim(),
-    correo: e.target.correo.value.trim(),
+    correo_electronico: e.target.correo_electronico.value.trim(),
     contrasena: e.target.contrasena.value,
     nombre_empresa: e.target.nombre_empresa.value.trim(),
     NIT: e.target.NIT.value.trim(),

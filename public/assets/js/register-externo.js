@@ -1,45 +1,56 @@
 if (typeof API_BASE_URL === 'undefined') {
-  alert('⚠️ config.js no está cargado.');
+  alert('⚠️ config.js no cargado.');
 }
 
-document.getElementById('formRegister').addEventListener('submit', async (e) => {
-  e.preventDefault();
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('formRegister');
   const msg = document.getElementById('msg');
-  msg.textContent = 'Registrando...';
-  msg.className = 'text-center text-blue-700 font-medium';
 
-  const data = {
-    tipo_usuario: 'Integrante externo',
-    nombre_usuario: e.target.nombre_usuario.value.trim(),
-    correo: e.target.correo.value.trim(),
-    contrasena: e.target.contrasena.value,
-    nombres: e.target.nombres.value.trim(),
-    apellidos: e.target.apellidos.value.trim(),
-    fecha_nacimiento: e.target.fecha_nacimiento.value,
-    telefono: e.target.telefono.value.trim(),
-    descripcion: e.target.descripcion.value.trim()
-  };
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
+    msg.textContent = 'Registrando...';
+    msg.className = 'text-sm text-blue-700';
 
-    const text = await res.text();
-    const result = JSON.parse(text);
+    const payload = {
+      tipo_usuario: 'Integrante externo',
+      nombre_usuario: form.nombre_usuario.value.trim(),
+      correo_electronico: form.correo_electronico.value.trim(),
+      contrasena: form.contrasena.value,
+      nombres: form.nombres.value.trim(),
+      apellidos: form.apellidos.value.trim(),
+      fecha_nacimiento: form.fecha_nacimiento.value || null,
+      telefono: form.telefono.value.trim() || null,
+      descripcion: form.descripcion.value.trim() || null
+    };
 
-    if (res.ok && result.success) {
-      msg.textContent = '✅ Registro exitoso. Redirigiendo...';
-      msg.className = 'text-center text-green-600 font-semibold';
-      setTimeout(() => window.location.href = '/login', 1500);
-    } else {
-      throw new Error(result.error || 'Error al registrar usuario');
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error('Error inesperado en el servidor (no devolvió JSON válido).');
+      }
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Error al registrar usuario externo');
+      }
+
+      msg.textContent = '✅ Usuario externo registrado con éxito';
+      msg.className = 'text-sm text-green-700 font-medium';
+      setTimeout(() => (window.location.href = '/login'), 1500);
+
+    } catch (err) {
+      console.error(err);
+      msg.textContent = `❌ ${err.message}`;
+      msg.className = 'text-sm text-red-600 font-medium';
     }
-
-  } catch (err) {
-    msg.textContent = `❌ ${err.message}`;
-    msg.className = 'text-center text-red-600 font-semibold';
-  }
+  });
 });

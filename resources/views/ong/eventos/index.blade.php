@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
 
-        const res = await fetch(`${API_BASE_URL}/api/events/ong/${ongId}`, {
+        const res = await fetch(`${API_BASE_URL}/api/eventos/ong/${ongId}`, {
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Accept": "application/json"
@@ -112,7 +112,7 @@ async function eliminar(id) {
 
     const token = localStorage.getItem('token');
 
-    const res = await fetch(`${API_BASE_URL}/api/events/${id}`, {
+    const res = await fetch(`${API_BASE_URL}/api/eventos/${id}`, {
         method: "DELETE",
         headers: {
             "Authorization": `Bearer ${token}`,

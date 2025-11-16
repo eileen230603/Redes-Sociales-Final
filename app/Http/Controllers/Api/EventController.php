@@ -4,15 +4,15 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use App\Models\Evento;
 use App\Models\EventoParticipacion;
 use App\Models\User;
+use App\Models\Empresa;
+use App\Models\IntegranteExterno;
 
 class EventController extends Controller
 {
-    // ======================================================
-    //  Conversión segura JSON → ARRAY
-    // ======================================================
     private function safeArray($value)
     {
         if (is_array($value)) return $value;
@@ -25,7 +25,7 @@ class EventController extends Controller
     }
 
     // ======================================================
-    //  LISTAR EVENTOS PARA LA ONG
+    //  LISTAR EVENTOS DE UNA ONG
     // ======================================================
     public function indexByOng($ongId)
     {
@@ -40,8 +40,7 @@ class EventController extends Controller
     }
 
     // ======================================================
-    //  LISTAR EVENTOS PARA EL USUARIO EXTERNO
-    //  SOLO ESTADO = PUBLICADO
+    //  LISTAR EVENTOS PUBLICADOS PARA EXTERNOS
     // ======================================================
     public function indexAll()
     {
@@ -50,7 +49,6 @@ class EventController extends Controller
                 ->orderBy('fecha_inicio', 'asc')
                 ->get();
 
-            // Convertir arrays para evitar errores
             $eventos->transform(function ($e) {
                 $e->patrocinadores = $this->safeArray($e->patrocinadores);
                 $e->invitados = $this->safeArray($e->invitados);
@@ -58,8 +56,10 @@ class EventController extends Controller
                 return $e;
             });
 
-            // IMPORTANTE: la vista espera directamente un array
-            return response()->json($eventos);
+            return response()->json([
+                'success' => true,
+                'eventos' => $eventos
+            ]);
 
         } catch (\Throwable $e) {
             return response()->json([
@@ -77,33 +77,104 @@ class EventController extends Controller
     public function store(Request $request)
     {
         try {
+            // Convertir campos JSON string a arrays si vienen como string
+            $data = $request->all();
+            
+            // Procesar patrocinadores
+            if (!isset($data['patrocinadores']) || empty($data['patrocinadores'])) {
+                $data['patrocinadores'] = [];
+            } elseif (is_string($data['patrocinadores'])) {
+                $decoded = json_decode($data['patrocinadores'], true);
+                $data['patrocinadores'] = is_array($decoded) ? $decoded : [];
+            } elseif (!is_array($data['patrocinadores'])) {
+                $data['patrocinadores'] = [];
+            }
+            
+            // Procesar invitados
+            if (!isset($data['invitados']) || empty($data['invitados'])) {
+                $data['invitados'] = [];
+            } elseif (is_string($data['invitados'])) {
+                $decoded = json_decode($data['invitados'], true);
+                $data['invitados'] = is_array($decoded) ? $decoded : [];
+            } elseif (!is_array($data['invitados'])) {
+                $data['invitados'] = [];
+            }
+            
+            // Procesar auspiciadores
+            if (!isset($data['auspiciadores']) || empty($data['auspiciadores'])) {
+                $data['auspiciadores'] = [];
+            } elseif (is_string($data['auspiciadores'])) {
+                $decoded = json_decode($data['auspiciadores'], true);
+                $data['auspiciadores'] = is_array($decoded) ? $decoded : [];
+            } elseif (!is_array($data['auspiciadores'])) {
+                $data['auspiciadores'] = [];
+            }
+            
+            // Procesar imágenes (puede venir como array de archivos o JSON string)
+            if (!isset($data['imagenes']) || empty($data['imagenes'])) {
+                $data['imagenes'] = [];
+            } elseif (is_string($data['imagenes'])) {
+                $decoded = json_decode($data['imagenes'], true);
+                $data['imagenes'] = is_array($decoded) ? $decoded : [];
+            } elseif (!is_array($data['imagenes'])) {
+                $data['imagenes'] = [];
+            }
+            
+            $validator = Validator::make($data, [
+                'ong_id' => 'required|exists:ongs,user_id',
+                'titulo' => 'required|string|max:255',
+                'descripcion' => 'nullable|string',
+                'tipo_evento' => 'required|string|max:100',
+                'fecha_inicio' => 'required|date|after:now',
+                'fecha_fin' => 'nullable|date|after:fecha_inicio',
+                'fecha_limite_inscripcion' => 'nullable|date|before:fecha_inicio',
+                'capacidad_maxima' => 'nullable|integer|min:1',
+                'estado' => 'required|in:borrador,publicado,cancelado',
+                'ciudad' => 'nullable|string|max:255',
+                'direccion' => 'nullable|string|max:255',
+                'lat' => 'nullable|numeric|between:-90,90',
+                'lng' => 'nullable|numeric|between:-180,180',
+                'inscripcion_abierta' => 'nullable|boolean',
+                'patrocinadores' => 'nullable|array',
+                'invitados' => 'nullable|array',
+                'imagenes' => 'nullable|array',
+                'auspiciadores' => 'nullable|array',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => $validator->errors()->first(),
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
             $evento = Evento::create([
-                "ong_id" => $request->ong_id,
-                "titulo" => $request->titulo,
-                "descripcion" => $request->descripcion,
-                "tipo_evento" => $request->tipo_evento,
-
-                "fecha_inicio" => $request->fecha_inicio,
-                "fecha_fin" => $request->fecha_fin,
-                "fecha_limite_inscripcion" => $request->fecha_limite_inscripcion,
-
-                "capacidad_maxima" => $request->capacidad_maxima,
-                "estado" => $request->estado,
-                "ciudad" => $request->ciudad,
-                "direccion" => $request->direccion,
-                "lat" => $request->lat,
-                "lng" => $request->lng,
-
-                "patrocinadores" => $this->safeArray($request->patrocinadores),
-                "invitados" => $this->safeArray($request->invitados),
-                "imagenes" => $this->safeArray($request->imagenes),
+                "ong_id" => $data['ong_id'],
+                "titulo" => $data['titulo'],
+                "descripcion" => $data['descripcion'] ?? null,
+                "tipo_evento" => $data['tipo_evento'],
+                "fecha_inicio" => $data['fecha_inicio'],
+                "fecha_fin" => $data['fecha_fin'] ?? null,
+                "fecha_limite_inscripcion" => $data['fecha_limite_inscripcion'] ?? null,
+                "capacidad_maxima" => $data['capacidad_maxima'] ?? null,
+                "estado" => $data['estado'],
+                "ciudad" => $data['ciudad'] ?? null,
+                "direccion" => $data['direccion'] ?? null,
+                "lat" => $data['lat'] ?? null,
+                "lng" => $data['lng'] ?? null,
+                "inscripcion_abierta" => $data['inscripcion_abierta'] ?? true,
+                "patrocinadores" => $this->safeArray($data['patrocinadores'] ?? []),
+                "invitados" => $this->safeArray($data['invitados'] ?? []),
+                "imagenes" => $this->safeArray($data['imagenes'] ?? []),
+                "auspiciadores" => $this->safeArray($data['auspiciadores'] ?? []),
             ]);
 
             return response()->json([
                 "success" => true,
                 "message" => "Evento creado correctamente",
                 "evento"  => $evento
-            ]);
+            ], 201);
 
         } catch (\Throwable $e) {
             return response()->json([
@@ -116,7 +187,7 @@ class EventController extends Controller
     }
 
     // ======================================================
-    //  DETALLE DEL EVENTO
+    //  MOSTRAR UN EVENTO
     // ======================================================
     public function show($id)
     {
@@ -158,29 +229,59 @@ class EventController extends Controller
             $evento = Evento::find($id);
 
             if (!$evento)
-                return response()->json(["success" => false, "message" => "No encontrado"], 404);
+                return response()->json(["success" => false, "message" => "Evento no encontrado"], 404);
+
+            $validator = Validator::make($request->all(), [
+                'titulo' => 'sometimes|required|string|max:255',
+                'descripcion' => 'nullable|string',
+                'tipo_evento' => 'sometimes|required|string|max:100',
+                'fecha_inicio' => 'sometimes|required|date',
+                'fecha_fin' => 'nullable|date|after:fecha_inicio',
+                'fecha_limite_inscripcion' => 'nullable|date|before:fecha_inicio',
+                'capacidad_maxima' => 'nullable|integer|min:1',
+                'estado' => 'sometimes|required|in:borrador,publicado,cancelado',
+                'ciudad' => 'nullable|string|max:255',
+                'direccion' => 'nullable|string|max:255',
+                'lat' => 'nullable|numeric|between:-90,90',
+                'lng' => 'nullable|numeric|between:-180,180',
+                'inscripcion_abierta' => 'nullable|boolean',
+                'patrocinadores' => 'nullable|array',
+                'invitados' => 'nullable|array',
+                'imagenes' => 'nullable|array',
+                'auspiciadores' => 'nullable|array',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => $validator->errors()->first(),
+                    'errors' => $validator->errors()
+                ], 422);
+            }
 
             $evento->update([
-                "titulo" => $request->titulo,
-                "descripcion" => $request->descripcion,
-                "tipo_evento" => $request->tipo_evento,
-                "fecha_inicio" => $request->fecha_inicio,
-                "fecha_fin" => $request->fecha_fin,
-                "fecha_limite_inscripcion" => $request->fecha_limite_inscripcion,
-                "capacidad_maxima" => $request->capacidad_maxima,
-                "estado" => $request->estado,
-                "ciudad" => $request->ciudad,
-                "direccion" => $request->direccion,
-                "lat" => $request->lat,
-                "lng" => $request->lng,
-                "patrocinadores" => $this->safeArray($request->patrocinadores),
-                "invitados" => $this->safeArray($request->invitados),
-                "imagenes" => $this->safeArray($request->imagenes),
+                "titulo" => $request->titulo ?? $evento->titulo,
+                "descripcion" => $request->descripcion ?? $evento->descripcion,
+                "tipo_evento" => $request->tipo_evento ?? $evento->tipo_evento,
+                "fecha_inicio" => $request->fecha_inicio ?? $evento->fecha_inicio,
+                "fecha_fin" => $request->fecha_fin ?? $evento->fecha_fin,
+                "fecha_limite_inscripcion" => $request->fecha_limite_inscripcion ?? $evento->fecha_limite_inscripcion,
+                "capacidad_maxima" => $request->capacidad_maxima ?? $evento->capacidad_maxima,
+                "estado" => $request->estado ?? $evento->estado,
+                "ciudad" => $request->ciudad ?? $evento->ciudad,
+                "direccion" => $request->direccion ?? $evento->direccion,
+                "lat" => $request->lat ?? $evento->lat,
+                "lng" => $request->lng ?? $evento->lng,
+                "inscripcion_abierta" => $request->has('inscripcion_abierta') ? $request->inscripcion_abierta : $evento->inscripcion_abierta,
+                "patrocinadores" => $request->has('patrocinadores') ? $this->safeArray($request->patrocinadores) : $evento->patrocinadores,
+                "invitados" => $request->has('invitados') ? $this->safeArray($request->invitados) : $evento->invitados,
+                "imagenes" => $request->has('imagenes') ? $this->safeArray($request->imagenes) : $evento->imagenes,
+                "auspiciadores" => $request->has('auspiciadores') ? $this->safeArray($request->auspiciadores) : $evento->auspiciadores,
             ]);
 
             return response()->json([
                 "success" => true,
-                "message" => "Evento actualizado",
+                "message" => "Evento actualizado correctamente",
                 "evento"  => $evento->fresh()
             ]);
 
@@ -195,7 +296,7 @@ class EventController extends Controller
     }
 
     // ======================================================
-    //  ELIMINAR
+    //  ELIMINAR EVENTO
     // ======================================================
     public function destroy($id)
     {
@@ -213,86 +314,65 @@ class EventController extends Controller
     }
 
     // ======================================================
-    //  PARTICIPAR EN EVENTO
-    // ======================================================
-    public function participar($id)
-    {
-        $userId = auth()->id();
-
-        $ya = EventoParticipacion::where("evento_id", $id)
-            ->where("externo_id", $userId)
-            ->first();
-
-        if ($ya) {
-            return response()->json(["success" => false, "message" => "Ya estás inscrito"]);
-        }
-
-        EventoParticipacion::create([
-            "evento_id" => $id,
-            "externo_id" => $userId
-        ]);
-
-        return response()->json(["success" => true, "message" => "Inscripción realizada"]);
-    }
-
-    // ======================================================
-    //  CANCELAR INSCRIPCIÓN
-    // ======================================================
-    public function cancelar($id)
-    {
-        $userId = auth()->id();
-
-        EventoParticipacion::where("evento_id", $id)
-            ->where("externo_id", $userId)
-            ->delete();
-
-        return response()->json(["success" => true, "message" => "Inscripción cancelada"]);
-    }
-
-    // ======================================================
-    //  MIS EVENTOS
-    // ======================================================
-    public function misEventos()
-    {
-        $userId = auth()->id();
-
-        $eventos = EventoParticipacion::with("evento")
-            ->where("externo_id", $userId)
-            ->get();
-
-        return response()->json([
-            "success" => true,
-            "eventos" => $eventos
-        ]);
-    }
-
-    // ======================================================
-    //  EMPRESAS
+    //  EMPRESAS DISPONIBLES PARA PATROCINAR
     // ======================================================
     public function empresasDisponibles()
     {
-        return response()->json([
-            "success" => true,
-            "empresas" => [
-                ["id" => 1, "nombre" => "Coca-Cola"],
-                ["id" => 2, "nombre" => "Samsung"],
-                ["id" => 3, "nombre" => "Toyota"],
-            ]
-        ]);
+        try {
+            $empresas = Empresa::with('usuario')
+                ->whereHas('usuario', function($query) {
+                    $query->where('activo', true);
+                })
+                ->get()
+                ->map(function($empresa) {
+                    return [
+                        'id' => $empresa->user_id,
+                        'nombre' => $empresa->nombre_empresa,
+                        'NIT' => $empresa->NIT,
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'empresas' => $empresas
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     // ======================================================
-    //  INVITADOS
+    //  INVITADOS DISPONIBLES
     // ======================================================
-    public function invitados()
+    public function invitadosDisponibles()
     {
-        return response()->json([
-            "success" => true,
-            "invitados" => [
-                ["id" => 1, "nombre" => "Juan Pérez"],
-                ["id" => 2, "nombre" => "María Gómez"],
-                ["id" => 3, "nombre" => "Carlos López"]
-            ]
-        ]);
+        try {
+            // Los invitados pueden ser integrantes externos activos
+            $invitados = IntegranteExterno::with('usuario')
+                ->whereHas('usuario', function($query) {
+                    $query->where('activo', true);
+                })
+                ->get()
+                ->map(function($externo) {
+                    return [
+                        'id' => $externo->user_id,
+                        'nombre' => trim($externo->nombres . ' ' . ($externo->apellidos ?? '')),
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'invitados' => $invitados
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
+
 }

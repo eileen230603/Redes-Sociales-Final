@@ -9,7 +9,7 @@ class MegaEventoController extends Controller
 {
     public function index()
     {
-        $items = MegaEvento::orderByDesc('MegaEventoID')->get();
+        $items = MegaEvento::orderByDesc('mega_evento_id')->get();
         return response()->json($items);
     }
 
@@ -23,7 +23,7 @@ class MegaEventoController extends Controller
             'ubicacion' => 'nullable|string|max:500',
             'categoria' => 'nullable|string|max:50',
             'estado' => 'nullable|string|max:20',
-            'ong_organizadora_principal' => 'required|integer|exists:ongs,id_usuario',
+            'ong_organizadora_principal' => 'required|integer|exists:ongs,user_id',
             'capacidad_maxima' => 'nullable|integer',
             'es_publico' => 'boolean'
         ]);

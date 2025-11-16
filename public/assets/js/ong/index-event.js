@@ -3,7 +3,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const cont = document.getElementById('eventosContainer');
 
     const token = localStorage.getItem('token');
-    const ongId = localStorage.getItem('id_entidad');
+    // Para ONG, id_entidad es igual a id_usuario (ambos son el user_id)
+    const ongId = localStorage.getItem('id_entidad') || localStorage.getItem('id_usuario');
 
     if (!token || !ongId) {
         cont.innerHTML = "<p class='text-danger'>Debe iniciar sesión.</p>";
@@ -12,7 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
 
-        const res = await fetch(`${API_BASE_URL}/api/events/ong/${ongId}`, {
+        const res = await fetch(`${API_BASE_URL}/api/eventos/ong/${ongId}`, {
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Accept": "application/json"
@@ -70,7 +71,7 @@ async function eliminar(id) {
 
     const token = localStorage.getItem('token');
 
-    const res = await fetch(`${API_BASE_URL}/api/events/${id}`, {
+    const res = await fetch(`${API_BASE_URL}/api/eventos/${id}`, {
         method: "DELETE",
         headers: {
             "Authorization": `Bearer ${token}`,

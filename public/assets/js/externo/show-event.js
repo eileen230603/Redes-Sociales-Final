@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const id = document.getElementById("eventoId").value;
     const token = localStorage.getItem("token");
 
-    const res = await fetch(`${API_BASE_URL}/api/events/detalle/${id}`, {
+    const res = await fetch(`${API_BASE_URL}/api/eventos/detalle/${id}`, {
         headers: { "Authorization": `Bearer ${token}` }
     });
 
@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const btnC = document.getElementById("btnCancelar");
 
     btnP.onclick = async () => {
-        await fetch(`${API_BASE_URL}/api/eventos/participar`, {
+        const res = await fetch(`${API_BASE_URL}/api/participaciones/inscribir`, {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${token}`,
@@ -29,12 +29,18 @@ document.addEventListener("DOMContentLoaded", async () => {
             body: JSON.stringify({ evento_id: id })
         });
 
-        btnP.classList.add("d-none");
-        btnC.classList.remove("d-none");
+        const data = await res.json();
+        if (data.success) {
+            btnP.classList.add("d-none");
+            btnC.classList.remove("d-none");
+            alert("Inscripción exitosa");
+        } else {
+            alert(data.error || "Error al inscribirse");
+        }
     };
 
     btnC.onclick = async () => {
-        await fetch(`${API_BASE_URL}/api/eventos/cancelar`, {
+        const res = await fetch(`${API_BASE_URL}/api/participaciones/cancelar`, {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${token}`,
@@ -43,7 +49,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             body: JSON.stringify({ evento_id: id })
         });
 
-        btnC.classList.add("d-none");
-        btnP.classList.remove("d-none");
+        const data = await res.json();
+        if (data.success) {
+            btnC.classList.add("d-none");
+            btnP.classList.remove("d-none");
+            alert("Inscripción cancelada");
+        } else {
+            alert(data.error || "Error al cancelar");
+        }
     };
 });

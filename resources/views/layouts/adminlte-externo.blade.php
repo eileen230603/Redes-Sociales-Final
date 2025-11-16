@@ -53,7 +53,7 @@
         </li>
 
         <li class="nav-item">
-            <a href="/login" onclick="localStorage.clear()" class="nav-link text-danger">
+            <a href="#" onclick="cerrarSesion(event)" class="nav-link text-danger">
                 <i class="nav-icon fas fa-sign-out-alt"></i>
                 <p>Cerrar sesión</p>
             </a>
@@ -69,4 +69,29 @@
 
 @section('js')
 <script src="{{ asset('vendor/adminlte/dist/js/adminlte.min.js') }}"></script>
+<script src="{{ asset('assets/js/config.js') }}"></script>
+<script>
+async function cerrarSesion(event) {
+    event.preventDefault();
+    
+    const token = localStorage.getItem('token');
+    
+    if (token) {
+        try {
+            await fetch(`${API_BASE_URL}/api/auth/logout`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+        } catch (error) {
+            console.error('Error al cerrar sesión en el servidor:', error);
+        }
+    }
+    
+    localStorage.clear();
+    window.location.href = '/login';
+}
+</script>
 @stop

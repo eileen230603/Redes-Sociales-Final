@@ -38,7 +38,7 @@ async function cargarEventos() {
     const cont = document.getElementById("contenedorEventos");
 
     try {
-        const res = await fetch(`${API_BASE_URL}/api/events`, {
+        const res = await fetch(`${API_BASE_URL}/api/eventos`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
 

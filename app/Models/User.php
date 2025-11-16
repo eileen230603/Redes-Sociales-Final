@@ -13,6 +13,8 @@ class User extends Authenticatable
     protected $table = 'usuarios';
     protected $primaryKey = 'id_usuario';
     public $timestamps = false;
+    public $incrementing = true;
+    protected $keyType = 'int';
 
     protected $fillable = [
         'nombre_usuario',
@@ -24,7 +26,7 @@ class User extends Authenticatable
 
     protected $hidden = ['contrasena'];
 
-    // Relación con ONG, Empresa e Integrante Externo
+    // Relaciones
     public function ong()
     {
         return $this->hasOne(Ong::class, 'user_id', 'id_usuario');
@@ -40,15 +42,21 @@ class User extends Authenticatable
         return $this->hasOne(IntegranteExterno::class, 'user_id', 'id_usuario');
     }
 
-    // Métodos de tipo de usuario
+    // Métodos de rol
     public function esOng()               { return $this->tipo_usuario === 'ONG'; }
     public function esEmpresa()           { return $this->tipo_usuario === 'Empresa'; }
     public function esIntegranteExterno() { return $this->tipo_usuario === 'Integrante externo'; }
     public function esSuperAdmin()        { return $this->tipo_usuario === 'Super admin'; }
 
-    // Laravel espera “password” como campo, lo adaptamos:
+    // Contraseña personalizada
     public function getAuthPassword()
     {
         return $this->contrasena;
     }
+
+    public function getAuthIdentifierName()
+    {
+        return 'id_usuario';
+    }
+
 }

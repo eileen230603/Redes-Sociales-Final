@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
             'contrasena'        => Hash::make('123456'),
             'tipo_usuario'      => 'ONG',
             'activo'            => true,
-        ]);
+        ], 'id_usuario');
 
         DB::table('ongs')->insert([
             'user_id'     => $id,
@@ -27,7 +27,6 @@ class DatabaseSeeder extends Seeder
             'direccion'   => 'Av. Siempre Viva 742',
             'sitio_web'   => 'https://demo.org',
             'descripcion' => 'ONG de prueba',
-            'activo'      => true,
         ]);
     }
 }

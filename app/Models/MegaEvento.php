@@ -10,7 +10,7 @@ class MegaEvento extends Model
     use HasFactory;
 
     protected $table = 'mega_eventos';
-    protected $primaryKey = 'MegaEventoID';
+    protected $primaryKey = 'mega_evento_id';
     public $timestamps = false;
 
     protected $fillable = [
@@ -29,6 +29,6 @@ class MegaEvento extends Model
 
     public function ongPrincipal()
     {
-        return $this->belongsTo(Ong::class, 'ong_organizadora_principal', 'id_usuario');
+        return $this->belongsTo(Ong::class, 'ong_organizadora_principal', 'user_id');
     }
 }

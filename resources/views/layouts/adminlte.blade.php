@@ -28,7 +28,7 @@
         </a>
     </li>
     <li class="nav-item d-none d-sm-inline-block">
-        <a href="/login" onclick="localStorage.clear()" class="nav-link text-danger">
+        <a href="#" onclick="cerrarSesion(event)" class="nav-link text-danger">
             <i class="fas fa-sign-out-alt mr-1"></i> Cerrar sesión
         </a>
     </li>
@@ -80,7 +80,7 @@
 
         {{-- 👥 Voluntarios --}}
         <li class="nav-item">
-            <a href="#" class="nav-link">
+            <a href="{{ route('ong.voluntarios.index') }}" class="nav-link {{ request()->is('ong/voluntarios*') ? 'active' : '' }}">
                 <i class="nav-icon fas fa-users"></i>
                 <p>Voluntarios</p>
             </a>
@@ -88,7 +88,7 @@
 
         {{-- 📊 Reportes --}}
         <li class="nav-item">
-            <a href="#" class="nav-link">
+            <a href="{{ route('ong.reportes.index') }}" class="nav-link {{ request()->is('ong/reportes*') ? 'active' : '' }}">
                 <i class="nav-icon fas fa-chart-bar"></i>
                 <p>Reportes</p>
             </a>
@@ -130,7 +130,7 @@
         </li>
 
         <li class="nav-item">
-            <a href="/login" onclick="localStorage.clear()" class="nav-link text-danger">
+            <a href="#" onclick="cerrarSesion(event)" class="nav-link text-danger">
                 <i class="nav-icon fas fa-sign-out-alt"></i>
                 <p>Cerrar sesión</p>
             </a>
@@ -150,4 +150,29 @@
 @section('js')
 <script src="{{ asset('vendor/adminlte/dist/js/adminlte.min.js') }}"></script>
 <script src="{{ asset('js/custom.js') }}"></script>
+<script src="{{ asset('assets/js/config.js') }}"></script>
+<script>
+async function cerrarSesion(event) {
+    event.preventDefault();
+    
+    const token = localStorage.getItem('token');
+    
+    if (token) {
+        try {
+            await fetch(`${API_BASE_URL}/api/auth/logout`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+        } catch (error) {
+            console.error('Error al cerrar sesión en el servidor:', error);
+        }
+    }
+    
+    localStorage.clear();
+    window.location.href = '/login';
+}
+</script>
 @stop

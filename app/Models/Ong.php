@@ -10,7 +10,7 @@ class Ong extends Model
     use HasFactory;
 
     protected $table = 'ongs';
-    protected $primaryKey = 'user_id'; // ✔ ESTA ES LA PK REAL
+    protected $primaryKey = 'user_id'; // ← importante
     public $incrementing = false;
     protected $keyType = 'int';
     public $timestamps = true;

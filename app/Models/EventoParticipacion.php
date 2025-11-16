@@ -12,7 +12,7 @@ class EventoParticipacion extends Model
         'evento_id',
         'externo_id',
         'asistio',
-        'puntos'
+        'puntos',
     ];
 
     public function evento()
@@ -22,6 +22,6 @@ class EventoParticipacion extends Model
 
     public function externo()
     {
-        return $this->belongsTo(User::class, 'externo_id');
+        return $this->belongsTo(User::class, 'externo_id', 'id_usuario');
     }
 }

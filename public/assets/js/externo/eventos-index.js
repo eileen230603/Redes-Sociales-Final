@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const cont = document.getElementById("listaEventos");
 
     try {
-        const res = await fetch(`${API_BASE_URL}/api/events`, {
+        const res = await fetch(`${API_BASE_URL}/api/eventos`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
 

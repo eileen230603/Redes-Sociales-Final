@@ -12,7 +12,7 @@ class EventoParticipacionController extends Controller
     // Inscripción
     public function inscribir(Request $request)
     {
-        $externoId = $request->user()->id;
+        $externoId = $request->user()->id_usuario;
         $eventoId = $request->evento_id;
 
         $evento = Evento::find($eventoId);
@@ -21,23 +21,19 @@ class EventoParticipacionController extends Controller
             return response()->json(["success" => false, "error" => "Evento no encontrado"], 404);
         }
 
-        // ¿Inscripciones abiertas?
         if (!$evento->inscripcion_abierta) {
             return response()->json(["success" => false, "error" => "Inscripciones cerradas"], 400);
         }
 
-        // ¿Cupo lleno?
         $inscritos = EventoParticipacion::where('evento_id', $eventoId)->count();
         if ($evento->capacidad_maxima && $inscritos >= $evento->capacidad_maxima) {
             return response()->json(["success" => false, "error" => "Cupo agotado"], 400);
         }
 
-        // ¿Ya está inscrito?
         if (EventoParticipacion::where('evento_id', $eventoId)->where('externo_id', $externoId)->exists()) {
             return response()->json(["success" => false, "error" => "Ya estás inscrito"], 400);
         }
 
-        // Registrar
         $data = EventoParticipacion::create([
             "evento_id" => $eventoId,
             "externo_id" => $externoId,
@@ -51,7 +47,7 @@ class EventoParticipacionController extends Controller
     // Cancelar inscripción
     public function cancelar(Request $request)
     {
-        $externoId = $request->user()->id;
+        $externoId = $request->user()->id_usuario;
         $eventoId = $request->evento_id;
 
         $registro = EventoParticipacion::where('evento_id', $eventoId)
@@ -70,7 +66,7 @@ class EventoParticipacionController extends Controller
     // Ver mis eventos
     public function misEventos(Request $request)
     {
-        $externoId = $request->user()->id;
+        $externoId = $request->user()->id_usuario;
 
         $registros = EventoParticipacion::with('evento')
             ->where('externo_id', $externoId)

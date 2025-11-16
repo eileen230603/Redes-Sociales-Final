@@ -10,7 +10,7 @@ class Empresa extends Model
     use HasFactory;
 
     protected $table = 'empresas';
-    protected $primaryKey = 'user_id'; 
+    protected $primaryKey = 'user_id';
     public $incrementing = false;
     protected $keyType = 'int';
     public $timestamps = true;

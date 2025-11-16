@@ -17,7 +17,7 @@ const eventoId = window.location.pathname.split("/")[3];
 // =====================================================
 document.addEventListener("DOMContentLoaded", async () => {
     try {
-        const res = await fetch(`${API_BASE_URL}/api/events/detalle/${eventoId}`, {
+        const res = await fetch(`${API_BASE_URL}/api/eventos/detalle/${eventoId}`, {
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Accept": "application/json"
@@ -79,7 +79,7 @@ document.getElementById("editEventForm").addEventListener("submit", async (e) =>
     };
 
     try {
-        const res = await fetch(`${API_BASE_URL}/api/events/${eventoId}`, {
+        const res = await fetch(`${API_BASE_URL}/api/eventos/${eventoId}`, {
             method: "PUT",
             headers: {
                 "Authorization": `Bearer ${token}`,

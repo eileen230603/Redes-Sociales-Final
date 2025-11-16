@@ -7,11 +7,11 @@ const eventoIdShow = window.location.pathname.split("/")[3];
 
 console.log("🔍 Token:", tokenShow);
 console.log("🔍 ID del evento:", eventoIdShow);
-console.log("🔍 URL completa:", `${API_BASE_URL}/api/events/detalle/${eventoIdShow}`);
+console.log("🔍 URL completa:", `${API_BASE_URL}/api/eventos/detalle/${eventoIdShow}`);
 
 document.addEventListener("DOMContentLoaded", async () => {
     try {
-        const url = `${API_BASE_URL}/api/events/detalle/${eventoIdShow}`;
+        const url = `${API_BASE_URL}/api/eventos/detalle/${eventoIdShow}`;
         console.log("📡 Haciendo petición a:", url);
 
         const res = await fetch(url, {

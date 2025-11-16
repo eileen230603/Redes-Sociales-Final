@@ -9,20 +9,27 @@ class EventoController extends Controller
 {
     public function index()
     {
-        $eventos = Evento::with('ong')->orderByDesc('EventoID')->get();
+        $eventos = Evento::with('ong')->orderByDesc('id')->get();
         return response()->json($eventos);
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'Tittulo' => 'required|string|max:200',
-            'Descripcion' => 'nullable|string',
-            'F_Inicio' => 'required|date',
-            'F_final' => 'nullable|date',
-            'Locacion' => 'nullable|string|max:250',
-            'ong_id' => 'required|integer|exists:ongs,id_usuario',
-            'Tipo_evento' => 'nullable|string|max:100'
+            'ong_id' => 'required|integer|exists:ongs,user_id',
+            'titulo' => 'required|string|max:255',
+            'descripcion' => 'nullable|string',
+            'tipo_evento' => 'nullable|string|max:100',
+            'fecha_inicio' => 'required|date',
+            'fecha_fin' => 'nullable|date',
+            'fecha_limite_inscripcion' => 'nullable|date',
+            'capacidad_maxima' => 'nullable|integer',
+            'inscripcion_abierta' => 'boolean',
+            'estado' => 'nullable|string',
+            'lat' => 'nullable|numeric',
+            'lng' => 'nullable|numeric',
+            'direccion' => 'nullable|string',
+            'ciudad' => 'nullable|string',
         ]);
 
         $evento = Evento::create($data);
@@ -39,6 +46,7 @@ class EventoController extends Controller
     {
         $evento = Evento::findOrFail($id);
         $evento->update($request->all());
+
         return response()->json(['success' => true, 'evento' => $evento]);
     }
 

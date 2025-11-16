@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const payload = {
       tipo_usuario: 'ONG',
       nombre_usuario: form.nombre_usuario.value.trim(),
-      correo: form.correo.value.trim(),
+      correo_electronico: form.correo_electronico.value.trim(),
       contrasena: form.contrasena.value,
       nombre_ong: form.nombre_ong.value.trim(),
       NIT: form.NIT.value.trim(),
