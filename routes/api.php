@@ -34,6 +34,9 @@ Route::middleware('auth:sanctum')->group(function () {
         // EMPRESAS E INVITADOS
         Route::get('/empresas/disponibles', [EventController::class, 'empresasDisponibles']);
         Route::get('/invitados',         [EventController::class, 'invitadosDisponibles']);
+        
+        // PATROCINADORES
+        Route::post('/{id}/patrocinar', [EventController::class, 'agregarPatrocinador']);
     });
 
     // ----------- PARTICIPACIÓN -----------

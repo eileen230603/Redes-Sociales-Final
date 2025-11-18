@@ -1,17 +1,12 @@
-@extends('adminlte::page')
+@extends('layouts.adminlte-empresa')
 
-@section('title', 'Panel Empresa')
+@section('page_title', 'Panel de Empresa')
 
-@section('content_header')
-    <h1><i class="fas fa-building"></i> Panel de Empresa</h1>
-@stop
-
-@section('content')
-<div class="container-fluid">
-    <div class="alert alert-info">
-        <h5>Bienvenido, <span id="nombreUsuario"></span></h5>
-        <p>Administra tus eventos, publicaciones y alianzas empresariales desde este panel.</p>
-    </div>
+@section('content_body')
+<div class="alert alert-info">
+    <h5>Bienvenido, <span id="nombreUsuario"></span></h5>
+    <p>Administra tus eventos, publicaciones y alianzas empresariales desde este panel.</p>
+</div>
 
     <!-- 🔹 Estadísticas -->
     <div class="row">
@@ -63,13 +58,6 @@
         </div>
     </div>
 
-    <!-- 🔹 Botón cerrar sesión -->
-    <div class="text-right mt-3">
-        <button id="logoutBtn" class="btn btn-danger">
-            <i class="fas fa-sign-out-alt"></i> Cerrar sesión
-        </button>
-    </div>
-</div>
 @stop
 
 @section('js')
@@ -104,15 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 🔹 Logout
-  document.getElementById('logoutBtn').addEventListener('click', async () => {
-    await fetch(`${API_BASE_URL}/api/auth/logout`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
-    });
-    localStorage.clear();
-    window.location.href = '/login';
-  });
+  // El logout se maneja desde el layout
 });
 </script>
 @stop

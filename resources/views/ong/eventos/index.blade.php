@@ -35,10 +35,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const cont = document.getElementById('eventosContainer');
 
     const token = localStorage.getItem('token');
-    const ongId = parseInt(localStorage.getItem("id_usuario"), 10); // FIX ✔
+    // Para ONG, id_entidad es igual a id_usuario (ambos son el user_id)
+    const ongId = parseInt(localStorage.getItem("id_entidad") || localStorage.getItem("id_usuario"), 10);
 
     console.log("TOKEN:", token);
-    console.log("ONG ID:", ongId);
+    console.log("id_entidad:", localStorage.getItem("id_entidad"));
+    console.log("id_usuario:", localStorage.getItem("id_usuario"));
+    console.log("ONG ID (usado):", ongId);
+    console.log("API URL:", `${API_BASE_URL}/api/eventos/ong/${ongId}`);
 
     if (!token || isNaN(ongId) || ongId <= 0) {
         cont.innerHTML = "<p class='text-danger'>Debe iniciar sesión correctamente.</p>";
@@ -48,26 +52,40 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
 
         const res = await fetch(`${API_BASE_URL}/api/eventos/ong/${ongId}`, {
+            method: 'GET',
             headers: {
                 "Authorization": `Bearer ${token}`,
-                "Accept": "application/json"
+                "Accept": "application/json",
+                "Content-Type": "application/json"
             }
         });
 
+        console.log("Response status:", res.status);
+        console.log("Response ok:", res.ok);
+
         if (!res.ok) {
-            cont.innerHTML = "<p class='text-danger'>Error cargando eventos (Error servidor).</p>";
+            const errorData = await res.json().catch(() => ({}));
+            console.error("Error response:", errorData);
+            cont.innerHTML = `<p class='text-danger'>Error cargando eventos (${res.status}): ${errorData.error || 'Error del servidor'}</p>`;
             return;
         }
 
         const data = await res.json();
+        console.log("Eventos recibidos:", data);
 
         if (!data.success) {
-            cont.innerHTML = "<p class='text-danger'>Error cargando eventos.</p>";
+            console.error("Error en respuesta:", data);
+            cont.innerHTML = `<p class='text-danger'>Error cargando eventos: ${data.error || 'Error desconocido'}</p>`;
             return;
         }
 
-        if (data.eventos.length === 0) {
-            cont.innerHTML = "<p class='text-muted'>No hay eventos registrados.</p>";
+        if (!data.eventos || data.eventos.length === 0) {
+            cont.innerHTML = `
+                <div class="alert alert-info">
+                    <p class='text-muted mb-2'>No hay eventos registrados para esta ONG.</p>
+                    <small class='text-muted'>ONG ID usado: ${data.ong_id || ongId} | Total encontrados: ${data.count || 0}</small>
+                </div>
+            `;
             return;
         }
 

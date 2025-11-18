@@ -17,8 +17,11 @@ return new class extends Migration {
             $table->boolean('activo')->default(true);
         });
 
-        DB::statement("ALTER TABLE usuarios
-            ADD CONSTRAINT tipo_usuario_chk CHECK (tipo_usuario IN ('Super admin','Integrante externo','ONG','Empresa'));");
+        // CHECK constraint compatible con SQLite (solo para MySQL/PostgreSQL)
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE usuarios
+                ADD CONSTRAINT tipo_usuario_chk CHECK (tipo_usuario IN ('Super admin','Integrante externo','ONG','Empresa'));");
+        }
     }
 
     public function down(): void {

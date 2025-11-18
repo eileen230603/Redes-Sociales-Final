@@ -40,6 +40,17 @@ Route::prefix('ong/reportes')->name('ong.reportes.')->group(function () {
     Route::view('/', 'ong.reportes.index')->name('index');
 });
 
+// ---------------- EMPRESA: EVENTOS ----------------
+Route::prefix('empresa/eventos')->name('empresa.eventos.')->group(function () {
+    Route::view('/', 'empresa.eventos.index')->name('index');
+    Route::view('/disponibles', 'empresa.eventos.disponibles')->name('disponibles');
+});
+
+// ---------------- EMPRESA: REPORTES ----------------
+Route::prefix('empresa/reportes')->name('empresa.reportes.')->group(function () {
+    Route::view('/', 'empresa.reportes.index')->name('index');
+});
+
 // ---------------- LOGOUT ----------------
 Route::get('/logout', function () {
     // Limpiar localStorage y redirigir al login

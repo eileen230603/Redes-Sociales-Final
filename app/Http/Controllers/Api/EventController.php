@@ -29,14 +29,32 @@ class EventController extends Controller
     // ======================================================
     public function indexByOng($ongId)
     {
-        $eventos = Evento::where('ong_id', $ongId)
-            ->orderBy('id', 'desc')
-            ->get();
+        try {
+            // Convertir a entero para asegurar el tipo correcto
+            $ongId = (int) $ongId;
+            
+            \Log::info("Buscando eventos para ONG ID: {$ongId}");
+            
+            $eventos = Evento::where('ong_id', $ongId)
+                ->orderBy('id', 'desc')
+                ->get();
 
-        return response()->json([
-            'success' => true,
-            'eventos' => $eventos
-        ]);
+            \Log::info("Eventos encontrados: " . $eventos->count());
+
+            return response()->json([
+                'success' => true,
+                'eventos' => $eventos,
+                'ong_id' => $ongId,
+                'count' => $eventos->count()
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error("Error al obtener eventos: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'ong_id' => $ongId
+            ], 500);
+        }
     }
 
     // ======================================================
@@ -45,9 +63,13 @@ class EventController extends Controller
     public function indexAll()
     {
         try {
+            \Log::info("Buscando eventos publicados para externos");
+            
             $eventos = Evento::where('estado', 'publicado')
                 ->orderBy('fecha_inicio', 'asc')
                 ->get();
+
+            \Log::info("Eventos publicados encontrados: " . $eventos->count());
 
             $eventos->transform(function ($e) {
                 $e->patrocinadores = $this->safeArray($e->patrocinadores);
@@ -58,10 +80,12 @@ class EventController extends Controller
 
             return response()->json([
                 'success' => true,
-                'eventos' => $eventos
+                'eventos' => $eventos,
+                'count' => $eventos->count()
             ]);
 
         } catch (\Throwable $e) {
+            \Log::error("Error al obtener eventos publicados: " . $e->getMessage());
             return response()->json([
                 "success" => false,
                 "error"   => $e->getMessage(),
@@ -283,6 +307,70 @@ class EventController extends Controller
                 "success" => true,
                 "message" => "Evento actualizado correctamente",
                 "evento"  => $evento->fresh()
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                "success" => false,
+                "error" => $e->getMessage(),
+                "line" => $e->getLine(),
+                "file" => $e->getFile()
+            ], 500);
+        }
+    }
+
+    // ======================================================
+    //  AGREGAR PATROCINADOR A EVENTO
+    // ======================================================
+    public function agregarPatrocinador(Request $request, $id)
+    {
+        try {
+            $evento = Evento::find($id);
+
+            if (!$evento)
+                return response()->json(["success" => false, "message" => "Evento no encontrado"], 404);
+
+            $validator = Validator::make($request->all(), [
+                'empresa_id' => 'required|integer|exists:empresas,user_id',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => $validator->errors()->first(),
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $empresaId = $request->empresa_id;
+            $patrocinadores = $this->safeArray($evento->patrocinadores ?? []);
+            
+            // Convertir todos a string para consistencia
+            $patrocinadores = array_map(function($p) {
+                return (string) $p;
+            }, $patrocinadores);
+            
+            $empresaIdStr = (string) $empresaId;
+
+            // Verificar si ya es patrocinador
+            if (in_array($empresaIdStr, $patrocinadores)) {
+                return response()->json([
+                    "success" => false,
+                    "message" => "La empresa ya es patrocinadora de este evento"
+                ], 400);
+            }
+
+            // Agregar la empresa a los patrocinadores
+            $patrocinadores[] = $empresaIdStr;
+            
+            $evento->update([
+                "patrocinadores" => $patrocinadores
+            ]);
+
+            return response()->json([
+                "success" => true,
+                "message" => "Empresa agregada como patrocinadora correctamente",
+                "evento" => $evento->fresh()
             ]);
 
         } catch (\Throwable $e) {

@@ -1,30 +1,35 @@
-{{-- resources/views/layouts/adminlte-externo.blade.php --}}
-{{-- Layout exclusivo para usuarios externos (Integrantes Externos) --}}
+{{-- resources/views/layouts/adminlte-empresa.blade.php --}}
+{{-- Layout exclusivo para empresas --}}
 @extends('adminlte::page')
 
-@section('title', 'UNI2 • Panel del Integrante Externo')
+@section('title', 'UNI2 • Panel de Empresa')
 
 @php
-    // Configuración específica para usuarios externos
+    // Configuración específica para empresas
     config(['adminlte.layout_topnav' => null]);
     config(['adminlte.layout_fixed_sidebar' => true]);
     config(['adminlte.layout_fixed_navbar' => true]);
-    // Configurar el menú específico para usuarios externos
+    // Configurar el menú específico para empresas
     config(['adminlte.menu' => [
         ['header' => 'NAVEGACIÓN PRINCIPAL'],
         [
             'text' => 'Inicio',
-            'url'  => '/home-externo',
+            'url'  => '/home-empresa',
             'icon' => 'fas fa-home',
         ],
         [
-            'text' => 'Eventos',
-            'url'  => '/externo/eventos',
-            'icon' => 'fas fa-calendar-alt',
+            'text' => 'Eventos Patrocinados',
+            'url'  => '/empresa/eventos',
+            'icon' => 'fas fa-calendar-check',
+        ],
+        [
+            'text' => 'Ayuda a Eventos',
+            'url'  => '/empresa/eventos/disponibles',
+            'icon' => 'fas fa-hand-holding-heart',
         ],
         [
             'text' => 'Reportes',
-            'url'  => '/externo/reportes',
+            'url'  => '/empresa/reportes',
             'icon' => 'fas fa-chart-bar',
         ],
         ['header' => 'OTRAS OPCIONES'],
@@ -48,8 +53,8 @@
 @section('content_header')
 <div class="d-flex align-items-center justify-content-between">
     <h1 class="mb-0 text-primary">
-        <i class="fas fa-user-friends mr-2"></i>
-        @yield('page_title', 'Panel del Integrante Externo')
+        <i class="fas fa-building mr-2"></i>
+        @yield('page_title', 'Panel de Empresa')
     </h1>
 </div>
 @stop
@@ -59,8 +64,6 @@
     @yield('content_body')
 </div>
 @stop
-
-{{-- El sidebar se renderiza automáticamente desde la configuración del menú --}}
 
 {{-- NAVBAR SUPERIOR --}}
 @push('adminlte_topnav')
@@ -79,7 +82,7 @@
 @section('css')
 <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/adminlte.min.css') }}">
 <style>
-    /* Estilos específicos para panel de externo */
+    /* Estilos específicos para panel de empresa */
     .main-sidebar {
         background-color: #343a40 !important;
     }
@@ -90,7 +93,7 @@
 <script src="{{ asset('vendor/adminlte/dist/js/adminlte.min.js') }}"></script>
 <script src="{{ asset('assets/js/config.js') }}"></script>
 <script>
-// Verificar que el usuario es externo y proteger rutas
+// Verificar que el usuario es empresa y proteger rutas
 document.addEventListener('DOMContentLoaded', function() {
     const tipoUsuario = localStorage.getItem('tipo_usuario');
     const currentPath = window.location.pathname;
@@ -110,7 +113,6 @@ document.addEventListener('DOMContentLoaded', function() {
         sidebarLinks.forEach(link => {
             const text = link.textContent.trim();
             if (text === 'Cerrar sesión' || text.includes('Cerrar sesión')) {
-                // Agregar listener para cerrar sesión
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -120,40 +122,22 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }, 500);
     
-    // Si el usuario es externo pero está en rutas de ONG, redirigir
-    if (tipoUsuario === 'Integrante externo') {
+    // Si el usuario es empresa pero está en rutas de ONG o externo, redirigir
+    if (tipoUsuario === 'Empresa') {
         // Proteger contra acceso a rutas de ONG
         if (currentPath.startsWith('/ong/')) {
-            console.warn('Usuario externo intentando acceder a ruta de ONG, redirigiendo...');
-            if (currentPath.startsWith('/ong/eventos')) {
-                window.location.href = '/externo/eventos';
-                return;
-            }
-            if (currentPath.startsWith('/ong/voluntarios')) {
-                window.location.href = '/externo/reportes';
-                return;
-            }
-            if (currentPath.startsWith('/ong/reportes')) {
-                window.location.href = '/externo/reportes';
-                return;
-            }
-            window.location.href = '/home-externo';
+            console.warn('Usuario empresa intentando acceder a ruta de ONG, redirigiendo...');
+            window.location.href = '/home-empresa';
             return;
         }
-        
-        // Asegurar que los enlaces del sidebar apunten a rutas correctas
-        document.querySelectorAll('a[href^="/ong/"]').forEach(link => {
-            const href = link.getAttribute('href');
-            if (href.includes('/ong/eventos')) {
-                link.setAttribute('href', '/externo/eventos');
-            } else if (href.includes('/ong/voluntarios')) {
-                link.setAttribute('href', '/externo/reportes');
-            } else if (href.includes('/ong/reportes')) {
-                link.setAttribute('href', '/externo/reportes');
-            }
-        });
-    } else if (tipoUsuario && tipoUsuario !== 'Integrante externo') {
-        console.warn('Usuario no es externo, pero está en panel de externo');
+        // Proteger contra acceso a rutas de externo
+        if (currentPath.startsWith('/externo/')) {
+            console.warn('Usuario empresa intentando acceder a ruta de externo, redirigiendo...');
+            window.location.href = '/home-empresa';
+            return;
+        }
+    } else if (tipoUsuario && tipoUsuario !== 'Empresa') {
+        console.warn('Usuario no es empresa, pero está en panel de empresa');
     }
 });
 
@@ -200,3 +184,4 @@ async function cerrarSesion(event) {
 window.cerrarSesion = cerrarSesion;
 </script>
 @stop
+
