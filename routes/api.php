@@ -28,6 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // ONG
         Route::get('/ong/{ongId}',       [EventController::class, 'indexByOng']);
+        Route::get('/ong/{ongId}/dashboard', [EventController::class, 'dashboardPorEstado']);
         Route::post('/',                 [EventController::class, 'store']);
         Route::put('/{id}',              [EventController::class, 'update']);
         Route::delete('/{id}',           [EventController::class, 'destroy']);
@@ -62,12 +63,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // ----------- NOTIFICACIONES -----------
     Route::prefix('notificaciones')->group(function () {
         Route::get('/', [NotificacionController::class, 'index']);
+        Route::get('/contador', [NotificacionController::class, 'contador']);
         Route::put('/{id}/leida', [NotificacionController::class, 'marcarLeida']);
         Route::put('/marcar-todas', [NotificacionController::class, 'marcarTodasLeidas']);
     });
 
     // ----------- DASHBOARD ONG -----------
     Route::prefix('dashboard-ong')->group(function () {
+        Route::get('/estadisticas-generales', [DashboardOngController::class, 'estadisticasGenerales']);
         Route::get('/participantes/estadisticas', [DashboardOngController::class, 'estadisticasParticipantes']);
         Route::get('/participantes/lista', [DashboardOngController::class, 'listaParticipantes']);
         Route::get('/reacciones/estadisticas', [DashboardOngController::class, 'estadisticasReacciones']);

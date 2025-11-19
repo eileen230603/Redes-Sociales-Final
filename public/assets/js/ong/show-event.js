@@ -73,6 +73,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const estadoBadges = {
             'borrador': { class: 'badge-secondary', text: 'Borrador' },
             'publicado': { class: 'badge-success', text: 'Publicado' },
+            'finalizado': { class: 'badge-info', text: 'Finalizado' },
             'cancelado': { class: 'badge-danger', text: 'Cancelado' }
         };
         const estadoInfo = estadoBadges[e.estado] || { class: 'badge-secondary', text: e.estado || 'N/A' };
@@ -87,6 +88,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         document.getElementById('fecha_inicio').textContent = formatFecha(e.fecha_inicio);
         document.getElementById('fecha_fin').textContent = formatFecha(e.fecha_fin);
         document.getElementById('fecha_limite_inscripcion').textContent = formatFecha(e.fecha_limite_inscripcion);
+        
+        // Fecha de finalización (si existe)
+        if (e.fecha_finalizacion) {
+            document.getElementById('fechaFinalizacionContainer').style.display = 'block';
+            document.getElementById('fecha_finalizacion').textContent = formatFecha(e.fecha_finalizacion);
+        } else {
+            document.getElementById('fechaFinalizacionContainer').style.display = 'none';
+        }
 
         // Capacidad
         document.getElementById('capacidad_maxima').textContent = e.capacidad_maxima ? `${e.capacidad_maxima} personas` : 'Sin límite';

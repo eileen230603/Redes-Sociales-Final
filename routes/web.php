@@ -53,6 +53,11 @@ Route::prefix('ong/dashboard')->name('ong.dashboard.')->group(function () {
     Route::view('/', 'ong.dashboard.index')->name('index');
 });
 
+// ---------------- ONG: DASHBOARD DE EVENTOS ----------------
+Route::prefix('ong/eventos-dashboard')->name('ong.eventos-dashboard.')->group(function () {
+    Route::view('/', 'ong.eventos.dashboard')->name('index');
+});
+
 // ---------------- ONG: MEGA EVENTOS ----------------
 Route::prefix('ong/mega-eventos')->name('ong.mega-eventos.')->group(function () {
     Route::view('/', 'ong.mega-eventos.index')->name('index');

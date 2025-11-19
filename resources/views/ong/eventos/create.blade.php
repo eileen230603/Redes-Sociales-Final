@@ -61,12 +61,14 @@
 
                 <div class="form-group mb-3">
                     <label for="capacidadMaxima">Capacidad máxima</label>
-                    <input type="number" id="capacidadMaxima" class="form-control" min="1">
+                    <input type="text" id="capacidadMaxima" class="form-control" pattern="[0-9]*" inputmode="numeric" placeholder="Solo números">
+                    <small class="form-text text-muted">Ingrese solo números (sin letras, símbolos ni espacios)</small>
                 </div>
 
                 <div class="form-group mb-3">
-                    <label for="estado">Estado del evento</label>
-                    <select id="estado" class="form-control">
+                    <label for="estado">Estado del evento *</label>
+                    <select id="estado" class="form-control" required>
+                        <option value="" disabled selected>Selecciona un estado</option>
                         <option value="borrador">📝 Borrador</option>
                         <option value="publicado">✅ Publicado</option>
                         <option value="cancelado">❌ Cancelado</option>
@@ -99,11 +101,30 @@
                 <hr>
                 <h4 class="text-warning mt-4"><i class="fas fa-images"></i> Imágenes promocionales</h4>
 
-                <div class="form-group">
+                <!-- Subir imágenes desde dispositivo -->
+                <div class="form-group mb-3">
+                    <label for="imagenesPromocionales">Subir imágenes desde dispositivo</label>
                     <input type="file" id="imagenesPromocionales" multiple accept="image/*" class="form-control-file">
+                    <small class="form-text text-muted">Formatos permitidos: JPG, PNG, GIF, WEBP. Tamaño máximo: 5MB por imagen.</small>
                 </div>
 
-                <div id="previewContainer" class="d-flex flex-wrap gap-2 mb-3"></div>
+                <div id="previewContainer" class="d-flex flex-wrap gap-2 mb-4"></div>
+
+                <!-- Agregar imagen por URL -->
+                <div class="form-group mb-3">
+                    <label for="imagen_url">Agregar imagen por URL</label>
+                    <div class="input-group">
+                        <input type="url" id="imagen_url" class="form-control" placeholder="https://ejemplo.com/imagen.jpg">
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-success" id="btnAgregarUrl">
+                                <i class="fas fa-plus mr-2"></i>Agregar
+                            </button>
+                        </div>
+                    </div>
+                    <small class="form-text text-muted">Ingresa una URL válida de una imagen (JPG, PNG, GIF, WEBP).</small>
+                </div>
+
+                <div id="urlImagesContainer" class="d-flex flex-wrap gap-2 mb-3"></div>
 
                 <!-- EMPRESAS -->
                 <hr>
@@ -145,13 +166,47 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
 <style>
-    #previewContainer img {
-        width: 100px;
-        height: 100px;
+    #previewContainer img,
+    #urlImagesContainer img {
+        width: 150px;
+        height: 150px;
         object-fit: cover;
-        border-radius: 5px;
+        border-radius: 8px;
         border: 2px solid #ddd;
-        margin-right: 8px;
+        margin: 5px;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    #previewContainer img:hover,
+    #urlImagesContainer img:hover {
+        transform: scale(1.05);
+    }
+    .image-preview-wrapper {
+        position: relative;
+        display: inline-block;
+        margin: 5px;
+    }
+    .image-preview-wrapper .remove-image {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #dc3545;
+        color: white;
+        border-radius: 50%;
+        width: 25px;
+        height: 25px;
+        border: none;
+        cursor: pointer;
+        font-size: 12px;
+    }
+    #urlImagesContainer .image-preview-wrapper {
+        border: 2px solid #28a745;
+    }
+    #urlImagesContainer img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 6px;
     }
 </style>
 @stop

@@ -54,7 +54,8 @@
 
                 <div class="form-group mb-3">
                     <label>Capacidad máxima</label>
-                    <input type="number" id="capacidad_maxima" class="form-control">
+                    <input type="text" id="capacidad_maxima" class="form-control" pattern="[0-9]*" inputmode="numeric" placeholder="Solo números">
+                    <small class="form-text text-muted">Ingrese solo números (sin letras, símbolos ni espacios)</small>
                 </div>
 
                 <div class="form-group mb-3">
@@ -81,19 +82,35 @@
                 <h5 class="mb-3"><i class="fas fa-images"></i> Imágenes promocionales</h5>
                 
                 <!-- Imágenes existentes -->
-                <div id="imagenesExistentes" class="mb-3">
+                <div id="imagenesExistentes" class="mb-4">
                     <p class="text-muted">Cargando imágenes...</p>
                 </div>
 
-                <!-- Subir nuevas imágenes -->
+                <!-- Subir nuevas imágenes desde dispositivo -->
                 <div class="form-group mb-3">
-                    <label>Agregar nuevas imágenes</label>
+                    <label>Subir nuevas imágenes desde dispositivo</label>
                     <input type="file" id="nuevasImagenes" multiple accept="image/*" class="form-control-file">
-                    <small class="text-muted">Puedes seleccionar múltiples imágenes</small>
+                    <small class="form-text text-muted">Formatos permitidos: JPG, PNG, GIF, WEBP. Tamaño máximo: 5MB por imagen.</small>
                 </div>
 
                 <!-- Preview de nuevas imágenes -->
-                <div id="previewNuevasImagenes" class="d-flex flex-wrap gap-2 mb-3"></div>
+                <div id="previewNuevasImagenes" class="d-flex flex-wrap gap-2 mb-4"></div>
+
+                <!-- Agregar imagen por URL -->
+                <div class="form-group mb-3">
+                    <label for="imagen_url_edit">Agregar imagen por URL</label>
+                    <div class="input-group">
+                        <input type="url" id="imagen_url_edit" class="form-control" placeholder="https://ejemplo.com/imagen.jpg">
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-success" id="btnAgregarUrlEdit">
+                                <i class="fas fa-plus mr-2"></i>Agregar
+                            </button>
+                        </div>
+                    </div>
+                    <small class="form-text text-muted">Ingresa una URL válida de una imagen (JPG, PNG, GIF, WEBP).</small>
+                </div>
+
+                <div id="urlImagesContainerEdit" class="d-flex flex-wrap gap-2 mb-3"></div>
 
                 <button type="submit" class="btn btn-primary mt-3">Guardar cambios</button>
 
@@ -140,13 +157,35 @@
         justify-content: center;
         font-size: 14px;
     }
-    #previewNuevasImagenes img {
+    #previewNuevasImagenes img,
+    #urlImagesContainerEdit img {
         width: 150px;
         height: 150px;
         object-fit: cover;
         border-radius: 8px;
         border: 2px solid #28a745;
         margin: 8px;
+    }
+    .image-preview-wrapper-url {
+        position: relative;
+        display: inline-block;
+        margin: 5px;
+        border: 2px solid #28a745;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .image-preview-wrapper-url .remove-image {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #dc3545;
+        color: white;
+        border-radius: 50%;
+        width: 25px;
+        height: 25px;
+        border: none;
+        cursor: pointer;
+        font-size: 12px;
     }
 </style>
 @stop

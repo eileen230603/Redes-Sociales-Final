@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Evento;
 use App\Models\EventoParticipacion;
+use App\Models\EventoReaccion;
 use App\Models\User;
 use App\Models\Empresa;
 use App\Models\IntegranteExterno;
@@ -142,23 +143,65 @@ class EventController extends Controller
             
             foreach ($files as $file) {
                 if ($file->isValid()) {
+                    // Validar tipo y tamaño
+                    $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
+                    if (!in_array($file->getMimeType(), $allowedMimes)) {
+                        continue;
+                    }
+                    
+                    if ($file->getSize() > 5120 * 1024) { // 5MB
+                        continue;
+                    }
+                    
                     // Generar nombre único para la imagen
                     $filename = 'eventos/' . ($eventoId ?? 'temp') . '/' . Str::uuid() . '.' . $file->getClientOriginalExtension();
                     
                     // Guardar en storage/public
                     $path = $file->storeAs('public', $filename);
                     
-                    // Obtener la URL pública
+                    // Obtener la ruta relativa (ej: /storage/eventos/1/uuid.jpg)
                     $url = Storage::url($filename);
-                    $imagenes[] = $url;
+                    $imagenes[] = $url; // Guardar como /storage/... (ruta relativa)
                 }
             }
         }
         
-        // Si también vienen imágenes como JSON string o array
+        // Si también vienen imágenes como JSON string o array (rutas relativas existentes)
         if ($request->has('imagenes_json')) {
             $imagenesJson = $this->safeArray($request->input('imagenes_json'));
-            $imagenes = array_merge($imagenes, $imagenesJson);
+            // Normalizar a rutas relativas
+            $imagenesJson = array_map(function($img) {
+                if (empty($img)) return null;
+                // Si es URL completa, extraer la ruta relativa
+                if (strpos($img, 'http://') === 0 || strpos($img, 'https://') === 0) {
+                    $parsed = parse_url($img);
+                    return $parsed['path'] ?? null;
+                }
+                // Si ya es ruta relativa, retornarla
+                return $img;
+            }, $imagenesJson);
+            $imagenes = array_merge($imagenes, array_filter($imagenesJson));
+        }
+
+        // Si vienen imágenes por URL (URLs completas de internet)
+        if ($request->has('imagenes_urls')) {
+            $urlsInput = $request->input('imagenes_urls');
+            
+            // Si es string JSON, decodificarlo
+            if (is_string($urlsInput)) {
+                $decoded = json_decode($urlsInput, true);
+                $urlsImagenes = is_array($decoded) ? $decoded : [];
+            } else {
+                $urlsImagenes = $this->safeArray($urlsInput);
+            }
+            
+            // Validar y agregar URLs completas (se guardan como están, el accessor las manejará)
+            $urlsValidas = array_filter($urlsImagenes, function($url) {
+                if (empty($url) || !is_string($url)) return false;
+                // Validar que sea una URL válida
+                return filter_var($url, FILTER_VALIDATE_URL) !== false;
+            });
+            $imagenes = array_merge($imagenes, $urlsValidas);
         }
         
         // Si vienen imágenes como array directo (desde JSON)
@@ -167,7 +210,7 @@ class EventController extends Controller
             $imagenes = array_merge($imagenes, $imagenesArray);
         }
         
-        return array_unique($imagenes); // Eliminar duplicados
+        return array_values(array_unique(array_filter($imagenes))); // Eliminar duplicados y valores nulos
     }
 
     // ======================================================
@@ -176,21 +219,35 @@ class EventController extends Controller
     public function indexByOng($ongId, Request $request)
     {
         try {
-            // Convertir a entero para asegurar el tipo correcto
-            $ongId = (int) $ongId;
+            // Obtener el usuario autenticado
+            $usuarioAutenticado = $request->user();
             
-            \Log::info("Buscando eventos para ONG ID: {$ongId}");
+            if (!$usuarioAutenticado) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Usuario no autenticado'
+                ], 401);
+            }
             
-            $query = Evento::where('ong_id', $ongId);
+            // Validar que el ID de la ONG en la URL coincida con el usuario autenticado
+            $ongIdAutenticada = (int) $usuarioAutenticado->id_usuario;
+            $ongIdParametro = (int) $ongId;
+            
+            if ($ongIdAutenticada !== $ongIdParametro) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'No tienes permiso para acceder a estos eventos'
+                ], 403);
+            }
+            
+            \Log::info("Buscando eventos para ONG ID: {$ongIdAutenticada}");
+            
+            // Obtener todos los eventos de la ONG autenticada
+            $query = Evento::where('ong_id', $ongIdAutenticada);
             
             // Filtro por tipo de evento
             if ($request->has('tipo_evento') && $request->tipo_evento !== '' && $request->tipo_evento !== 'todos') {
                 $query->where('tipo_evento', $request->tipo_evento);
-            }
-            
-            // Filtro por estado
-            if ($request->has('estado') && $request->estado !== '' && $request->estado !== 'todos') {
-                $query->where('estado', $request->estado);
             }
             
             // Búsqueda por título o descripción
@@ -202,15 +259,43 @@ class EventController extends Controller
                 });
             }
             
-            $eventos = $query->orderBy('id', 'desc')->get();
+            // Obtener todos los eventos primero para calcular estados dinámicos
+            $todosEventos = $query->orderBy('id', 'desc')->get();
+            
+            // Filtrar por estado dinámico si se especifica
+            $estadoFiltro = $request->get('estado', 'todos');
+            if ($estadoFiltro !== 'todos' && $estadoFiltro !== '') {
+                $todosEventos = $todosEventos->filter(function($e) use ($estadoFiltro) {
+                    $estadoDinamico = $e->estado_dinamico;
+                    
+                    if ($estadoFiltro === 'finalizados') {
+                        return $estadoDinamico === 'finalizado';
+                    } elseif ($estadoFiltro === 'activos') {
+                        return $estadoDinamico === 'activo';
+                    } elseif ($estadoFiltro === 'proximos') {
+                        return $estadoDinamico === 'proximo';
+                    } elseif ($estadoFiltro === 'en_curso') {
+                        return $estadoDinamico === 'activo';
+                    } else {
+                        // Para borrador, cancelado, etc., usar el estado guardado
+                        return $e->estado === $estadoFiltro;
+                    }
+                })->values();
+            }
+            
+            $eventos = $todosEventos;
 
             \Log::info("Eventos encontrados: " . $eventos->count());
 
             // Enriquecer patrocinadores e invitados con información completa
+            // Y calcular estado dinámico basado en fechas
             $eventos->transform(function ($e) {
                 $e->patrocinadores = $this->enriquecerPatrocinadores($this->safeArray($e->patrocinadores));
                 $e->invitados = $this->enriquecerInvitados($this->safeArray($e->invitados));
-                $e->imagenes = $this->safeArray($e->imagenes);
+                // El accessor del modelo ya genera URLs completas
+                $e->makeVisible(['imagenes', 'fecha_finalizacion']);
+                // Agregar estado dinámico calculado
+                $e->estado_dinamico = $e->estado_dinamico;
                 return $e;
             });
 
@@ -261,7 +346,10 @@ class EventController extends Controller
             $eventos->transform(function ($e) {
                 $e->patrocinadores = $this->enriquecerPatrocinadores($this->safeArray($e->patrocinadores));
                 $e->invitados = $this->enriquecerInvitados($this->safeArray($e->invitados));
-                $e->imagenes = $this->safeArray($e->imagenes);
+                // El accessor del modelo ya genera URLs completas
+                $e->makeVisible(['imagenes', 'fecha_finalizacion']);
+                // Agregar estado dinámico calculado
+                $e->estado_dinamico = $e->estado_dinamico;
                 return $e;
             });
 
@@ -275,122 +363,9 @@ class EventController extends Controller
             \Log::error("Error al obtener eventos publicados: " . $e->getMessage());
             return response()->json([
                 "success" => false,
-                "error"   => $e->getMessage(),
-                "file"    => $e->getFile(),
-                "line"    => $e->getLine(),
-            ], 500);
-        }
-    }
-
-    // ======================================================
-    //  CREAR EVENTO
-    // ======================================================
-    public function store(Request $request)
-    {
-        try {
-            // Convertir campos JSON string a arrays si vienen como string
-            $data = $request->all();
-            
-            // Procesar patrocinadores
-            if (!isset($data['patrocinadores']) || empty($data['patrocinadores'])) {
-                $data['patrocinadores'] = [];
-            } elseif (is_string($data['patrocinadores'])) {
-                $decoded = json_decode($data['patrocinadores'], true);
-                $data['patrocinadores'] = is_array($decoded) ? $decoded : [];
-            } elseif (!is_array($data['patrocinadores'])) {
-                $data['patrocinadores'] = [];
-            }
-            
-            // Procesar invitados
-            if (!isset($data['invitados']) || empty($data['invitados'])) {
-                $data['invitados'] = [];
-            } elseif (is_string($data['invitados'])) {
-                $decoded = json_decode($data['invitados'], true);
-                $data['invitados'] = is_array($decoded) ? $decoded : [];
-            } elseif (!is_array($data['invitados'])) {
-                $data['invitados'] = [];
-            }
-            
-            // Procesar auspiciadores
-            if (!isset($data['auspiciadores']) || empty($data['auspiciadores'])) {
-                $data['auspiciadores'] = [];
-            } elseif (is_string($data['auspiciadores'])) {
-                $decoded = json_decode($data['auspiciadores'], true);
-                $data['auspiciadores'] = is_array($decoded) ? $decoded : [];
-            } elseif (!is_array($data['auspiciadores'])) {
-                $data['auspiciadores'] = [];
-            }
-            
-            $validator = Validator::make($data, [
-                'ong_id' => 'required|exists:ongs,user_id',
-                'titulo' => 'required|string|max:255',
-                'descripcion' => 'nullable|string',
-                'tipo_evento' => 'required|string|max:100',
-                'fecha_inicio' => 'required|date|after:now',
-                'fecha_fin' => 'nullable|date|after:fecha_inicio',
-                'fecha_limite_inscripcion' => 'nullable|date|before:fecha_inicio',
-                'capacidad_maxima' => 'nullable|integer|min:1',
-                'estado' => 'required|in:borrador,publicado,cancelado',
-                'ciudad' => 'nullable|string|max:255',
-                'direccion' => 'nullable|string|max:255',
-                'lat' => 'nullable|numeric|between:-90,90',
-                'lng' => 'nullable|numeric|between:-180,180',
-                'inscripcion_abierta' => 'nullable|boolean',
-                'patrocinadores' => 'nullable|array',
-                'invitados' => 'nullable|array',
-                'imagenes' => 'nullable|array',
-                'imagenes.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120', // Max 5MB por imagen
-                'auspiciadores' => 'nullable|array',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'error' => $validator->errors()->first(),
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-
-            // Crear el evento primero para obtener el ID
-            $evento = Evento::create([
-                "ong_id" => $data['ong_id'],
-                "titulo" => $data['titulo'],
-                "descripcion" => $data['descripcion'] ?? null,
-                "tipo_evento" => $data['tipo_evento'],
-                "fecha_inicio" => $data['fecha_inicio'],
-                "fecha_fin" => $data['fecha_fin'] ?? null,
-                "fecha_limite_inscripcion" => $data['fecha_limite_inscripcion'] ?? null,
-                "capacidad_maxima" => $data['capacidad_maxima'] ?? null,
-                "estado" => $data['estado'],
-                "ciudad" => $data['ciudad'] ?? null,
-                "direccion" => $data['direccion'] ?? null,
-                "lat" => $data['lat'] ?? null,
-                "lng" => $data['lng'] ?? null,
-                "inscripcion_abierta" => $data['inscripcion_abierta'] ?? true,
-                "patrocinadores" => $this->safeArray($data['patrocinadores'] ?? []),
-                "invitados" => $this->safeArray($data['invitados'] ?? []),
-                "imagenes" => [],
-                "auspiciadores" => $this->safeArray($data['auspiciadores'] ?? []),
-            ]);
-
-            // Procesar imágenes después de crear el evento
-            $imagenes = $this->processImages($request, $evento->id);
-            if (!empty($imagenes)) {
-                $evento->update(['imagenes' => $imagenes]);
-            }
-
-            return response()->json([
-                "success" => true,
-                "message" => "Evento creado correctamente",
-                "evento"  => $evento
-            ], 201);
-
-        } catch (\Throwable $e) {
-            return response()->json([
-                "success" => false,
                 "error" => $e->getMessage(),
-                "file" => $e->getFile(),
                 "line" => $e->getLine(),
+                "file" => $e->getFile()
             ], 500);
         }
     }
@@ -412,7 +387,10 @@ class EventController extends Controller
 
             $evento->patrocinadores = $this->enriquecerPatrocinadores($this->safeArray($evento->patrocinadores));
             $evento->invitados = $this->enriquecerInvitados($this->safeArray($evento->invitados));
-            $evento->imagenes = $this->safeArray($evento->imagenes);
+            // El accessor del modelo ya genera URLs completas
+            $evento->makeVisible(['imagenes', 'fecha_finalizacion']);
+            // Agregar estado dinámico calculado
+            $evento->estado_dinamico = $evento->estado_dinamico;
 
             return response()->json([
                 "success" => true,
@@ -425,6 +403,114 @@ class EventController extends Controller
                 "error" => $e->getMessage(),
                 "line" => $e->getLine(),
                 "file" => $e->getFile()
+            ], 500);
+        }
+    }
+
+    // ======================================================
+    //  CREAR EVENTO
+    // ======================================================
+    public function store(Request $request)
+    {
+        try {
+            // Preparar datos para validación
+            $requestData = $request->all();
+            
+            // Convertir strings JSON vacíos a arrays vacíos para patrocinadores e invitados
+            if (isset($requestData['patrocinadores']) && is_string($requestData['patrocinadores']) && $requestData['patrocinadores'] === '[]') {
+                $requestData['patrocinadores'] = [];
+            }
+            if (isset($requestData['invitados']) && is_string($requestData['invitados']) && $requestData['invitados'] === '[]') {
+                $requestData['invitados'] = [];
+            }
+            
+            $validator = Validator::make($requestData, [
+                'ong_id' => 'required|integer|exists:ongs,user_id',
+                'titulo' => 'required|string|max:255',
+                'descripcion' => 'nullable|string',
+                'tipo_evento' => 'required|string|max:100',
+                'fecha_inicio' => 'required|date|after:now',
+                'fecha_fin' => 'nullable|date|after:fecha_inicio',
+                'fecha_limite_inscripcion' => 'nullable|date|before:fecha_inicio',
+                'capacidad_maxima' => 'nullable|integer|min:1',
+                'estado' => 'required|in:borrador,publicado,finalizado,cancelado',
+                'ciudad' => 'nullable|string|max:255',
+                'direccion' => 'nullable|string|max:255',
+                'lat' => 'nullable|numeric|between:-90,90',
+                'lng' => 'nullable|numeric|between:-180,180',
+                'inscripcion_abierta' => 'nullable|boolean',
+                'patrocinadores' => 'nullable|array',
+                'patrocinadores.*' => 'integer',
+                'invitados' => 'nullable|array',
+                'invitados.*' => 'integer',
+                'imagenes' => 'nullable|array',
+                'auspiciadores' => 'nullable|array',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    "success" => false,
+                    "errors" => $validator->errors()
+                ], 422);
+            }
+
+            $data = $validator->validated();
+
+            // Procesar patrocinadores e invitados correctamente
+            // Ya están validados como arrays, solo asegurar que sean enteros
+            $patrocinadores = [];
+            if (isset($data['patrocinadores']) && is_array($data['patrocinadores'])) {
+                $patrocinadores = array_map('intval', array_filter($data['patrocinadores'], 'is_numeric'));
+            }
+
+            $invitados = [];
+            if (isset($data['invitados']) && is_array($data['invitados'])) {
+                $invitados = array_map('intval', array_filter($data['invitados'], 'is_numeric'));
+            }
+
+            $evento = Evento::create([
+                "ong_id" => $data['ong_id'],
+                "titulo" => $data['titulo'],
+                "descripcion" => $data['descripcion'] ?? null,
+                "tipo_evento" => $data['tipo_evento'],
+                "fecha_inicio" => $data['fecha_inicio'],
+                "fecha_fin" => $data['fecha_fin'] ?? null,
+                "fecha_limite_inscripcion" => $data['fecha_limite_inscripcion'] ?? null,
+                "capacidad_maxima" => $data['capacidad_maxima'] ?? null,
+                "estado" => $data['estado'],
+                "ciudad" => $data['ciudad'] ?? null,
+                "direccion" => $data['direccion'] ?? null,
+                "lat" => $data['lat'] ?? null,
+                "lng" => $data['lng'] ?? null,
+                "inscripcion_abierta" => $data['inscripcion_abierta'] ?? true,
+                "patrocinadores" => $patrocinadores,
+                "invitados" => $invitados,
+                "imagenes" => [],
+                "auspiciadores" => $this->safeArray($data['auspiciadores'] ?? []),
+            ]);
+
+            // Procesar imágenes después de crear el evento
+            $imagenes = $this->processImages($request, $evento->id);
+            if (!empty($imagenes)) {
+                $evento->update(['imagenes' => $imagenes]);
+            }
+            
+            // Forzar refresh para obtener las imágenes procesadas
+            $evento->refresh();
+            $evento->makeVisible('imagenes');
+
+            return response()->json([
+                "success" => true,
+                "message" => "Evento creado correctamente",
+                "evento"  => $evento
+            ], 201);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                "success" => false,
+                "error" => $e->getMessage(),
+                "file" => $e->getFile(),
+                "line" => $e->getLine(),
             ], 500);
         }
     }
@@ -448,7 +534,7 @@ class EventController extends Controller
                 'fecha_fin' => 'nullable|date|after:fecha_inicio',
                 'fecha_limite_inscripcion' => 'nullable|date|before:fecha_inicio',
                 'capacidad_maxima' => 'nullable|integer|min:1',
-                'estado' => 'sometimes|required|in:borrador,publicado,cancelado',
+                'estado' => 'sometimes|required|in:borrador,publicado,finalizado,cancelado',
                 'ciudad' => 'nullable|string|max:255',
                 'direccion' => 'nullable|string|max:255',
                 'lat' => 'nullable|numeric|between:-90,90',
@@ -457,57 +543,76 @@ class EventController extends Controller
                 'patrocinadores' => 'nullable|array',
                 'invitados' => 'nullable|array',
                 'imagenes' => 'nullable|array',
-                'imagenes.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120', // Max 5MB por imagen
                 'auspiciadores' => 'nullable|array',
             ]);
 
             if ($validator->fails()) {
                 return response()->json([
-                    'success' => false,
-                    'error' => $validator->errors()->first(),
-                    'errors' => $validator->errors()
+                    "success" => false,
+                    "errors" => $validator->errors()
                 ], 422);
             }
 
-            // Procesar imágenes si hay archivos nuevos
-            $imagenesActuales = $this->safeArray($evento->imagenes ?? []);
-            
-            // Si hay nuevas imágenes, procesarlas
-            if ($request->hasFile('imagenes')) {
-                $nuevasImagenes = $this->processImages($request, $evento->id);
-                $imagenesActuales = array_merge($imagenesActuales, $nuevasImagenes);
-            }
+            $data = $validator->validated();
+
+            // Procesar imágenes: obtener las existentes primero
+            $imagenesActuales = $this->safeArray($evento->getRawOriginal('imagenes') ?? []);
             
             // Si vienen imágenes como JSON (para mantener las existentes o actualizar)
             if ($request->has('imagenes_json')) {
                 $imagenesJson = $this->safeArray($request->input('imagenes_json'));
-                $imagenesActuales = $imagenesJson; // Reemplazar con las imágenes del JSON
+                // Normalizar a rutas relativas o URLs completas según corresponda
+                $imagenesJson = array_map(function($img) {
+                    if (empty($img)) return null;
+                    // Si es URL completa de internet, mantenerla
+                    if (strpos($img, 'http://') === 0 || strpos($img, 'https://') === 0) {
+                        // Verificar si es URL externa (no del servidor)
+                        $parsed = parse_url($img);
+                        $host = $parsed['host'] ?? '';
+                        $serverHost = parse_url(url('/'), PHP_URL_HOST);
+                        if ($host !== $serverHost && !empty($host)) {
+                            return $img; // URL externa, mantenerla completa
+                        }
+                        // Si es URL del servidor, extraer ruta relativa
+                        return $parsed['path'] ?? null;
+                    }
+                    // Si ya es ruta relativa, retornarla
+                    return $img;
+                }, $imagenesJson);
+                $imagenesActuales = array_values(array_filter($imagenesJson));
+            }
+            
+            // Procesar nuevas imágenes (archivos y URLs de internet)
+            // Esto incluye archivos subidos y URLs nuevas enviadas en imagenes_urls
+            $nuevasImagenes = $this->processImages($request, $evento->id);
+            
+            // Combinar imágenes existentes con nuevas
+            $imagenesActuales = array_merge($imagenesActuales, $nuevasImagenes);
+            
+            // Eliminar duplicados y valores nulos, reindexar array
+            $data['imagenes'] = array_values(array_unique(array_filter($imagenesActuales)));
+
+            // Convertir arrays a JSON si vienen
+            if (isset($data['patrocinadores'])) {
+                $data['patrocinadores'] = $this->safeArray($data['patrocinadores']);
+            }
+            if (isset($data['invitados'])) {
+                $data['invitados'] = $this->safeArray($data['invitados']);
+            }
+            if (isset($data['auspiciadores'])) {
+                $data['auspiciadores'] = $this->safeArray($data['auspiciadores']);
             }
 
-            $evento->update([
-                "titulo" => $request->titulo ?? $evento->titulo,
-                "descripcion" => $request->descripcion ?? $evento->descripcion,
-                "tipo_evento" => $request->tipo_evento ?? $evento->tipo_evento,
-                "fecha_inicio" => $request->fecha_inicio ?? $evento->fecha_inicio,
-                "fecha_fin" => $request->fecha_fin ?? $evento->fecha_fin,
-                "fecha_limite_inscripcion" => $request->fecha_limite_inscripcion ?? $evento->fecha_limite_inscripcion,
-                "capacidad_maxima" => $request->capacidad_maxima ?? $evento->capacidad_maxima,
-                "estado" => $request->estado ?? $evento->estado,
-                "ciudad" => $request->ciudad ?? $evento->ciudad,
-                "direccion" => $request->direccion ?? $evento->direccion,
-                "lat" => $request->lat ?? $evento->lat,
-                "lng" => $request->lng ?? $evento->lng,
-                "inscripcion_abierta" => $request->has('inscripcion_abierta') ? $request->inscripcion_abierta : $evento->inscripcion_abierta,
-                "patrocinadores" => $request->has('patrocinadores') ? $this->safeArray($request->patrocinadores) : $evento->patrocinadores,
-                "invitados" => $request->has('invitados') ? $this->safeArray($request->invitados) : $evento->invitados,
-                "imagenes" => array_unique($imagenesActuales), // Eliminar duplicados
-                "auspiciadores" => $request->has('auspiciadores') ? $this->safeArray($request->auspiciadores) : $evento->auspiciadores,
-            ]);
+            $evento->update($data);
+            
+            // Forzar refresh para obtener las imágenes procesadas
+            $evento->refresh();
+            $evento->makeVisible('imagenes');
 
             return response()->json([
                 "success" => true,
                 "message" => "Evento actualizado correctamente",
-                "evento"  => $evento->fresh()
+                "evento" => $evento->fresh()
             ]);
 
         } catch (\Throwable $e) {
@@ -521,65 +626,105 @@ class EventController extends Controller
     }
 
     // ======================================================
-    //  AGREGAR PATROCINADOR A EVENTO
+    //  DASHBOARD DE EVENTOS POR ESTADO (ONG)
     // ======================================================
-    public function agregarPatrocinador(Request $request, $id)
+    public function dashboardPorEstado($ongId, Request $request)
     {
         try {
-            $evento = Evento::find($id);
-
-            if (!$evento)
-                return response()->json(["success" => false, "message" => "Evento no encontrado"], 404);
-
-            $validator = Validator::make($request->all(), [
-                'empresa_id' => 'required|integer|exists:empresas,user_id',
-            ]);
-
-            if ($validator->fails()) {
+            // Obtener el usuario autenticado
+            $usuarioAutenticado = $request->user();
+            
+            if (!$usuarioAutenticado) {
                 return response()->json([
                     'success' => false,
-                    'error' => $validator->errors()->first(),
-                    'errors' => $validator->errors()
-                ], 422);
+                    'error' => 'Usuario no autenticado'
+                ], 401);
             }
-
-            $empresaId = $request->empresa_id;
-            $patrocinadores = $this->safeArray($evento->patrocinadores ?? []);
             
-            // Convertir todos a string para consistencia
-            $patrocinadores = array_map(function($p) {
-                return (string) $p;
-            }, $patrocinadores);
+            // Validar que el ID de la ONG en la URL coincida con el usuario autenticado
+            $ongIdAutenticada = (int) $usuarioAutenticado->id_usuario;
+            $ongIdParametro = (int) $ongId;
             
-            $empresaIdStr = (string) $empresaId;
-
-            // Verificar si ya es patrocinador
-            if (in_array($empresaIdStr, $patrocinadores)) {
+            if ($ongIdAutenticada !== $ongIdParametro) {
                 return response()->json([
-                    "success" => false,
-                    "message" => "La empresa ya es patrocinadora de este evento"
-                ], 400);
+                    'success' => false,
+                    'error' => 'No tienes permiso para acceder a estos eventos'
+                ], 403);
             }
-
-            // Agregar la empresa a los patrocinadores
-            $patrocinadores[] = $empresaIdStr;
             
-            $evento->update([
-                "patrocinadores" => $patrocinadores
-            ]);
-
+            \Log::info("Dashboard: Buscando eventos para ONG ID autenticada: {$ongIdAutenticada}");
+            
+            // Obtener todos los eventos de la ONG autenticada
+            $query = Evento::where('ong_id', $ongIdAutenticada);
+            
+            // Búsqueda
+            if ($request->has('buscar') && $request->buscar !== '') {
+                $buscar = $request->buscar;
+                $query->where(function($q) use ($buscar) {
+                    $q->where('titulo', 'ilike', "%{$buscar}%")
+                      ->orWhere('descripcion', 'ilike', "%{$buscar}%");
+                });
+            }
+            
+            // Ordenar por fecha de inicio descendente
+            $todosEventos = $query->orderBy('fecha_inicio', 'desc')->get();
+            
+            // Calcular estados dinámicos y filtrar
+            $estadoFiltro = $request->get('estado', 'todos');
+            $eventos = $todosEventos->filter(function($e) use ($estadoFiltro) {
+                $estadoDinamico = $e->estado_dinamico;
+                
+                if ($estadoFiltro === 'todos') {
+                    return true;
+                } elseif ($estadoFiltro === 'finalizados') {
+                    return $estadoDinamico === 'finalizado';
+                } elseif ($estadoFiltro === 'activos') {
+                    return $estadoDinamico === 'activo';
+                } elseif ($estadoFiltro === 'proximos') {
+                    return $estadoDinamico === 'proximo';
+                } elseif ($estadoFiltro === 'en_curso') {
+                    return $estadoDinamico === 'activo';
+                } elseif ($estadoFiltro === 'cancelados') {
+                    return $estadoDinamico === 'cancelado';
+                } elseif ($estadoFiltro === 'borradores') {
+                    return $estadoDinamico === 'borrador';
+                }
+                return true;
+            })->values();
+            
+            // Enriquecer datos y agregar estado dinámico
+            $eventos->transform(function ($e) {
+                $e->patrocinadores = $this->enriquecerPatrocinadores($this->safeArray($e->patrocinadores));
+                $e->invitados = $this->enriquecerInvitados($this->safeArray($e->invitados));
+                $e->imagenes = $this->safeArray($e->imagenes);
+                $e->makeVisible(['fecha_finalizacion']);
+                // Agregar estado dinámico calculado
+                $e->estado_dinamico = $e->estado_dinamico;
+                return $e;
+            });
+            
+            // Calcular estadísticas basadas en estados dinámicos (solo eventos)
+            $estadisticas = [
+                'total' => $todosEventos->count(),
+                'finalizados' => $todosEventos->filter(fn($e) => $e->estado_dinamico === 'finalizado')->count(),
+                'activos' => $todosEventos->filter(fn($e) => $e->estado_dinamico === 'activo')->count(),
+                'proximos' => $todosEventos->filter(fn($e) => $e->estado_dinamico === 'proximo')->count(),
+                'en_curso' => $todosEventos->filter(fn($e) => $e->estado_dinamico === 'activo')->count(),
+                'cancelados' => $todosEventos->filter(fn($e) => $e->estado_dinamico === 'cancelado')->count(),
+                'borradores' => $todosEventos->filter(fn($e) => $e->estado_dinamico === 'borrador')->count(),
+            ];
+            
             return response()->json([
-                "success" => true,
-                "message" => "Empresa agregada como patrocinadora correctamente",
-                "evento" => $evento->fresh()
+                'success' => true,
+                'eventos' => $eventos,
+                'estadisticas' => $estadisticas,
+                'filtro_estado' => $estadoFiltro,
+                'count' => $eventos->count()
             ]);
-
         } catch (\Throwable $e) {
             return response()->json([
-                "success" => false,
-                "error" => $e->getMessage(),
-                "line" => $e->getLine(),
-                "file" => $e->getFile()
+                'success' => false,
+                'error' => $e->getMessage()
             ], 500);
         }
     }
@@ -608,27 +753,25 @@ class EventController extends Controller
     public function empresasDisponibles()
     {
         try {
-            $empresas = Empresa::with('usuario')
-                ->whereHas('usuario', function($query) {
-                    $query->where('activo', true);
-                })
+            $empresas = Empresa::select('user_id', 'nombre_empresa', 'descripcion')
                 ->get()
-                ->map(function($empresa) {
+                ->map(function ($empresa) {
                     return [
                         'id' => $empresa->user_id,
                         'nombre' => $empresa->nombre_empresa,
-                        'NIT' => $empresa->NIT,
+                        'descripcion' => $empresa->descripcion ?? ''
                     ];
                 });
 
             return response()->json([
-                'success' => true,
-                'empresas' => $empresas
+                "success" => true,
+                "empresas" => $empresas
             ]);
         } catch (\Throwable $e) {
+            \Log::error("Error en empresasDisponibles: " . $e->getMessage());
             return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
+                "success" => false,
+                "error" => $e->getMessage()
             ], 500);
         }
     }
@@ -639,29 +782,94 @@ class EventController extends Controller
     public function invitadosDisponibles()
     {
         try {
-            // Los invitados pueden ser integrantes externos activos
-            $invitados = IntegranteExterno::with('usuario')
-                ->whereHas('usuario', function($query) {
-                    $query->where('activo', true);
-                })
+            $invitados = IntegranteExterno::with('usuario:id_usuario,nombre_usuario,correo_electronico')
+                ->select('user_id', 'nombres', 'apellidos', 'descripcion')
                 ->get()
-                ->map(function($externo) {
+                ->map(function ($inv) {
+                    $nombreCompleto = trim(($inv->nombres ?? '') . ' ' . ($inv->apellidos ?? ''));
+                    if (empty($nombreCompleto)) {
+                        $nombreCompleto = $inv->usuario->nombre_usuario ?? 'Sin nombre';
+                    }
                     return [
-                        'id' => $externo->user_id,
-                        'nombre' => trim($externo->nombres . ' ' . ($externo->apellidos ?? '')),
+                        'id' => $inv->user_id,
+                        'nombre' => $nombreCompleto,
+                        'email' => $inv->usuario->correo_electronico ?? $inv->email ?? null
                     ];
                 });
 
             return response()->json([
-                'success' => true,
-                'invitados' => $invitados
+                "success" => true,
+                "invitados" => $invitados
             ]);
         } catch (\Throwable $e) {
+            \Log::error("Error en invitadosDisponibles: " . $e->getMessage());
+            \Log::error("Stack trace: " . $e->getTraceAsString());
             return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
+                "success" => false,
+                "error" => $e->getMessage()
             ], 500);
         }
     }
 
+    // ======================================================
+    //  AGREGAR PATROCINADOR A EVENTO
+    // ======================================================
+    public function agregarPatrocinador(Request $request, $id)
+    {
+        try {
+            $evento = Evento::find($id);
+
+            if (!$evento) {
+                return response()->json([
+                    "success" => false,
+                    "message" => "Evento no encontrado"
+                ], 404);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'empresa_id' => 'required|integer|exists:empresas,user_id'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    "success" => false,
+                    "errors" => $validator->errors()
+                ], 422);
+            }
+
+            $empresaId = $request->empresa_id;
+            $empresaIdStr = (string) $empresaId;
+            
+            $patrocinadores = $this->safeArray($evento->patrocinadores);
+
+            // Verificar si ya es patrocinador
+            if (in_array($empresaIdStr, $patrocinadores) || in_array($empresaId, $patrocinadores)) {
+                return response()->json([
+                    "success" => false,
+                    "message" => "La empresa ya es patrocinadora de este evento"
+                ], 400);
+            }
+
+            // Agregar la empresa a los patrocinadores
+            $patrocinadores[] = $empresaIdStr;
+            
+            $evento->update([
+                "patrocinadores" => $patrocinadores
+            ]);
+
+            return response()->json([
+                "success" => true,
+                "message" => "Empresa agregada como patrocinadora correctamente",
+                "evento" => $evento->fresh()
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                "success" => false,
+                "error" => $e->getMessage(),
+                "line" => $e->getLine(),
+                "file" => $e->getFile()
+            ], 500);
+        }
+    }
 }

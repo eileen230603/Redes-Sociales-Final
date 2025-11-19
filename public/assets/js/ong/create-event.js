@@ -17,6 +17,7 @@ if (!token || tipoUsuario !== "ONG" || isNaN(ongId) || ongId <= 0) {
 }
 
 const allFiles = [];
+let urlImages = []; // Array para almacenar URLs de imágenes
 let ciudadDetectada = "";
 
 // ===============================
@@ -82,11 +83,16 @@ async function loadEmpresas() {
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/eventos/empresas/disponibles`, {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { 
+                Authorization: `Bearer ${token}`,
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+            }
         });
         
         if (!res.ok) {
-            throw new Error('Error en la respuesta del servidor');
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.error || `Error HTTP ${res.status}: ${res.statusText}`);
         }
         
         const data = await res.json();
@@ -97,12 +103,12 @@ async function loadEmpresas() {
 
         box.innerHTML = "";
 
-        if (data.empresas && data.empresas.length > 0) {
+        if (data.empresas && Array.isArray(data.empresas) && data.empresas.length > 0) {
             data.empresas.forEach(e => {
                 box.innerHTML += `
                     <label class="col-md-4 p-2 border rounded">
                         <input type="checkbox" name="patro" value="${e.id}">
-                        ${e.nombre}
+                        ${e.nombre || 'Sin nombre'}
                     </label>`;
             });
         } else {
@@ -121,11 +127,16 @@ async function loadInvitados() {
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/eventos/invitados`, {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { 
+                Authorization: `Bearer ${token}`,
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+            }
         });
         
         if (!res.ok) {
-            throw new Error('Error en la respuesta del servidor');
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.error || `Error HTTP ${res.status}: ${res.statusText}`);
         }
         
         const data = await res.json();
@@ -136,12 +147,12 @@ async function loadInvitados() {
 
         box.innerHTML = "";
 
-        if (data.invitados && data.invitados.length > 0) {
+        if (data.invitados && Array.isArray(data.invitados) && data.invitados.length > 0) {
             data.invitados.forEach(i => {
                 box.innerHTML += `
                     <label class="col-md-4 p-2 border rounded">
                         <input type="checkbox" name="invitados" value="${i.id}">
-                        ${i.nombre}
+                        ${i.nombre || 'Sin nombre'}
                     </label>`;
             });
         } else {
@@ -157,6 +168,48 @@ async function loadInvitados() {
 document.addEventListener("DOMContentLoaded", () => {
     loadEmpresas();
     loadInvitados();
+    
+    // Validar capacidad máxima en tiempo real (solo números - estricto)
+    const capacidadInput = document.getElementById("capacidadMaxima");
+    if (capacidadInput) {
+        capacidadInput.addEventListener("input", function(e) {
+            // Remover cualquier carácter que no sea número (0-9)
+            // Esto incluye letras, vocales, símbolos, espacios, etc.
+            let value = this.value.replace(/[^0-9]/g, '');
+            if (this.value !== value) {
+                this.value = value;
+                mostrarNotificacion("warning", "Carácter inválido", "Solo se permiten números (0-9). No se permiten letras, vocales, símbolos ni espacios.");
+            }
+        });
+        
+        capacidadInput.addEventListener("keypress", function(e) {
+            // Prevenir la entrada de caracteres que no sean números
+            const char = String.fromCharCode(e.which);
+            if (!/[0-9]/.test(char)) {
+                e.preventDefault();
+                mostrarNotificacion("warning", "Carácter inválido", "Solo se permiten números (0-9) en este campo");
+            }
+        });
+        
+        capacidadInput.addEventListener("paste", function(e) {
+            e.preventDefault();
+            const paste = (e.clipboardData || window.clipboardData).getData('text');
+            // Filtrar solo números
+            const numbersOnly = paste.replace(/[^0-9]/g, '');
+            if (numbersOnly !== paste) {
+                mostrarNotificacion("warning", "Contenido inválido", "Solo se permiten números (0-9). Se han eliminado letras, vocales, símbolos y espacios.");
+            }
+            this.value = numbersOnly;
+        });
+        
+        // Prevenir espacios con la tecla espacio
+        capacidadInput.addEventListener("keydown", function(e) {
+            if (e.key === ' ' || e.key === 'Spacebar') {
+                e.preventDefault();
+                mostrarNotificacion("warning", "Carácter inválido", "No se permiten espacios en este campo");
+            }
+        });
+    }
 });
 
 // ===============================
@@ -190,6 +243,123 @@ function removeImage(i) {
 }
 
 // ===============================
+// 🖼️ IMÁGENES POR URL
+// ===============================
+function addUrlImage(url) {
+    // Verificar si la URL ya existe
+    if (urlImages.includes(url)) {
+        mostrarNotificacion('warning', 'URL duplicada', 'Esta URL ya ha sido agregada');
+        return;
+    }
+
+    urlImages.push(url);
+    updateUrlImagesPreview();
+}
+
+function updateUrlImagesPreview() {
+    const container = document.getElementById('urlImagesContainer');
+    if (!container) return;
+    
+    container.innerHTML = '';
+
+    if (urlImages.length === 0) {
+        return;
+    }
+
+    urlImages.forEach((url, index) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'image-preview-wrapper';
+        wrapper.style.cssText = 'border-radius: 8px; overflow: hidden; border: 2px solid #28a745;';
+        
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = `Imagen URL ${index + 1}`;
+        img.style.cssText = 'width: 100%; height: 150px; object-fit: cover; cursor: pointer;';
+        img.onclick = () => window.open(url, '_blank');
+        img.onerror = function() {
+            this.onerror = null;
+            this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="150" height="150"%3E%3Crect fill="%23f8f9fa" width="150" height="150"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23adb5bd" font-family="Arial" font-size="12"%3EError cargando%3C/text%3E%3C/svg%3E';
+            this.style.objectFit = 'contain';
+            this.style.padding = '10px';
+        };
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'remove-image';
+        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        removeBtn.onclick = () => removeUrlImage(index);
+        
+        wrapper.appendChild(img);
+        wrapper.appendChild(removeBtn);
+        container.appendChild(wrapper);
+    });
+}
+
+function removeUrlImage(index) {
+    urlImages.splice(index, 1);
+    updateUrlImagesPreview();
+}
+
+// Event listeners para agregar URL
+document.addEventListener('DOMContentLoaded', function() {
+    const btnAgregarUrl = document.getElementById('btnAgregarUrl');
+    const imagenUrlInput = document.getElementById('imagen_url');
+    
+    if (btnAgregarUrl) {
+        btnAgregarUrl.addEventListener('click', function() {
+            const url = imagenUrlInput.value.trim();
+            
+            if (!url) {
+                mostrarNotificacion('warning', 'URL vacía', 'Por favor ingresa una URL válida');
+                return;
+            }
+
+            // Validar que sea una URL válida
+            try {
+                new URL(url);
+            } catch (e) {
+                mostrarNotificacion('error', 'URL inválida', 'Por favor ingresa una URL válida (ej: https://ejemplo.com/imagen.jpg)');
+                return;
+            }
+
+            // Verificar que sea una imagen (por extensión)
+            const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+            const isImage = imageExtensions.some(ext => url.toLowerCase().includes(ext)) || 
+                           url.match(/\.(jpg|jpeg|png|gif|webp)(\?|$)/i);
+
+            if (!isImage) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'URL no parece ser una imagen',
+                    text: 'La URL debe apuntar a una imagen (JPG, PNG, GIF, WEBP)',
+                    showCancelButton: true,
+                    confirmButtonText: 'Agregar de todos modos',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        addUrlImage(url);
+                        imagenUrlInput.value = '';
+                    }
+                });
+            } else {
+                addUrlImage(url);
+                imagenUrlInput.value = '';
+            }
+        });
+    }
+
+    // Permitir agregar URL con Enter
+    if (imagenUrlInput) {
+        imagenUrlInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (btnAgregarUrl) btnAgregarUrl.click();
+            }
+        });
+    }
+});
+
+// ===============================
 // 🚀 ENVÍO FINAL
 // ===============================
 document.getElementById("createEventJsonForm")
@@ -198,35 +368,147 @@ document.getElementById("createEventJsonForm")
 async function submitEventForm(e) {
     e.preventDefault();
 
+    // ===============================
+    // VALIDACIÓN DE CAMPOS OBLIGATORIOS
+    // ===============================
+    const titulo = document.getElementById("titulo").value.trim();
+    const tipoEvento = document.getElementById("tipoEvento").value;
+    const fechaInicio = document.getElementById("fechaInicio").value;
+    const estado = document.getElementById("estado").value;
+
+    // Validar título
+    if (!titulo) {
+        mostrarNotificacion("error", "Campo requerido", "El título del evento es obligatorio");
+        document.getElementById("titulo").focus();
+        return;
+    }
+
+    // Validar tipo de evento
+    if (!tipoEvento || tipoEvento === "") {
+        mostrarNotificacion("error", "Campo requerido", "Debes seleccionar un tipo de evento");
+        document.getElementById("tipoEvento").focus();
+        return;
+    }
+
+    // Validar fecha de inicio
+    if (!fechaInicio) {
+        mostrarNotificacion("error", "Campo requerido", "La fecha de inicio es obligatoria");
+        document.getElementById("fechaInicio").focus();
+        return;
+    }
+
+    // Validar estado (obligatorio)
+    if (!estado || estado === "" || estado === null) {
+        mostrarNotificacion("error", "Campo requerido", "Debes seleccionar un estado para el evento");
+        document.getElementById("estado").focus();
+        return;
+    }
+
+    // Validar fecha de inicio sea futura
+    const fechaInicioDate = new Date(fechaInicio);
+    const ahora = new Date();
+    if (fechaInicioDate <= ahora) {
+        mostrarNotificacion("error", "Fecha inválida", "La fecha de inicio debe ser una fecha futura");
+        document.getElementById("fechaInicio").focus();
+        return;
+    }
+
+    // Validar fecha de fin si está presente
+    const fechaFin = document.getElementById("fechaFinal").value;
+    if (fechaFin) {
+        const fechaFinDate = new Date(fechaFin);
+        if (fechaFinDate <= fechaInicioDate) {
+            mostrarNotificacion("error", "Fecha inválida", "La fecha de finalización debe ser posterior a la fecha de inicio");
+            document.getElementById("fechaFinal").focus();
+            return;
+        }
+    }
+
+    // Validar fecha límite de inscripción si está presente
+    const fechaLimiteInscripcion = document.getElementById("fechaLimiteInscripcion").value;
+    if (fechaLimiteInscripcion) {
+        const fechaLimiteDate = new Date(fechaLimiteInscripcion);
+        if (fechaLimiteDate >= fechaInicioDate) {
+            mostrarNotificacion("error", "Fecha inválida", "La fecha límite de inscripción debe ser anterior a la fecha de inicio");
+            document.getElementById("fechaLimiteInscripcion").focus();
+            return;
+        }
+    }
+
+    // Validar capacidad máxima (solo números - estricto)
+    const capacidadMaxima = document.getElementById("capacidadMaxima").value.trim();
+    if (capacidadMaxima) {
+        // Verificar que solo contenga números (sin letras, vocales, símbolos, espacios)
+        // Regex estricto: solo dígitos del 0-9
+        if (!/^\d+$/.test(capacidadMaxima)) {
+            mostrarNotificacion("error", "Valor inválido", "La capacidad máxima debe ser un número válido. No se permiten letras, vocales, símbolos ni espacios. Solo números (0-9).");
+            document.getElementById("capacidadMaxima").focus();
+            document.getElementById("capacidadMaxima").value = "";
+            return;
+        }
+        // Verificar que sea mayor a 0
+        const capacidadNum = parseInt(capacidadMaxima, 10);
+        if (isNaN(capacidadNum) || capacidadNum < 1) {
+            mostrarNotificacion("error", "Valor inválido", "La capacidad máxima debe ser un número mayor a 0");
+            document.getElementById("capacidadMaxima").focus();
+            document.getElementById("capacidadMaxima").value = "";
+            return;
+        }
+    }
+
     const fd = new FormData();
 
     // ✔ ID REAL DE LA ONG
     fd.append("ong_id", ongId);
 
-    fd.append("titulo", document.getElementById("titulo").value);
-    fd.append("descripcion", document.getElementById("descripcion").value);
-    fd.append("tipo_evento", document.getElementById("tipoEvento").value);
+    fd.append("titulo", titulo);
+    fd.append("descripcion", document.getElementById("descripcion").value || "");
+    fd.append("tipo_evento", tipoEvento);
 
-    fd.append("fecha_inicio", document.getElementById("fechaInicio").value);
-    fd.append("fecha_fin", document.getElementById("fechaFinal").value);
-    fd.append("fecha_limite_inscripcion", document.getElementById("fechaLimiteInscripcion").value);
+    fd.append("fecha_inicio", fechaInicio);
+    fd.append("fecha_fin", fechaFin || "");
+    fd.append("fecha_limite_inscripcion", fechaLimiteInscripcion || "");
 
-    fd.append("capacidad_maxima", document.getElementById("capacidadMaxima").value);
-    fd.append("estado", document.getElementById("estado").value);
-    fd.append("ciudad", ciudadDetectada);
-    fd.append("direccion", document.getElementById("locacion").value);
+    // Capacidad máxima (solo números válidos)
+    const capacidadMaximaValue = document.getElementById("capacidadMaxima").value.trim();
+    if (capacidadMaximaValue && /^\d+$/.test(capacidadMaximaValue)) {
+        fd.append("capacidad_maxima", parseInt(capacidadMaximaValue, 10));
+    }
+    fd.append("estado", estado);
+    fd.append("ciudad", ciudadDetectada || "");
+    fd.append("direccion", document.getElementById("locacion").value || "");
 
-    fd.append(
-        "patrocinadores",
-        JSON.stringify([...document.querySelectorAll("input[name='patro']:checked")].map(e => e.value))
-    );
+    // Patrocinadores e invitados como arrays
+    const patrocinadoresIds = [...document.querySelectorAll("input[name='patro']:checked")].map(e => parseInt(e.value));
+    const invitadosIds = [...document.querySelectorAll("input[name='invitados']:checked")].map(e => parseInt(e.value));
+    
+    // Enviar como arrays (FormData maneja arrays automáticamente)
+    // Si no hay elementos, enviar array vacío explícitamente
+    if (patrocinadoresIds.length > 0) {
+        patrocinadoresIds.forEach(id => {
+            fd.append("patrocinadores[]", id);
+        });
+    } else {
+        // Enviar array vacío para que Laravel lo reconozca como array
+        fd.append("patrocinadores", "[]");
+    }
+    
+    if (invitadosIds.length > 0) {
+        invitadosIds.forEach(id => {
+            fd.append("invitados[]", id);
+        });
+    } else {
+        // Enviar array vacío para que Laravel lo reconozca como array
+        fd.append("invitados", "[]");
+    }
 
-    fd.append(
-        "invitados",
-        JSON.stringify([...document.querySelectorAll("input[name='invitados']:checked")].map(e => e.value))
-    );
-
+    // Agregar archivos de imagen
     allFiles.forEach(f => fd.append("imagenes[]", f));
+    
+    // Agregar URLs de imágenes como JSON string
+    if (urlImages.length > 0) {
+        fd.append("imagenes_urls", JSON.stringify(urlImages));
+    }
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/eventos`, {
@@ -237,9 +519,33 @@ async function submitEventForm(e) {
 
         const data = await res.json();
 
-        if (!data.success) {
-            mostrarNotificacion("error", "Error al crear evento", data.error || "Ocurrió un error inesperado");
-            console.log(data);
+        if (!res.ok || !data.success) {
+            // Si hay errores de validación, mostrarlos
+            let mensajeError = data.error || "Ocurrió un error inesperado";
+            
+            if (data.errors && typeof data.errors === 'object') {
+                const erroresArray = Object.entries(data.errors).map(([campo, mensajes]) => {
+                    const mensaje = Array.isArray(mensajes) ? mensajes[0] : mensajes;
+                    // Traducir nombres de campos al español
+                    const camposTraducidos = {
+                        'ong_id': 'ID de ONG',
+                        'titulo': 'Título',
+                        'tipo_evento': 'Tipo de evento',
+                        'fecha_inicio': 'Fecha de inicio',
+                        'fecha_fin': 'Fecha de finalización',
+                        'fecha_limite_inscripcion': 'Fecha límite de inscripción',
+                        'estado': 'Estado',
+                        'patrocinadores': 'Patrocinadores',
+                        'invitados': 'Invitados'
+                    };
+                    const campoTraducido = camposTraducidos[campo] || campo;
+                    return `${campoTraducido}: ${mensaje}`;
+                });
+                mensajeError = erroresArray.join('\n');
+            }
+            
+            mostrarNotificacion("error", "Error al crear evento", mensajeError);
+            console.error("Error completo:", data);
             return;
         }
 

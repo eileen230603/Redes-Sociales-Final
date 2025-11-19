@@ -25,7 +25,7 @@ return new class extends Migration {
 
             $table->integer('capacidad_maxima')->nullable();
             $table->boolean('inscripcion_abierta')->default(true);
-            $table->enum('estado', ['borrador', 'publicado', 'cancelado'])->default('borrador');
+            $table->enum('estado', ['borrador', 'publicado', 'finalizado', 'cancelado'])->default('borrador');
 
             $table->decimal('lat', 10, 7)->nullable();
             $table->decimal('lng', 10, 7)->nullable();

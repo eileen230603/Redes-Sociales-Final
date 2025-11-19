@@ -32,7 +32,7 @@ class VoluntarioController extends Controller
                 ->with(['evento:id,titulo', 'externo'])
                 ->get();
 
-            // Agrupar y formatear los datos
+            // Agrupar y formatear los datos - Mostrar cada participación por separado
             $voluntarios = $participaciones->map(function($participacion) {
                 $user = $participacion->externo;
                 
@@ -42,6 +42,12 @@ class VoluntarioController extends Controller
                 
                 $externo = IntegranteExterno::where('user_id', $user->id_usuario)->first();
                 
+                // Determinar tipo de usuario
+                $tipoUsuario = 'Externo';
+                if ($user->tipo_usuario === 'Voluntario' || $user->tipo_usuario === 'voluntario') {
+                    $tipoUsuario = 'Voluntario';
+                }
+                
                 $nombre = $user->nombre_usuario;
                 if ($externo) {
                     $nombreCompleto = trim($externo->nombres . ' ' . ($externo->apellidos ?? ''));
@@ -50,19 +56,33 @@ class VoluntarioController extends Controller
                     }
                 }
                 
+                // Estado de participación
+                $estado = $participacion->estado ?? 'pendiente';
+                $estadoLabels = [
+                    'pendiente' => 'Pendiente',
+                    'aprobada' => 'Aprobada',
+                    'rechazada' => 'Rechazada'
+                ];
+                $estadoLabel = $estadoLabels[$estado] ?? ucfirst($estado);
+                
                 return [
                     'id' => $participacion->id,
                     'user_id' => $user->id_usuario,
                     'nombre' => $nombre,
                     'email' => $externo ? ($externo->email ?? $user->correo_electronico) : $user->correo_electronico,
+                    'telefono' => $externo ? ($externo->phone_number ?? 'No disponible') : 'No disponible',
+                    'tipo_usuario' => $tipoUsuario,
                     'evento_id' => $participacion->evento_id,
                     'evento_titulo' => $participacion->evento->titulo ?? 'N/A',
+                    'estado' => $estado,
+                    'estado_label' => $estadoLabel,
                     'asistio' => (bool) $participacion->asistio,
                     'puntos' => (int) $participacion->puntos,
                     'fecha_inscripcion' => $participacion->created_at ? $participacion->created_at->format('Y-m-d H:i:s') : null,
+                    'fecha_inscripcion_formateada' => $participacion->created_at ? $participacion->created_at->format('d/m/Y H:i') : null,
                     'foto_perfil' => $externo ? ($externo->foto_perfil_url ?? null) : ($user->foto_perfil_url ?? null)
                 ];
-            })->filter(); // Eliminar nulls
+            })->filter()->values(); // Eliminar nulls y reindexar
 
             return response()->json([
                 'success' => true,

@@ -5,9 +5,6 @@
 @section('content_body')
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="text-primary">
-            <i class="fas fa-tachometer-alt mr-2"></i> Dashboard Extendido
-        </h1>
         <button class="btn btn-outline-primary" onclick="cargarDatos()">
             <i class="fas fa-sync-alt mr-2"></i> Actualizar
         </button>
@@ -34,53 +31,53 @@
             <!-- Estadísticas Generales -->
             <div class="row mb-4">
                 <div class="col-md-3">
-                    <div class="card border-0 shadow-sm" style="border-left: 4px solid #007bff;">
+                    <div class="card" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); border: none;">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="text-muted mb-1">Total Participantes</h6>
-                                    <h3 class="mb-0" id="totalParticipantes">0</h3>
+                                    <h6 class="text-white text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; opacity: 0.9;">Total Participantes</h6>
+                                    <h2 class="mb-0 text-white" id="totalParticipantes" style="font-size: 2.5rem; font-weight: 700;">0</h2>
                                 </div>
-                                <i class="fas fa-users fa-2x text-primary" style="opacity: 0.3;"></i>
+                                <i class="fas fa-users fa-3x text-white" style="opacity: 0.3;"></i>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card border-0 shadow-sm" style="border-left: 4px solid #28a745;">
+                    <div class="card" style="background: linear-gradient(135deg, #28a745 0%, #218838 100%); border: none;">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="text-muted mb-1">Aprobados</h6>
-                                    <h3 class="mb-0 text-success" id="totalAprobados">0</h3>
+                                    <h6 class="text-white text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; opacity: 0.9;">Aprobados</h6>
+                                    <h2 class="mb-0 text-white" id="totalAprobados" style="font-size: 2.5rem; font-weight: 700;">0</h2>
                                 </div>
-                                <i class="fas fa-check-circle fa-2x text-success" style="opacity: 0.3;"></i>
+                                <i class="fas fa-check-circle fa-3x text-white" style="opacity: 0.3;"></i>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card border-0 shadow-sm" style="border-left: 4px solid #ffc107;">
+                    <div class="card" style="background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%); border: none;">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="text-muted mb-1">Pendientes</h6>
-                                    <h3 class="mb-0 text-warning" id="totalPendientes">0</h3>
+                                    <h6 class="text-white text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; opacity: 0.9;">Pendientes</h6>
+                                    <h2 class="mb-0 text-white" id="totalPendientes" style="font-size: 2.5rem; font-weight: 700;">0</h2>
                                 </div>
-                                <i class="fas fa-clock fa-2x text-warning" style="opacity: 0.3;"></i>
+                                <i class="fas fa-clock fa-3x text-white" style="opacity: 0.3;"></i>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card border-0 shadow-sm" style="border-left: 4px solid #dc3545;">
+                    <div class="card" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); border: none;">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="text-muted mb-1">Rechazados</h6>
-                                    <h3 class="mb-0 text-danger" id="totalRechazados">0</h3>
+                                    <h6 class="text-white text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; opacity: 0.9;">Rechazados</h6>
+                                    <h2 class="mb-0 text-white" id="totalRechazados" style="font-size: 2.5rem; font-weight: 700;">0</h2>
                                 </div>
-                                <i class="fas fa-times-circle fa-2x text-danger" style="opacity: 0.3;"></i>
+                                <i class="fas fa-times-circle fa-3x text-white" style="opacity: 0.3;"></i>
                             </div>
                         </div>
                     </div>
@@ -90,11 +87,11 @@
             <!-- Gráficos -->
             <div class="row mb-4">
                 <div class="col-md-6">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-white">
-                            <h5 class="mb-0">
-                                <i class="fas fa-chart-pie mr-2 text-primary"></i> Distribución por Estado
-                            </h5>
+                    <div class="card">
+                        <div class="card-header" style="background-color: #17a2b8; color: white;">
+                            <h3 class="card-title" style="color: white; margin: 0;">
+                                <i class="fas fa-chart-pie mr-2"></i>Distribución por Estado
+                            </h3>
                         </div>
                         <div class="card-body">
                             <canvas id="graficoEstadoParticipantes" height="250"></canvas>
@@ -102,11 +99,11 @@
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-white">
-                            <h5 class="mb-0">
-                                <i class="fas fa-chart-bar mr-2 text-primary"></i> Participantes por Evento
-                            </h5>
+                    <div class="card">
+                        <div class="card-header" style="background-color: #28a745; color: white;">
+                            <h3 class="card-title" style="color: white; margin: 0;">
+                                <i class="fas fa-chart-bar mr-2"></i>Participantes por Evento
+                            </h3>
                         </div>
                         <div class="card-body">
                             <canvas id="graficoParticipantesPorEvento" height="250"></canvas>
@@ -163,14 +160,14 @@
             <!-- Estadísticas Generales -->
             <div class="row mb-4">
                 <div class="col-md-12">
-                    <div class="card border-0 shadow-sm" style="border-left: 4px solid #dc3545;">
+                    <div class="card" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); border: none;">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="text-muted mb-1">Total de Reacciones</h6>
-                                    <h3 class="mb-0 text-danger" id="totalReacciones">0</h3>
+                                    <h6 class="text-white text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; opacity: 0.9;">Total de Reacciones</h6>
+                                    <h2 class="mb-0 text-white" id="totalReacciones" style="font-size: 2.5rem; font-weight: 700;">0</h2>
                                 </div>
-                                <i class="fas fa-heart fa-3x text-danger" style="opacity: 0.3;"></i>
+                                <i class="fas fa-heart fa-3x text-white" style="opacity: 0.3;"></i>
                             </div>
                         </div>
                     </div>
@@ -180,11 +177,11 @@
             <!-- Gráfico de Reacciones -->
             <div class="row mb-4">
                 <div class="col-md-12">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-white">
-                            <h5 class="mb-0">
-                                <i class="fas fa-chart-bar mr-2 text-danger"></i> Reacciones por Evento
-                            </h5>
+                    <div class="card">
+                        <div class="card-header" style="background-color: #dc3545; color: white;">
+                            <h3 class="card-title" style="color: white; margin: 0;">
+                                <i class="fas fa-chart-bar mr-2"></i>Reacciones por Evento
+                            </h3>
                         </div>
                         <div class="card-body">
                             <canvas id="graficoReaccionesPorEvento" height="100"></canvas>
@@ -364,11 +361,11 @@ async function cargarEstadisticasParticipantes() {
             filtro.innerHTML += `<option value="${est.evento_id}">${est.evento_titulo}</option>`;
         });
 
-        // Gráfico de pastel - Distribución por estado
+        // Gráfico de donut - Distribución por estado
         const ctx1 = document.getElementById('graficoEstadoParticipantes');
         if (chartEstadoParticipantes) chartEstadoParticipantes.destroy();
         chartEstadoParticipantes = new Chart(ctx1, {
-            type: 'pie',
+            type: 'doughnut',
             data: {
                 labels: ['Aprobados', 'Pendientes', 'Rechazados'],
                 datasets: [{
@@ -378,16 +375,46 @@ async function cargarEstadisticasParticipantes() {
                         data.totales.rechazados
                     ],
                     backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
-                    borderWidth: 2,
-                    borderColor: '#fff'
+                    borderWidth: 3,
+                    borderColor: '#fff',
+                    hoverOffset: 6
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
+                cutout: '60%',
                 plugins: {
                     legend: {
-                        position: 'bottom'
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true,
+                            font: {
+                                size: 12,
+                                family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
                     }
                 }
             }
@@ -404,17 +431,23 @@ async function cargarEstadisticasParticipantes() {
                     {
                         label: 'Aprobados',
                         data: data.estadisticas_por_evento.map(e => e.aprobados),
-                        backgroundColor: '#28a745'
+                        backgroundColor: '#28a745',
+                        borderRadius: 4,
+                        borderSkipped: false
                     },
                     {
                         label: 'Pendientes',
                         data: data.estadisticas_por_evento.map(e => e.pendientes),
-                        backgroundColor: '#ffc107'
+                        backgroundColor: '#ffc107',
+                        borderRadius: 4,
+                        borderSkipped: false
                     },
                     {
                         label: 'Rechazados',
                         data: data.estadisticas_por_evento.map(e => e.rechazados),
-                        backgroundColor: '#dc3545'
+                        backgroundColor: '#dc3545',
+                        borderRadius: 4,
+                        borderSkipped: false
                     }
                 ]
             },
@@ -423,12 +456,53 @@ async function cargarEstadisticasParticipantes() {
                 maintainAspectRatio: true,
                 scales: {
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            font: {
+                                size: 11
+                            },
+                            color: '#6c757d'
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: {
+                                size: 11
+                            },
+                            color: '#6c757d'
+                        },
+                        grid: {
+                            display: false
+                        }
                     }
                 },
                 plugins: {
                     legend: {
-                        position: 'top'
+                        position: 'top',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true,
+                            font: {
+                                size: 12,
+                                family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        }
                     }
                 }
             }
@@ -591,7 +665,9 @@ async function cargarEstadisticasReacciones() {
                     data: data.estadisticas_por_evento.map(e => e.total_reacciones),
                     backgroundColor: '#dc3545',
                     borderColor: '#c82333',
-                    borderWidth: 1
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    borderSkipped: false
                 }]
             },
             options: {
@@ -599,12 +675,50 @@ async function cargarEstadisticasReacciones() {
                 maintainAspectRatio: true,
                 scales: {
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            font: {
+                                size: 11
+                            },
+                            color: '#6c757d'
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: {
+                                size: 11
+                            },
+                            color: '#6c757d'
+                        },
+                        grid: {
+                            display: false
+                        }
                     }
                 },
                 plugins: {
                     legend: {
                         display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                return `Reacciones: ${context.parsed.y}`;
+                            }
+                        }
                     }
                 }
             }

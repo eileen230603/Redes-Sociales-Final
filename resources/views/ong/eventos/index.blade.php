@@ -40,6 +40,7 @@
                         <option value="todos">Todos los estados</option>
                         <option value="borrador">Borrador</option>
                         <option value="publicado">Publicado</option>
+                        <option value="finalizado">Finalizado</option>
                         <option value="cancelado">Cancelado</option>
                     </select>
                 </div>
@@ -189,13 +190,17 @@ async function cargarEventos() {
                 minute: '2-digit'
             }) : 'Fecha no especificada';
 
-            // Estado badge
+            // Estado badge - usar estado_dinamico si está disponible
+            const estadoParaBadge = ev.estado_dinamico || ev.estado;
             const estadoBadges = {
-                'borrador': '<span class="badge badge-secondary">Borrador</span>',
-                'publicado': '<span class="badge badge-success">Publicado</span>',
-                'cancelado': '<span class="badge badge-danger">Cancelado</span>'
+                'borrador': '<span class="badge badge-warning">Borrador</span>',
+                'publicado': '<span class="badge badge-primary">Publicado</span>',
+                'cancelado': '<span class="badge badge-danger">Cancelado</span>',
+                'finalizado': '<span class="badge badge-secondary">Finalizado</span>',
+                'activo': '<span class="badge badge-success">En Curso</span>',
+                'proximo': '<span class="badge badge-info">Próximo</span>'
             };
-            const estadoBadge = estadoBadges[ev.estado] || '<span class="badge badge-secondary">' + (ev.estado || 'N/A') + '</span>';
+            const estadoBadge = estadoBadges[estadoParaBadge] || '<span class="badge badge-secondary">' + (estadoParaBadge || 'N/A') + '</span>';
 
             // Crear card con diseño minimalista
             const cardDiv = document.createElement('div');
