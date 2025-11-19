@@ -176,9 +176,24 @@ return [
             'icon' => 'fas fa-users',
         ],
         [
+            'text' => 'Dashboard',
+            'url'  => '/ong/dashboard',
+            'icon' => 'fas fa-tachometer-alt',
+        ],
+        [
+            'text' => 'Mega Eventos',
+            'url'  => '/ong/mega-eventos',
+            'icon' => 'fas fa-calendar-check',
+        ],
+        [
             'text' => 'Reportes',
             'url'  => '/reportes',
             'icon' => 'fas fa-chart-line',
+        ],
+        [
+            'text' => 'Mi Perfil',
+            'url'  => '/perfil/ong',
+            'icon' => 'fas fa-user-circle',
         ],
         [
             'text' => 'Configuraciones',
@@ -186,7 +201,7 @@ return [
             'submenu' => [
                 [
                     'text' => 'Perfil',
-                    'url'  => '/perfil',
+                    'url'  => '/perfil/ong',
                     'icon' => 'fas fa-user-circle',
                 ],
                 [

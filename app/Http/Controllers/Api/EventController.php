@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Evento;
 use App\Models\EventoParticipacion;
 use App\Models\User;
 use App\Models\Empresa;
 use App\Models\IntegranteExterno;
+use Illuminate\Support\Str;
 
 class EventController extends Controller
 {
@@ -24,10 +26,154 @@ class EventController extends Controller
         return [];
     }
 
+    /**
+     * Enriquecer patrocinadores con información completa (avatar y nombre)
+     */
+    private function enriquecerPatrocinadores($patrocinadores)
+    {
+        if (!is_array($patrocinadores) || empty($patrocinadores)) {
+            return [];
+        }
+
+        $enriquecidos = [];
+        foreach ($patrocinadores as $pat) {
+            // Si es un ID numérico, buscar la empresa
+            if (is_numeric($pat)) {
+                $empresa = Empresa::where('user_id', $pat)->first();
+                if ($empresa) {
+                    $enriquecidos[] = [
+                        'id' => $pat,
+                        'nombre' => $empresa->nombre_empresa,
+                        'avatar' => $empresa->foto_perfil_url ?? null,
+                        'tipo' => 'empresa'
+                    ];
+                }
+            } elseif (is_string($pat)) {
+                // Si es un string, puede ser un nombre o un ID como string
+                if (is_numeric($pat)) {
+                    $empresa = Empresa::where('user_id', (int)$pat)->first();
+                    if ($empresa) {
+                        $enriquecidos[] = [
+                            'id' => (int)$pat,
+                            'nombre' => $empresa->nombre_empresa,
+                            'avatar' => $empresa->foto_perfil_url ?? null,
+                            'tipo' => 'empresa'
+                        ];
+                    }
+                } else {
+                    // Si es solo texto, mantenerlo pero sin avatar
+                    $enriquecidos[] = [
+                        'id' => null,
+                        'nombre' => $pat,
+                        'avatar' => null,
+                        'tipo' => 'texto'
+                    ];
+                }
+            }
+        }
+        return $enriquecidos;
+    }
+
+    /**
+     * Enriquecer invitados con información completa (avatar y nombre)
+     */
+    private function enriquecerInvitados($invitados)
+    {
+        if (!is_array($invitados) || empty($invitados)) {
+            return [];
+        }
+
+        $enriquecidos = [];
+        foreach ($invitados as $inv) {
+            // Si es un ID numérico, buscar el externo
+            if (is_numeric($inv)) {
+                $externo = IntegranteExterno::where('user_id', $inv)->with('usuario')->first();
+                if ($externo) {
+                    $nombre = trim($externo->nombres . ' ' . ($externo->apellidos ?? ''));
+                    $enriquecidos[] = [
+                        'id' => $inv,
+                        'nombre' => $nombre ?: ($externo->usuario->nombre_usuario ?? 'N/A'),
+                        'avatar' => $externo->foto_perfil_url ?? null,
+                        'tipo' => 'externo'
+                    ];
+                }
+            } elseif (is_string($inv)) {
+                // Si es un string, puede ser un nombre o un ID como string
+                if (is_numeric($inv)) {
+                    $externo = IntegranteExterno::where('user_id', (int)$inv)->with('usuario')->first();
+                    if ($externo) {
+                        $nombre = trim($externo->nombres . ' ' . ($externo->apellidos ?? ''));
+                        $enriquecidos[] = [
+                            'id' => (int)$inv,
+                            'nombre' => $nombre ?: ($externo->usuario->nombre_usuario ?? 'N/A'),
+                            'avatar' => $externo->foto_perfil_url ?? null,
+                            'tipo' => 'externo'
+                        ];
+                    }
+                } else {
+                    // Si es solo texto, mantenerlo pero sin avatar
+                    $enriquecidos[] = [
+                        'id' => null,
+                        'nombre' => $inv,
+                        'avatar' => null,
+                        'tipo' => 'texto'
+                    ];
+                }
+            }
+        }
+        return $enriquecidos;
+    }
+
+    /**
+     * Procesar y guardar imágenes
+     */
+    private function processImages($request, $eventoId = null)
+    {
+        $imagenes = [];
+        
+        // Si hay archivos de imagen en el request
+        if ($request->hasFile('imagenes')) {
+            $files = $request->file('imagenes');
+            
+            // Asegurar que sea un array
+            if (!is_array($files)) {
+                $files = [$files];
+            }
+            
+            foreach ($files as $file) {
+                if ($file->isValid()) {
+                    // Generar nombre único para la imagen
+                    $filename = 'eventos/' . ($eventoId ?? 'temp') . '/' . Str::uuid() . '.' . $file->getClientOriginalExtension();
+                    
+                    // Guardar en storage/public
+                    $path = $file->storeAs('public', $filename);
+                    
+                    // Obtener la URL pública
+                    $url = Storage::url($filename);
+                    $imagenes[] = $url;
+                }
+            }
+        }
+        
+        // Si también vienen imágenes como JSON string o array
+        if ($request->has('imagenes_json')) {
+            $imagenesJson = $this->safeArray($request->input('imagenes_json'));
+            $imagenes = array_merge($imagenes, $imagenesJson);
+        }
+        
+        // Si vienen imágenes como array directo (desde JSON)
+        if ($request->has('imagenes') && !$request->hasFile('imagenes')) {
+            $imagenesArray = $this->safeArray($request->input('imagenes'));
+            $imagenes = array_merge($imagenes, $imagenesArray);
+        }
+        
+        return array_unique($imagenes); // Eliminar duplicados
+    }
+
     // ======================================================
     //  LISTAR EVENTOS DE UNA ONG
     // ======================================================
-    public function indexByOng($ongId)
+    public function indexByOng($ongId, Request $request)
     {
         try {
             // Convertir a entero para asegurar el tipo correcto
@@ -35,11 +181,38 @@ class EventController extends Controller
             
             \Log::info("Buscando eventos para ONG ID: {$ongId}");
             
-            $eventos = Evento::where('ong_id', $ongId)
-                ->orderBy('id', 'desc')
-                ->get();
+            $query = Evento::where('ong_id', $ongId);
+            
+            // Filtro por tipo de evento
+            if ($request->has('tipo_evento') && $request->tipo_evento !== '' && $request->tipo_evento !== 'todos') {
+                $query->where('tipo_evento', $request->tipo_evento);
+            }
+            
+            // Filtro por estado
+            if ($request->has('estado') && $request->estado !== '' && $request->estado !== 'todos') {
+                $query->where('estado', $request->estado);
+            }
+            
+            // Búsqueda por título o descripción
+            if ($request->has('buscar') && $request->buscar !== '') {
+                $buscar = $request->buscar;
+                $query->where(function($q) use ($buscar) {
+                    $q->where('titulo', 'ilike', "%{$buscar}%")
+                      ->orWhere('descripcion', 'ilike', "%{$buscar}%");
+                });
+            }
+            
+            $eventos = $query->orderBy('id', 'desc')->get();
 
             \Log::info("Eventos encontrados: " . $eventos->count());
+
+            // Enriquecer patrocinadores e invitados con información completa
+            $eventos->transform(function ($e) {
+                $e->patrocinadores = $this->enriquecerPatrocinadores($this->safeArray($e->patrocinadores));
+                $e->invitados = $this->enriquecerInvitados($this->safeArray($e->invitados));
+                $e->imagenes = $this->safeArray($e->imagenes);
+                return $e;
+            });
 
             return response()->json([
                 'success' => true,
@@ -60,20 +233,34 @@ class EventController extends Controller
     // ======================================================
     //  LISTAR EVENTOS PUBLICADOS PARA EXTERNOS
     // ======================================================
-    public function indexAll()
+    public function indexAll(Request $request)
     {
         try {
             \Log::info("Buscando eventos publicados para externos");
             
-            $eventos = Evento::where('estado', 'publicado')
-                ->orderBy('fecha_inicio', 'asc')
-                ->get();
+            $query = Evento::where('estado', 'publicado');
+            
+            // Filtro por tipo de evento
+            if ($request->has('tipo_evento') && $request->tipo_evento !== '' && $request->tipo_evento !== 'todos') {
+                $query->where('tipo_evento', $request->tipo_evento);
+            }
+            
+            // Búsqueda por título o descripción
+            if ($request->has('buscar') && $request->buscar !== '') {
+                $buscar = $request->buscar;
+                $query->where(function($q) use ($buscar) {
+                    $q->where('titulo', 'ilike', "%{$buscar}%")
+                      ->orWhere('descripcion', 'ilike', "%{$buscar}%");
+                });
+            }
+            
+            $eventos = $query->orderBy('fecha_inicio', 'asc')->get();
 
             \Log::info("Eventos publicados encontrados: " . $eventos->count());
 
             $eventos->transform(function ($e) {
-                $e->patrocinadores = $this->safeArray($e->patrocinadores);
-                $e->invitados = $this->safeArray($e->invitados);
+                $e->patrocinadores = $this->enriquecerPatrocinadores($this->safeArray($e->patrocinadores));
+                $e->invitados = $this->enriquecerInvitados($this->safeArray($e->invitados));
                 $e->imagenes = $this->safeArray($e->imagenes);
                 return $e;
             });
@@ -134,16 +321,6 @@ class EventController extends Controller
                 $data['auspiciadores'] = [];
             }
             
-            // Procesar imágenes (puede venir como array de archivos o JSON string)
-            if (!isset($data['imagenes']) || empty($data['imagenes'])) {
-                $data['imagenes'] = [];
-            } elseif (is_string($data['imagenes'])) {
-                $decoded = json_decode($data['imagenes'], true);
-                $data['imagenes'] = is_array($decoded) ? $decoded : [];
-            } elseif (!is_array($data['imagenes'])) {
-                $data['imagenes'] = [];
-            }
-            
             $validator = Validator::make($data, [
                 'ong_id' => 'required|exists:ongs,user_id',
                 'titulo' => 'required|string|max:255',
@@ -162,6 +339,7 @@ class EventController extends Controller
                 'patrocinadores' => 'nullable|array',
                 'invitados' => 'nullable|array',
                 'imagenes' => 'nullable|array',
+                'imagenes.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120', // Max 5MB por imagen
                 'auspiciadores' => 'nullable|array',
             ]);
 
@@ -173,6 +351,7 @@ class EventController extends Controller
                 ], 422);
             }
 
+            // Crear el evento primero para obtener el ID
             $evento = Evento::create([
                 "ong_id" => $data['ong_id'],
                 "titulo" => $data['titulo'],
@@ -190,9 +369,15 @@ class EventController extends Controller
                 "inscripcion_abierta" => $data['inscripcion_abierta'] ?? true,
                 "patrocinadores" => $this->safeArray($data['patrocinadores'] ?? []),
                 "invitados" => $this->safeArray($data['invitados'] ?? []),
-                "imagenes" => $this->safeArray($data['imagenes'] ?? []),
+                "imagenes" => [],
                 "auspiciadores" => $this->safeArray($data['auspiciadores'] ?? []),
             ]);
+
+            // Procesar imágenes después de crear el evento
+            $imagenes = $this->processImages($request, $evento->id);
+            if (!empty($imagenes)) {
+                $evento->update(['imagenes' => $imagenes]);
+            }
 
             return response()->json([
                 "success" => true,
@@ -225,8 +410,8 @@ class EventController extends Controller
                 ], 404);
             }
 
-            $evento->patrocinadores = $this->safeArray($evento->patrocinadores);
-            $evento->invitados = $this->safeArray($evento->invitados);
+            $evento->patrocinadores = $this->enriquecerPatrocinadores($this->safeArray($evento->patrocinadores));
+            $evento->invitados = $this->enriquecerInvitados($this->safeArray($evento->invitados));
             $evento->imagenes = $this->safeArray($evento->imagenes);
 
             return response()->json([
@@ -272,6 +457,7 @@ class EventController extends Controller
                 'patrocinadores' => 'nullable|array',
                 'invitados' => 'nullable|array',
                 'imagenes' => 'nullable|array',
+                'imagenes.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120', // Max 5MB por imagen
                 'auspiciadores' => 'nullable|array',
             ]);
 
@@ -281,6 +467,21 @@ class EventController extends Controller
                     'error' => $validator->errors()->first(),
                     'errors' => $validator->errors()
                 ], 422);
+            }
+
+            // Procesar imágenes si hay archivos nuevos
+            $imagenesActuales = $this->safeArray($evento->imagenes ?? []);
+            
+            // Si hay nuevas imágenes, procesarlas
+            if ($request->hasFile('imagenes')) {
+                $nuevasImagenes = $this->processImages($request, $evento->id);
+                $imagenesActuales = array_merge($imagenesActuales, $nuevasImagenes);
+            }
+            
+            // Si vienen imágenes como JSON (para mantener las existentes o actualizar)
+            if ($request->has('imagenes_json')) {
+                $imagenesJson = $this->safeArray($request->input('imagenes_json'));
+                $imagenesActuales = $imagenesJson; // Reemplazar con las imágenes del JSON
             }
 
             $evento->update([
@@ -299,7 +500,7 @@ class EventController extends Controller
                 "inscripcion_abierta" => $request->has('inscripcion_abierta') ? $request->inscripcion_abierta : $evento->inscripcion_abierta,
                 "patrocinadores" => $request->has('patrocinadores') ? $this->safeArray($request->patrocinadores) : $evento->patrocinadores,
                 "invitados" => $request->has('invitados') ? $this->safeArray($request->invitados) : $evento->invitados,
-                "imagenes" => $request->has('imagenes') ? $this->safeArray($request->imagenes) : $evento->imagenes,
+                "imagenes" => array_unique($imagenesActuales), // Eliminar duplicados
                 "auspiciadores" => $request->has('auspiciadores') ? $this->safeArray($request->auspiciadores) : $evento->auspiciadores,
             ]);
 

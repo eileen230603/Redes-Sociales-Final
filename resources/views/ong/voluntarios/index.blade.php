@@ -119,25 +119,39 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         document.getElementById('totalVoluntarios').textContent = `${vols.length} voluntario${vols.length !== 1 ? 's' : ''}`;
 
-        container.innerHTML = vols.map(vol => `
+        container.innerHTML = vols.map(vol => {
+            const inicial = (vol.nombre || 'V').charAt(0).toUpperCase();
+            const fotoPerfil = vol.foto_perfil || null;
+            
+            return `
             <div class="col-md-6 col-lg-4 mb-3">
                 <div class="card shadow-sm h-100 border-left-primary">
                     <div class="card-body">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-gradient-primary text-white me-3" style="
-                                width: 55px;
-                                height: 55px;
-                                border-radius: 50%;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                font-size: 22px;
-                                font-weight: bold;
-                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-                            ">
-                                ${(vol.nombre || 'V').charAt(0).toUpperCase()}
-                            </div>
+                            ${fotoPerfil ? `
+                                <img src="${fotoPerfil}" alt="${vol.nombre || 'Voluntario'}" class="rounded-circle me-3" style="
+                                    width: 55px;
+                                    height: 55px;
+                                    object-fit: cover;
+                                    border: 3px solid #667eea;
+                                    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                                ">
+                            ` : `
+                                <div class="avatar-circle bg-gradient-primary text-white me-3" style="
+                                    width: 55px;
+                                    height: 55px;
+                                    border-radius: 50%;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    font-size: 22px;
+                                    font-weight: bold;
+                                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                                ">
+                                    ${inicial}
+                                </div>
+                            `}
                             <div style="flex: 1; min-width: 0;">
                                 <h5 class="mb-0 text-truncate" title="${vol.nombre || 'Voluntario'}">${vol.nombre || 'Voluntario'}</h5>
                                 <small class="text-muted d-block text-truncate" title="${vol.email || ''}">

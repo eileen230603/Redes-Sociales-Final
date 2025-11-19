@@ -34,6 +34,9 @@ return new class extends Migration {
             $table->integer('capacidad_maxima')->nullable();
             $table->boolean('es_publico')->default(false);
             $table->string('estado', 20)->default('planificacion');
+            
+            // Campo para almacenar imágenes (JSON array de rutas)
+            $table->json('imagenes')->nullable();
         });
     }
 

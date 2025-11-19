@@ -32,6 +32,11 @@
             'url'  => '/empresa/reportes',
             'icon' => 'fas fa-chart-bar',
         ],
+        [
+            'text' => 'Mi Perfil',
+            'url'  => '/perfil/empresa',
+            'icon' => 'fas fa-user-circle',
+        ],
         ['header' => 'OTRAS OPCIONES'],
         [
             'text' => 'Ir a página pública',

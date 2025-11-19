@@ -86,6 +86,14 @@
             </a>
         </li>
 
+        {{-- 📊 Dashboard --}}
+        <li class="nav-item">
+            <a href="{{ route('ong.dashboard.index') }}" class="nav-link {{ request()->is('ong/dashboard*') ? 'active' : '' }}">
+                <i class="nav-icon fas fa-tachometer-alt"></i>
+                <p>Dashboard</p>
+            </a>
+        </li>
+
         {{-- 📊 Reportes --}}
         <li class="nav-item">
             <a href="{{ route('ong.reportes.index') }}" class="nav-link {{ request()->is('ong/reportes*') ? 'active' : '' }}">
@@ -94,29 +102,20 @@
             </a>
         </li>
 
-        {{-- ⚙️ Configuraciones --}}
-        <li class="nav-item has-treeview">
-            <a href="#" class="nav-link">
-                <i class="nav-icon fas fa-cogs"></i>
-                <p>
-                    Configuraciones
-                    <i class="right fas fa-angle-left"></i>
-                </p>
+        {{-- 🔔 Notificaciones --}}
+        <li class="nav-item">
+            <a href="{{ route('ong.notificaciones.index') }}" class="nav-link {{ request()->is('ong/notificaciones*') ? 'active' : '' }}">
+                <i class="nav-icon fas fa-bell"></i>
+                <p>Notificaciones <span id="badgeNotificaciones" class="badge badge-danger badge-sm ml-1" style="display: none;">0</span></p>
             </a>
-            <ul class="nav nav-treeview">
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fas fa-user-cog nav-icon"></i>
-                        <p>Perfil</p>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fas fa-sliders-h nav-icon"></i>
-                        <p>Parámetros</p>
-                    </a>
-                </li>
-            </ul>
+        </li>
+
+        {{-- 👤 Perfil --}}
+        <li class="nav-item">
+            <a href="{{ route('perfil.ong') }}" class="nav-link {{ request()->is('perfil/ong') ? 'active' : '' }}">
+                <i class="nav-icon fas fa-user-circle"></i>
+                <p>Mi Perfil</p>
+            </a>
         </li>
 
         {{-- 🌐 OTRAS OPCIONES --}}
@@ -174,5 +173,30 @@ async function cerrarSesion(event) {
     localStorage.clear();
     window.location.href = '/login';
 }
+
+// Cargar contador de notificaciones no leídas
+document.addEventListener('DOMContentLoaded', async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/notificaciones`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            }
+        });
+        const data = await res.json();
+        if (data.success && data.no_leidas > 0) {
+            const badge = document.getElementById('badgeNotificaciones');
+            if (badge) {
+                badge.textContent = data.no_leidas;
+                badge.style.display = 'inline-block';
+            }
+        }
+    } catch (error) {
+        console.warn('Error cargando notificaciones:', error);
+    }
+});
 </script>
 @stop

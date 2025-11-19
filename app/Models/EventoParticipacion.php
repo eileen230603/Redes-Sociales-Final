@@ -11,6 +11,7 @@ class EventoParticipacion extends Model
     protected $fillable = [
         'evento_id',
         'externo_id',
+        'estado',
         'asistio',
         'puntos',
     ];

@@ -46,4 +46,23 @@ class Evento extends Model
             'id_usuario'     // PK de usuarios
         );
     }
+
+    // Reacciones (favoritos)
+    public function reacciones()
+    {
+        return $this->hasMany(EventoReaccion::class, 'evento_id');
+    }
+
+    // Usuarios que reaccionaron
+    public function usuariosQueReaccionaron()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'evento_reacciones',
+            'evento_id',
+            'externo_id',
+            'id',
+            'id_usuario'
+        );
+    }
 }

@@ -23,9 +23,19 @@
             'icon' => 'fas fa-calendar-alt',
         ],
         [
+            'text' => 'Mis Participaciones',
+            'url'  => '/externo/mis-participaciones',
+            'icon' => 'fas fa-calendar-check',
+        ],
+        [
             'text' => 'Reportes',
             'url'  => '/externo/reportes',
             'icon' => 'fas fa-chart-bar',
+        ],
+        [
+            'text' => 'Mi Perfil',
+            'url'  => '/perfil/externo',
+            'icon' => 'fas fa-user-circle',
         ],
         ['header' => 'OTRAS OPCIONES'],
         [

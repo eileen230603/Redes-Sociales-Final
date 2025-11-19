@@ -76,6 +76,25 @@
                     <input type="text" id="direccion" class="form-control">
                 </div>
 
+                <!-- IMÁGENES -->
+                <hr class="mt-4 mb-3">
+                <h5 class="mb-3"><i class="fas fa-images"></i> Imágenes promocionales</h5>
+                
+                <!-- Imágenes existentes -->
+                <div id="imagenesExistentes" class="mb-3">
+                    <p class="text-muted">Cargando imágenes...</p>
+                </div>
+
+                <!-- Subir nuevas imágenes -->
+                <div class="form-group mb-3">
+                    <label>Agregar nuevas imágenes</label>
+                    <input type="file" id="nuevasImagenes" multiple accept="image/*" class="form-control-file">
+                    <small class="text-muted">Puedes seleccionar múltiples imágenes</small>
+                </div>
+
+                <!-- Preview de nuevas imágenes -->
+                <div id="previewNuevasImagenes" class="d-flex flex-wrap gap-2 mb-3"></div>
+
                 <button type="submit" class="btn btn-primary mt-3">Guardar cambios</button>
 
             </form>
@@ -84,6 +103,52 @@
     </div>
 
 </div>
+@stop
+
+@section('css')
+<style>
+    #imagenesExistentes .imagen-item {
+        position: relative;
+        display: inline-block;
+        margin: 8px;
+    }
+    #imagenesExistentes .imagen-item img {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 2px solid #ddd;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    #imagenesExistentes .imagen-item img:hover {
+        transform: scale(1.05);
+    }
+    #imagenesExistentes .imagen-item .btn-eliminar {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: rgba(220, 53, 69, 0.9);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+    }
+    #previewNuevasImagenes img {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 2px solid #28a745;
+        margin: 8px;
+    }
+</style>
 @stop
 
 @section('js')

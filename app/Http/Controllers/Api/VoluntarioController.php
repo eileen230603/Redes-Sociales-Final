@@ -54,12 +54,13 @@ class VoluntarioController extends Controller
                     'id' => $participacion->id,
                     'user_id' => $user->id_usuario,
                     'nombre' => $nombre,
-                    'email' => $user->correo_electronico,
+                    'email' => $externo ? ($externo->email ?? $user->correo_electronico) : $user->correo_electronico,
                     'evento_id' => $participacion->evento_id,
                     'evento_titulo' => $participacion->evento->titulo ?? 'N/A',
                     'asistio' => (bool) $participacion->asistio,
                     'puntos' => (int) $participacion->puntos,
                     'fecha_inscripcion' => $participacion->created_at ? $participacion->created_at->format('Y-m-d H:i:s') : null,
+                    'foto_perfil' => $externo ? ($externo->foto_perfil_url ?? null) : ($user->foto_perfil_url ?? null)
                 ];
             })->filter(); // Eliminar nulls
 

@@ -10,6 +10,11 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // Ejecutar seeder de parametrizaciones primero
+        $this->call([
+            ParametrizacionesSeeder::class,
+        ]);
+
         // Usuario ONG demo
         $id = DB::table('usuarios')->insertGetId([
             'nombre_usuario'    => 'ong_demo',
