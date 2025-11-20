@@ -416,12 +416,15 @@ class EventController extends Controller
             // Preparar datos para validación
             $requestData = $request->all();
             
-            // Convertir strings JSON vacíos a arrays vacíos para patrocinadores e invitados
+            // Convertir strings JSON vacíos a arrays vacíos para patrocinadores, invitados y auspiciadores
             if (isset($requestData['patrocinadores']) && is_string($requestData['patrocinadores']) && $requestData['patrocinadores'] === '[]') {
                 $requestData['patrocinadores'] = [];
             }
             if (isset($requestData['invitados']) && is_string($requestData['invitados']) && $requestData['invitados'] === '[]') {
                 $requestData['invitados'] = [];
+            }
+            if (isset($requestData['auspiciadores']) && is_string($requestData['auspiciadores']) && $requestData['auspiciadores'] === '[]') {
+                $requestData['auspiciadores'] = [];
             }
             
             $validator = Validator::make($requestData, [
