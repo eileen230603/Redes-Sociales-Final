@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Evento;
 use App\Models\EventoParticipacion;
 use App\Models\IntegranteExterno;
+use App\Models\Notificacion;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -43,6 +44,9 @@ class EventoParticipacionController extends Controller
             "asistio" => false,
             "puntos" => 0
         ]);
+
+        // Crear notificación para la ONG
+        $this->crearNotificacionParticipacion($evento, $externoId);
 
         return response()->json(["success" => true, "message" => "Inscripción exitosa", "data" => $data]);
     }
@@ -228,6 +232,36 @@ class EventoParticipacionController extends Controller
                 "success" => false,
                 "error" => "Error al rechazar participación: " . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Crear notificación para la ONG cuando alguien se inscribe
+     */
+    private function crearNotificacionParticipacion(Evento $evento, $externoId)
+    {
+        try {
+            $externo = User::find($externoId);
+            if (!$externo) return;
+
+            $integranteExterno = IntegranteExterno::where('user_id', $externoId)->first();
+            $nombreUsuario = $integranteExterno 
+                ? trim($integranteExterno->nombres . ' ' . ($integranteExterno->apellidos ?? ''))
+                : $externo->nombre_usuario;
+
+            Notificacion::create([
+                'ong_id' => $evento->ong_id,
+                'evento_id' => $evento->id,
+                'externo_id' => $externoId,
+                'tipo' => 'participacion',
+                'titulo' => 'Nueva inscripción en tu evento',
+                'mensaje' => "{$nombreUsuario} se inscribió al evento \"{$evento->titulo}\"",
+                'leida' => false
+            ]);
+
+        } catch (\Throwable $e) {
+            // Log error pero no fallar la inscripción
+            \Log::error('Error creando notificación de participación: ' . $e->getMessage());
         }
     }
 }

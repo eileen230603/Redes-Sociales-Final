@@ -7,6 +7,8 @@ use App\Models\Evento;
 use App\Models\EventoParticipacion;
 use App\Models\EventoReaccion;
 use App\Models\IntegranteExterno;
+use App\Models\MegaEvento;
+use App\Models\Ong;
 use Illuminate\Http\Request;
 
 class DashboardOngController extends Controller
@@ -204,6 +206,113 @@ class DashboardOngController extends Controller
             return response()->json([
                 'success' => false,
                 'error' => 'Error al obtener reacciones: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener estadísticas generales para el home de la ONG
+     */
+    public function estadisticasGenerales(Request $request)
+    {
+        try {
+            $ongId = $request->user()->id_usuario;
+
+            // Obtener información de la ONG
+            $ong = Ong::where('user_id', $ongId)->first();
+            
+            // Obtener IDs de eventos de la ONG
+            $eventosIds = Evento::where('ong_id', $ongId)->pluck('id');
+            
+            // Estadísticas de eventos
+            $totalEventos = Evento::where('ong_id', $ongId)->count();
+            $eventosActivos = Evento::where('ong_id', $ongId)
+                ->where('fecha_inicio', '<=', now())
+                ->where('fecha_fin', '>=', now())
+                ->count();
+            $eventosProximos = Evento::where('ong_id', $ongId)
+                ->where('fecha_inicio', '>', now())
+                ->count();
+            $eventosFinalizados = Evento::where('ong_id', $ongId)
+                ->where(function($query) {
+                    $query->where('fecha_fin', '<', now())
+                          ->orWhere('estado', 'finalizado');
+                })
+                ->count();
+
+            // Estadísticas de mega eventos
+            $totalMegaEventos = MegaEvento::where('ong_organizadora_principal', $ongId)->count();
+            $megaEventosActivos = MegaEvento::where('ong_organizadora_principal', $ongId)
+                ->where('fecha_inicio', '<=', now())
+                ->where('fecha_fin', '>=', now())
+                ->count();
+
+            // Estadísticas de participantes/voluntarios
+            $totalVoluntarios = EventoParticipacion::whereIn('evento_id', $eventosIds)
+                ->distinct('externo_id')
+                ->count('externo_id');
+            $totalParticipantes = EventoParticipacion::whereIn('evento_id', $eventosIds)->count();
+            $participantesAprobados = EventoParticipacion::whereIn('evento_id', $eventosIds)
+                ->where('estado', 'aprobada')
+                ->count();
+
+            // Estadísticas de reacciones
+            $totalReacciones = EventoReaccion::whereIn('evento_id', $eventosIds)->count();
+            $eventosConReacciones = EventoReaccion::whereIn('evento_id', $eventosIds)
+                ->distinct('evento_id')
+                ->count('evento_id');
+
+            // Distribución de eventos por tipo
+            $eventosPorTipo = Evento::where('ong_id', $ongId)
+                ->selectRaw('tipo_evento, COUNT(*) as total')
+                ->groupBy('tipo_evento')
+                ->get()
+                ->pluck('total', 'tipo_evento');
+
+            // Distribución de participantes por estado
+            $participantesPorEstado = EventoParticipacion::whereIn('evento_id', $eventosIds)
+                ->selectRaw('estado, COUNT(*) as total')
+                ->groupBy('estado')
+                ->get()
+                ->pluck('total', 'estado');
+
+            return response()->json([
+                'success' => true,
+                'ong' => [
+                    'nombre' => $ong ? $ong->nombre_ong : 'ONG',
+                    'descripcion' => $ong ? $ong->descripcion : null,
+                ],
+                'estadisticas' => [
+                    'eventos' => [
+                        'total' => $totalEventos,
+                        'activos' => $eventosActivos,
+                        'proximos' => $eventosProximos,
+                        'finalizados' => $eventosFinalizados,
+                    ],
+                    'mega_eventos' => [
+                        'total' => $totalMegaEventos,
+                        'activos' => $megaEventosActivos,
+                    ],
+                    'voluntarios' => [
+                        'total_unicos' => $totalVoluntarios,
+                        'total_inscripciones' => $totalParticipantes,
+                        'aprobados' => $participantesAprobados,
+                    ],
+                    'reacciones' => [
+                        'total' => $totalReacciones,
+                        'eventos_con_reacciones' => $eventosConReacciones,
+                    ],
+                ],
+                'distribuciones' => [
+                    'eventos_por_tipo' => $eventosPorTipo,
+                    'participantes_por_estado' => $participantesPorEstado,
+                ]
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al obtener estadísticas: ' . $e->getMessage()
             ], 500);
         }
     }

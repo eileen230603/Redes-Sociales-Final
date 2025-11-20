@@ -168,6 +168,16 @@ return [
         [
             'text' => 'Eventos',
             'url'  => '/eventos',
+            'submenu' => [
+                [
+                    'text' => 'Lista de Eventos',
+                    'url'  => '/ong/eventos',
+                ],
+                [
+                    'text' => 'Dashboard de Eventos',
+                    'url'  => '/ong/eventos-dashboard',
+                ],
+            ],
             'icon' => 'fas fa-calendar-alt',
         ],
         [
@@ -194,6 +204,13 @@ return [
             'text' => 'Mi Perfil',
             'url'  => '/perfil/ong',
             'icon' => 'fas fa-user-circle',
+        ],
+        [
+            'text' => 'Notificaciones',
+            'url'  => '/ong/notificaciones',
+            'icon' => 'fas fa-bell',
+            'label' => 0,
+            'label_color' => 'danger',
         ],
         [
             'text' => 'Configuraciones',

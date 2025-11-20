@@ -53,6 +53,31 @@ class NotificacionController extends Controller
     }
 
     /**
+     * Obtener solo el contador de notificaciones no leídas (para actualización en tiempo real)
+     */
+    public function contador(Request $request)
+    {
+        try {
+            $ongId = $request->user()->id_usuario;
+
+            $noLeidas = Notificacion::where('ong_id', $ongId)
+                ->where('leida', false)
+                ->count();
+
+            return response()->json([
+                'success' => true,
+                'no_leidas' => $noLeidas
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al obtener contador: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Marcar notificación como leída
      */
     public function marcarLeida(Request $request, $id)

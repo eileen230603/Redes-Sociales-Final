@@ -41,22 +41,45 @@
     }
 
     .notificacion-item.no-leida {
-        background: #f8f9fa;
+        background: #fff5f5;
         border-left-color: #dc3545;
         font-weight: 600;
+        border-left-width: 5px;
     }
 
     .notificacion-item.leida {
-        background: white;
-        opacity: 0.8;
+        background: #f8f9fa;
+        border-left-color: #6c757d;
+        opacity: 0.9;
+        border-left-width: 4px;
     }
 
     .notificacion-tipo-reaccion {
         border-left-color: #dc3545;
     }
 
+    .notificacion-tipo-reaccion.no-leida {
+        border-left-color: #dc3545;
+        background: #fff5f5;
+    }
+
+    .notificacion-tipo-reaccion.leida {
+        border-left-color: #adb5bd;
+        background: #f8f9fa;
+    }
+
     .notificacion-tipo-participacion {
         border-left-color: #28a745;
+    }
+
+    .notificacion-tipo-participacion.no-leida {
+        border-left-color: #28a745;
+        background: #f0fff4;
+    }
+
+    .notificacion-tipo-participacion.leida {
+        border-left-color: #adb5bd;
+        background: #f8f9fa;
     }
 </style>
 @endsection
@@ -137,11 +160,14 @@ async function cargarNotificaciones() {
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="flex-grow-1">
                                 <div class="d-flex align-items-center mb-2">
-                                    <i class="fas ${iconoTipo} mr-2" style="font-size: 1.2rem;"></i>
-                                    <h5 class="mb-0" style="font-size: 1rem; font-weight: ${notif.leida ? '400' : '600'};">
+                                    <div class="mr-2" style="position: relative;">
+                                        <i class="fas ${iconoTipo}" style="font-size: 1.2rem;"></i>
+                                        ${!notif.leida ? '<span class="badge badge-danger position-absolute" style="top: -5px; right: -8px; font-size: 0.6rem; padding: 2px 4px; border-radius: 50%; min-width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;">!</span>' : ''}
+                                    </div>
+                                    <h5 class="mb-0" style="font-size: 1rem; font-weight: ${notif.leida ? '400' : '600'}; color: ${notif.leida ? '#6c757d' : '#212529'};">
                                         ${notif.titulo}
                                     </h5>
-                                    ${!notif.leida ? '<span class="badge badge-danger ml-2">Nueva</span>' : ''}
+                                    ${!notif.leida ? '<span class="badge badge-danger ml-2" style="font-weight: bold;"><i class="fas fa-circle" style="font-size: 0.4rem; margin-right: 3px;"></i>Nueva</span>' : '<span class="badge badge-secondary ml-2" style="opacity: 0.7;"><i class="fas fa-check" style="font-size: 0.7rem; margin-right: 3px;"></i>Leída</span>'}
                                 </div>
                                 <p class="mb-2" style="color: #6c757d; font-size: 0.9rem;">
                                     ${notif.mensaje}
@@ -198,6 +224,10 @@ async function marcarLeida(id) {
 
         const data = await res.json();
         if (data.success) {
+            // Actualizar contador global después de marcar como leída
+            if (typeof actualizarContadorNotificaciones === 'function') {
+                actualizarContadorNotificaciones();
+            }
             await cargarNotificaciones();
         } else {
             if (typeof Swal !== 'undefined') {
@@ -242,6 +272,10 @@ async function marcarTodasLeidas() {
 
         const data = await res.json();
         if (data.success) {
+            // Actualizar contador global después de marcar todas como leídas
+            if (typeof actualizarContadorNotificaciones === 'function') {
+                actualizarContadorNotificaciones();
+            }
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
                     icon: 'success',

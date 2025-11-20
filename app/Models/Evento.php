@@ -15,6 +15,7 @@ class Evento extends Model
         'fecha_inicio'             => 'datetime',
         'fecha_fin'                => 'datetime',
         'fecha_limite_inscripcion' => 'datetime',
+        'fecha_finalizacion'       => 'datetime',
         'imagenes'                 => 'array',
         'patrocinadores'           => 'array',
         'auspiciadores'            => 'array',
@@ -64,5 +65,135 @@ class Evento extends Model
             'id',
             'id_usuario'
         );
+    }
+
+    /**
+     * Calcular el estado dinámico del evento basado en fechas
+     * Retorna: 'proximo', 'activo', 'finalizado' o el estado guardado si es 'borrador' o 'cancelado'
+     */
+    public function getEstadoDinamicoAttribute()
+    {
+        // Si el estado es borrador o cancelado, mantenerlo
+        if (in_array($this->estado, ['borrador', 'cancelado'])) {
+            return $this->estado;
+        }
+
+        // Si ya tiene fecha_finalizacion, está finalizado
+        if ($this->fecha_finalizacion) {
+            return 'finalizado';
+        }
+
+        $ahora = now();
+        
+        // Si no tiene fecha_fin, usar el estado guardado
+        if (!$this->fecha_fin) {
+            return $this->estado;
+        }
+
+        $fechaInicio = $this->fecha_inicio ? \Carbon\Carbon::parse($this->fecha_inicio) : null;
+        $fechaFin = \Carbon\Carbon::parse($this->fecha_fin);
+
+        // Si la fecha_fin ya pasó, está finalizado
+        if ($fechaFin->isPast()) {
+            return 'finalizado';
+        }
+
+        // Si la fecha_inicio aún no ha llegado, está próximo
+        if ($fechaInicio && $fechaInicio->isFuture()) {
+            return 'proximo';
+        }
+
+        // Si está entre fecha_inicio y fecha_fin, está activo
+        if ($fechaInicio && $fechaInicio->isPast() && $fechaFin->isFuture()) {
+            return 'activo';
+        }
+
+        // Por defecto, usar el estado guardado
+        return $this->estado;
+    }
+
+    /**
+     * Verificar si el evento está finalizado (basado en fecha_fin)
+     */
+    public function estaFinalizado()
+    {
+        if (!$this->fecha_fin) {
+            return false;
+        }
+        
+        return \Carbon\Carbon::parse($this->fecha_fin)->isPast();
+    }
+
+    /**
+     * Verificar si el evento está próximo (fecha_inicio en el futuro)
+     */
+    public function estaProximo()
+    {
+        if (!$this->fecha_inicio) {
+            return false;
+        }
+        
+        return \Carbon\Carbon::parse($this->fecha_inicio)->isFuture();
+    }
+
+    /**
+     * Verificar si el evento está activo (entre fecha_inicio y fecha_fin)
+     */
+    public function estaActivo()
+    {
+        if (!$this->fecha_inicio || !$this->fecha_fin) {
+            return false;
+        }
+        
+        $inicio = \Carbon\Carbon::parse($this->fecha_inicio);
+        $fin = \Carbon\Carbon::parse($this->fecha_fin);
+        $ahora = now();
+        
+        return $inicio->isPast() && $fin->isFuture();
+    }
+
+    /**
+     * Accessor para obtener URLs completas de las imágenes
+     * Se ejecuta después del cast 'array', así que $value ya es un array
+     */
+    public function getImagenesAttribute($value)
+    {
+        // Si $value es null o no es array, retornar array vacío
+        if (!is_array($value)) {
+            // Si es string, intentar decodificar JSON
+            if (is_string($value)) {
+                $decoded = json_decode($value, true);
+                $value = is_array($decoded) ? $decoded : [];
+            } else {
+                $value = [];
+            }
+        }
+
+        // Generar URLs completas para cada imagen
+        return array_map(function($imagen) {
+            if (empty($imagen) || !is_string($imagen)) {
+                return null;
+            }
+
+            // Si ya es una URL completa, retornarla
+            if (strpos($imagen, 'http://') === 0 || strpos($imagen, 'https://') === 0) {
+                return $imagen;
+            }
+
+            // Si empieza con /storage/, agregar el dominio
+            if (strpos($imagen, '/storage/') === 0) {
+                return url($imagen);
+            }
+
+            // Si empieza con storage/, agregar /storage/
+            if (strpos($imagen, 'storage/') === 0) {
+                return url('/storage/' . $imagen);
+            }
+
+            // Por defecto, asumir que es relativa a storage
+            return url('/storage/' . ltrim($imagen, '/'));
+        }, array_filter($value, function($img) {
+            return !empty($img) && is_string($img);
+        }));
     }
 }

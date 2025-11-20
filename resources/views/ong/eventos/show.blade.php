@@ -90,6 +90,15 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="col-md-6 mb-3" id="fechaFinalizacionContainer" style="display: none;">
+                                <div class="d-flex align-items-start">
+                                    <i class="fas fa-flag-checkered text-info mr-3 mt-1" style="font-size: 1.2rem;"></i>
+                                    <div>
+                                        <h6 class="mb-1" style="color: #495057; font-weight: 600;">Fecha de Finalización</h6>
+                                        <p id="fecha_finalizacion" class="mb-0 text-muted"></p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
