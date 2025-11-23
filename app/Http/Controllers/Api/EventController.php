@@ -142,15 +142,42 @@ class EventController extends Controller
             
             foreach ($files as $file) {
                 if ($file->isValid()) {
-                    // Generar nombre único para la imagen
-                    $filename = 'eventos/' . ($eventoId ?? 'temp') . '/' . Str::uuid() . '.' . $file->getClientOriginalExtension();
-                    
-                    // Guardar en storage/public
-                    $path = $file->storeAs('public', $filename);
-                    
-                    // Obtener la URL pública
-                    $url = Storage::url($filename);
-                    $imagenes[] = $url;
+                    try {
+                        // Generar nombre único para la imagen
+                        $filename = 'eventos/' . ($eventoId ?? 'temp') . '/' . Str::uuid() . '.' . $file->getClientOriginalExtension();
+                        
+                        // Guardar usando el disco 'public' explícitamente
+                        $path = Storage::disk('public')->putFileAs(
+                            'eventos/' . ($eventoId ?? 'temp'),
+                            $file,
+                            Str::uuid() . '.' . $file->getClientOriginalExtension()
+                        );
+                        
+                        // Verificar que el archivo se guardó
+                        $fullPath = storage_path('app/public/' . $path);
+                        if (!file_exists($fullPath)) {
+                            \Log::error("Error: Archivo no se guardó en $fullPath");
+                            continue;
+                        }
+                        
+                        // Copiar también a public/storage/ para que el servidor de PHP pueda servirlo directamente
+                        $publicPath = public_path('storage/' . $path);
+                        $publicDir = dirname($publicPath);
+                        if (!file_exists($publicDir)) {
+                            mkdir($publicDir, 0755, true);
+                        }
+                        if (file_exists($fullPath)) {
+                            copy($fullPath, $publicPath);
+                        }
+                        
+                        // Obtener la URL pública (ruta relativa)
+                        $url = Storage::disk('public')->url($path);
+                        $imagenes[] = $url;
+                        
+                        \Log::info("Imagen guardada: $url -> $fullPath (también copiada a $publicPath)");
+                    } catch (\Exception $e) {
+                        \Log::error("Error al guardar imagen: " . $e->getMessage());
+                    }
                 }
             }
         }

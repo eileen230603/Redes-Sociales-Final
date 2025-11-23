@@ -65,4 +65,48 @@ class Evento extends Model
             'id_usuario'
         );
     }
+
+    /**
+     * Accessor para convertir rutas relativas de imágenes a URLs completas
+     */
+    public function getImagenesAttribute($value)
+    {
+        // Si $value es null o no es array, retornar array vacío
+        if (!is_array($value)) {
+            // Si es string, intentar decodificar JSON
+            if (is_string($value)) {
+                $decoded = json_decode($value, true);
+                $value = is_array($decoded) ? $decoded : [];
+            } else {
+                $value = [];
+            }
+        }
+
+        // Generar URLs completas para cada imagen
+        return array_map(function($imagen) {
+            if (empty($imagen) || !is_string($imagen)) {
+                return null;
+            }
+
+            // Si ya es una URL completa, retornarla
+            if (strpos($imagen, 'http://') === 0 || strpos($imagen, 'https://') === 0) {
+                return $imagen;
+            }
+
+            // Si empieza con /storage/, agregar el dominio (para Laravel web)
+            if (strpos($imagen, '/storage/') === 0) {
+                return url($imagen);
+            }
+
+            // Si empieza con storage/, agregar /storage/
+            if (strpos($imagen, 'storage/') === 0) {
+                return url('/storage/' . $imagen);
+            }
+
+            // Por defecto, asumir que es relativa a storage
+            return url('/storage/' . ltrim($imagen, '/'));
+        }, array_filter($value, function($img) {
+            return !empty($img) && is_string($img);
+        }));
+    }
 }
