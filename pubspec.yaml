@@ -43,6 +43,20 @@ dependencies:
   
   # Date formatting
   intl: ^0.19.0
+  
+  # Image picker
+  image_picker: ^1.0.7
+  
+  # File picker (para Windows/Desktop)
+  file_picker: ^8.0.0+1
+  
+  # Cached network images
+  cached_network_image: ^3.3.1
+  
+  # Maps - usando flutter_map (similar a Leaflet, funciona en web)
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+  geolocator: ^12.0.0
 
 dev_dependencies:
   flutter_test:

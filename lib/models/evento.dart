@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class Evento {
   final int id;
   final int? ongId;
@@ -45,6 +47,53 @@ class Evento {
     this.updatedAt,
   });
 
+  // Helper para parsear arrays que pueden venir como JSON string o array
+  static List<dynamic>? _parseJsonArray(dynamic value) {
+    if (value == null) return null;
+    if (value is List) {
+      // Filtrar valores nulos y arrays vacíos
+      final filtered =
+          value
+              .where(
+                (item) =>
+                    item != null &&
+                    item.toString().trim().isNotEmpty &&
+                    item.toString() != '[]' &&
+                    item.toString() != 'null',
+              )
+              .toList();
+      return filtered.isEmpty ? null : filtered;
+    }
+    if (value is String) {
+      // Si es string vacío o representa array vacío, retornar null
+      final trimmed = value.trim();
+      if (trimmed.isEmpty || trimmed == '[]' || trimmed == 'null') return null;
+
+      try {
+        final decoded = jsonDecode(value);
+        if (decoded is List) {
+          final filtered =
+              decoded
+                  .where(
+                    (item) =>
+                        item != null &&
+                        item.toString().trim().isNotEmpty &&
+                        item.toString() != '[]' &&
+                        item.toString() != 'null',
+                  )
+                  .toList();
+          return filtered.isEmpty ? null : filtered;
+        }
+        // Si no es array, tratar como array con un solo string válido
+        return [value];
+      } catch (e) {
+        // Si no es JSON válido, tratar como array con un solo string
+        return [value];
+      }
+    }
+    return [value];
+  }
+
   factory Evento.fromJson(Map<String, dynamic> json) {
     return Evento(
       id: json['id'] as int,
@@ -65,15 +114,25 @@ class Evento {
       estado: json['estado'] as String,
       ciudad: json['ciudad'] as String?,
       direccion: json['direccion'] as String?,
-      lat: json['lat'] != null ? (json['lat'] as num).toDouble() : null,
-      lng: json['lng'] != null ? (json['lng'] as num).toDouble() : null,
+      lat:
+          json['lat'] != null
+              ? (json['lat'] is String
+                  ? double.tryParse(json['lat'] as String)
+                  : (json['lat'] as num).toDouble())
+              : null,
+      lng:
+          json['lng'] != null
+              ? (json['lng'] is String
+                  ? double.tryParse(json['lng'] as String)
+                  : (json['lng'] as num).toDouble())
+              : null,
       inscripcionAbierta:
           json['inscripcion_abierta'] == 1 ||
           json['inscripcion_abierta'] == true,
-      patrocinadores: json['patrocinadores'] as List<dynamic>?,
-      invitados: json['invitados'] as List<dynamic>?,
-      imagenes: json['imagenes'] as List<dynamic>?,
-      auspiciadores: json['auspiciadores'] as List<dynamic>?,
+      patrocinadores: _parseJsonArray(json['patrocinadores']),
+      invitados: _parseJsonArray(json['invitados']),
+      imagenes: _parseJsonArray(json['imagenes']),
+      auspiciadores: _parseJsonArray(json['auspiciadores']),
       createdAt:
           json['created_at'] != null
               ? DateTime.parse(json['created_at'] as String)

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/api_service.dart';
 import '../../services/storage_service.dart';
 import '../../widgets/app_drawer.dart';
@@ -164,40 +165,29 @@ class _EventosPatrocinadosScreenState extends State<EventosPatrocinadosScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (imagenUrl != null)
-              Image.network(
-                imagenUrl,
+              CachedNetworkImage(
+                imageUrl: imagenUrl,
                 height: 200,
                 width: double.infinity,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    height: 200,
-                    width: double.infinity,
-                    color: Colors.grey[200],
-                    child: Icon(
-                      Icons.image_not_supported,
-                      size: 64,
-                      color: Colors.grey[400],
+                placeholder:
+                    (context, url) => Container(
+                      height: 200,
+                      width: double.infinity,
+                      color: Colors.grey[200],
+                      child: const Center(child: CircularProgressIndicator()),
                     ),
-                  );
-                },
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Container(
-                    height: 200,
-                    width: double.infinity,
-                    color: Colors.grey[200],
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        value:
-                            loadingProgress.expectedTotalBytes != null
-                                ? loadingProgress.cumulativeBytesLoaded /
-                                    loadingProgress.expectedTotalBytes!
-                                : null,
+                errorWidget:
+                    (context, url, error) => Container(
+                      height: 200,
+                      width: double.infinity,
+                      color: Colors.grey[200],
+                      child: Icon(
+                        Icons.image_not_supported,
+                        size: 64,
+                        color: Colors.grey[400],
                       ),
                     ),
-                  );
-                },
               )
             else
               Container(
@@ -331,10 +321,14 @@ class _EventosPatrocinadosScreenState extends State<EventosPatrocinadosScreen> {
     final apiBaseUrl = ApiConfig.baseUrl;
     final baseUrl = apiBaseUrl.replaceAll('/api', '');
     if (imgPath.startsWith('/')) {
+      // Si es /storage/, convertirla a /api/storage para CORS
+      if (imgPath.startsWith('/storage')) {
+        return '$baseUrl/api$imgPath';
+      }
       return '$baseUrl$imgPath';
     }
     if (imgPath.startsWith('storage/')) {
-      return '$baseUrl/$imgPath';
+      return '$baseUrl/api/$imgPath';
     }
     return '$baseUrl/$imgPath';
   }

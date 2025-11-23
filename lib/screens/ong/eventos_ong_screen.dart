@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/api_service.dart';
 import '../../services/storage_service.dart';
 import '../../widgets/app_drawer.dart';
@@ -184,13 +185,35 @@ class _EventosOngScreenState extends State<EventosOngScreen> {
 
   Widget _buildEventoCard(Evento evento) {
     String? imagenUrl;
-    if (evento.imagenes != null &&
-        evento.imagenes!.isNotEmpty &&
-        evento.imagenes![0] != null) {
-      final imgPath = evento.imagenes![0].toString().trim();
-      if (imgPath.isNotEmpty) {
-        imagenUrl = _getImageUrl(imgPath);
+    if (evento.imagenes != null && evento.imagenes!.isNotEmpty) {
+      // Obtener la primera imagen válida
+      for (var img in evento.imagenes!) {
+        if (img != null) {
+          final imgPath = img.toString().trim();
+          // Validar que la ruta sea válida
+          if (imgPath.isNotEmpty &&
+              imgPath != 'null' &&
+              imgPath != '[]' &&
+              !imgPath.startsWith('[') &&
+              !imgPath.startsWith('{')) {
+            final url = _getImageUrl(imgPath);
+            if (url != null && url.isNotEmpty) {
+              imagenUrl = url;
+              // Debug: imprimir la URL construida
+              print('🖼️ Imagen del evento ${evento.id}:');
+              print('   Ruta original: $imgPath');
+              print('   URL construida: $imagenUrl');
+              break; // Usar la primera imagen válida
+            }
+          }
+        }
       }
+    }
+
+    // Debug: si no hay imagen, mostrar info
+    if (imagenUrl == null && evento.imagenes != null) {
+      print('⚠️ Evento ${evento.id} sin imagen válida:');
+      print('   imagenes: ${evento.imagenes}');
     }
 
     return Card(
@@ -214,40 +237,31 @@ class _EventosOngScreenState extends State<EventosOngScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (imagenUrl != null)
-                  Image.network(
-                    imagenUrl,
+                  CachedNetworkImage(
+                    imageUrl: imagenUrl,
                     height: 200,
                     width: double.infinity,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        height: 200,
-                        width: double.infinity,
-                        color: Colors.grey[200],
-                        child: Icon(
-                          Icons.image_not_supported,
-                          size: 64,
-                          color: Colors.grey[400],
-                        ),
-                      );
-                    },
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Container(
-                        height: 200,
-                        width: double.infinity,
-                        color: Colors.grey[200],
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            value:
-                                loadingProgress.expectedTotalBytes != null
-                                    ? loadingProgress.cumulativeBytesLoaded /
-                                        loadingProgress.expectedTotalBytes!
-                                    : null,
+                    placeholder:
+                        (context, url) => Container(
+                          height: 200,
+                          width: double.infinity,
+                          color: Colors.grey[200],
+                          child: const Center(
+                            child: CircularProgressIndicator(),
                           ),
                         ),
-                      );
-                    },
+                    errorWidget:
+                        (context, url, error) => Container(
+                          height: 200,
+                          width: double.infinity,
+                          color: Colors.grey[200],
+                          child: Icon(
+                            Icons.image_not_supported,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                        ),
                   )
                 else
                   Container(
@@ -401,19 +415,38 @@ class _EventosOngScreenState extends State<EventosOngScreen> {
   }
 
   String? _getImageUrl(String imgPath) {
-    if (imgPath.isEmpty) return null;
+    if (imgPath.isEmpty || imgPath == 'null') return null;
+
+    // Si ya es una URL completa, retornarla
     if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
       return imgPath;
     }
+
+    // Construir URL base (remover /api del final)
     final apiBaseUrl = ApiConfig.baseUrl;
-    final baseUrl = apiBaseUrl.replaceAll('/api', '');
-    if (imgPath.startsWith('/')) {
-      return '$baseUrl$imgPath';
+    final baseUrl = apiBaseUrl
+        .replaceAll('/api', '')
+        .replaceAll(RegExp(r'/$'), '');
+
+    // Normalizar la ruta de la imagen
+    String normalizedPath = imgPath;
+
+    // Si la ruta ya empieza con /storage, convertirla a /api/storage para CORS
+    if (normalizedPath.startsWith('/storage')) {
+      return '$baseUrl/api$normalizedPath';
     }
-    if (imgPath.startsWith('storage/')) {
-      return '$baseUrl/$imgPath';
+
+    // Si empieza con storage/ (sin /), convertirla a /api/storage/
+    if (normalizedPath.startsWith('storage/')) {
+      return '$baseUrl/api/$normalizedPath';
     }
-    return '$baseUrl/$imgPath';
+
+    // Si no empieza con /, agregarlo
+    if (!normalizedPath.startsWith('/')) {
+      normalizedPath = '/$normalizedPath';
+    }
+
+    return '$baseUrl$normalizedPath';
   }
 
   String _formatDate(DateTime date) {
