@@ -6,6 +6,7 @@ import '../../widgets/app_drawer.dart';
 import '../../models/evento.dart';
 import '../../config/api_config.dart';
 import '../evento_detail_screen.dart';
+import '../../utils/image_helper.dart';
 
 class EventosPatrocinadosScreen extends StatefulWidget {
   const EventosPatrocinadosScreen({super.key});
@@ -137,15 +138,8 @@ class _EventosPatrocinadosScreenState extends State<EventosPatrocinadosScreen> {
   }
 
   Widget _buildEventoCard(Evento evento) {
-    String? imagenUrl;
-    if (evento.imagenes != null &&
-        evento.imagenes!.isNotEmpty &&
-        evento.imagenes![0] != null) {
-      final imgPath = evento.imagenes![0].toString().trim();
-      if (imgPath.isNotEmpty) {
-        imagenUrl = _getImageUrl(imgPath);
-      }
-    }
+    // Obtener la primera imagen usando el helper
+    final imagenUrl = ImageHelper.getFirstImageUrl(evento.imagenes);
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
@@ -311,26 +305,6 @@ class _EventosPatrocinadosScreenState extends State<EventosPatrocinadosScreen> {
         ),
       ),
     );
-  }
-
-  String? _getImageUrl(String imgPath) {
-    if (imgPath.isEmpty) return null;
-    if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
-      return imgPath;
-    }
-    final apiBaseUrl = ApiConfig.baseUrl;
-    final baseUrl = apiBaseUrl.replaceAll('/api', '');
-    if (imgPath.startsWith('/')) {
-      // Si es /storage/, convertirla a /api/storage para CORS
-      if (imgPath.startsWith('/storage')) {
-        return '$baseUrl/api$imgPath';
-      }
-      return '$baseUrl$imgPath';
-    }
-    if (imgPath.startsWith('storage/')) {
-      return '$baseUrl/api/$imgPath';
-    }
-    return '$baseUrl/$imgPath';
   }
 
   String _formatDate(DateTime date) {

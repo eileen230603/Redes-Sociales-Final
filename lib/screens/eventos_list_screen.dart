@@ -4,6 +4,7 @@ import '../services/api_service.dart';
 import '../models/evento.dart';
 import '../widgets/app_drawer.dart';
 import '../config/api_config.dart';
+import '../utils/image_helper.dart';
 import 'evento_detail_screen.dart';
 
 class EventosListScreen extends StatefulWidget {
@@ -110,16 +111,8 @@ class _EventosListScreenState extends State<EventosListScreen> {
   }
 
   Widget _buildEventoCard(Evento evento) {
-    // Obtener la primera imagen si existe
-    String? imagenUrl;
-    if (evento.imagenes != null &&
-        evento.imagenes!.isNotEmpty &&
-        evento.imagenes![0] != null) {
-      final imgPath = evento.imagenes![0].toString().trim();
-      if (imgPath.isNotEmpty) {
-        imagenUrl = _getImageUrl(imgPath);
-      }
-    }
+    // Obtener la primera imagen usando el helper
+    final imagenUrl = ImageHelper.getFirstImageUrl(evento.imagenes);
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
@@ -284,36 +277,6 @@ class _EventosListScreenState extends State<EventosListScreen> {
         ),
       ),
     );
-  }
-
-  String? _getImageUrl(String imgPath) {
-    if (imgPath.isEmpty) return null;
-
-    // Si ya es una URL completa, retornarla
-    if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
-      return imgPath;
-    }
-
-    // Obtener la URL base (sin /api)
-    final apiBaseUrl = ApiConfig.baseUrl; // http://127.0.0.1:8000/api
-    final baseUrl = apiBaseUrl.replaceAll('/api', ''); // http://127.0.0.1:8000
-
-    // Si es una ruta relativa que empieza con /
-    if (imgPath.startsWith('/')) {
-      // Si es /storage/, convertirla a /api/storage para CORS
-      if (imgPath.startsWith('/storage')) {
-        return '$baseUrl/api$imgPath';
-      }
-      return '$baseUrl$imgPath';
-    }
-
-    // Si es una ruta de storage, convertirla a /api/storage/
-    if (imgPath.startsWith('storage/')) {
-      return '$baseUrl/api/$imgPath';
-    }
-
-    // Por defecto, asumir que es relativa a la raíz
-    return '$baseUrl/$imgPath';
   }
 
   String _formatDate(DateTime date) {

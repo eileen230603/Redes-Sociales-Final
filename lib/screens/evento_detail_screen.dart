@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../services/api_service.dart';
 import '../models/evento.dart';
 import '../models/evento_participacion.dart';
 import '../widgets/app_drawer.dart';
+import '../utils/image_helper.dart';
 
 class EventoDetailScreen extends StatefulWidget {
   final int eventoId;
@@ -197,6 +199,69 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Galería de imágenes
+                    if (_evento!.imagenes != null && _evento!.imagenes!.isNotEmpty) ...[
+                      const Text(
+                        'Imágenes del Evento',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 200,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _evento!.imagenes!.length,
+                          itemBuilder: (context, index) {
+                            final imgPath = _evento!.imagenes![index]?.toString().trim();
+                            if (imgPath == null || imgPath.isEmpty) return const SizedBox.shrink();
+                            
+                            final imageUrl = ImageHelper.buildImageUrl(imgPath);
+                            if (imageUrl == null) return const SizedBox.shrink();
+
+                            return Container(
+                              width: 300,
+                              margin: const EdgeInsets.only(right: 12),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: CachedNetworkImage(
+                                  imageUrl: imageUrl,
+                                  fit: BoxFit.cover,
+                                  placeholder: (context, url) => Container(
+                                    color: Colors.grey[200],
+                                    child: const Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  ),
+                                  errorWidget: (context, url, error) => Container(
+                                    color: Colors.grey[200],
+                                    child: const Icon(
+                                      Icons.image_not_supported,
+                                      size: 48,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+
                     // Título
                     Text(
                       _evento!.titulo,

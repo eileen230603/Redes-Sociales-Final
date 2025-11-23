@@ -6,6 +6,7 @@ import '../../widgets/app_drawer.dart';
 import '../../models/evento.dart';
 import '../../config/api_config.dart';
 import '../evento_detail_screen.dart';
+import '../../utils/image_helper.dart';
 
 class EventosOngScreen extends StatefulWidget {
   const EventosOngScreen({super.key});
@@ -184,37 +185,8 @@ class _EventosOngScreenState extends State<EventosOngScreen> {
   }
 
   Widget _buildEventoCard(Evento evento) {
-    String? imagenUrl;
-    if (evento.imagenes != null && evento.imagenes!.isNotEmpty) {
-      // Obtener la primera imagen válida
-      for (var img in evento.imagenes!) {
-        if (img != null) {
-          final imgPath = img.toString().trim();
-          // Validar que la ruta sea válida
-          if (imgPath.isNotEmpty &&
-              imgPath != 'null' &&
-              imgPath != '[]' &&
-              !imgPath.startsWith('[') &&
-              !imgPath.startsWith('{')) {
-            final url = _getImageUrl(imgPath);
-            if (url != null && url.isNotEmpty) {
-              imagenUrl = url;
-              // Debug: imprimir la URL construida
-              print('🖼️ Imagen del evento ${evento.id}:');
-              print('   Ruta original: $imgPath');
-              print('   URL construida: $imagenUrl');
-              break; // Usar la primera imagen válida
-            }
-          }
-        }
-      }
-    }
-
-    // Debug: si no hay imagen, mostrar info
-    if (imagenUrl == null && evento.imagenes != null) {
-      print('⚠️ Evento ${evento.id} sin imagen válida:');
-      print('   imagenes: ${evento.imagenes}');
-    }
+    // Obtener la primera imagen usando el helper
+    final imagenUrl = ImageHelper.getFirstImageUrl(evento.imagenes);
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
@@ -412,41 +384,6 @@ class _EventosOngScreenState extends State<EventosOngScreen> {
         ],
       ),
     );
-  }
-
-  String? _getImageUrl(String imgPath) {
-    if (imgPath.isEmpty || imgPath == 'null') return null;
-
-    // Si ya es una URL completa, retornarla
-    if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
-      return imgPath;
-    }
-
-    // Construir URL base (remover /api del final)
-    final apiBaseUrl = ApiConfig.baseUrl;
-    final baseUrl = apiBaseUrl
-        .replaceAll('/api', '')
-        .replaceAll(RegExp(r'/$'), '');
-
-    // Normalizar la ruta de la imagen
-    String normalizedPath = imgPath;
-
-    // Si la ruta ya empieza con /storage, convertirla a /api/storage para CORS
-    if (normalizedPath.startsWith('/storage')) {
-      return '$baseUrl/api$normalizedPath';
-    }
-
-    // Si empieza con storage/ (sin /), convertirla a /api/storage/
-    if (normalizedPath.startsWith('storage/')) {
-      return '$baseUrl/api/$normalizedPath';
-    }
-
-    // Si no empieza con /, agregarlo
-    if (!normalizedPath.startsWith('/')) {
-      normalizedPath = '/$normalizedPath';
-    }
-
-    return '$baseUrl$normalizedPath';
   }
 
   String _formatDate(DateTime date) {

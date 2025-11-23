@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Agregar este import para FilteringTextInputFormatter
 import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform;
 import 'package:flutter/foundation.dart' show TargetPlatform;
 import 'package:image_picker/image_picker.dart';
@@ -10,6 +11,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
 import '../../services/api_service.dart';
 import '../../services/storage_service.dart';
+import '../../services/parametrizacion_service.dart';
+import '../../models/tipo_evento.dart';
 import '../../widgets/app_drawer.dart';
 
 class CrearEventoScreen extends StatefulWidget {
@@ -23,7 +26,6 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
   final _formKey = GlobalKey<FormState>();
   final _tituloController = TextEditingController();
   final _descripcionController = TextEditingController();
-  final _tipoEventoController = TextEditingController();
   final _ciudadController = TextEditingController();
   final _direccionController = TextEditingController();
   final _capacidadController = TextEditingController();
@@ -51,12 +53,29 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
   bool _isLoadingEmpresas = false;
   bool _isLoadingInvitados = false;
 
+  // Tipos de evento
+  List<TipoEvento> _tiposEvento = [];
+  bool _isLoadingTiposEvento = false;
+  String? _tipoEventoSeleccionado;
+  
+  // Tipos de evento por defecto (iguales a Laravel - valores exactos del select)
+  static const List<String> _tiposEventoPorDefecto = [
+    'conferencia',
+    'taller',
+    'seminario',
+    'voluntariado',
+    'cultural',
+    'deportivo',
+    'otro',
+  ];
+
   @override
   void initState() {
     super.initState();
     _loadOngId();
     _loadEmpresasDisponibles();
     _loadInvitadosDisponibles();
+    _loadTiposEvento(); // Agregar esta línea
   }
 
   Future<void> _loadOngId() async {
@@ -100,6 +119,74 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
     });
   }
 
+  Future<void> _loadTiposEvento() async {
+    setState(() {
+      _isLoadingTiposEvento = true;
+    });
+    
+    try {
+      print('🔄 Cargando tipos de evento desde API...');
+      final result = await ParametrizacionService.getTiposEvento(activo: true);
+      
+      if (!mounted) return;
+      
+      print('📥 Respuesta recibida: success=${result['success']}');
+      
+      setState(() {
+        _isLoadingTiposEvento = false;
+        if (result['success'] == true) {
+          final tiposCargados = result['tipos'] as List<TipoEvento>;
+          if (tiposCargados.isNotEmpty) {
+            _tiposEvento = tiposCargados;
+            print('✅ Tipos de evento cargados desde API: ${_tiposEvento.length}');
+            for (var tipo in _tiposEvento) {
+              print('   - ${tipo.nombre}');
+            }
+          } else {
+            // Si no hay tipos en la API, usar los por defecto
+            print('⚠️ No hay tipos en la API, usando tipos por defecto');
+            _usarTiposPorDefecto();
+          }
+        } else {
+          // Si hay error (tabla no existe, etc.), usar tipos por defecto
+          print('❌ Error al cargar tipos de evento: ${result['error']}');
+          print('⚠️ Usando tipos por defecto (iguales a Laravel)');
+          _usarTiposPorDefecto();
+        }
+      });
+    } catch (e, stackTrace) {
+      if (!mounted) return;
+      print('❌ Excepción al cargar tipos de evento: $e');
+      print('📚 Stack trace: $stackTrace');
+      print('⚠️ Usando tipos por defecto debido a error');
+      setState(() {
+        _isLoadingTiposEvento = false;
+        _usarTiposPorDefecto();
+      });
+    }
+  }
+
+  // Método helper para usar tipos por defecto (iguales a Laravel)
+  void _usarTiposPorDefecto() {
+    _tiposEvento = _tiposEventoPorDefecto.asMap().entries.map((entry) {
+      final index = entry.key;
+      final nombre = entry.value;
+      // Capitalizar primera letra para mostrar
+      final nombreMostrar = nombre[0].toUpperCase() + nombre.substring(1);
+      return TipoEvento(
+        id: index + 1,
+        codigo: nombre,
+        nombre: nombreMostrar, // Mostrar con primera letra mayúscula
+        orden: index,
+        activo: true,
+      );
+    }).toList();
+    print('✅ Tipos por defecto cargados (iguales a Laravel): ${_tiposEvento.length}');
+    for (var tipo in _tiposEvento) {
+      print('   - ${tipo.nombre} (código: ${tipo.codigo})');
+    }
+  }
+
   Future<void> _reverseGeocode(double lat, double lng) async {
     try {
       final response = await http.get(
@@ -111,17 +198,22 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         final displayName = data['display_name'] as String? ?? '';
         final address = data['address'] as Map<String, dynamic>?;
+        
+        // Obtener ciudad de diferentes campos posibles
         final ciudad =
             address?['city'] ??
             address?['town'] ??
             address?['village'] ??
+            address?['municipality'] ??
+            address?['county'] ??
             address?['state'] ??
             '';
 
         setState(() {
           _direccionSeleccionada = displayName;
           _direccionController.text = displayName;
-          if (ciudad.isNotEmpty && _ciudadController.text.isEmpty) {
+          // Solo actualizar ciudad si el campo está vacío (no sobrescribir si ya tiene valor)
+          if (ciudad.isNotEmpty && _ciudadController.text.trim().isEmpty) {
             _ciudadController.text = ciudad;
           }
         });
@@ -261,25 +353,46 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
       return;
     }
 
+    // Validar tipo de evento
+    if (_tipoEventoSeleccionado == null || _tipoEventoSeleccionado!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Por favor selecciona un tipo de evento'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Validar descripción si se llenó
+    final descripcionTexto = _descripcionController.text.trim();
+    if (descripcionTexto.isNotEmpty && descripcionTexto.length < 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('La descripción debe tener al menos 10 caracteres'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
 
+    // Preparar datos del evento
     final eventoData = <String, dynamic>{
       'ong_id': _ongId,
       'titulo': _tituloController.text.trim(),
-      'descripcion':
-          _descripcionController.text.trim().isEmpty
-              ? null
-              : _descripcionController.text.trim(),
-      'tipo_evento': _tipoEventoController.text.trim(),
+      'descripcion': descripcionTexto.isEmpty ? null : descripcionTexto,
+      'tipo_evento': _tipoEventoSeleccionado, // Usar el valor seleccionado
       'fecha_inicio': _fechaInicio!.toIso8601String(),
       'fecha_fin': _fechaFin?.toIso8601String(),
       'fecha_limite_inscripcion': _fechaLimiteInscripcion?.toIso8601String(),
       'capacidad_maxima':
           _capacidadController.text.trim().isEmpty
               ? null
-              : int.tryParse(_capacidadController.text.trim()),
+              : int.tryParse(_capacidadController.text.trim().replaceAll(RegExp(r'[,.]'), '')),
       'estado': _estado,
       'ciudad':
           _ciudadController.text.trim().isEmpty
@@ -294,11 +407,24 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
       'lat': _selectedLocation?.latitude,
       'lng': _selectedLocation?.longitude,
       'inscripcion_abierta': _inscripcionAbierta,
-      'patrocinadores': _patrocinadoresSeleccionados.toList(),
-      'invitados': _invitadosSeleccionados.toList(),
-      'auspiciadores': [],
-      // No incluir 'imagenes' aquí, se envía como archivos en multipart
+      // Solo incluir patrocinadores si hay selección
+      if (_patrocinadoresSeleccionados.isNotEmpty)
+        'patrocinadores': _patrocinadoresSeleccionados.toList(),
+      // Solo incluir invitados si hay selección
+      if (_invitadosSeleccionados.isNotEmpty)
+        'invitados': _invitadosSeleccionados.toList(),
+      // NO incluir auspiciadores - Laravel lo manejará como array vacío por defecto
     };
+
+    print('📤 Datos del evento a enviar:');
+    print('   Título: ${eventoData['titulo']}');
+    print('   Tipo evento: ${eventoData['tipo_evento']}');
+    print('   Fecha inicio: ${eventoData['fecha_inicio']}');
+    print('   Estado: ${eventoData['estado']}');
+    print('   Inscripción abierta: ${eventoData['inscripcion_abierta']}');
+    print('   Patrocinadores: ${eventoData.containsKey('patrocinadores') ? eventoData['patrocinadores'] : 'No incluido'}');
+    print('   Invitados: ${eventoData.containsKey('invitados') ? eventoData['invitados'] : 'No incluido'}');
+    print('   Auspiciadores: No incluido (Laravel usará array vacío por defecto)');
 
     final result = await ApiService.crearEvento(
       eventoData,
@@ -330,15 +456,44 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
       // Mostrar error detallado
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(errorMessage),
+          content: Text(
+            errorMessage,
+            style: const TextStyle(fontSize: 14),
+          ),
           backgroundColor: Colors.red,
-          duration: const Duration(seconds: 5),
+          duration: const Duration(seconds: 6),
+          action: SnackBarAction(
+            label: 'Ver detalles',
+            textColor: Colors.white,
+            onPressed: () {
+              if (errors != null) {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Errores de validación'),
+                    content: SingleChildScrollView(
+                      child: Text(
+                        errors.toString(),
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cerrar'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            },
+          ),
         ),
       );
 
       // Si hay errores de validación, mostrarlos en consola
       if (errors != null) {
-        print('Errores de validación: $errors');
+        print('❌ Errores de validación: $errors');
       }
     }
   }
@@ -347,7 +502,6 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
   void dispose() {
     _tituloController.dispose();
     _descripcionController.dispose();
-    _tipoEventoController.dispose();
     _ciudadController.dispose();
     _direccionController.dispose();
     _capacidadController.dispose();
@@ -390,24 +544,58 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Descripción',
                   border: OutlineInputBorder(),
+                  hintText: 'Descripción del evento (mínimo 10 caracteres si se completa)',
                 ),
                 maxLines: 3,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _tipoEventoController,
-                decoration: const InputDecoration(
-                  labelText: 'Tipo de evento *',
-                  border: OutlineInputBorder(),
-                  hintText: 'Ej: Cultura, Educación, Salud, Ambiente',
-                ),
                 validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'El tipo de evento es requerido';
+                  // Si se llena la descripción, debe tener al menos 10 caracteres
+                  if (value != null && value.trim().isNotEmpty) {
+                    if (value.trim().length < 10) {
+                      return 'La descripción debe tener al menos 10 caracteres';
+                    }
                   }
                   return null;
                 },
               ),
+              const SizedBox(height: 16),
+              // Selector de tipo de evento
+              if (_isLoadingTiposEvento)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: CircularProgressIndicator(),
+                  ),
+                )
+              else
+                DropdownButtonFormField<String>(
+                  value: _tipoEventoSeleccionado,
+                  decoration: const InputDecoration(
+                    labelText: 'Tipo de evento *',
+                    border: OutlineInputBorder(),
+                    hintText: 'Selecciona un tipo de evento',
+                    prefixIcon: Icon(Icons.category),
+                  ),
+                  items: _tiposEvento.map((tipo) {
+                    return DropdownMenuItem<String>(
+                      value: tipo.codigo, // Usar el código (valor real) como value
+                      child: Text(tipo.nombre), // Mostrar el nombre formateado
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _tipoEventoSeleccionado = value; // Guardar el código
+                      });
+                      print('✅ Tipo de evento seleccionado: $value');
+                    }
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'El tipo de evento es requerido';
+                    }
+                    return null;
+                  },
+                ),
               const SizedBox(height: 24),
               const Text(
                 'Fechas',
@@ -470,6 +658,7 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
                   labelText: 'Ciudad',
                   border: OutlineInputBorder(),
                 ),
+                // Campo editable - se puede llenar manualmente o desde el mapa si está vacío
               ),
               const SizedBox(height: 16),
               const Text(
@@ -548,8 +737,13 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
               ],
               const SizedBox(height: 24),
               const Text(
-                'Empresas Colaboradoras',
+                'Empresas Colaboradoras (Opcional)',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Puedes seleccionar empresas que patrocinarán este evento',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
               const SizedBox(height: 16),
               if (_isLoadingEmpresas)
@@ -587,8 +781,13 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
                 ),
               const SizedBox(height: 24),
               const Text(
-                'Invitados',
+                'Invitados (Opcional)',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Puedes seleccionar invitados especiales para este evento',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
               const SizedBox(height: 16),
               if (_isLoadingInvitados)
@@ -738,9 +937,31 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Capacidad máxima',
                   border: OutlineInputBorder(),
-                  hintText: 'Número de participantes',
+                  hintText: 'Ej: 1,000 o 1000',
                 ),
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: false,
+                  signed: false,
+                ),
+                inputFormatters: [
+                  // Formatter que permite números con separadores de miles (coma o punto)
+                  _NumericWithSeparatorFormatter(),
+                  LengthLimitingTextInputFormatter(15), // Aumentar límite para números grandes
+                ],
+                validator: (value) {
+                  if (value != null && value.trim().isNotEmpty) {
+                    // Remover separadores de miles antes de parsear
+                    final numeroTexto = value.trim().replaceAll(RegExp(r'[,.]'), '');
+                    final numero = int.tryParse(numeroTexto);
+                    if (numero == null) {
+                      return 'Ingrese un número válido';
+                    }
+                    if (numero <= 0) {
+                      return 'La capacidad debe ser mayor a 0';
+                    }
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
@@ -946,5 +1167,47 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
     final hour = date.hour.toString().padLeft(2, '0');
     final minute = date.minute.toString().padLeft(2, '0');
     return '$day/$month/$year $hour:$minute';
+  }
+}
+
+// Formatter personalizado que permite números con separadores de miles
+class _NumericWithSeparatorFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    // Si el nuevo valor está vacío, permitirlo
+    if (newValue.text.isEmpty) {
+      return newValue;
+    }
+    
+    // Permitir solo dígitos, comas y puntos
+    final regex = RegExp(r'^[0-9,.]*$');
+    
+    if (!regex.hasMatch(newValue.text)) {
+      // Si contiene caracteres no permitidos, devolver el valor anterior
+      return oldValue;
+    }
+    
+    // Validar formato: solo permitir comas o puntos como separadores de miles
+    final text = newValue.text;
+    
+    // No permitir comas y puntos juntos
+    if (text.contains(',') && text.contains('.')) {
+      return oldValue;
+    }
+    
+    // No permitir separadores al inicio
+    if (text.startsWith(',') || text.startsWith('.')) {
+      return oldValue;
+    }
+    
+    // No permitir separadores consecutivos
+    if (text.contains(',,') || text.contains('..') || text.contains(',.') || text.contains('.,')) {
+      return oldValue;
+    }
+    
+    return newValue;
   }
 }

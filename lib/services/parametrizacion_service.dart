@@ -162,23 +162,37 @@ class ParametrizacionService {
         '${ApiConfig.baseUrl}/parametrizaciones/tipos-evento',
       ).replace(queryParameters: queryParams);
 
+      print('🔗 Cargando tipos de evento desde: $uri');
+
       final response = await http.get(uri, headers: await _getHeaders());
+
+      print('📡 Respuesta HTTP: ${response.statusCode}');
+      print('📄 Body: ${response.body}');
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
 
       if (response.statusCode == 200 && data['success'] == true) {
-        final tiposList =
-            (data['data'] as List)
-                .map((t) => TipoEvento.fromJson(t as Map<String, dynamic>))
-                .toList();
-        return {'success': true, 'tipos': tiposList};
+        final dataList = data['data'] as List?;
+        if (dataList != null && dataList.isNotEmpty) {
+          final tiposList =
+              dataList
+                  .map((t) => TipoEvento.fromJson(t as Map<String, dynamic>))
+                  .toList();
+          print('✅ Tipos parseados: ${tiposList.length}');
+          return {'success': true, 'tipos': tiposList};
+        } else {
+          print('⚠️ No hay tipos de evento en la respuesta');
+          return {'success': true, 'tipos': <TipoEvento>[]};
+        }
       }
 
       return {
         'success': false,
         'error': data['error'] ?? 'Error al obtener tipos de evento',
       };
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('❌ Error en getTiposEvento: $e');
+      print('📚 Stack trace: $stackTrace');
       return {'success': false, 'error': 'Error de conexión: ${e.toString()}'};
     }
   }

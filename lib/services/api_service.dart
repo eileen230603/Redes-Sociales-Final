@@ -2,11 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import '../config/api_config.dart';
 import '../models/auth_response.dart';
 import '../models/evento.dart';
 import '../models/evento_participacion.dart';
 import 'storage_service.dart';
+import 'package:flutter/services.dart';
 
 class ApiService {
   // Obtener headers con autenticación
@@ -526,31 +528,177 @@ class ApiService {
 
   // Crear evento
   static Future<Map<String, dynamic>> crearEvento(
-    Map<String, dynamic> eventoData,
-  ) async {
+    Map<String, dynamic> eventoData, {
+    List<XFile>? imagenes,
+  }) async {
     try {
-      final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}/eventos'),
-        headers: await _getHeaders(includeAuth: true),
-        body: jsonEncode(eventoData),
-      );
-
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
-
-      if (response.statusCode == 201 && data['success'] == true) {
-        return {
-          'success': true,
-          'message': data['message'] ?? 'Evento creado exitosamente',
-          'evento': data['evento'],
-        };
+      final token = await StorageService.getToken();
+      final headers = {
+        'Accept': 'application/json',
+      };
+      
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
       }
 
-      return {
-        'success': false,
-        'error': data['error'] ?? data['message'] ?? 'Error al crear evento',
-        'errors': data['errors'],
-      };
-    } catch (e) {
+      // Si hay imágenes, usar multipart/form-data
+      if (imagenes != null && imagenes.isNotEmpty) {
+        final request = http.MultipartRequest(
+          'POST',
+          Uri.parse('${ApiConfig.baseUrl}/eventos'),
+        );
+
+        // Agregar headers
+        request.headers.addAll(headers);
+
+        // Preparar datos para enviar
+        eventoData.forEach((key, value) {
+          // CRÍTICO: Para arrays vacíos, NO enviarlos en absoluto
+          if (value is List && value.isEmpty) {
+            // No enviar arrays vacíos - Laravel los manejará como null/array vacío
+            return; // Saltar este campo completamente
+          }
+          
+          if (value != null) {
+            if (value is List) {
+              // Para arrays con elementos, enviar cada uno con índice
+              // Laravel espera: patrocinadores[0], patrocinadores[1], etc.
+              for (int i = 0; i < value.length; i++) {
+                request.fields['$key[$i]'] = value[i].toString();
+              }
+            } else if (value is DateTime) {
+              request.fields[key] = value.toIso8601String();
+            } else if (value is bool) {
+              // CRÍTICO: En multipart/form-data, Laravel espera "1" o "0" para booleanos
+              request.fields[key] = value ? '1' : '0';
+            } else if (value is int || value is double) {
+              request.fields[key] = value.toString();
+            } else {
+              request.fields[key] = value.toString();
+            }
+          }
+        });
+
+        // Agregar imágenes
+        for (var imagen in imagenes) {
+          try {
+            final bytes = await imagen.readAsBytes();
+            final filename = imagen.name.isNotEmpty 
+                ? imagen.name 
+                : 'imagen_${DateTime.now().millisecondsSinceEpoch}.jpg';
+            
+            final multipartFile = http.MultipartFile.fromBytes(
+              'imagenes[]',
+              bytes,
+              filename: filename,
+            );
+            request.files.add(multipartFile);
+          } catch (e) {
+            print('⚠️ Error al procesar imagen: $e');
+          }
+        }
+
+        print('📤 Enviando evento con multipart/form-data');
+        print('📋 Campos finales que se enviarán: ${request.fields.keys.toList()}');
+        print('📋 Valores: ${request.fields}');
+        print('🖼️ Imágenes: ${request.files.length}');
+
+        final streamedResponse = await request.send();
+        final response = await http.Response.fromStream(streamedResponse);
+
+        print('📥 Respuesta: ${response.statusCode}');
+        print('📄 Body: ${response.body}');
+
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+        if (response.statusCode == 201 && data['success'] == true) {
+          return {
+            'success': true,
+            'message': data['message'] ?? 'Evento creado exitosamente',
+            'evento': data['evento'],
+          };
+        }
+
+        // Manejar errores de validación
+        String errorMessage = 'Error al crear evento';
+        if (data.containsKey('errors')) {
+          final errors = data['errors'];
+          if (errors is Map) {
+            final errorList = <String>[];
+            errors.forEach((key, value) {
+              if (value is List) {
+                errorList.addAll(value.cast<String>());
+              } else {
+                errorList.add(value.toString());
+              }
+            });
+            errorMessage = errorList.join('\n');
+          }
+        } else if (data.containsKey('error')) {
+          errorMessage = data['error'].toString();
+        } else if (data.containsKey('message')) {
+          errorMessage = data['message'].toString();
+        }
+
+        return {
+          'success': false,
+          'error': errorMessage,
+          'errors': data['errors'],
+        };
+      } else {
+        // Sin imágenes, usar JSON normal
+        final response = await http.post(
+          Uri.parse('${ApiConfig.baseUrl}/eventos'),
+          headers: {
+            ...headers,
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode(eventoData),
+        );
+
+        print('📥 Respuesta JSON: ${response.statusCode}');
+        print('📄 Body: ${response.body}');
+
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+        if (response.statusCode == 201 && data['success'] == true) {
+          return {
+            'success': true,
+            'message': data['message'] ?? 'Evento creado exitosamente',
+            'evento': data['evento'],
+          };
+        }
+
+        // Manejar errores de validación
+        String errorMessage = 'Error al crear evento';
+        if (data.containsKey('errors')) {
+          final errors = data['errors'];
+          if (errors is Map) {
+            final errorList = <String>[];
+            errors.forEach((key, value) {
+              if (value is List) {
+                errorList.addAll(value.cast<String>());
+              } else {
+                errorList.add(value.toString());
+              }
+            });
+            errorMessage = errorList.join('\n');
+          }
+        } else if (data.containsKey('error')) {
+          errorMessage = data['error'].toString();
+        } else if (data.containsKey('message')) {
+          errorMessage = data['message'].toString();
+        }
+
+        return {
+          'success': false,
+          'error': errorMessage,
+          'errors': data['errors'],
+        };
+      }
+    } catch (e, stackTrace) {
+      print('❌ Error en crearEvento: $e');
+      print('📚 Stack trace: $stackTrace');
       return {'success': false, 'error': 'Error de conexión: ${e.toString()}'};
     }
   }
@@ -633,6 +781,60 @@ class ApiService {
       return {
         'success': false,
         'error': data['error'] ?? 'Error al obtener voluntarios',
+      };
+    } catch (e) {
+      return {'success': false, 'error': 'Error de conexión: ${e.toString()}'};
+    }
+  }
+
+  // ========== EMPRESAS E INVITADOS ==========
+
+  // Obtener empresas disponibles para patrocinar
+  static Future<Map<String, dynamic>> getEmpresasDisponibles() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/eventos/empresas/disponibles'),
+        headers: await _getHeaders(includeAuth: true),
+      );
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return {
+          'success': true,
+          'empresas': data['empresas'] as List,
+        };
+      }
+
+      return {
+        'success': false,
+        'error': data['error'] ?? 'Error al obtener empresas',
+      };
+    } catch (e) {
+      return {'success': false, 'error': 'Error de conexión: ${e.toString()}'};
+    }
+  }
+
+  // Obtener invitados disponibles
+  static Future<Map<String, dynamic>> getInvitadosDisponibles() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/eventos/invitados'),
+        headers: await _getHeaders(includeAuth: true),
+      );
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return {
+          'success': true,
+          'invitados': data['invitados'] as List,
+        };
+      }
+
+      return {
+        'success': false,
+        'error': data['error'] ?? 'Error al obtener invitados',
       };
     } catch (e) {
       return {'success': false, 'error': 'Error de conexión: ${e.toString()}'};
