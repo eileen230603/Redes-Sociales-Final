@@ -12,6 +12,11 @@ use App\Http\Controllers\Api\ConfiguracionController;
 use App\Http\Controllers\Api\ParametrizacionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MegaEventoController;
+use App\Http\Controllers\StorageController;
+
+// ----------- STORAGE (con CORS para Flutter) -----------
+Route::options('/storage/{path}', [StorageController::class, 'options'])->where('path', '.*');
+Route::get('/storage/{path}', [StorageController::class, 'serve'])->where('path', '.*');
 
 // ----------- AUTH -----------
 Route::post('/auth/register', [AuthController::class, 'register']);
@@ -89,11 +94,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // ----------- MEGA EVENTOS -----------
     Route::prefix('mega-eventos')->group(function () {
         Route::get('/', [MegaEventoController::class, 'index']);
+        Route::get('/publicos', [MegaEventoController::class, 'publicos']);
         Route::post('/', [MegaEventoController::class, 'store']);
         Route::get('/{id}', [MegaEventoController::class, 'show']);
         Route::put('/{id}', [MegaEventoController::class, 'update']);
         Route::delete('/{id}', [MegaEventoController::class, 'destroy']);
         Route::delete('/{id}/imagen', [MegaEventoController::class, 'deleteImage']);
+        Route::post('/{id}/participar', [MegaEventoController::class, 'participar']);
+        Route::get('/{id}/verificar-participacion', [MegaEventoController::class, 'verificarParticipacion']);
     });
 
     // ----------- CONFIGURACIÓN / PARÁMETROS -----------

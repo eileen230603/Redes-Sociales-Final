@@ -619,4 +619,6 @@ document.addEventListener('DOMContentLoaded', function() {
     cargarEventos();
 });
 </script>
+{{-- Script global para icono de notificaciones --}}
+<script src="{{ asset('js/notificaciones-ong.js') }}"></script>
 @stop

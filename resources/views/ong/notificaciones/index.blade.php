@@ -85,6 +85,8 @@
 @endsection
 
 @section('js')
+{{-- Script global para icono de notificaciones --}}
+<script src="{{ asset('js/notificaciones-ong.js') }}"></script>
 <script src="{{ asset('assets/js/config.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', async () => {

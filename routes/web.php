@@ -1,9 +1,18 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Log;
+
+// --- SERVIR ARCHIVOS DE STORAGE CON CORS (MÁXIMA PRIORIDAD) ---
+// Esta ruta DEBE estar al principio para tener máxima prioridad
+Route::options('/storage/{path}', [App\Http\Controllers\StorageController::class, 'options'])
+    ->where('path', '.*');
+
+Route::get('/storage/{path}', [App\Http\Controllers\StorageController::class, 'serve'])
+    ->where('path', '.*');
 
 // ---------------- AUTH ----------------
-Route::view('/', 'auth.login')->name('inicio');
+Route::view('/', 'welcome')->name('inicio');
 Route::view('/login', 'auth.login')->name('login');
 
 Route::view('/register-ong', 'auth.register-ong')->name('register.ong');
@@ -24,6 +33,18 @@ Route::prefix('externo/eventos')->group(function () {
 
 // ---------------- EXTERNO: MIS PARTICIPACIONES ----------------
 Route::view('/externo/mis-participaciones', 'externo.mis-participaciones')->name('externo.mis-participaciones');
+
+// ---------------- EXTERNO: MEGA EVENTOS ----------------
+Route::prefix('externo/mega-eventos')->name('externo.mega-eventos.')->group(function () {
+    Route::view('/', 'externo.mega-eventos.index')->name('index');
+    Route::view('/{id}/detalle', 'externo.mega-eventos.show')->name('show');
+});
+
+// ---------------- VOLUNTARIO: MEGA EVENTOS ----------------
+Route::prefix('voluntario/mega-eventos')->name('voluntario.mega-eventos.')->group(function () {
+    Route::view('/', 'externo.mega-eventos.index')->name('index');
+    Route::view('/{id}/detalle', 'externo.mega-eventos.show')->name('show');
+});
 
 // ---------------- ONG: EVENTOS ----------------
 Route::prefix('ong/eventos')->name('ong.eventos.')->group(function () {
@@ -64,6 +85,12 @@ Route::prefix('ong/mega-eventos')->name('ong.mega-eventos.')->group(function () 
     Route::view('/crear', 'ong.mega-eventos.create')->name('create');
     Route::view('/{id}/editar', 'ong.mega-eventos.edit')->name('edit');
     Route::view('/{id}/detalle', 'ong.mega-eventos.show')->name('show');
+});
+
+// ---------------- EMPRESA: MEGA EVENTOS ----------------
+Route::prefix('empresa/mega-eventos')->name('empresa.mega-eventos.')->group(function () {
+    Route::view('/', 'empresa.mega-eventos.index')->name('index');
+    Route::view('/{id}/detalle', 'empresa.mega-eventos.show')->name('show');
 });
 
 // ---------------- EMPRESA: EVENTOS ----------------

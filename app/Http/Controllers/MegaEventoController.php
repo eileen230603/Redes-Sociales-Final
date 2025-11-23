@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use App\Models\MegaEvento;
 use Illuminate\Support\Str;
 
@@ -43,26 +44,53 @@ class MegaEventoController extends Controller
             }
             
             foreach ($files as $file) {
-                if ($file->isValid()) {
-                    // Validar tipo y tamaño
-                    $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
-                    if (!in_array($file->getMimeType(), $allowedMimes)) {
-                        continue;
+                try {
+                    if ($file->isValid()) {
+                        // Validar tipo y tamaño
+                        $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
+                        if (!in_array($file->getMimeType(), $allowedMimes)) {
+                            continue;
+                        }
+                        
+                        if ($file->getSize() > 5120 * 1024) { // 5MB
+                            continue;
+                        }
+                        
+                        // Generar nombre único para la imagen
+                        $filename = 'mega_eventos/' . ($megaEventoId ?? 'temp') . '/' . Str::uuid() . '.' . $file->getClientOriginalExtension();
+                        
+                        // Guardar usando el disco 'public' explícitamente
+                        $path = Storage::disk('public')->putFileAs(
+                            dirname($filename),
+                            $file,
+                            basename($filename)
+                        );
+                        
+                        // Verificar que el archivo se guardó
+                        $fullPath = storage_path('app/public/' . $path);
+                        if (!file_exists($fullPath)) {
+                            \Log::error("No se pudo guardar la imagen: $fullPath");
+                            continue;
+                        }
+                        
+                        // Copiar también a public/storage/ para que el servidor de PHP pueda servirlo directamente
+                        $publicPath = public_path('storage/' . $path);
+                        $publicDir = dirname($publicPath);
+                        if (!file_exists($publicDir)) {
+                            mkdir($publicDir, 0755, true);
+                        }
+                        if (file_exists($fullPath)) {
+                            copy($fullPath, $publicPath);
+                        }
+                        
+                        // Obtener la URL pública (ruta relativa)
+                        $url = Storage::disk('public')->url($path);
+                        $imagenes[] = $url;
+                        
+                        \Log::info("Imagen guardada: $url -> $fullPath (también copiada a $publicPath)");
                     }
-                    
-                    if ($file->getSize() > 5120 * 1024) { // 5MB
-                        continue;
-                    }
-                    
-                    // Generar nombre único para la imagen
-                    $filename = 'mega_eventos/' . ($megaEventoId ?? 'temp') . '/' . Str::uuid() . '.' . $file->getClientOriginalExtension();
-                    
-                    // Guardar en storage/public
-                    $path = $file->storeAs('public', $filename);
-                    
-                    // Obtener la ruta relativa (ej: /storage/mega_eventos/1/uuid.jpg)
-                    $url = Storage::url($filename);
-                    $imagenes[] = $url; // Guardar como /storage/... (ruta relativa)
+                } catch (\Exception $e) {
+                    \Log::error("Error al guardar imagen: " . $e->getMessage());
                 }
             }
         }
@@ -505,6 +533,214 @@ class MegaEventoController extends Controller
                 'success' => false,
                 'error' => 'Error al eliminar imagen: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Participar en un mega evento (para usuarios externos/voluntarios)
+     */
+    public function participar(Request $request, $megaEventoId)
+    {
+        try {
+            $externoId = $request->user()->id_usuario;
+            
+            // Verificar que el usuario es externo o voluntario
+            $user = \App\Models\User::find($externoId);
+            if (!$user || ($user->tipo_usuario !== 'Integrante externo' && $user->tipo_usuario !== 'Voluntario')) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Solo usuarios externos y voluntarios pueden participar en mega eventos'
+                ], 403);
+            }
+
+            $megaEvento = MegaEvento::find($megaEventoId);
+            
+            if (!$megaEvento) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Mega evento no encontrado'
+                ], 404);
+            }
+
+            if (!$megaEvento->es_publico) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Este mega evento no es público'
+                ], 403);
+            }
+
+            if (!$megaEvento->activo) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Este mega evento no está activo'
+                ], 400);
+            }
+
+            // Verificar capacidad
+            $participantes = DB::table('mega_evento_participantes_externos')
+                ->where('mega_evento_id', $megaEventoId)
+                ->where('activo', true)
+                ->count();
+            
+            if ($megaEvento->capacidad_maxima && $participantes >= $megaEvento->capacidad_maxima) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Cupo agotado'
+                ], 400);
+            }
+
+            // Obtener integrante externo
+            $integranteExterno = \App\Models\IntegranteExterno::where('user_id', $externoId)->first();
+            
+            if (!$integranteExterno) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Usuario externo no encontrado'
+                ], 404);
+            }
+
+            // Verificar si ya está participando
+            $yaParticipa = DB::table('mega_evento_participantes_externos')
+                ->where('mega_evento_id', $megaEventoId)
+                ->where('integrante_externo_id', $integranteExterno->user_id)
+                ->exists();
+
+            if ($yaParticipa) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Ya estás participando en este mega evento'
+                ], 400);
+            }
+
+            // Crear participación automáticamente aprobada
+            DB::table('mega_evento_participantes_externos')->insert([
+                'mega_evento_id' => $megaEventoId,
+                'integrante_externo_id' => $integranteExterno->user_id,
+                'estado_participacion' => 'aprobada', // Aprobación automática
+                'fecha_registro' => now(),
+                'activo' => true
+            ]);
+
+            // Crear notificación para la ONG
+            $this->crearNotificacionMegaEvento($megaEvento, $externoId);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Participación registrada y aprobada automáticamente'
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al participar en mega evento: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Verificar si el usuario está participando en un mega evento
+     */
+    public function verificarParticipacion(Request $request, $megaEventoId)
+    {
+        try {
+            $externoId = $request->user()->id_usuario;
+            $integranteExterno = \App\Models\IntegranteExterno::where('user_id', $externoId)->first();
+            
+            if (!$integranteExterno) {
+                return response()->json([
+                    'success' => true,
+                    'participando' => false
+                ]);
+            }
+
+            $participando = DB::table('mega_evento_participantes_externos')
+                ->where('mega_evento_id', $megaEventoId)
+                ->where('integrante_externo_id', $integranteExterno->user_id)
+                ->where('activo', true)
+                ->exists();
+
+            return response()->json([
+                'success' => true,
+                'participando' => $participando
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al verificar participación: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener mega eventos públicos (para usuarios externos/voluntarios)
+     */
+    public function publicos(Request $request)
+    {
+        try {
+            $query = MegaEvento::with('ongPrincipal')
+                ->where('es_publico', true)
+                ->where('activo', true);
+            
+            // Filtro por categoría
+            if ($request->has('categoria') && $request->categoria !== '' && $request->categoria !== 'todos') {
+                $query->where('categoria', $request->categoria);
+            }
+            
+            // Búsqueda por título o descripción
+            if ($request->has('buscar') && $request->buscar !== '') {
+                $buscar = $request->buscar;
+                $query->where(function($q) use ($buscar) {
+                    $q->where('titulo', 'ilike', "%{$buscar}%")
+                      ->orWhere('descripcion', 'ilike', "%{$buscar}%");
+                });
+            }
+            
+            $megaEventos = $query->orderByDesc('fecha_inicio')->get();
+            
+            foreach ($megaEventos as $mega) {
+                $mega->makeVisible('imagenes');
+            }
+            
+            return response()->json([
+                'success' => true,
+                'mega_eventos' => $megaEventos,
+                'count' => $megaEventos->count()
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al obtener mega eventos públicos: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Crear notificación para la ONG cuando alguien participa en un mega evento
+     */
+    private function crearNotificacionMegaEvento(MegaEvento $megaEvento, $externoId)
+    {
+        try {
+            $externo = \App\Models\User::find($externoId);
+            if (!$externo) return;
+
+            $integranteExterno = \App\Models\IntegranteExterno::where('user_id', $externoId)->first();
+            $nombreUsuario = $integranteExterno 
+                ? trim($integranteExterno->nombres . ' ' . ($integranteExterno->apellidos ?? ''))
+                : $externo->nombre_usuario;
+
+            \App\Models\Notificacion::create([
+                'ong_id' => $megaEvento->ong_organizadora_principal,
+                'evento_id' => null, // Los mega eventos no tienen evento_id
+                'externo_id' => $externoId,
+                'tipo' => 'participacion',
+                'titulo' => 'Nueva participación en tu mega evento',
+                'mensaje' => "{$nombreUsuario} se inscribió al mega evento \"{$megaEvento->titulo}\"",
+                'leida' => false
+            ]);
+
+        } catch (\Throwable $e) {
+            \Log::error('Error creando notificación de mega evento: ' . $e->getMessage());
         }
     }
 }

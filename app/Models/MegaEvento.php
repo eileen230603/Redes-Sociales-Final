@@ -43,8 +43,7 @@ class MegaEvento extends Model
     ];
 
     /**
-     * Accessor para obtener URLs completas de las imágenes
-     * Se ejecuta después del cast 'array', así que $value ya es un array
+     * Accessor para convertir rutas relativas de imágenes a URLs completas
      */
     public function getImagenesAttribute($value)
     {
@@ -70,7 +69,7 @@ class MegaEvento extends Model
                 return $imagen;
             }
 
-            // Si empieza con /storage/, agregar el dominio
+            // Si empieza con /storage/, agregar el dominio (para Laravel web)
             if (strpos($imagen, '/storage/') === 0) {
                 return url($imagen);
             }

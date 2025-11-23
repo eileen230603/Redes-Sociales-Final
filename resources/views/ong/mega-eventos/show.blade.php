@@ -75,14 +75,18 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6 mb-4">
-                                <div class="d-flex align-items-start">
-                                    <div class="mr-3" style="width: 40px; height: 40px; background: #fef2f2; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                                        <i class="fas fa-map-marker-alt" style="color: #ef4444;"></i>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <small class="text-muted d-block mb-1" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Ubicación</small>
-                                        <p id="ubicacion" class="mb-0" style="font-size: 0.95rem; font-weight: 500; color: #2c3e50;">-</p>
+                            <div class="col-md-12 mb-4">
+                                <div class="card border-0" style="background: #f8f9fa; border-radius: 12px; padding: 1.25rem;">
+                                    <div class="d-flex align-items-start">
+                                        <div class="mr-3" style="width: 50px; height: 50px; background: #fff; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                            <i class="fas fa-map-marker-alt" style="color: #ef4444; font-size: 1.25rem;"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <small class="text-muted d-block mb-2" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Ubicación del Evento</small>
+                                            <div id="ubicacionContainer">
+                                                <p id="ubicacion" class="mb-0" style="font-size: 1rem; font-weight: 500; color: #2c3e50; line-height: 1.6;">-</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -359,8 +363,108 @@ function displayMegaEvento(mega) {
         document.getElementById('fecha_fin').textContent = '-';
     }
 
-    // Ubicación
-    document.getElementById('ubicacion').textContent = mega.ubicacion || 'No especificada';
+    // Ubicación - Mostrar de forma más visible y organizada con dirección, ciudad y departamento
+    const ubicacionContainer = document.getElementById('ubicacionContainer');
+    const ubicacion = mega.ubicacion || 'No especificada';
+    
+    function parsearUbicacion(ubicacionStr) {
+        if (!ubicacionStr || ubicacionStr === 'No especificada' || ubicacionStr.trim() === '') {
+            return null;
+        }
+        
+        // Intentar parsear formato: "Dirección, Ciudad, Departamento" o variaciones
+        const partes = ubicacionStr.split(',').map(p => p.trim()).filter(p => p);
+        
+        if (partes.length >= 3) {
+            // Formato: Dirección, Ciudad, Departamento
+            // Las últimas dos partes son ciudad y departamento, el resto es dirección
+            return {
+                direccion: partes.slice(0, -2).join(', '),
+                ciudad: partes[partes.length - 2],
+                departamento: partes[partes.length - 1]
+            };
+        } else if (partes.length === 2) {
+            // Formato: Dirección, Ciudad o Ciudad, Departamento
+            const segundaParte = partes[1].toLowerCase();
+            const esDepartamento = segundaParte.includes('departamento') || 
+                                   segundaParte.includes('depto') ||
+                                   segundaParte.includes('dep.') ||
+                                   segundaParte.length < 15;
+            
+            if (esDepartamento) {
+                return {
+                    direccion: partes[0],
+                    ciudad: null,
+                    departamento: partes[1]
+                };
+            } else {
+                return {
+                    direccion: partes[0],
+                    ciudad: partes[1],
+                    departamento: null
+                };
+            }
+        } else if (partes.length === 1) {
+            return {
+                direccion: partes[0],
+                ciudad: null,
+                departamento: null
+            };
+        }
+        
+        return null;
+    }
+    
+    const ubicacionParsed = parsearUbicacion(ubicacion);
+    
+    if (ubicacionParsed) {
+        let html = '';
+        
+        if (ubicacionParsed.direccion) {
+            html += `
+                <div class="mb-2">
+                    <strong style="color: #495057; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <i class="fas fa-road mr-1" style="color: #6c757d;"></i> Dirección:
+                    </strong>
+                    <p class="mb-0 mt-1" style="font-size: 0.95rem; color: #2c3e50; font-weight: 500;">${ubicacionParsed.direccion}</p>
+                </div>
+            `;
+        }
+        
+        if (ubicacionParsed.ciudad) {
+            html += `
+                <div class="mb-2">
+                    <strong style="color: #495057; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <i class="fas fa-city mr-1" style="color: #6c757d;"></i> Ciudad:
+                    </strong>
+                    <p class="mb-0 mt-1" style="font-size: 0.95rem; color: #2c3e50; font-weight: 500;">${ubicacionParsed.ciudad}</p>
+                </div>
+            `;
+        }
+        
+        if (ubicacionParsed.departamento) {
+            html += `
+                <div>
+                    <strong style="color: #495057; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <i class="fas fa-map-marked-alt mr-1" style="color: #6c757d;"></i> Departamento:
+                    </strong>
+                    <p class="mb-0 mt-1" style="font-size: 0.95rem; color: #2c3e50; font-weight: 500;">${ubicacionParsed.departamento}</p>
+                </div>
+            `;
+        }
+        
+        ubicacionContainer.innerHTML = html || `
+            <p class="mb-0" style="font-size: 1rem; font-weight: 500; color: #2c3e50; line-height: 1.6;">
+                <i class="fas fa-map-marker-alt mr-2" style="color: #ef4444;"></i>${ubicacion}
+            </p>
+        `;
+    } else {
+        ubicacionContainer.innerHTML = `
+            <p class="mb-0 text-muted" style="font-size: 0.95rem;">
+                <i class="fas fa-exclamation-circle mr-2"></i>Ubicación no especificada
+            </p>
+        `;
+    }
 
     // Capacidad
     document.getElementById('capacidad_maxima').textContent = mega.capacidad_maxima 

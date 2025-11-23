@@ -294,6 +294,8 @@
 @endsection
 
 @section('js')
+{{-- Script global para icono de notificaciones --}}
+<script src="{{ asset('js/notificaciones-ong.js') }}"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="{{ asset('assets/js/config.js') }}"></script>
 <script src="{{ asset('assets/js/ong/show-event.js') }}"></script>

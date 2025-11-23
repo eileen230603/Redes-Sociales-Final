@@ -37,9 +37,7 @@
                     </label>
                     <select id="filtroEstado" class="form-control">
                         <option value="">Todos los estados</option>
-                        <option value="pendiente">Pendiente</option>
                         <option value="aprobada">Aprobada</option>
-                        <option value="rechazada">Rechazada</option>
                     </select>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
@@ -186,6 +184,8 @@
 @stop
 
 @section('js')
+{{-- Script global para icono de notificaciones --}}
+<script src="{{ asset('js/notificaciones-ong.js') }}"></script>
 <script src="{{ asset('assets/js/config.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
@@ -266,14 +266,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         document.getElementById('totalVoluntarios').textContent = `${vols.length} participante${vols.length !== 1 ? 's' : ''}`;
 
-        // Función para obtener color del badge según estado
+        // Función para obtener color del badge según estado (solo aprobadas ahora)
         const getEstadoBadge = (estado) => {
             const estados = {
-                'pendiente': { class: 'warning', icon: 'fa-clock', text: 'Pendiente' },
-                'aprobada': { class: 'success', icon: 'fa-check-circle', text: 'Aprobada' },
-                'rechazada': { class: 'danger', icon: 'fa-times-circle', text: 'Rechazada' }
+                'aprobada': { class: 'success', icon: 'fa-check-circle', text: 'Aprobada' }
             };
-            return estados[estado] || estados['pendiente'];
+            return estados[estado] || estados['aprobada'];
         };
 
         // Función para obtener color del badge según tipo de usuario
@@ -301,7 +299,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         ${vols.map(vol => {
                             const inicial = (vol.nombre || 'U').charAt(0).toUpperCase();
                             const fotoPerfil = vol.foto_perfil || null;
-                            const estadoInfo = getEstadoBadge(vol.estado || 'pendiente');
+                            const estadoInfo = getEstadoBadge(vol.estado || 'aprobada');
                             const tipoInfo = getTipoUsuarioBadge(vol.tipo_usuario || 'Externo');
                             
                             return `
@@ -348,20 +346,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     </small>
                                 </td>
                                 <td style="text-align: center;">
-                                    ${vol.estado === 'pendiente' ? `
-                                        <div class="btn-group" role="group">
-                                            <button type="button" class="btn btn-success btn-sm" onclick="aprobarParticipacion(${vol.id})" title="Aprobar participación">
-                                                <i class="fas fa-check"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-danger btn-sm" onclick="rechazarParticipacion(${vol.id})" title="Rechazar participación">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </div>
-                                    ` : `
-                                        <span class="badge badge-secondary">
-                                            <i class="fas fa-check-circle"></i> ${estadoInfo.text}
-                                        </span>
-                                    `}
+                                    <span class="badge badge-success">
+                                        <i class="fas fa-check-circle"></i> Aprobada automáticamente
+                                    </span>
                                 </td>
                             </tr>
                             `;
@@ -385,7 +372,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 (vol.estado_label || '').toLowerCase().includes(termino) ||
                 (vol.tipo_usuario || '').toLowerCase().includes(termino);
             
-            const coincideEstado = !estadoFiltro || (vol.estado || 'pendiente') === estadoFiltro;
+            const coincideEstado = !estadoFiltro || (vol.estado || 'aprobada') === estadoFiltro;
             
             return coincideBusqueda && coincideEstado;
         });

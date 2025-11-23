@@ -209,8 +209,6 @@ return [
             'text' => 'Notificaciones',
             'url'  => '/ong/notificaciones',
             'icon' => 'fas fa-bell',
-            'label' => 0,
-            'label_color' => 'danger',
         ],
         [
             'text' => 'Configuraciones',

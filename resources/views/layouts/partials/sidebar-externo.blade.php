@@ -23,6 +23,13 @@
                 </li>
 
                 <li class="nav-item">
+                    <a href="/externo/mega-eventos" class="nav-link {{ request()->is('externo/mega-eventos*') || request()->is('voluntario/mega-eventos*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-star"></i>
+                        <p>Mega Eventos</p>
+                    </a>
+                </li>
+
+                <li class="nav-item">
                     <a href="/externo/reportes" class="nav-link {{ request()->is('externo/reportes') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-chart-line"></i>
                         <p>Reportes</p>

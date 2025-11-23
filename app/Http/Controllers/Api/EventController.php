@@ -6,13 +6,13 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use App\Models\Evento;
 use App\Models\EventoParticipacion;
 use App\Models\EventoReaccion;
 use App\Models\User;
 use App\Models\Empresa;
 use App\Models\IntegranteExterno;
-use Illuminate\Support\Str;
 
 class EventController extends Controller
 {
@@ -142,26 +142,53 @@ class EventController extends Controller
             }
             
             foreach ($files as $file) {
-                if ($file->isValid()) {
-                    // Validar tipo y tamaño
-                    $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
-                    if (!in_array($file->getMimeType(), $allowedMimes)) {
-                        continue;
+                try {
+                    if ($file->isValid()) {
+                        // Validar tipo y tamaño
+                        $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
+                        if (!in_array($file->getMimeType(), $allowedMimes)) {
+                            continue;
+                        }
+                        
+                        if ($file->getSize() > 5120 * 1024) { // 5MB
+                            continue;
+                        }
+                        
+                        // Generar nombre único para la imagen
+                        $filename = 'eventos/' . ($eventoId ?? 'temp') . '/' . Str::uuid() . '.' . $file->getClientOriginalExtension();
+                        
+                        // Guardar usando el disco 'public' explícitamente
+                        $path = Storage::disk('public')->putFileAs(
+                            dirname($filename),
+                            $file,
+                            basename($filename)
+                        );
+                        
+                        // Verificar que el archivo se guardó
+                        $fullPath = storage_path('app/public/' . $path);
+                        if (!file_exists($fullPath)) {
+                            \Log::error("No se pudo guardar la imagen: $fullPath");
+                            continue;
+                        }
+                        
+                        // Copiar también a public/storage/ para que el servidor de PHP pueda servirlo directamente
+                        $publicPath = public_path('storage/' . $path);
+                        $publicDir = dirname($publicPath);
+                        if (!file_exists($publicDir)) {
+                            mkdir($publicDir, 0755, true);
+                        }
+                        if (file_exists($fullPath)) {
+                            copy($fullPath, $publicPath);
+                        }
+                        
+                        // Obtener la URL pública (ruta relativa)
+                        $url = Storage::disk('public')->url($path);
+                        $imagenes[] = $url;
+                        
+                        \Log::info("Imagen guardada: $url -> $fullPath (también copiada a $publicPath)");
                     }
-                    
-                    if ($file->getSize() > 5120 * 1024) { // 5MB
-                        continue;
-                    }
-                    
-                    // Generar nombre único para la imagen
-                    $filename = 'eventos/' . ($eventoId ?? 'temp') . '/' . Str::uuid() . '.' . $file->getClientOriginalExtension();
-                    
-                    // Guardar en storage/public
-                    $path = $file->storeAs('public', $filename);
-                    
-                    // Obtener la ruta relativa (ej: /storage/eventos/1/uuid.jpg)
-                    $url = Storage::url($filename);
-                    $imagenes[] = $url; // Guardar como /storage/... (ruta relativa)
+                } catch (\Exception $e) {
+                    \Log::error("Error al guardar imagen: " . $e->getMessage());
                 }
             }
         }
@@ -427,30 +454,69 @@ class EventController extends Controller
             $validator = Validator::make($requestData, [
                 'ong_id' => 'required|integer|exists:ongs,user_id',
                 'titulo' => 'required|string|max:255',
-                'descripcion' => 'nullable|string',
+                'descripcion' => 'required|string|min:10',
                 'tipo_evento' => 'required|string|max:100',
                 'fecha_inicio' => 'required|date|after:now',
-                'fecha_fin' => 'nullable|date|after:fecha_inicio',
+                'fecha_fin' => 'required|date|after:fecha_inicio',
                 'fecha_limite_inscripcion' => 'nullable|date|before:fecha_inicio',
                 'capacidad_maxima' => 'nullable|integer|min:1',
                 'estado' => 'required|in:borrador,publicado,finalizado,cancelado',
                 'ciudad' => 'nullable|string|max:255',
-                'direccion' => 'nullable|string|max:255',
-                'lat' => 'nullable|numeric|between:-90,90',
-                'lng' => 'nullable|numeric|between:-180,180',
+                'direccion' => 'required|string|max:255',
+                'lat' => 'required|numeric|between:-90,90',
+                'lng' => 'required|numeric|between:-180,180',
                 'inscripcion_abierta' => 'nullable|boolean',
                 'patrocinadores' => 'nullable|array',
                 'patrocinadores.*' => 'integer',
                 'invitados' => 'nullable|array',
                 'invitados.*' => 'integer',
                 'imagenes' => 'nullable|array',
+                'imagenes_urls' => 'nullable|string',
                 'auspiciadores' => 'nullable|array',
+            ], [
+                'titulo.required' => 'El título del evento es obligatorio.',
+                'descripcion.required' => 'La descripción del evento es obligatoria.',
+                'descripcion.min' => 'La descripción debe tener al menos 10 caracteres.',
+                'tipo_evento.required' => 'Debes seleccionar un tipo de evento.',
+                'fecha_inicio.required' => 'La fecha de inicio es obligatoria.',
+                'fecha_inicio.after' => 'La fecha de inicio debe ser una fecha futura.',
+                'fecha_fin.required' => 'La fecha de finalización es obligatoria.',
+                'fecha_fin.after' => 'La fecha de finalización debe ser posterior a la fecha de inicio.',
+                'estado.required' => 'Debes seleccionar un estado para el evento.',
+                'direccion.required' => 'La ubicación/dirección del evento es obligatoria.',
+                'lat.required' => 'Debes seleccionar una ubicación en el mapa.',
+                'lng.required' => 'Debes seleccionar una ubicación en el mapa.',
             ]);
 
+            // Validar que haya al menos una imagen (archivo o URL)
+            $tieneImagenes = false;
+            if ($request->hasFile('imagenes') && count($request->file('imagenes')) > 0) {
+                $tieneImagenes = true;
+            }
+            if ($request->has('imagenes_urls')) {
+                $urls = json_decode($request->input('imagenes_urls'), true);
+                if (is_array($urls) && count($urls) > 0) {
+                    $tieneImagenes = true;
+                }
+            }
+
             if ($validator->fails()) {
+                if (!$tieneImagenes) {
+                    $validator->errors()->add('imagenes', 'Debes agregar al menos una imagen promocional (archivo o URL).');
+                }
                 return response()->json([
                     "success" => false,
+                    "error" => "Por favor, completa todos los campos obligatorios antes de crear el evento.",
                     "errors" => $validator->errors()
+                ], 422);
+            }
+            
+            // Validación adicional: debe haber al menos una imagen
+            if (!$tieneImagenes) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Debes agregar al menos una imagen promocional (archivo o URL) antes de crear el evento.",
+                    "errors" => ['imagenes' => ['Debes agregar al menos una imagen promocional.']]
                 ], 422);
             }
 

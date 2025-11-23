@@ -24,8 +24,8 @@
                 </div>
 
                 <div class="form-group mb-3">
-                    <label for="descripcion">Descripción</label>
-                    <textarea id="descripcion" name="descripcion" rows="3" class="form-control"></textarea>
+                    <label for="descripcion">Descripción *</label>
+                    <textarea id="descripcion" name="descripcion" rows="3" class="form-control" required></textarea>
                 </div>
 
                 <div class="form-row">
@@ -35,8 +35,8 @@
                     </div>
 
                     <div class="form-group col-md-6">
-                        <label for="fechaFinal">Fecha de finalización</label>
-                        <input type="datetime-local" id="fechaFinal" class="form-control">
+                        <label for="fechaFinal">Fecha de finalización *</label>
+                        <input type="datetime-local" id="fechaFinal" class="form-control" required>
                     </div>
                 </div>
 
@@ -89,9 +89,10 @@
                 <div id="map" class="rounded mb-3" style="height: 300px; border: 1px solid #ced4da;"></div>
 
                 <div class="form-group">
-                    <label for="locacion">Dirección seleccionada</label>
-                    <input id="locacion" readonly class="form-control bg-light">
+                    <label for="locacion">Dirección seleccionada *</label>
+                    <input id="locacion" readonly class="form-control bg-light" required>
                     <small id="ciudadInfo" class="text-muted"></small>
+                    <small class="form-text text-muted">Haz clic en el mapa para seleccionar la ubicación del evento</small>
                 </div>
 
                 <input type="hidden" id="lat">
@@ -103,16 +104,16 @@
 
                 <!-- Subir imágenes desde dispositivo -->
                 <div class="form-group mb-3">
-                    <label for="imagenesPromocionales">Subir imágenes desde dispositivo</label>
+                    <label for="imagenesPromocionales">Subir imágenes desde dispositivo *</label>
                     <input type="file" id="imagenesPromocionales" multiple accept="image/*" class="form-control-file">
-                    <small class="form-text text-muted">Formatos permitidos: JPG, PNG, GIF, WEBP. Tamaño máximo: 5MB por imagen.</small>
+                    <small class="form-text text-muted">Formatos permitidos: JPG, PNG, GIF, WEBP. Tamaño máximo: 5MB por imagen. Debes agregar al menos una imagen (archivo o URL).</small>
                 </div>
 
                 <div id="previewContainer" class="d-flex flex-wrap gap-2 mb-4"></div>
 
                 <!-- Agregar imagen por URL -->
                 <div class="form-group mb-3">
-                    <label for="imagen_url">Agregar imagen por URL</label>
+                    <label for="imagen_url">Agregar imagen por URL *</label>
                     <div class="input-group">
                         <input type="url" id="imagen_url" class="form-control" placeholder="https://ejemplo.com/imagen.jpg">
                         <div class="input-group-append">
@@ -121,7 +122,7 @@
                             </button>
                         </div>
                     </div>
-                    <small class="form-text text-muted">Ingresa una URL válida de una imagen (JPG, PNG, GIF, WEBP).</small>
+                    <small class="form-text text-muted">Ingresa una URL válida de una imagen (JPG, PNG, GIF, WEBP). Debes agregar al menos una imagen (archivo o URL).</small>
                 </div>
 
                 <div id="urlImagesContainer" class="d-flex flex-wrap gap-2 mb-3"></div>
@@ -181,6 +182,14 @@
     #urlImagesContainer img:hover {
         transform: scale(1.05);
     }
+    .is-invalid {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+    }
+    .is-invalid:focus {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+    }
     .image-preview-wrapper {
         position: relative;
         display: inline-block;
@@ -208,10 +217,20 @@
         object-fit: cover;
         border-radius: 6px;
     }
+    .is-invalid {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+    }
+    .is-invalid:focus {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+    }
 </style>
 @stop
 
 @section('js')
+{{-- Script global para icono de notificaciones --}}
+<script src="{{ asset('js/notificaciones-ong.js') }}"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="{{ asset('assets/js/config.js') }}"></script>
 

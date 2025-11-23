@@ -56,14 +56,16 @@ class VoluntarioController extends Controller
                     }
                 }
                 
-                // Estado de participación
-                $estado = $participacion->estado ?? 'pendiente';
+                // Estado de participación - Solo mostrar aprobadas (las participaciones ahora son automáticas)
+                $estado = $participacion->estado ?? 'aprobada';
+                // Filtrar solo participaciones aprobadas
+                if ($estado !== 'aprobada') {
+                    return null;
+                }
                 $estadoLabels = [
-                    'pendiente' => 'Pendiente',
-                    'aprobada' => 'Aprobada',
-                    'rechazada' => 'Rechazada'
+                    'aprobada' => 'Aprobada'
                 ];
-                $estadoLabel = $estadoLabels[$estado] ?? ucfirst($estado);
+                $estadoLabel = $estadoLabels[$estado] ?? 'Aprobada';
                 
                 return [
                     'id' => $participacion->id,

@@ -22,11 +22,11 @@
 
 {{-- NAVBAR SUPERIOR --}}
 @push('adminlte_topnav')
-    {{-- 🔔 Ícono de Notificaciones Permanente - SIEMPRE VISIBLE PARA ONGs --}}
-    <li class="nav-item" id="notificacionesNavItem" style="display: flex !important; align-items: center;">
+    {{-- 🔔 Ícono de Notificaciones - POSICIONADO ANTES DEL MENÚ DE USUARIO (círculo gris) --}}
+    <li class="nav-item" id="notificacionesNavItem" style="display: flex !important; align-items: center; order: 998;">
         <a href="{{ route('ong.notificaciones.index') }}" class="nav-link position-relative" id="notificacionesIcono" title="Notificaciones" style="display: flex !important; align-items: center; justify-content: center; padding: 0.5rem 0.75rem !important; min-width: 45px; color: #6c757d !important;">
             <i class="fas fa-bell" style="font-size: 1.25rem !important; display: block !important;"></i>
-            <span class="badge badge-danger position-absolute" id="contadorNotificaciones" style="top: 2px; right: 2px; display: none; font-size: 0.65rem; padding: 3px 6px; min-width: 18px; height: 18px; line-height: 12px; border-radius: 9px; font-weight: bold; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">0</span>
+            <span class="badge badge-danger position-absolute" id="contadorNotificaciones" style="top: 2px; right: 2px; display: none; font-size: 0.7rem; padding: 4px 7px; min-width: 20px; height: 20px; line-height: 12px; border-radius: 10px; font-weight: bold; z-index: 10; background-color: #dc3545 !important; color: white !important; box-shadow: 0 2px 4px rgba(0,0,0,0.2); align-items: center; justify-content: center;">0</span>
         </a>
     </li>
     <li class="nav-item d-none d-sm-inline-block">
@@ -113,7 +113,7 @@
         <li class="nav-item">
             <a href="{{ route('ong.notificaciones.index') }}" class="nav-link {{ request()->is('ong/notificaciones*') ? 'active' : '' }}">
                 <i class="nav-icon fas fa-bell"></i>
-                <p>Notificaciones <span id="badgeNotificaciones" class="badge badge-danger ml-1" style="display: none; font-weight: bold; font-size: 0.75rem; padding: 3px 6px; border-radius: 10px;">0</span></p>
+                <p>Notificaciones</p>
             </a>
         </li>
 
@@ -201,23 +201,50 @@
         position: absolute;
         top: 2px;
         right: 2px;
-        border-radius: 9px;
+        border-radius: 10px;
         font-weight: bold;
         line-height: 12px;
-        padding: 3px 6px;
-        min-width: 18px;
-        height: 18px;
+        padding: 4px 7px;
+        min-width: 20px;
+        height: 20px;
         display: flex;
         align-items: center;
         justify-content: center;
         z-index: 10;
+        background-color: #dc3545 !important;
+        color: white !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        font-size: 0.7rem;
     }
 
     /* Asegurar que el navbar muestre el ícono */
     .navbar-nav .nav-item {
         display: flex;
         align-items: center;
+    }
+    
+    /* Forzar que el icono de notificaciones esté siempre visible - ANTES DEL MENÚ DE USUARIO */
+    #notificacionesNavItem {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        order: 998 !important;
+    }
+    
+    /* Asegurar que el icono esté justo antes del menú de usuario */
+    .navbar-nav > #notificacionesNavItem {
+        order: 998 !important;
+    }
+    
+    /* El menú de usuario (círculo gris) debe estar después */
+    .navbar-nav > .nav-item:has(.user-menu) {
+        order: 999 !important;
+    }
+    
+    #notificacionesIcono {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
     }
 
     /* Forzar visibilidad del ícono en todas las pantallas */
@@ -226,6 +253,66 @@
             display: flex !important;
             padding: 0.4rem 0.6rem !important;
         }
+        #notificacionesNavItem {
+            display: flex !important;
+            visibility: visible !important;
+        }
+    }
+    
+    /* Asegurar que el navbar tenga espacio para el icono */
+    .main-header .navbar-nav {
+        display: flex;
+        align-items: center;
+        flex-wrap: nowrap;
+    }
+    
+    /* Forzar que el icono esté justo antes del menú de usuario */
+    .main-header .navbar-nav > #notificacionesNavItem {
+        order: 998 !important;
+        margin-right: 0.5rem;
+    }
+    
+    /* Asegurar visibilidad en todas las pantallas */
+    body:has(.main-header) #notificacionesNavItem {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* Estilo específico para el icono de notificaciones */
+    #notificacionesIcono {
+        cursor: pointer;
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+    
+    #notificacionesIcono:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Badge más visible */
+    #contadorNotificaciones {
+        position: absolute !important;
+        top: 5px !important;
+        right: 5px !important;
+        z-index: 1000 !important;
+        font-size: 0.65rem !important;
+        padding: 3px 6px !important;
+        min-width: 18px !important;
+        height: 18px !important;
+        border-radius: 9px !important;
+        font-weight: bold !important;
+        background-color: #dc3545 !important;
+        color: white !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
 </style>
 @stop
@@ -235,6 +322,8 @@
 <script src="{{ asset('vendor/adminlte/dist/js/adminlte.min.js') }}"></script>
 <script src="{{ asset('js/custom.js') }}"></script>
 <script src="{{ asset('assets/js/config.js') }}"></script>
+{{-- Script global para icono de notificaciones en todas las pantallas ONG --}}
+<script src="{{ asset('js/notificaciones-ong.js') }}"></script>
 <script>
 async function cerrarSesion(event) {
     event.preventDefault();
@@ -294,10 +383,15 @@ async function actualizarContadorNotificaciones() {
             
             if (contadorNavbar) {
                 if (contador > 0) {
-                    contadorNavbar.textContent = contador > 99 ? '99+' : contador;
+                    // Mostrar "10+" cuando hay 10 o más notificaciones, o el número exacto si es menor
+                    contadorNavbar.textContent = contador >= 10 ? '10+' : contador.toString();
                     contadorNavbar.style.display = 'flex';
                     contadorNavbar.style.visibility = 'visible';
                     contadorNavbar.style.opacity = '1';
+                    contadorNavbar.style.backgroundColor = '#dc3545';
+                    contadorNavbar.style.color = 'white';
+                    contadorNavbar.style.alignItems = 'center';
+                    contadorNavbar.style.justifyContent = 'center';
                     
                     // Agregar animación de pulso si hay notificaciones nuevas
                     contadorNavbar.classList.add('pulse-animation');
@@ -310,6 +404,7 @@ async function actualizarContadorNotificaciones() {
                 } else {
                     contadorNavbar.style.display = 'none';
                     contadorNavbar.style.visibility = 'hidden';
+                    contadorNavbar.style.opacity = '0';
                     contadorNavbar.classList.remove('pulse-animation');
                 }
             }
@@ -320,49 +415,7 @@ async function actualizarContadorNotificaciones() {
                 iconoNavbar.style.visibility = 'visible';
             }
 
-            // Actualizar contador en el sidebar (badge personalizado)
-            const badgeSidebar = document.getElementById('badgeNotificaciones');
-            if (badgeSidebar) {
-                if (contador > 0) {
-                    badgeSidebar.textContent = contador > 99 ? '99+' : contador;
-                    badgeSidebar.style.display = 'inline-block';
-                    badgeSidebar.style.visibility = 'visible';
-                } else {
-                    badgeSidebar.style.display = 'none';
-                    badgeSidebar.style.visibility = 'hidden';
-                }
-            }
-
-            // Actualizar badge en el menú de AdminLTE (si existe)
-            // Buscar el elemento del menú de notificaciones generado por AdminLTE
-            const menuItems = document.querySelectorAll('.nav-sidebar .nav-item');
-            menuItems.forEach(item => {
-                const link = item.querySelector('a[href*="notificaciones"]');
-                if (link) {
-                    // Buscar o crear el badge en el menú de AdminLTE
-                    let adminLteBadge = link.querySelector('.badge');
-                    if (!adminLteBadge && contador > 0) {
-                        // Crear badge si no existe
-                        const pTag = link.querySelector('p');
-                        if (pTag) {
-                            adminLteBadge = document.createElement('span');
-                            adminLteBadge.className = 'badge badge-danger badge-sm ml-1';
-                            adminLteBadge.style.cssText = 'display: inline-block; font-weight: bold;';
-                            pTag.appendChild(adminLteBadge);
-                        }
-                    }
-                    if (adminLteBadge) {
-                        if (contador > 0) {
-                            adminLteBadge.textContent = contador > 99 ? '99+' : contador;
-                            adminLteBadge.style.display = 'inline-block';
-                            adminLteBadge.style.visibility = 'visible';
-                        } else {
-                            adminLteBadge.style.display = 'none';
-                            adminLteBadge.style.visibility = 'hidden';
-                        }
-                    }
-                }
-            });
+            // Badge del sidebar removido según solicitud del usuario
         }
     } catch (error) {
         console.warn('Error actualizando contador de notificaciones:', error);
@@ -390,21 +443,208 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // Asegurar que el ícono esté visible para ONGs
+    // Asegurar que el ícono esté visible para ONGs - SIEMPRE VISIBLE
     if (navItem) {
         navItem.style.display = 'flex';
         navItem.style.visibility = 'visible';
+        navItem.style.opacity = '1';
     }
     if (iconoNavbar) {
         iconoNavbar.style.display = 'flex';
         iconoNavbar.style.visibility = 'visible';
+        iconoNavbar.style.opacity = '1';
+    }
+    
+    // Forzar visibilidad del icono en todas las pantallas
+    const notificacionesNavItem = document.getElementById('notificacionesNavItem');
+    if (notificacionesNavItem) {
+        notificacionesNavItem.style.setProperty('display', 'flex', 'important');
+        notificacionesNavItem.style.setProperty('visibility', 'visible', 'important');
+        notificacionesNavItem.style.setProperty('opacity', '1', 'important');
     }
 
-    // Cargar contador inicial
+    // Cargar contador inicial inmediatamente
     actualizarContadorNotificaciones();
 
-    // Actualizar contador cada 10 segundos (tiempo real)
-    setInterval(actualizarContadorNotificaciones, 10000);
+    // También cargar después de un pequeño delay para asegurar que todo esté listo
+    setTimeout(actualizarContadorNotificaciones, 500);
+    setTimeout(actualizarContadorNotificaciones, 1500);
+
+    // Actualizar contador cada 5 segundos (tiempo real más frecuente)
+    setInterval(actualizarContadorNotificaciones, 5000);
+    
+    // Actualizar cuando la página recupera el foco
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            actualizarContadorNotificaciones();
+        }
+    });
+    
+    window.addEventListener('focus', actualizarContadorNotificaciones);
+    
+    // Forzar visibilidad del icono cada vez que se carga una nueva página
+    setTimeout(() => {
+        const navItem = document.getElementById('notificacionesNavItem');
+        const icono = document.getElementById('notificacionesIcono');
+        if (navItem) {
+            navItem.style.setProperty('display', 'flex', 'important');
+            navItem.style.setProperty('visibility', 'visible', 'important');
+            navItem.style.setProperty('opacity', '1', 'important');
+        }
+        if (icono) {
+            icono.style.setProperty('display', 'flex', 'important');
+            icono.style.setProperty('visibility', 'visible', 'important');
+            icono.style.setProperty('opacity', '1', 'important');
+        }
+    }, 100);
 });
+
+// Asegurar visibilidad del icono cuando se navega entre páginas
+window.addEventListener('load', () => {
+    const tipoUsuario = localStorage.getItem('tipo_usuario');
+    if (tipoUsuario !== 'ONG') return;
+    
+    // Buscar el icono existente
+    let navItem = document.getElementById('notificacionesNavItem');
+    let icono = document.getElementById('notificacionesIcono');
+    
+    // Si no existe, crearlo dinámicamente (para vistas que usan adminlte::page directamente)
+    if (!navItem) {
+        const navbarNav = document.querySelector('.main-header .navbar-nav');
+        if (navbarNav) {
+            // Buscar el menú de usuario para insertar antes de él
+            const userMenu = navbarNav.querySelector('.nav-item:has(.user-menu), .nav-item:has([data-toggle="dropdown"])');
+            
+            navItem = document.createElement('li');
+            navItem.className = 'nav-item';
+            navItem.id = 'notificacionesNavItem';
+            navItem.style.cssText = 'display: flex !important; align-items: center; order: 998;';
+            
+            const link = document.createElement('a');
+            link.href = '{{ route("ong.notificaciones.index") }}';
+            link.className = 'nav-link position-relative';
+            link.id = 'notificacionesIcono';
+            link.title = 'Notificaciones';
+            link.style.cssText = 'display: flex !important; align-items: center; justify-content: center; padding: 0.5rem 0.75rem !important; min-width: 45px; color: #6c757d !important;';
+            
+            const bellIcon = document.createElement('i');
+            bellIcon.className = 'fas fa-bell';
+            bellIcon.style.cssText = 'font-size: 1.25rem !important; display: block !important;';
+            
+            const badge = document.createElement('span');
+            badge.className = 'badge badge-danger position-absolute';
+            badge.id = 'contadorNotificaciones';
+            badge.style.cssText = 'top: 2px; right: 2px; display: none; font-size: 0.7rem; padding: 4px 7px; min-width: 20px; height: 20px; line-height: 12px; border-radius: 10px; font-weight: bold; z-index: 10; background-color: #dc3545 !important; color: white !important; box-shadow: 0 2px 4px rgba(0,0,0,0.2);';
+            badge.textContent = '0';
+            
+            link.appendChild(bellIcon);
+            link.appendChild(badge);
+            navItem.appendChild(link);
+            
+            // Insertar antes del menú de usuario si existe, sino al final
+            if (userMenu) {
+                navbarNav.insertBefore(navItem, userMenu);
+            } else {
+                navbarNav.appendChild(navItem);
+            }
+            
+            icono = link;
+        }
+    }
+    
+    // Forzar visibilidad
+    if (navItem) {
+        navItem.style.setProperty('display', 'flex', 'important');
+        navItem.style.setProperty('visibility', 'visible', 'important');
+        navItem.style.setProperty('opacity', '1', 'important');
+    }
+    if (icono) {
+        icono.style.setProperty('display', 'flex', 'important');
+        icono.style.setProperty('visibility', 'visible', 'important');
+        icono.style.setProperty('opacity', '1', 'important');
+    }
+    
+    // Actualizar contador si el icono fue creado dinámicamente
+    const contador = document.getElementById('contadorNotificaciones');
+    if (navItem && contador && !contador.hasAttribute('data-initialized')) {
+        setTimeout(() => {
+            actualizarContadorNotificaciones();
+            contador.setAttribute('data-initialized', 'true');
+        }, 500);
+    }
+});
+
+// Script adicional para asegurar visibilidad en todas las pantallas
+(function() {
+    const tipoUsuario = localStorage.getItem('tipo_usuario');
+    if (tipoUsuario !== 'ONG') return;
+    
+    function asegurarIconoVisible() {
+        let navItem = document.getElementById('notificacionesNavItem');
+        let icono = document.getElementById('notificacionesIcono');
+        
+        if (!navItem) {
+            const navbarNav = document.querySelector('.main-header .navbar-nav, .navbar-nav');
+            if (navbarNav) {
+                const userMenu = navbarNav.querySelector('.user-menu, [data-toggle="dropdown"]')?.closest('.nav-item');
+                
+                navItem = document.createElement('li');
+                navItem.className = 'nav-item';
+                navItem.id = 'notificacionesNavItem';
+                navItem.style.cssText = 'display: flex !important; align-items: center; order: 998;';
+                
+                const link = document.createElement('a');
+                link.href = '{{ route("ong.notificaciones.index") }}';
+                link.className = 'nav-link position-relative';
+                link.id = 'notificacionesIcono';
+                link.title = 'Notificaciones';
+                link.style.cssText = 'display: flex !important; align-items: center; justify-content: center; padding: 0.5rem 0.75rem !important; min-width: 45px; color: #6c757d !important;';
+                
+                const bellIcon = document.createElement('i');
+                bellIcon.className = 'fas fa-bell';
+                bellIcon.style.cssText = 'font-size: 1.25rem !important; display: block !important;';
+                
+                const badge = document.createElement('span');
+                badge.className = 'badge badge-danger position-absolute';
+                badge.id = 'contadorNotificaciones';
+                badge.style.cssText = 'top: 2px; right: 2px; display: none; font-size: 0.7rem; padding: 4px 7px; min-width: 20px; height: 20px; line-height: 12px; border-radius: 10px; font-weight: bold; z-index: 10; background-color: #dc3545 !important; color: white !important; box-shadow: 0 2px 4px rgba(0,0,0,0.2);';
+                badge.textContent = '0';
+                
+                link.appendChild(bellIcon);
+                link.appendChild(badge);
+                navItem.appendChild(link);
+                
+                if (userMenu) {
+                    navbarNav.insertBefore(navItem, userMenu);
+                } else {
+                    navbarNav.appendChild(navItem);
+                }
+            }
+        }
+        
+        if (navItem) {
+            navItem.style.setProperty('display', 'flex', 'important');
+            navItem.style.setProperty('visibility', 'visible', 'important');
+            navItem.style.setProperty('opacity', '1', 'important');
+        }
+        if (icono || document.getElementById('notificacionesIcono')) {
+            const iconoEl = icono || document.getElementById('notificacionesIcono');
+            iconoEl.style.setProperty('display', 'flex', 'important');
+            iconoEl.style.setProperty('visibility', 'visible', 'important');
+            iconoEl.style.setProperty('opacity', '1', 'important');
+        }
+    }
+    
+    // Ejecutar inmediatamente y después de que cargue el DOM
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', asegurarIconoVisible);
+    } else {
+        asegurarIconoVisible();
+    }
+    
+    // También ejecutar después de un pequeño delay para asegurar que AdminLTE haya cargado
+    setTimeout(asegurarIconoVisible, 100);
+    setTimeout(asegurarIconoVisible, 500);
+})();
 </script>
 @stop

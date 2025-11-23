@@ -23,6 +23,11 @@
             'icon' => 'fas fa-calendar-alt',
         ],
         [
+            'text' => 'Mega Eventos',
+            'url'  => '/externo/mega-eventos',
+            'icon' => 'fas fa-star',
+        ],
+        [
             'text' => 'Mis Participaciones',
             'url'  => '/externo/mis-participaciones',
             'icon' => 'fas fa-calendar-check',

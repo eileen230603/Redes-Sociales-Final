@@ -230,7 +230,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (typeof Swal !== 'undefined') {
                 const result = await Swal.fire({
                     title: '¿Participar en este evento?',
-                    text: 'Tu solicitud será enviada para aprobación',
+                    text: 'Tu participación será registrada y aprobada automáticamente',
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonColor: '#28a745',
@@ -258,7 +258,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     Swal.fire({
                         icon: 'success',
                         title: '¡Inscripción exitosa!',
-                        text: 'Tu solicitud ha sido enviada y está pendiente de aprobación',
+                        text: 'Tu participación ha sido registrada y aprobada automáticamente',
                         timer: 3000,
                         showConfirmButton: false
                     });

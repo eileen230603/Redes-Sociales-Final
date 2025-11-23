@@ -6,7 +6,7 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="text-primary">
-            <i class="fas fa-calendar-check mr-2"></i> Mega Eventos
+            <i class=></i> 
         </h2>
         <a href="{{ route('ong.mega-eventos.create') }}" class="btn btn-success btn-lg">
             <i class="fas fa-plus mr-2"></i> Nuevo Mega Evento

@@ -62,7 +62,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Accessor para obtener la URL completa de la foto de perfil
+     * Accessor para convertir rutas relativas de foto de perfil a URLs completas
      */
     public function getFotoPerfilUrlAttribute()
     {
@@ -75,12 +75,18 @@ class User extends Authenticatable
             return $this->foto_perfil;
         }
 
-        // Si es una ruta relativa, construir la URL completa
+        // Si empieza con /storage/, agregar el dominio (para Laravel web)
         if (str_starts_with($this->foto_perfil, '/storage/')) {
             return url($this->foto_perfil);
         }
 
-        return url('storage/' . $this->foto_perfil);
+        // Si empieza con storage/, agregar /storage/
+        if (str_starts_with($this->foto_perfil, 'storage/')) {
+            return url('/storage/' . $this->foto_perfil);
+        }
+
+        // Por defecto, asumir que es relativa a storage
+        return url('/storage/' . ltrim($this->foto_perfil, '/'));
     }
 
 }

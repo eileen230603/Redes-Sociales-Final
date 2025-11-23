@@ -175,14 +175,13 @@ class ProfileController extends Controller
                 $user->contrasena = Hash::make($request->nueva_contrasena);
             }
 
-            // Procesar foto de perfil
-            $fotoPerfil = $this->processFotoPerfil($request, $user);
-            if ($fotoPerfil !== null) {
+            // Procesar foto de perfil para usuario base
+            $fotoPerfil = $this->processFotoPerfil($request, $user, 'usuario');
+            if ($fotoPerfil !== null && !empty($fotoPerfil)) {
                 $user->foto_perfil = $fotoPerfil;
-                $user->save();
-            } else {
-                $user->save();
+                \Log::info("Guardando foto_perfil en usuario base: $fotoPerfil");
             }
+            $user->save();
 
             // Actualizar información específica según el tipo
             if ($user->esOng() && $user->ong) {
@@ -196,8 +195,9 @@ class ProfileController extends Controller
                 
                 // Procesar foto de perfil para ONG
                 $fotoPerfilOng = $this->processFotoPerfil($request, $user, 'ong');
-                if ($fotoPerfilOng !== null) {
+                if ($fotoPerfilOng !== null && !empty($fotoPerfilOng)) {
                     $ong->foto_perfil = $fotoPerfilOng;
+                    \Log::info("Guardando foto_perfil en ONG: $fotoPerfilOng");
                 }
                 
                 $ong->save();
@@ -215,8 +215,9 @@ class ProfileController extends Controller
                 
                 // Procesar foto de perfil para Empresa
                 $fotoPerfilEmpresa = $this->processFotoPerfil($request, $user, 'empresa');
-                if ($fotoPerfilEmpresa !== null) {
+                if ($fotoPerfilEmpresa !== null && !empty($fotoPerfilEmpresa)) {
                     $empresa->foto_perfil = $fotoPerfilEmpresa;
+                    \Log::info("Guardando foto_perfil en Empresa: $fotoPerfilEmpresa");
                 }
                 
                 $empresa->save();
@@ -234,8 +235,9 @@ class ProfileController extends Controller
                 
                 // Procesar foto de perfil para Externo
                 $fotoPerfilExterno = $this->processFotoPerfil($request, $user, 'externo');
-                if ($fotoPerfilExterno !== null) {
+                if ($fotoPerfilExterno !== null && !empty($fotoPerfilExterno)) {
                     $externo->foto_perfil = $fotoPerfilExterno;
+                    \Log::info("Guardando foto_perfil en Externo: $fotoPerfilExterno");
                 }
                 
                 $externo->save();
@@ -256,10 +258,24 @@ class ProfileController extends Controller
                 $user->load('integranteExterno');
             }
             
+            // Obtener la foto de perfil actualizada según el tipo
+            $fotoPerfilActualizada = null;
+            if ($user->esOng() && $user->ong) {
+                $fotoPerfilActualizada = $user->ong->foto_perfil_url ?? null;
+            } elseif ($user->esEmpresa() && $user->empresa) {
+                $fotoPerfilActualizada = $user->empresa->foto_perfil_url ?? null;
+            } elseif ($user->esIntegranteExterno() && $user->integranteExterno) {
+                $fotoPerfilActualizada = $user->integranteExterno->foto_perfil_url ?? null;
+            } else {
+                $fotoPerfilActualizada = $user->foto_perfil_url ?? null;
+            }
+            
+            \Log::info("Perfil actualizado. Foto de perfil: " . ($fotoPerfilActualizada ?? 'null'));
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Perfil actualizado correctamente',
-                'foto_perfil' => $user->foto_perfil_url ?? null
+                'foto_perfil' => $fotoPerfilActualizada
             ]);
 
         } catch (\Throwable $e) {
@@ -276,9 +292,18 @@ class ProfileController extends Controller
      */
     private function processFotoPerfil(Request $request, User $user, $tipo = 'usuario')
     {
+        \Log::info("processFotoPerfil iniciado para tipo: {$tipo}, usuario: {$user->id_usuario}");
+        
         // Prioridad: archivo subido > URL proporcionada
         if ($request->hasFile('foto_perfil')) {
             $file = $request->file('foto_perfil');
+            \Log::info("Archivo recibido: " . $file->getClientOriginalName() . ", tamaño: " . $file->getSize());
+            
+            // Verificar que el archivo sea válido
+            if (!$file->isValid()) {
+                \Log::warning("Archivo de foto_perfil inválido para tipo {$tipo}");
+                return null;
+            }
             
             // Validar tipo de archivo
             $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
@@ -307,25 +332,92 @@ class ProfileController extends Controller
 
             // Solo eliminar si es un archivo local (no URL externa)
             if ($fotoAnterior && !str_starts_with($fotoAnterior, 'http://') && !str_starts_with($fotoAnterior, 'https://')) {
-                // Limpiar la ruta para eliminar
-                $rutaAnterior = str_replace('storage/', '', $fotoAnterior);
-                $rutaAnterior = ltrim($rutaAnterior, '/');
-                if (Storage::disk('public')->exists($rutaAnterior)) {
-                    Storage::disk('public')->delete($rutaAnterior);
-                    \Log::info("Eliminada foto anterior para tipo {$tipo}: {$rutaAnterior}");
+                try {
+                    // Limpiar la ruta para eliminar
+                    $rutaAnterior = str_replace('storage/', '', $fotoAnterior);
+                    $rutaAnterior = str_replace('/storage/', '', $rutaAnterior);
+                    $rutaAnterior = ltrim($rutaAnterior, '/');
+                    
+                    // Eliminar de storage/app/public/
+                    if (Storage::disk('public')->exists($rutaAnterior)) {
+                        Storage::disk('public')->delete($rutaAnterior);
+                        \Log::info("Eliminada foto anterior de storage para tipo {$tipo}: {$rutaAnterior}");
+                    }
+                    
+                    // Eliminar también de public/storage/
+                    $publicPathAnterior = public_path('storage/' . $rutaAnterior);
+                    if (file_exists($publicPathAnterior) && is_file($publicPathAnterior)) {
+                        unlink($publicPathAnterior);
+                        \Log::info("Eliminada foto anterior de public/storage para tipo {$tipo}: {$publicPathAnterior}");
+                    }
+                } catch (\Exception $e) {
+                    \Log::warning("Error al eliminar foto anterior para tipo {$tipo}: " . $e->getMessage());
                 }
             }
 
-            // Guardar nueva foto (similar a mega-eventos)
-            $nombreArchivo = 'perfil_' . $user->id_usuario . '_' . time() . '_' . \Illuminate\Support\Str::random(8) . '.' . $file->getClientOriginalExtension();
-            $ruta = 'perfiles/' . $tipo . '/' . $user->id_usuario;
-            $path = $file->storeAs($ruta, $nombreArchivo, 'public');
-
-            // Retornar ruta relativa (similar a mega-eventos: /storage/...)
-            // El accessor del modelo la convertirá a URL completa si es necesario
-            $url = Storage::url($path);
-            \Log::info("Guardada nueva foto_perfil para tipo {$tipo}: {$url}");
-            return $url; // Retorna /storage/perfiles/...
+            // Guardar nueva foto usando el mismo sistema mejorado que eventos y mega eventos
+            try {
+                // Generar nombre único para el archivo
+                $extension = $file->getClientOriginalExtension();
+                $nombreArchivo = 'perfil_' . $user->id_usuario . '_' . time() . '_' . \Illuminate\Support\Str::random(8) . '.' . $extension;
+                $ruta = 'perfiles/' . $tipo . '/' . $user->id_usuario;
+                $filename = $ruta . '/' . $nombreArchivo;
+                
+                // Guardar usando el disco 'public' explícitamente
+                $path = Storage::disk('public')->putFileAs(
+                    $ruta,
+                    $file,
+                    $nombreArchivo
+                );
+                
+                // Verificar que el archivo se guardó correctamente
+                $fullPath = storage_path('app/public/' . $path);
+                if (!file_exists($fullPath) || !is_file($fullPath)) {
+                    \Log::error("No se pudo guardar la foto de perfil: $fullPath");
+                    return null;
+                }
+                
+                // Verificar que el archivo tiene contenido
+                if (filesize($fullPath) === 0) {
+                    \Log::error("La foto de perfil se guardó vacía: $fullPath");
+                    Storage::disk('public')->delete($path);
+                    return null;
+                }
+                
+                // Copiar también a public/storage/ para que el servidor de PHP pueda servirlo directamente
+                $publicPath = public_path('storage/' . $path);
+                $publicDir = dirname($publicPath);
+                if (!file_exists($publicDir)) {
+                    if (!mkdir($publicDir, 0755, true)) {
+                        \Log::warning("No se pudo crear el directorio: $publicDir");
+                    }
+                }
+                
+                if (file_exists($fullPath)) {
+                    if (!copy($fullPath, $publicPath)) {
+                        \Log::warning("No se pudo copiar la foto a public/storage: $publicPath");
+                    } else {
+                        \Log::info("Foto copiada exitosamente a public/storage: $publicPath");
+                    }
+                }
+                
+                // Obtener la URL pública (ruta relativa)
+                $url = Storage::disk('public')->url($path);
+                
+                // Verificar que la URL se generó correctamente
+                if (empty($url)) {
+                    \Log::error("No se pudo generar la URL para la foto de perfil: $path");
+                    return null;
+                }
+                
+                \Log::info("Foto de perfil guardada exitosamente para tipo {$tipo}: $url -> $fullPath (también copiada a $publicPath)");
+                return $url; // Retorna /storage/perfiles/...
+                
+            } catch (\Exception $e) {
+                \Log::error("Error al guardar foto de perfil tipo {$tipo}: " . $e->getMessage());
+                \Log::error("Stack trace: " . $e->getTraceAsString());
+                return null;
+            }
         }
 
         // Si se proporciona una URL (similar a imagenes_urls en mega-eventos)

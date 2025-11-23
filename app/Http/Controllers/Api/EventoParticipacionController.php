@@ -40,7 +40,7 @@ class EventoParticipacionController extends Controller
         $data = EventoParticipacion::create([
             "evento_id" => $eventoId,
             "externo_id" => $externoId,
-            "estado" => "pendiente",
+            "estado" => "aprobada", // Aprobación automática
             "asistio" => false,
             "puntos" => 0
         ]);
@@ -48,7 +48,7 @@ class EventoParticipacionController extends Controller
         // Crear notificación para la ONG
         $this->crearNotificacionParticipacion($evento, $externoId);
 
-        return response()->json(["success" => true, "message" => "Inscripción exitosa", "data" => $data]);
+        return response()->json(["success" => true, "message" => "Inscripción exitosa y aprobada automáticamente", "data" => $data]);
     }
 
     // Cancelar inscripción

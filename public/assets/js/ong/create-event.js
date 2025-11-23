@@ -369,39 +369,103 @@ async function submitEventForm(e) {
     e.preventDefault();
 
     // ===============================
-    // VALIDACIÓN DE CAMPOS OBLIGATORIOS
+    // VALIDACIÓN ESTRICTA DE TODOS LOS CAMPOS OBLIGATORIOS
     // ===============================
     const titulo = document.getElementById("titulo").value.trim();
+    const descripcion = document.getElementById("descripcion").value.trim();
     const tipoEvento = document.getElementById("tipoEvento").value;
     const fechaInicio = document.getElementById("fechaInicio").value;
+    const fechaFinal = document.getElementById("fechaFinal").value;
     const estado = document.getElementById("estado").value;
+    const locacion = document.getElementById("locacion").value.trim();
+    const lat = document.getElementById("lat").value;
+    const lng = document.getElementById("lng").value;
 
     // Validar título
     if (!titulo) {
-        mostrarNotificacion("error", "Campo requerido", "El título del evento es obligatorio");
+        mostrarNotificacion("error", "Completa este campo", "El título del evento es obligatorio");
         document.getElementById("titulo").focus();
+        document.getElementById("titulo").classList.add("is-invalid");
         return;
+    } else {
+        document.getElementById("titulo").classList.remove("is-invalid");
+    }
+
+    // Validar descripción
+    if (!descripcion) {
+        mostrarNotificacion("error", "Completa este campo", "La descripción del evento es obligatoria");
+        document.getElementById("descripcion").focus();
+        document.getElementById("descripcion").classList.add("is-invalid");
+        return;
+    } else {
+        document.getElementById("descripcion").classList.remove("is-invalid");
     }
 
     // Validar tipo de evento
     if (!tipoEvento || tipoEvento === "") {
-        mostrarNotificacion("error", "Campo requerido", "Debes seleccionar un tipo de evento");
+        mostrarNotificacion("error", "Completa este campo", "Debes seleccionar un tipo de evento");
         document.getElementById("tipoEvento").focus();
+        document.getElementById("tipoEvento").classList.add("is-invalid");
         return;
+    } else {
+        document.getElementById("tipoEvento").classList.remove("is-invalid");
     }
 
     // Validar fecha de inicio
     if (!fechaInicio) {
-        mostrarNotificacion("error", "Campo requerido", "La fecha de inicio es obligatoria");
+        mostrarNotificacion("error", "Completa este campo", "La fecha de inicio es obligatoria");
         document.getElementById("fechaInicio").focus();
+        document.getElementById("fechaInicio").classList.add("is-invalid");
+        return;
+    } else {
+        document.getElementById("fechaInicio").classList.remove("is-invalid");
+    }
+
+    // Validar fecha de fin (obligatoria)
+    if (!fechaFinal) {
+        mostrarNotificacion("error", "Completa este campo", "La fecha de finalización es obligatoria");
+        document.getElementById("fechaFinal").focus();
+        document.getElementById("fechaFinal").classList.add("is-invalid");
+        return;
+    } else {
+        document.getElementById("fechaFinal").classList.remove("is-invalid");
+    }
+
+    // Validar locación/dirección (obligatoria)
+    if (!locacion || locacion === "") {
+        mostrarNotificacion("error", "Completa este campo", "Debes seleccionar una ubicación en el mapa");
+        document.getElementById("locacion").focus();
+        document.getElementById("locacion").classList.add("is-invalid");
+        return;
+    } else {
+        document.getElementById("locacion").classList.remove("is-invalid");
+    }
+
+    // Validar coordenadas (obligatorias)
+    if (!lat || !lng || lat === "" || lng === "") {
+        mostrarNotificacion("error", "Completa este campo", "Debes seleccionar una ubicación en el mapa");
+        document.getElementById("locacion").focus();
+        document.getElementById("locacion").classList.add("is-invalid");
+        return;
+    } else {
+        document.getElementById("locacion").classList.remove("is-invalid");
+    }
+
+    // Validar que haya al menos una imagen (archivo o URL)
+    if (allFiles.length === 0 && urlImages.length === 0) {
+        mostrarNotificacion("error", "Completa este campo", "Debes agregar al menos una imagen promocional");
+        document.getElementById("imagenesPromocionales").focus();
         return;
     }
 
     // Validar estado (obligatorio)
     if (!estado || estado === "" || estado === null) {
-        mostrarNotificacion("error", "Campo requerido", "Debes seleccionar un estado para el evento");
+        mostrarNotificacion("error", "Completa este campo", "Debes seleccionar un estado para el evento");
         document.getElementById("estado").focus();
+        document.getElementById("estado").classList.add("is-invalid");
         return;
+    } else {
+        document.getElementById("estado").classList.remove("is-invalid");
     }
 
     // Validar fecha de inicio sea futura
@@ -410,18 +474,21 @@ async function submitEventForm(e) {
     if (fechaInicioDate <= ahora) {
         mostrarNotificacion("error", "Fecha inválida", "La fecha de inicio debe ser una fecha futura");
         document.getElementById("fechaInicio").focus();
+        document.getElementById("fechaInicio").classList.add("is-invalid");
         return;
+    } else {
+        document.getElementById("fechaInicio").classList.remove("is-invalid");
     }
 
-    // Validar fecha de fin si está presente
-    const fechaFin = document.getElementById("fechaFinal").value;
-    if (fechaFin) {
-        const fechaFinDate = new Date(fechaFin);
-        if (fechaFinDate <= fechaInicioDate) {
-            mostrarNotificacion("error", "Fecha inválida", "La fecha de finalización debe ser posterior a la fecha de inicio");
-            document.getElementById("fechaFinal").focus();
-            return;
-        }
+    // Validar fecha de fin (obligatoria y debe ser posterior a fecha de inicio)
+    const fechaFinDate = new Date(fechaFinal);
+    if (fechaFinDate <= fechaInicioDate) {
+        mostrarNotificacion("error", "Fecha inválida", "La fecha de finalización debe ser posterior a la fecha de inicio");
+        document.getElementById("fechaFinal").focus();
+        document.getElementById("fechaFinal").classList.add("is-invalid");
+        return;
+    } else {
+        document.getElementById("fechaFinal").classList.remove("is-invalid");
     }
 
     // Validar fecha límite de inscripción si está presente
@@ -462,12 +529,14 @@ async function submitEventForm(e) {
     fd.append("ong_id", ongId);
 
     fd.append("titulo", titulo);
-    fd.append("descripcion", document.getElementById("descripcion").value || "");
+    fd.append("descripcion", descripcion);
     fd.append("tipo_evento", tipoEvento);
 
     fd.append("fecha_inicio", fechaInicio);
-    fd.append("fecha_fin", fechaFin || "");
+    fd.append("fecha_fin", fechaFinal);
     fd.append("fecha_limite_inscripcion", fechaLimiteInscripcion || "");
+    fd.append("lat", lat);
+    fd.append("lng", lng);
 
     // Capacidad máxima (solo números válidos)
     const capacidadMaximaValue = document.getElementById("capacidadMaxima").value.trim();
@@ -476,7 +545,7 @@ async function submitEventForm(e) {
     }
     fd.append("estado", estado);
     fd.append("ciudad", ciudadDetectada || "");
-    fd.append("direccion", document.getElementById("locacion").value || "");
+    fd.append("direccion", locacion);
 
     // Patrocinadores e invitados como arrays
     const patrocinadoresIds = [...document.querySelectorAll("input[name='patro']:checked")].map(e => parseInt(e.value));
