@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Log;
 
 // --- SERVIR ARCHIVOS DE STORAGE CON CORS (MÁXIMA PRIORIDAD) ---
 // Esta ruta DEBE estar al principio para tener máxima prioridad
