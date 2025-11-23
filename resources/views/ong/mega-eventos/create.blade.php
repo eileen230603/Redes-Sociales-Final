@@ -1,0 +1,615 @@
+@extends('layouts.adminlte')
+
+@section('page_title', 'Crear Mega Evento')
+
+@section('content_body')
+<div class="container-fluid">
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h3 class="card-title mb-0">
+                <i class="fas fa-calendar-plus mr-2"></i> Crear Nuevo Mega Evento
+            </h3>
+        </div>
+        <div class="card-body">
+            <form id="createMegaEventoForm" enctype="multipart/form-data">
+                <!-- Información Básica -->
+                <div class="mb-4 border-bottom pb-3">
+                    <h4 class="text-primary">
+                        <i class="fas fa-info-circle mr-2"></i> Información Básica
+                    </h4>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label for="titulo">Título del Mega Evento *</label>
+                            <input type="text" id="titulo" name="titulo" class="form-control" required 
+                                   maxlength="200" placeholder="Ej: Festival de Verano 2025">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="categoria">Categoría</label>
+                            <select id="categoria" name="categoria" class="form-control">
+                                <option value="social">Social</option>
+                                <option value="cultural">Cultural</option>
+                                <option value="deportivo">Deportivo</option>
+                                <option value="educativo">Educativo</option>
+                                <option value="benefico">Benéfico</option>
+                                <option value="ambiental">Ambiental</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="descripcion">Descripción</label>
+                    <textarea id="descripcion" name="descripcion" rows="4" class="form-control" 
+                              placeholder="Describe el mega evento..."></textarea>
+                </div>
+
+                <!-- Fechas -->
+                <div class="mb-4 border-bottom pb-3 mt-4">
+                    <h4 class="text-info">
+                        <i class="fas fa-calendar-alt mr-2"></i> Fechas del Evento
+                    </h4>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="fecha_inicio">Fecha y Hora de Inicio *</label>
+                            <input type="datetime-local" id="fecha_inicio" name="fecha_inicio" 
+                                   class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="fecha_fin">Fecha y Hora de Fin *</label>
+                            <input type="datetime-local" id="fecha_fin" name="fecha_fin" 
+                                   class="form-control" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ubicación y Capacidad -->
+                <div class="mb-4 border-bottom pb-3 mt-4">
+                    <h4 class="text-warning">
+                        <i class="fas fa-map-marker-alt mr-2"></i> Ubicación y Capacidad
+                    </h4>
+                </div>
+
+                <!-- Mapa -->
+                <div class="form-group mb-3">
+                    <label>Seleccionar Ubicación en el Mapa</label>
+                    <div id="map" class="rounded mb-3" style="height: 300px; border: 1px solid #ced4da;"></div>
+                    <div class="form-group">
+                        <label for="locacion">Dirección seleccionada</label>
+                        <input id="locacion" readonly class="form-control bg-light">
+                        <small id="ciudadInfo" class="text-muted"></small>
+                    </div>
+                    <input type="hidden" id="lat" name="lat">
+                    <input type="hidden" id="lng" name="lng">
+                </div>
+
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label for="ubicacion">Ubicación (Texto)</label>
+                            <input type="text" id="ubicacion" name="ubicacion" class="form-control" 
+                                   maxlength="500" placeholder="Ej: Parque Central, La Paz">
+                            <small class="form-text text-muted">Puedes escribir manualmente o seleccionar en el mapa</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="capacidad_maxima">Capacidad Máxima</label>
+                            <input type="number" id="capacidad_maxima" name="capacidad_maxima" 
+                                   class="form-control" min="1" placeholder="Ej: 1000">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Configuración -->
+                <div class="mb-4 border-bottom pb-3 mt-4">
+                    <h4 class="text-secondary">
+                        <i class="fas fa-cogs mr-2"></i> Configuración
+                    </h4>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="estado">Estado</label>
+                            <select id="estado" name="estado" class="form-control">
+                                <option value="planificacion">Planificación</option>
+                                <option value="activo">Activo</option>
+                                <option value="en_curso">En Curso</option>
+                                <option value="finalizado">Finalizado</option>
+                                <option value="cancelado">Cancelado</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="es_publico">Visibilidad</label>
+                            <select id="es_publico" name="es_publico" class="form-control">
+                                <option value="1">Público</option>
+                                <option value="0">Privado</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="activo">Estado de Actividad</label>
+                            <select id="activo" name="activo" class="form-control">
+                                <option value="1">Activo</option>
+                                <option value="0">Inactivo</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Imágenes -->
+                <div class="mb-4 border-bottom pb-3 mt-4">
+                    <h4 class="text-danger">
+                        <i class="fas fa-images mr-2"></i> Imágenes Promocionales
+                    </h4>
+                </div>
+
+                <!-- Subir archivos -->
+                <div class="form-group">
+                    <label for="imagenes">Subir Imágenes desde Archivo</label>
+                    <input type="file" id="imagenes" name="imagenes[]" multiple 
+                           accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" 
+                           class="form-control-file">
+                    <small class="form-text text-muted">
+                        Puedes seleccionar múltiples imágenes. Formatos permitidos: JPG, PNG, GIF, WEBP (máx. 5MB cada una)
+                    </small>
+                </div>
+
+                <div id="previewContainer" class="row mb-3"></div>
+
+                <!-- Agregar por URL -->
+                <div class="form-group mt-4">
+                    <label for="imagen_url">Agregar Imagen por URL (Opcional)</label>
+                    <div class="input-group">
+                        <input type="url" id="imagen_url" name="imagen_url" 
+                               class="form-control" 
+                               placeholder="https://ejemplo.com/imagen.jpg">
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-primary" id="btnAgregarUrl">
+                                <i class="fas fa-plus"></i> Agregar
+                            </button>
+                        </div>
+                    </div>
+                    <small class="form-text text-muted">
+                        Ingresa la URL completa de una imagen en internet
+                    </small>
+                </div>
+
+                <div id="urlImagesContainer" class="row mb-3"></div>
+
+                <!-- Mensaje de resultado -->
+                <div id="formMessage" class="alert" style="display: none;"></div>
+
+                <!-- Botones -->
+                <div class="d-flex justify-content-end mt-4">
+                    <a href="{{ route('ong.mega-eventos.index') }}" class="btn btn-secondary mr-2">
+                        <i class="fas fa-times mr-2"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="fas fa-save mr-2"></i> Crear Mega Evento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endsection
+
+@section('css')
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+    #previewContainer img {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 2px solid #ddd;
+        margin: 5px;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    #previewContainer img:hover {
+        transform: scale(1.05);
+    }
+    .image-preview-wrapper {
+        position: relative;
+        display: inline-block;
+        margin: 5px;
+    }
+    .image-preview-wrapper .remove-image {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #dc3545;
+        color: white;
+        border-radius: 50%;
+        width: 25px;
+        height: 25px;
+        border: none;
+        cursor: pointer;
+        font-size: 12px;
+    }
+    #urlImagesContainer .image-preview-wrapper,
+    #urlImagesContainerEdit .image-preview-wrapper {
+        border: 2px solid #28a745;
+    }
+    #urlImagesContainer img,
+    #urlImagesContainerEdit img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 6px;
+    }
+</style>
+@endsection
+
+@section('js')
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{{ asset('assets/js/config.js') }}"></script>
+<script>
+let selectedFiles = [];
+let urlImages = []; // Array para almacenar URLs de imágenes
+let map, clickMarker;
+let ciudadDetectada = "";
+
+// ===============================
+// 🗺️ MAPA LEAFLET
+// ===============================
+function initMap() {
+    const pos = [-16.5, -68.15]; // La Paz, Bolivia por defecto
+
+    map = L.map("map").setView(pos, 13);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+
+    map.on("click", (e) => {
+        const { lat, lng } = e.latlng;
+
+        if (clickMarker) clickMarker.setLatLng(e.latlng);
+        else clickMarker = L.marker(e.latlng).addTo(map);
+
+        document.getElementById("lat").value = lat;
+        document.getElementById("lng").value = lng;
+
+        reverseGeocode(lat, lng);
+    });
+}
+
+// ===============================
+// 🌍 GEOCODIFICACIÓN INVERSA
+// ===============================
+async function reverseGeocode(lat, lng) {
+    try {
+        const r = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+        );
+        const data = await r.json();
+
+        const direccion = data.display_name ?? "";
+        document.getElementById("locacion").value = direccion;
+        
+        // Actualizar también el campo de ubicación si está vacío
+        const ubicacionInput = document.getElementById("ubicacion");
+        if (!ubicacionInput.value) {
+            ubicacionInput.value = direccion;
+        }
+
+        ciudadDetectada =
+            data.address?.city ||
+            data.address?.town ||
+            data.address?.village ||
+            data.address?.state ||
+            "Sin especificar";
+
+        document.getElementById("ciudadInfo").innerText = "Ciudad: " + ciudadDetectada;
+
+    } catch (e) {
+        console.warn("No se pudo obtener dirección");
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initMap();
+    const token = localStorage.getItem('token');
+    const tipoUsuario = localStorage.getItem('tipo_usuario');
+    
+    if (!token || tipoUsuario !== 'ONG') {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Acceso Denegado',
+            text: 'Debes iniciar sesión como ONG para crear mega eventos.',
+            confirmButtonText: 'Ir al Login'
+        }).then(() => {
+            window.location.href = '/login';
+        });
+        return;
+    }
+
+    // Preview de imágenes desde archivo
+    document.getElementById('imagenes').addEventListener('change', function(e) {
+        const files = Array.from(e.target.files);
+        selectedFiles = [...selectedFiles, ...files];
+        updatePreview();
+    });
+
+    // Agregar imagen por URL
+    document.getElementById('btnAgregarUrl').addEventListener('click', function() {
+        const urlInput = document.getElementById('imagen_url');
+        const url = urlInput.value.trim();
+        
+        if (!url) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'URL vacía',
+                text: 'Por favor ingresa una URL válida'
+            });
+            return;
+        }
+
+        // Validar que sea una URL válida
+        try {
+            new URL(url);
+        } catch (e) {
+            Swal.fire({
+                icon: 'error',
+                title: 'URL inválida',
+                text: 'Por favor ingresa una URL válida (ej: https://ejemplo.com/imagen.jpg)'
+            });
+            return;
+        }
+
+        // Verificar que sea una imagen (por extensión)
+        const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+        const isImage = imageExtensions.some(ext => url.toLowerCase().includes(ext)) || 
+                       url.match(/\.(jpg|jpeg|png|gif|webp)(\?|$)/i);
+
+        if (!isImage) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'URL no parece ser una imagen',
+                text: 'La URL debe apuntar a una imagen (JPG, PNG, GIF, WEBP)',
+                showCancelButton: true,
+                confirmButtonText: 'Agregar de todos modos',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    addUrlImage(url);
+                    urlInput.value = '';
+                }
+            });
+        } else {
+            addUrlImage(url);
+            urlInput.value = '';
+        }
+    });
+
+    // Permitir agregar URL con Enter
+    document.getElementById('imagen_url').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('btnAgregarUrl').click();
+        }
+    });
+
+    // Validar fecha_fin después de fecha_inicio
+    document.getElementById('fecha_inicio').addEventListener('change', function() {
+        const fechaInicio = this.value;
+        const fechaFin = document.getElementById('fecha_fin');
+        if (fechaInicio && fechaFin.value && fechaFin.value <= fechaInicio) {
+            fechaFin.value = '';
+            Swal.fire({
+                icon: 'warning',
+                title: 'Fecha Inválida',
+                text: 'La fecha de fin debe ser posterior a la fecha de inicio'
+            });
+        }
+        fechaFin.min = fechaInicio;
+    });
+});
+
+function updatePreview() {
+    const container = document.getElementById('previewContainer');
+    container.innerHTML = '';
+
+    selectedFiles.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'image-preview-wrapper';
+            wrapper.innerHTML = `
+                <img src="${e.target.result}" alt="Preview ${index + 1}">
+                <button type="button" class="remove-image" onclick="removeImage(${index})" title="Eliminar">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            container.appendChild(wrapper);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function addUrlImage(url) {
+    // Verificar si la URL ya existe
+    if (urlImages.includes(url)) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'URL duplicada',
+            text: 'Esta URL ya ha sido agregada'
+        });
+        return;
+    }
+
+    urlImages.push(url);
+    updateUrlImagesPreview();
+}
+
+function updateUrlImagesPreview() {
+    const container = document.getElementById('urlImagesContainer');
+    container.innerHTML = '';
+
+    if (urlImages.length === 0) {
+        return;
+    }
+
+    urlImages.forEach((url, index) => {
+        const colDiv = document.createElement('div');
+        colDiv.className = 'col-md-3 col-sm-4 col-6 mb-3';
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = 'image-preview-wrapper position-relative';
+        wrapper.style.cssText = 'border-radius: 8px; overflow: hidden; border: 2px solid #28a745;';
+        
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = `Imagen URL ${index + 1}`;
+        img.className = 'img-fluid';
+        img.style.cssText = 'width: 100%; height: 150px; object-fit: cover; cursor: pointer;';
+        img.onclick = () => window.open(url, '_blank');
+        img.onerror = function() {
+            this.onerror = null;
+            this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="150" height="150"%3E%3Crect fill="%23f8f9fa" width="150" height="150"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23adb5bd" font-family="Arial" font-size="12"%3EError cargando%3C/text%3E%3C/svg%3E';
+            this.style.objectFit = 'contain';
+            this.style.padding = '10px';
+        };
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'remove-image btn btn-danger btn-sm';
+        removeBtn.style.cssText = 'position: absolute; top: 5px; right: 5px; width: 30px; height: 30px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center;';
+        removeBtn.title = 'Eliminar imagen';
+        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        removeBtn.onclick = () => removeUrlImage(index);
+        
+        wrapper.appendChild(img);
+        wrapper.appendChild(removeBtn);
+        colDiv.appendChild(wrapper);
+        container.appendChild(colDiv);
+    });
+}
+
+function removeUrlImage(index) {
+    urlImages.splice(index, 1);
+    updateUrlImagesPreview();
+}
+
+function removeImage(index) {
+    selectedFiles.splice(index, 1);
+    updatePreview();
+    // Actualizar el input file
+    const input = document.getElementById('imagenes');
+    const dt = new DataTransfer();
+    selectedFiles.forEach(file => dt.items.add(file));
+    input.files = dt.files;
+}
+
+document.getElementById('createMegaEventoForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const token = localStorage.getItem('token');
+    const ongId = parseInt(localStorage.getItem('id_entidad') || localStorage.getItem('id_usuario'), 10);
+    const formMessage = document.getElementById('formMessage');
+
+    // Validar fechas
+    const fechaInicio = document.getElementById('fecha_inicio').value;
+    const fechaFin = document.getElementById('fecha_fin').value;
+
+    if (new Date(fechaFin) <= new Date(fechaInicio)) {
+        formMessage.className = 'alert alert-danger';
+        formMessage.textContent = 'La fecha de fin debe ser posterior a la fecha de inicio';
+        formMessage.style.display = 'block';
+        return;
+    }
+
+    // Mostrar loading
+    Swal.fire({
+        title: 'Creando mega evento...',
+        text: 'Por favor espera',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    try {
+        const formData = new FormData();
+        formData.append('titulo', document.getElementById('titulo').value);
+        formData.append('descripcion', document.getElementById('descripcion').value);
+        formData.append('fecha_inicio', fechaInicio);
+        formData.append('fecha_fin', fechaFin);
+        formData.append('ubicacion', document.getElementById('ubicacion').value);
+        formData.append('lat', document.getElementById('lat').value || '');
+        formData.append('lng', document.getElementById('lng').value || '');
+        formData.append('categoria', document.getElementById('categoria').value);
+        formData.append('estado', document.getElementById('estado').value);
+        formData.append('ong_organizadora_principal', ongId);
+        formData.append('capacidad_maxima', document.getElementById('capacidad_maxima').value);
+        formData.append('es_publico', document.getElementById('es_publico').value);
+        formData.append('activo', document.getElementById('activo').value);
+
+        // Agregar imágenes desde archivos
+        selectedFiles.forEach(file => {
+            formData.append('imagenes[]', file);
+        });
+
+        // Agregar imágenes desde URLs
+        if (urlImages.length > 0) {
+            formData.append('imagenes_urls', JSON.stringify(urlImages));
+        }
+
+        const res = await fetch(`${API_BASE_URL}/api/mega-eventos`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            },
+            body: formData
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.error || 'Error al crear el mega evento'
+            });
+            return;
+        }
+
+        Swal.fire({
+            icon: 'success',
+            title: '¡Mega Evento Creado!',
+            text: 'El mega evento se ha creado correctamente',
+            confirmButtonText: 'Ver Mega Eventos',
+            timer: 2000,
+            timerProgressBar: true
+        }).then(() => {
+            window.location.href = '{{ route("ong.mega-eventos.index") }}';
+        });
+
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error de Conexión',
+            text: 'No se pudo conectar con el servidor'
+        });
+    }
+});
+</script>
+@endsection
+
