@@ -153,10 +153,6 @@ class Evento extends Model
     }
 
     /**
-     * Accessor para obtener URLs completas de las imágenes
-     * Se ejecuta después del cast 'array', así que $value ya es un array
-     */
-    /**
      * Accessor para convertir rutas relativas de imágenes a URLs completas
      */
     public function getImagenesAttribute($value)

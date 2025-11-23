@@ -15,8 +15,11 @@ use App\Http\Controllers\MegaEventoController;
 use App\Http\Controllers\StorageController;
 
 // ----------- STORAGE (con CORS para Flutter) -----------
-Route::options('/storage/{path}', [StorageController::class, 'options'])->where('path', '.*');
-Route::get('/storage/{path}', [StorageController::class, 'serve'])->where('path', '.*');
+// Esta ruta debe estar antes de las protegidas para que funcione sin autenticación
+Route::options('/storage/{path}', [StorageController::class, 'options'])
+    ->where('path', '.*');
+Route::get('/storage/{path}', [StorageController::class, 'serve'])
+    ->where('path', '.*');
 
 // ----------- AUTH -----------
 Route::post('/auth/register', [AuthController::class, 'register']);
