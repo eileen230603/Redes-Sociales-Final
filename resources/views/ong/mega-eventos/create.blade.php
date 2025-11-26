@@ -4,25 +4,38 @@
 
 @section('content_body')
 <div class="container-fluid">
-    <div class="card shadow-sm">
-        <div class="card-header bg-success text-white">
-            <h3 class="card-title mb-0">
-                <i class="fas fa-calendar-plus mr-2"></i> Crear Nuevo Mega Evento
-            </h3>
+    <div class="card shadow-sm" style="border-radius: 12px; border: 1px solid #F5F5F5;">
+        <div class="card-header" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: #FFFFFF; border-radius: 12px 12px 0 0;">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                <div>
+                    <h3 class="card-title mb-1" style="font-weight: 700; font-size: 1.4rem;">
+                        <i class="far fa-calendar-plus mr-2"></i> Crear nuevo mega evento
+                    </h3>
+                    <p class="mb-0" style="font-size: 0.9rem; opacity: 0.9;">
+                        Define la información principal, ubicación, visibilidad e imágenes para tu mega evento.
+                    </p>
+                </div>
+                <div class="mt-3 mt-md-0">
+                    <a href="{{ route('ong.mega-eventos.index') }}" class="btn btn-sm" style="background: rgba(255,255,255,0.15); color: #FFFFFF; border-radius: 999px; border: none; padding: 0.5rem 1.25rem;">
+                        <i class="far fa-arrow-left mr-1"></i> Volver a mega eventos
+                    </a>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
+        <div class="card-body p-4">
             <form id="createMegaEventoForm" enctype="multipart/form-data">
                 <!-- Información Básica -->
-                <div class="mb-4 border-bottom pb-3">
-                    <h4 class="text-primary">
-                        <i class="fas fa-info-circle mr-2"></i> Información Básica
+                <div class="mb-4 pb-3" style="border-bottom: 1px solid #F5F5F5;">
+                    <h4 class="mb-1" style="color: #0C2B44; font-weight: 700;">
+                        <i class="far fa-info-circle mr-2" style="color: #00A36C;"></i> Información básica
                     </h4>
+                    <p class="mb-0 text-muted" style="font-size: 0.9rem;">Completa los datos generales del mega evento.</p>
                 </div>
 
                 <div class="row">
                     <div class="col-md-8">
                         <div class="form-group">
-                            <label for="titulo">Título del Mega Evento *</label>
+                            <label for="titulo">Título del mega evento *</label>
                             <input type="text" id="titulo" name="titulo" class="form-control" required 
                                    maxlength="200" placeholder="Ej: Festival de Verano 2025">
                         </div>
@@ -50,9 +63,9 @@
                 </div>
 
                 <!-- Fechas -->
-                <div class="mb-4 border-bottom pb-3 mt-4">
-                    <h4 class="text-info">
-                        <i class="fas fa-calendar-alt mr-2"></i> Fechas del Evento
+                <div class="mb-4 border-bottom pb-3 mt-4" style="border-bottom: 1px solid #F5F5F5;">
+                    <h4 class="mb-1" style="color: #0C2B44; font-weight: 700;">
+                        <i class="far fa-calendar-alt mr-2" style="color: #00A36C;"></i> Fechas del evento
                     </h4>
                 </div>
 
@@ -74,18 +87,18 @@
                 </div>
 
                 <!-- Ubicación y Capacidad -->
-                <div class="mb-4 border-bottom pb-3 mt-4">
-                    <h4 class="text-warning">
-                        <i class="fas fa-map-marker-alt mr-2"></i> Ubicación y Capacidad
+                <div class="mb-4 border-bottom pb-3 mt-4" style="border-bottom: 1px solid #F5F5F5;">
+                    <h4 class="mb-1" style="color: #0C2B44; font-weight: 700;">
+                        <i class="far fa-map mr-2" style="color: #00A36C;"></i> Ubicación y capacidad
                     </h4>
                 </div>
 
                 <!-- Mapa -->
                 <div class="form-group mb-3">
-                    <label>Seleccionar Ubicación en el Mapa</label>
+                    <label>Seleccionar ubicación en el mapa</label>
                     <div id="map" class="rounded mb-3" style="height: 300px; border: 1px solid #ced4da;"></div>
                     <div class="form-group">
-                        <label for="locacion">Dirección seleccionada</label>
+                        <label for="locacion">Dirección seleccionada *</label>
                         <input id="locacion" readonly class="form-control bg-light">
                         <small id="ciudadInfo" class="text-muted"></small>
                     </div>
@@ -96,7 +109,7 @@
                 <div class="row">
                     <div class="col-md-8">
                         <div class="form-group">
-                            <label for="ubicacion">Ubicación (Texto)</label>
+                            <label for="ubicacion">Ubicación (texto)</label>
                             <input type="text" id="ubicacion" name="ubicacion" class="form-control" 
                                    maxlength="500" placeholder="Ej: Parque Central, La Paz">
                             <small class="form-text text-muted">Puedes escribir manualmente o seleccionar en el mapa</small>
@@ -104,7 +117,7 @@
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label for="capacidad_maxima">Capacidad Máxima</label>
+                            <label for="capacidad_maxima">Capacidad máxima</label>
                             <input type="number" id="capacidad_maxima" name="capacidad_maxima" 
                                    class="form-control" min="1" placeholder="Ej: 1000">
                         </div>
@@ -112,9 +125,9 @@
                 </div>
 
                 <!-- Configuración -->
-                <div class="mb-4 border-bottom pb-3 mt-4">
-                    <h4 class="text-secondary">
-                        <i class="fas fa-cogs mr-2"></i> Configuración
+                <div class="mb-4 border-bottom pb-3 mt-4" style="border-bottom: 1px solid #F5F5F5;">
+                    <h4 class="mb-1" style="color: #0C2B44; font-weight: 700;">
+                        <i class="far fa-cogs mr-2" style="color: #00A36C;"></i> Configuración
                     </h4>
                 </div>
 
@@ -152,15 +165,15 @@
                 </div>
 
                 <!-- Imágenes -->
-                <div class="mb-4 border-bottom pb-3 mt-4">
-                    <h4 class="text-danger">
-                        <i class="fas fa-images mr-2"></i> Imágenes Promocionales
+                <div class="mb-4 border-bottom pb-3 mt-4" style="border-bottom: 1px solid #F5F5F5;">
+                    <h4 class="mb-1" style="color: #0C2B44; font-weight: 700;">
+                        <i class="far fa-images mr-2" style="color: #00A36C;"></i> Imágenes promocionales
                     </h4>
                 </div>
 
                 <!-- Subir archivos -->
                 <div class="form-group">
-                    <label for="imagenes">Subir Imágenes desde Archivo</label>
+                    <label for="imagenes">Subir imágenes desde archivo</label>
                     <input type="file" id="imagenes" name="imagenes[]" multiple 
                            accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" 
                            class="form-control-file">
@@ -173,7 +186,7 @@
 
                 <!-- Agregar por URL -->
                 <div class="form-group mt-4">
-                    <label for="imagen_url">Agregar Imagen por URL (Opcional)</label>
+                    <label for="imagen_url">Agregar imagen por URL (opcional)</label>
                     <div class="input-group">
                         <input type="url" id="imagen_url" name="imagen_url" 
                                class="form-control" 
@@ -195,12 +208,12 @@
                 <div id="formMessage" class="alert" style="display: none;"></div>
 
                 <!-- Botones -->
-                <div class="d-flex justify-content-end mt-4">
-                    <a href="{{ route('ong.mega-eventos.index') }}" class="btn btn-secondary mr-2">
-                        <i class="fas fa-times mr-2"></i> Cancelar
+                <div class="d-flex justify-content-end mt-4 pt-3" style="border-top: 1px solid #F5F5F5;">
+                    <a href="{{ route('ong.mega-eventos.index') }}" class="btn btn-outline-secondary mr-2" style="border-radius: 8px;">
+                        <i class="far fa-times mr-1"></i> Cancelar
                     </a>
-                    <button type="submit" class="btn btn-success btn-lg">
-                        <i class="fas fa-save mr-2"></i> Crear Mega Evento
+                    <button type="submit" class="btn btn-success btn-lg" style="border-radius: 8px; min-width: 190px; font-weight: 600; background-color: #00A36C; border-color: #00A36C;">
+                        <i class="far fa-check-circle mr-1"></i> Crear mega evento
                     </button>
                 </div>
             </form>
@@ -209,7 +222,7 @@
 </div>
 @endsection
 
-@section('css')
+@push('css')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
     #previewContainer img {
@@ -217,7 +230,7 @@
         height: 150px;
         object-fit: cover;
         border-radius: 8px;
-        border: 2px solid #ddd;
+        border: 2px solid #F5F5F5;
         margin: 5px;
         cursor: pointer;
         transition: transform 0.2s;
@@ -245,7 +258,7 @@
     }
     #urlImagesContainer .image-preview-wrapper,
     #urlImagesContainerEdit .image-preview-wrapper {
-        border: 2px solid #28a745;
+        border: 2px solid #00A36C;
     }
     #urlImagesContainer img,
     #urlImagesContainerEdit img {
@@ -255,9 +268,11 @@
         border-radius: 6px;
     }
 </style>
-@endsection
+@endpush
 
-@section('js')
+@push('js')
+{{-- Script global para icono de notificaciones --}}
+<script src="{{ asset('js/notificaciones-ong.js') }}"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="{{ asset('assets/js/config.js') }}"></script>
 <script>
@@ -328,10 +343,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const tipoUsuario = localStorage.getItem('tipo_usuario');
     
     if (!token || tipoUsuario !== 'ONG') {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Acceso Denegado',
-            text: 'Debes iniciar sesión como ONG para crear mega eventos.',
+            Swal.fire({
+                icon: 'warning',
+                title: 'Acceso denegado',
+                text: 'Debes iniciar sesión como ONG para crear mega eventos.',
             confirmButtonText: 'Ir al Login'
         }).then(() => {
             window.location.href = '/login';
@@ -413,7 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
             fechaFin.value = '';
             Swal.fire({
                 icon: 'warning',
-                title: 'Fecha Inválida',
+                title: 'Fecha inválida',
                 text: 'La fecha de fin debe ser posterior a la fecha de inicio'
             });
         }
@@ -445,10 +460,10 @@ function updatePreview() {
 function addUrlImage(url) {
     // Verificar si la URL ya existe
     if (urlImages.includes(url)) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'URL duplicada',
-            text: 'Esta URL ya ha sido agregada'
+            Swal.fire({
+                icon: 'warning',
+                title: 'URL duplicada',
+                text: 'Esta URL ya ha sido agregada'
         });
         return;
     }
@@ -491,7 +506,7 @@ function updateUrlImagesPreview() {
         removeBtn.className = 'remove-image btn btn-danger btn-sm';
         removeBtn.style.cssText = 'position: absolute; top: 5px; right: 5px; width: 30px; height: 30px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center;';
         removeBtn.title = 'Eliminar imagen';
-        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        removeBtn.innerHTML = '<i class="far fa-times"></i>';
         removeBtn.onclick = () => removeUrlImage(index);
         
         wrapper.appendChild(img);
@@ -592,9 +607,9 @@ document.getElementById('createMegaEventoForm').addEventListener('submit', async
 
         Swal.fire({
             icon: 'success',
-            title: '¡Mega Evento Creado!',
+            title: '¡Mega evento creado!',
             text: 'El mega evento se ha creado correctamente',
-            confirmButtonText: 'Ver Mega Eventos',
+            confirmButtonText: 'Ver mega eventos',
             timer: 2000,
             timerProgressBar: true
         }).then(() => {
@@ -605,11 +620,11 @@ document.getElementById('createMegaEventoForm').addEventListener('submit', async
         console.error('Error:', error);
         Swal.fire({
             icon: 'error',
-            title: 'Error de Conexión',
+            title: 'Error de conexión',
             text: 'No se pudo conectar con el servidor'
         });
     }
 });
 </script>
-@endsection
+@endpush
 

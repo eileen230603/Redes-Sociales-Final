@@ -136,11 +136,52 @@ document.addEventListener("DOMContentLoaded", async () => {
             inscripcionAbierta.textContent = 'Cerrada';
         }
 
-        // Patrocinadores
+        // Empresas Colaboradoras (desde tabla de participaciones)
+        if (e.empresas_colaboradoras && Array.isArray(e.empresas_colaboradoras) && e.empresas_colaboradoras.length > 0) {
+            const colaboradorasCard = document.getElementById('colaboradorasCard');
+            if (colaboradorasCard) {
+                colaboradorasCard.style.display = 'block';
+                const colaboradorasDiv = document.getElementById('colaboradoras');
+                if (colaboradorasDiv) {
+                    colaboradorasDiv.innerHTML = '';
+                    e.empresas_colaboradoras.forEach(emp => {
+                        const nombre = typeof emp === 'object' ? (emp.nombre || 'N/A') : emp;
+                        const avatar = typeof emp === 'object' ? (emp.avatar || null) : null;
+                        const estado = typeof emp === 'object' ? (emp.estado || 'asignada') : 'asignada';
+                        const tipoColab = typeof emp === 'object' ? (emp.tipo_colaboracion || '') : '';
+                        const inicial = nombre.charAt(0).toUpperCase();
+                        
+                        const item = document.createElement('div');
+                        item.className = 'd-flex align-items-center mb-2 mr-3';
+                        item.style.cssText = 'background: #f8f9fa; padding: 0.5rem 0.75rem; border-radius: 8px; border-left: 3px solid #28a745;';
+                        
+                        let contenido = '';
+                        if (avatar) {
+                            contenido = `<img src="${avatar}" alt="${nombre}" class="rounded-circle mr-2" style="width: 35px; height: 35px; object-fit: cover; border: 2px solid #28a745;">`;
+                        } else {
+                            contenido = `<div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center mr-2" style="width: 35px; height: 35px; font-weight: 600; font-size: 0.9rem;">${inicial}</div>`;
+                        }
+                        
+                        contenido += `<div class="flex-grow-1">
+                            <span style="font-weight: 500; color: #2c3e50;">${nombre}</span>
+                            ${tipoColab ? `<br><small class="text-muted"><i class="fas fa-tag"></i> ${tipoColab}</small>` : ''}
+                            ${estado === 'confirmada' ? '<br><span class="badge badge-success badge-sm">Confirmada</span>' : '<br><span class="badge badge-warning badge-sm">Pendiente</span>'}
+                        </div>`;
+                        
+                        item.innerHTML = contenido;
+                        colaboradorasDiv.appendChild(item);
+                    });
+                }
+            }
+        }
+
+        // Patrocinadores (del campo JSON - legacy)
         if (e.patrocinadores && Array.isArray(e.patrocinadores) && e.patrocinadores.length > 0) {
             const patrocinadoresCard = document.getElementById('patrocinadoresCard');
+            if (patrocinadoresCard) {
             patrocinadoresCard.style.display = 'block';
             const patrocinadoresDiv = document.getElementById('patrocinadores');
+                if (patrocinadoresDiv) {
             patrocinadoresDiv.innerHTML = '';
             e.patrocinadores.forEach(pat => {
                 const nombre = typeof pat === 'object' ? (pat.nombre || 'N/A') : pat;
@@ -166,6 +207,44 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
                 patrocinadoresDiv.appendChild(item);
             });
+                }
+            }
+        }
+
+        // Auspiciadores (del campo JSON)
+        if (e.auspiciadores && Array.isArray(e.auspiciadores) && e.auspiciadores.length > 0) {
+            const auspiciadoresCard = document.getElementById('auspiciadoresCard');
+            if (auspiciadoresCard) {
+                auspiciadoresCard.style.display = 'block';
+                const auspiciadoresDiv = document.getElementById('auspiciadores');
+                if (auspiciadoresDiv) {
+                    auspiciadoresDiv.innerHTML = '';
+                    e.auspiciadores.forEach(aus => {
+                        const nombre = typeof aus === 'object' ? (aus.nombre || 'N/A') : aus;
+                        const avatar = typeof aus === 'object' ? (aus.avatar || null) : null;
+                        const inicial = nombre.charAt(0).toUpperCase();
+                        
+                        const item = document.createElement('div');
+                        item.className = 'd-flex align-items-center mb-2 mr-3';
+                        item.style.cssText = 'background: #f8f9fa; padding: 0.5rem 0.75rem; border-radius: 8px; border-left: 3px solid #17a2b8;';
+                        
+                        if (avatar) {
+                            item.innerHTML = `
+                                <img src="${avatar}" alt="${nombre}" class="rounded-circle mr-2" style="width: 35px; height: 35px; object-fit: cover; border: 2px solid #17a2b8;">
+                                <span style="font-weight: 500; color: #2c3e50;">${nombre}</span>
+                            `;
+                        } else {
+                            item.innerHTML = `
+                                <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center mr-2" style="width: 35px; height: 35px; font-weight: 600; font-size: 0.9rem;">
+                                    ${inicial}
+                                </div>
+                                <span style="font-weight: 500; color: #2c3e50;">${nombre}</span>
+                            `;
+                        }
+                        auspiciadoresDiv.appendChild(item);
+                    });
+                }
+            }
         }
 
         // Invitados

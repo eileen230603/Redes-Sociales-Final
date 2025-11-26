@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Ong;
 use App\Models\Empresa;
@@ -47,7 +48,9 @@ class AuthController extends Controller
                 ], 422);
             }
 
-            // CREAR USUARIO BASE
+            // TRANSACCIÓN: Crear usuario + entidad relacionada
+            $user = DB::transaction(function () use ($request) {
+                // 1. Crear usuario base
             $user = User::create([
                 'nombre_usuario'     => $request->nombre_usuario,
                 'correo_electronico' => $request->correo_electronico,
@@ -56,11 +59,7 @@ class AuthController extends Controller
                 'activo'             => true,
             ]);
 
-            // ---------------------------------------------
-            // REGISTRO SEGÚN TIPO
-            // ---------------------------------------------
-
-            // ONG
+                // 2. Crear entidad específica según tipo
             if ($user->tipo_usuario === "ONG") {
                 Ong::create([
                     'user_id'     => $user->id_usuario,
@@ -71,10 +70,7 @@ class AuthController extends Controller
                     'sitio_web'   => $request->sitio_web,
                     'descripcion' => $request->descripcion,
                 ]);
-            }
-
-            // Empresa
-            if ($user->tipo_usuario === "Empresa") {
+                } elseif ($user->tipo_usuario === "Empresa") {
                 Empresa::create([
                     'user_id'        => $user->id_usuario,
                     'nombre_empresa' => $request->nombre_empresa,
@@ -84,10 +80,7 @@ class AuthController extends Controller
                     'sitio_web'      => $request->sitio_web,
                     'descripcion'    => $request->descripcion,
                 ]);
-            }
-
-            // Integrante externo
-            if ($user->tipo_usuario === "Integrante externo") {
+                } elseif ($user->tipo_usuario === "Integrante externo") {
                 IntegranteExterno::create([
                     'user_id'          => $user->id_usuario,
                     'nombres'          => $request->nombres,
@@ -98,6 +91,9 @@ class AuthController extends Controller
                     'descripcion'      => $request->descripcion,
                 ]);
             }
+
+                return $user;
+            });
 
             $token = $user->createToken('auth_token')->plainTextToken;
 

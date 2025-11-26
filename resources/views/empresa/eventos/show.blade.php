@@ -164,6 +164,26 @@
                     </div>
                 </div>
 
+                <!-- Empresas Colaboradoras -->
+                <div id="colaboradorasCard" class="card border-0 shadow-sm mb-4" style="border-radius: 12px; display: none;">
+                    <div class="card-body p-4">
+                        <h5 class="mb-3" style="color: #2c3e50; font-weight: 600;">
+                            <i class="fas fa-handshake mr-2 text-success"></i> Empresas Colaboradoras
+                        </h5>
+                        <div id="colaboradoras" class="d-flex flex-wrap gap-2"></div>
+                    </div>
+                </div>
+
+                <!-- Auspiciadores -->
+                <div id="auspiciadoresCard" class="card border-0 shadow-sm mb-4" style="border-radius: 12px; display: none;">
+                    <div class="card-body p-4">
+                        <h5 class="mb-3" style="color: #2c3e50; font-weight: 600;">
+                            <i class="fas fa-star mr-2 text-info"></i> Auspiciadores
+                        </h5>
+                        <div id="auspiciadores" class="d-flex flex-wrap gap-2"></div>
+                    </div>
+                </div>
+
                 <!-- Patrocinadores -->
                 <div id="patrocinadoresCard" class="card border-0 shadow-sm mb-4" style="border-radius: 12px; display: none;">
                     <div class="card-body p-4">

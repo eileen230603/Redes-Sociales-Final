@@ -1,11 +1,22 @@
 @extends('layouts.adminlte-empresa')
 
-@section('page_title', 'Eventos Patrocinados')
+@section('page_title', 'Mis Eventos')
 
 @section('content_body')
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="text-primary"><i class="fas fa-calendar-check"></i> Eventos Patrocinados</h4>
+    <div>
+        <h4 class="text-primary mb-1"><i class="fas fa-calendar-check"></i> Mis Eventos (Colaboradores y Patrocinadores)</h4>
+        <p class="text-muted mb-0" style="font-size: 0.9rem;"><i class="fas fa-info-circle"></i> Eventos asignados por ONGs donde participas como colaboradora o patrocinadora</p>
+    </div>
+    <div>
+        <a href="/empresa/eventos/disponibles" class="btn btn-success mr-2">
+            <i class="fas fa-plus"></i> Ver Eventos Disponibles
+        </a>
+        <button class="btn btn-sm btn-outline-primary" id="btnRefresh" title="Actualizar lista">
+            <i class="fas fa-sync-alt"></i> Actualizar
+        </button>
+    </div>
 </div>
 
 <!-- Filtros y Búsqueda -->
@@ -54,7 +65,6 @@ let todosLosEventos = [];
 
 async function cargarEventosEmpresa() {
     const token = localStorage.getItem("token");
-    const empresaId = parseInt(localStorage.getItem("id_entidad") || localStorage.getItem("id_usuario"), 10);
     const cont = document.getElementById("eventosContainer");
 
     if (!token) {
@@ -68,16 +78,8 @@ async function cargarEventosEmpresa() {
     cont.innerHTML = '<div class="col-12 text-center py-3"><div class="spinner-border text-primary" role="status"><span class="sr-only">Cargando...</span></div><p class="mt-2 text-muted">Cargando eventos...</p></div>';
 
     try {
-        // Construir URL con parámetros de filtro
-        const params = new URLSearchParams();
-        if (filtrosEmpresa.estado !== 'todos') {
-            params.append('estado', filtrosEmpresa.estado);
-        }
-        if (filtrosEmpresa.buscar.trim() !== '') {
-            params.append('buscar', filtrosEmpresa.buscar.trim());
-        }
-
-        const url = `${API_BASE_URL}/api/eventos${params.toString() ? '?' + params.toString() : ''}`;
+        // Usar el nuevo endpoint de empresas participantes
+        const url = `${API_BASE_URL}/api/empresas/mis-eventos`;
 
         const res = await fetch(url, {
             method: 'GET',
@@ -107,66 +109,38 @@ async function cargarEventosEmpresa() {
             return;
         }
 
-        // Guardar todos los eventos para filtrado local
-        todosLosEventos = data.eventos;
-
-        // Filtrar eventos donde esta empresa es patrocinadora
-        // Los patrocinadores pueden venir como strings o números, así que comparamos ambos
-        let eventosPatrocinados = data.eventos.filter(evento => {
-            let patrocinadores = [];
+        // Obtener eventos de las participaciones
+        let eventosColaboradores = data.eventos || [];
             
-            // Procesar patrocinadores
-            if (Array.isArray(evento.patrocinadores)) {
-                patrocinadores = evento.patrocinadores;
-            } else if (typeof evento.patrocinadores === 'string') {
-                try {
-                    const parsed = JSON.parse(evento.patrocinadores);
-                    patrocinadores = Array.isArray(parsed) ? parsed : [];
-                } catch (err) {
-                    console.warn('Error parseando patrocinadores:', err);
-                }
-            }
-            
-            // Convertir empresaId a string y número para comparar
-            const empresaIdStr = String(empresaId);
-            const empresaIdNum = Number(empresaId);
-            
-            // Verificar si la empresa está en el array de patrocinadores
-            // Comparar tanto como string como número para cubrir todos los casos
-            const esPatrocinador = patrocinadores.some(p => {
-                // Normalizar ambos valores a string y número para comparar
-                const pNormalized = String(p).trim();
-                const empresaIdNormalized = String(empresaId).trim();
-                
-                // Comparar como strings
-                if (pNormalized === empresaIdNormalized) return true;
-                
-                // Comparar como números (por si acaso)
-                const pNum = Number(p);
-                const empresaIdNum = Number(empresaId);
-                if (!isNaN(pNum) && !isNaN(empresaIdNum) && pNum === empresaIdNum) return true;
-                
-                return false;
-            });
-            
-            console.log(`Evento "${evento.titulo}": patrocinadores=${JSON.stringify(patrocinadores)}, empresaId=${empresaId} (tipo: ${typeof empresaId}), esPatrocinador=${esPatrocinador}`);
-            
-            return esPatrocinador;
+        // Aplicar filtros locales
+        if (filtrosEmpresa.estado !== 'todos') {
+            eventosColaboradores = eventosColaboradores.filter(item => {
+                const evento = item.evento;
+                if (!evento) return false;
+                return evento.estado === filtrosEmpresa.estado;
         });
+        }
 
-        // Aplicar filtro de búsqueda local si hay texto
         if (filtrosEmpresa.buscar.trim() !== '') {
             const buscarLower = filtrosEmpresa.buscar.toLowerCase();
-            eventosPatrocinados = eventosPatrocinados.filter(evento => {
+            eventosColaboradores = eventosColaboradores.filter(item => {
+                const evento = item.evento;
+                if (!evento) return false;
                 const titulo = (evento.titulo || '').toLowerCase();
                 const descripcion = (evento.descripcion || '').toLowerCase();
                 return titulo.includes(buscarLower) || descripcion.includes(buscarLower);
             });
         }
 
-        if (eventosPatrocinados.length === 0) {
-            cont.innerHTML = `<div class="alert alert-info">
-                <p class="mb-0">No se encontraron eventos patrocinados con los filtros aplicados.</p>
+            if (eventosColaboradores.length === 0) {
+                cont.innerHTML = `<div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle fa-3x mb-3 text-primary"></i>
+                    <h5>No tienes eventos asignados</h5>
+                    <p class="mb-2">Aún no has sido asignada como empresa colaboradora o patrocinadora en ningún evento.</p>
+                    <p class="mb-0"><small class="text-muted">Cuando una ONG te asigne como colaboradora o patrocinadora, recibirás una notificación y el evento aparecerá aquí automáticamente.</small></p>
+                    <a href="/empresa/eventos/disponibles" class="btn btn-primary mt-3">
+                        <i class="fas fa-search"></i> Ver Eventos Disponibles
+                    </a>
             </div>`;
             return;
         }
@@ -192,7 +166,15 @@ async function cargarEventosEmpresa() {
             return `${window.location.origin}/storage/${imgUrl}`;
         }
 
-        eventosPatrocinados.forEach(e => {
+        eventosColaboradores.forEach(item => {
+            const e = item.evento;
+            const participacion = item;
+            
+            // Validar que el evento existe
+            if (!e) {
+                console.warn('Evento no encontrado para participación:', item.id);
+                return;
+            }
             const fechaInicio = e.fecha_inicio ? new Date(e.fecha_inicio).toLocaleDateString('es-ES', {
                 year: 'numeric',
                 month: '2-digit',
@@ -255,12 +237,26 @@ async function cargarEventosEmpresa() {
                             ${e.descripcion || 'Sin descripción'}
                         </p>
                         ${e.ciudad ? `<p class="text-muted mb-2" style="font-size: 0.85rem;"><i class="fas fa-map-marker-alt mr-1"></i> ${e.ciudad}</p>` : ''}
+                        ${e.ong && e.ong.nombre_ong ? `<p class="text-muted mb-2" style="font-size: 0.85rem;"><i class="fas fa-building mr-1 text-primary"></i> Organizado por: <strong>${e.ong.nombre_ong}</strong></p>` : ''}
                         <div class="mb-3 d-flex align-items-center" style="color: #6c757d; font-size: 0.85rem;">
                             <i class="far fa-calendar-alt mr-2"></i>
                             <span>${fechaInicio}</span>
                         </div>
                         ${e.tipo_evento ? `<span class="badge badge-info mb-2" style="font-size: 0.75rem;">${e.tipo_evento}</span>` : ''}
-                        <span class="badge badge-success mb-3" style="font-size: 0.75rem;">Patrocinador</span>
+                        <div class="mb-2">
+                            ${participacion.tipo_relacion === 'patrocinadora' 
+                                ? `<span class="badge badge-primary mr-1" style="font-size: 0.75rem; background-color: #007bff;"><i class="fas fa-handshake"></i> Patrocinadora</span>`
+                                : participacion.estado_participacion === 'confirmada' 
+                                    ? `<span class="badge badge-success mr-1" style="font-size: 0.75rem;"><i class="fas fa-check-circle"></i> Confirmada</span>`
+                                    : `<span class="badge badge-warning mr-1" style="font-size: 0.75rem;"><i class="fas fa-clock"></i> Pendiente</span>`
+                            }
+                            ${participacion.tipo_relacion === 'colaboradora' 
+                                ? `<span class="badge badge-success" style="font-size: 0.75rem; background-color: #28a745;"><i class="fas fa-handshake"></i> Colaboradora</span>`
+                                : ''
+                            }
+                        </div>
+                        ${participacion.fecha_asignacion ? `<p class="text-muted mb-2" style="font-size: 0.8rem;"><i class="fas fa-calendar-check mr-1"></i> Asignado el: ${new Date(participacion.fecha_asignacion).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}</p>` : ''}
+                        ${participacion.tipo_colaboracion ? `<p class="text-muted mb-2" style="font-size: 0.85rem;"><i class="fas fa-tag mr-1"></i> ${participacion.tipo_colaboracion}</p>` : ''}
                         <a href="/empresa/eventos/${e.id}/detalle" class="btn btn-sm btn-block mt-auto" style="background: #667eea; color: white; border: none; border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500; transition: all 0.2s;">
                             Ver Detalles
                         </a>
@@ -321,6 +317,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         };
         cargarEventosEmpresa();
     });
+
+    // Botón actualizar
+    const btnRefresh = document.getElementById('btnRefresh');
+    if (btnRefresh) {
+        btnRefresh.addEventListener('click', async function() {
+            const icon = this.querySelector('i');
+            icon.classList.add('fa-spin');
+            await cargarEventosEmpresa();
+            icon.classList.remove('fa-spin');
+        });
+    }
+
+    // Actualización automática cada 30 segundos
+    setInterval(async () => {
+        await cargarEventosEmpresa();
+    }, 30000); // 30 segundos
 });
 </script>
 @stop

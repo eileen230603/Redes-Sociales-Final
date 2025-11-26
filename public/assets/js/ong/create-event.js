@@ -75,11 +75,82 @@ async function reverseGeocode(lat, lng) {
 }
 
 // ===============================
-// 🏢 EMPRESAS / INVITADOS
+// 🏢 PATROCINADORES
 // ===============================
-async function loadEmpresas() {
+// Cargar patrocinadores disponibles
+async function loadPatrocinadores() {
     const box = document.getElementById("patrocinadoresBox");
-    box.innerHTML = "Cargando...";
+    if (!box) return;
+    
+    box.innerHTML = '<div class="col-12 text-center py-3"><div class="spinner-border text-primary" role="status"><span class="sr-only">Cargando...</span></div><p class="mt-2 text-muted">Cargando empresas...</p></div>';
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/eventos/empresas/disponibles`, {
+            headers: { 
+                Authorization: `Bearer ${token}`,
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.error || `Error HTTP ${res.status}: ${res.statusText}`);
+        }
+        
+        const data = await res.json();
+
+        if (!data.success) {
+            throw new Error(data.error || 'Error al cargar empresas');
+        }
+
+        box.innerHTML = "";
+
+        if (!data.empresas || data.empresas.length === 0) {
+            box.innerHTML = '<div class="col-12"><p class="text-muted text-center">No hay empresas disponibles para patrocinar.</p></div>';
+            return;
+        }
+
+        data.empresas.forEach(emp => {
+            const col = document.createElement('div');
+            col.className = 'col-md-4 col-sm-6 mb-3';
+            col.innerHTML = `
+                <div class="card border" style="border-radius: 8px; transition: all 0.2s;">
+                    <div class="card-body p-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="patrocinadores[]" value="${emp.id}" id="patrocinador_${emp.id}">
+                            <label class="form-check-label d-flex align-items-center" for="patrocinador_${emp.id}" style="cursor: pointer; width: 100%;">
+                                ${emp.foto_perfil 
+                                    ? `<img src="${emp.foto_perfil}" alt="${emp.nombre}" class="rounded-circle mr-2" style="width: 40px; height: 40px; object-fit: cover;">`
+                                    : `<div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mr-2" style="width: 40px; height: 40px; font-weight: 600;">${(emp.nombre || 'E').charAt(0).toUpperCase()}</div>`
+                                }
+                                <div class="flex-grow-1">
+                                    <strong style="font-size: 0.95rem; color: #2c3e50;">${emp.nombre || 'Sin nombre'}</strong>
+                                    ${emp.NIT ? `<br><small class="text-muted">NIT: ${emp.NIT}</small>` : ''}
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            `;
+            box.appendChild(col);
+        });
+
+    } catch (error) {
+        console.error("Error cargando patrocinadores:", error);
+        box.innerHTML = `<div class="col-12"><div class="alert alert-danger">Error al cargar empresas: ${error.message}</div></div>`;
+    }
+}
+
+// ===============================
+// 🏢 EMPRESAS COLABORADORAS (PARTICIPANTES)
+// ===============================
+// Cargar empresas colaboradoras (participantes)
+async function loadEmpresasColaboradoras() {
+    const box = document.getElementById("empresasColaboradorasBox");
+    if (!box) return;
+    
+    box.innerHTML = '<div class="col-12 text-center py-3"><div class="spinner-border text-primary" role="status"><span class="sr-only">Cargando...</span></div><p class="mt-2 text-muted">Cargando empresas...</p></div>';
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/eventos/empresas/disponibles`, {
@@ -104,20 +175,44 @@ async function loadEmpresas() {
         box.innerHTML = "";
 
         if (data.empresas && Array.isArray(data.empresas) && data.empresas.length > 0) {
-            data.empresas.forEach(e => {
-                box.innerHTML += `
-                    <label class="col-md-4 p-2 border rounded">
-                        <input type="checkbox" name="patro" value="${e.id}">
-                        ${e.nombre || 'Sin nombre'}
-                    </label>`;
+            data.empresas.forEach(empresa => {
+                const empresaCard = document.createElement('div');
+                empresaCard.className = 'col-md-4 col-sm-6 mb-3';
+                empresaCard.innerHTML = `
+                    <div class="card border h-100" style="border-radius: 8px; transition: all 0.2s;">
+                        <div class="card-body p-3">
+                            <div class="form-check">
+                                <input class="form-check-input empresa-colaboradora-checkbox" 
+                                       type="checkbox" 
+                                       name="empresas_colaboradoras[]" 
+                                       value="${empresa.id}" 
+                                       id="empresa_${empresa.id}">
+                                <label class="form-check-label w-100" for="empresa_${empresa.id}" style="cursor: pointer;">
+                                    <div class="d-flex align-items-center">
+                                        ${empresa.descripcion ? `
+                                            <div class="flex-grow-1">
+                                                <strong>${empresa.nombre || 'Sin nombre'}</strong>
+                                                <br>
+                                                <small class="text-muted">${empresa.descripcion.substring(0, 50)}${empresa.descripcion.length > 50 ? '...' : ''}</small>
+                                            </div>
+                                        ` : `
+                                            <strong>${empresa.nombre || 'Sin nombre'}</strong>
+                                        `}
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                box.appendChild(empresaCard);
             });
         } else {
-            box.innerHTML = "<p class='text-muted'>No hay empresas disponibles</p>";
+            box.innerHTML = "<div class='col-12'><p class='text-muted text-center'>No hay empresas disponibles para asignar como colaboradoras.</p></div>";
         }
 
     } catch (error) {
-        console.error('Error cargando empresas:', error);
-        box.innerHTML = "<p class='text-danger'>Error cargando empresas: " + error.message + "</p>";
+        console.error('Error cargando empresas colaboradoras:', error);
+        box.innerHTML = `<div class='col-12'><p class='text-danger text-center'>Error cargando empresas: ${error.message}</p></div>`;
     }
 }
 
@@ -166,7 +261,8 @@ async function loadInvitados() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    loadEmpresas();
+    loadPatrocinadores();
+    loadEmpresasColaboradoras();
     loadInvitados();
     
     // Validar capacidad máxima en tiempo real (solo números - estricto)
@@ -547,12 +643,13 @@ async function submitEventForm(e) {
     fd.append("ciudad", ciudadDetectada || "");
     fd.append("direccion", locacion);
 
-    // Patrocinadores e invitados como arrays
-    const patrocinadoresIds = [...document.querySelectorAll("input[name='patro']:checked")].map(e => parseInt(e.value));
+    // Patrocinadores como array
+    const patrocinadoresIds = [...document.querySelectorAll("input[name='patrocinadores[]']:checked")].map(e => parseInt(e.value));
+    
+    // Invitados como array
     const invitadosIds = [...document.querySelectorAll("input[name='invitados']:checked")].map(e => parseInt(e.value));
     
-    // Enviar como arrays (FormData maneja arrays automáticamente)
-    // Si no hay elementos, enviar array vacío explícitamente
+    // Enviar patrocinadores
     if (patrocinadoresIds.length > 0) {
         patrocinadoresIds.forEach(id => {
             fd.append("patrocinadores[]", id);
@@ -562,6 +659,7 @@ async function submitEventForm(e) {
         fd.append("patrocinadores", "[]");
     }
     
+    // Enviar invitados
     if (invitadosIds.length > 0) {
         invitadosIds.forEach(id => {
             fd.append("invitados[]", id);
@@ -618,8 +716,60 @@ async function submitEventForm(e) {
             return;
         }
 
-        // Mostrar notificación de éxito
+        // Obtener empresas colaboradoras seleccionadas
+        const empresasColaboradorasIds = [...document.querySelectorAll("input[name='empresas_colaboradoras[]']:checked")].map(e => parseInt(e.value));
+        
+        console.log('📋 Empresas colaboradoras seleccionadas:', empresasColaboradorasIds);
+        console.log('📦 Evento creado:', data.evento);
+        
+        // Si hay empresas colaboradoras seleccionadas, asignarlas al evento
+        if (empresasColaboradorasIds.length > 0) {
+            // Verificar que el evento tenga ID
+            const eventoId = data.evento?.id;
+            
+            if (!eventoId) {
+                console.error('❌ No se pudo obtener el ID del evento creado');
+                mostrarNotificacion("warning", "Advertencia", "El evento se creó pero no se pudo asignar las empresas. Por favor, asigna las empresas manualmente desde la edición del evento.");
+            } else {
+                try {
+                    console.log(`🔄 Asignando ${empresasColaboradorasIds.length} empresa(s) al evento ${eventoId}`);
+                    
+                    // Esperar un momento para asegurar que el evento esté completamente guardado
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    const asignarRes = await fetch(`${API_BASE_URL}/api/eventos/${eventoId}/empresas/asignar`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            empresas: empresasColaboradorasIds
+                        })
+                    });
+
+                    console.log('📡 Respuesta de asignación:', asignarRes.status, asignarRes.statusText);
+
+                    const asignarData = await asignarRes.json();
+                    console.log('📊 Datos de asignación:', asignarData);
+                    
+                    if (asignarRes.ok && asignarData.success) {
+                        console.log(`✅ ${asignarData.empresas_asignadas} empresa(s) asignada(s) correctamente`);
+                        mostrarNotificacion("success", "¡Éxito!", `Evento creado correctamente y ${asignarData.empresas_asignadas} empresa(s) asignada(s) y notificadas`);
+                    } else {
+                        console.error('❌ Error al asignar empresas colaboradoras:', asignarData.error || 'Error desconocido');
+                        mostrarNotificacion("warning", "Advertencia", `El evento se creó pero hubo un problema al asignar empresas: ${asignarData.error || 'Error desconocido'}`);
+                    }
+                } catch (error) {
+                    console.error('❌ Error al asignar empresas colaboradoras:', error);
+                    mostrarNotificacion("warning", "Advertencia", `El evento se creó pero hubo un error al asignar empresas. Por favor, asigna las empresas manualmente desde la edición del evento.`);
+                }
+            }
+        } else {
+            // Mostrar notificación de éxito solo si no hay empresas
         mostrarNotificacion("success", "¡Éxito!", "Evento creado correctamente");
+        }
         
         // Redirigir después de 2 segundos
         setTimeout(() => {

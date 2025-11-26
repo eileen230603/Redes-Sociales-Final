@@ -5,8 +5,11 @@
 @section('content_body')
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0" style="color: #0C2B44; font-weight: 700;">
+            <i class="far fa-chart-line mr-2" style="color: #00A36C;"></i>Dashboard de Análisis
+        </h3>
         <button class="btn btn-outline-primary" onclick="cargarDatos()">
-            <i class="fas fa-sync-alt mr-2"></i> Actualizar
+            <i class="far fa-sync mr-2"></i> Actualizar
         </button>
     </div>
 
@@ -14,12 +17,12 @@
     <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist" style="border-bottom: 2px solid #e9ecef;">
         <li class="nav-item">
             <a class="nav-link active" id="participantes-tab" data-toggle="tab" href="#participantes" role="tab" aria-controls="participantes" aria-selected="true">
-                <i class="fas fa-users mr-2"></i> Dashboard de Participantes
+                <i class="far fa-users mr-2"></i> Dashboard de Participantes
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link" id="reacciones-tab" data-toggle="tab" href="#reacciones" role="tab" aria-controls="reacciones" aria-selected="false">
-                <i class="fas fa-heart mr-2"></i> Dashboard de Reacciones
+                <i class="far fa-heart mr-2"></i> Dashboard de Reacciones
             </a>
         </li>
     </ul>
@@ -30,54 +33,54 @@
         <div class="tab-pane fade show active" id="participantes" role="tabpanel" aria-labelledby="participantes-tab">
             <!-- Estadísticas Generales -->
             <div class="row mb-4">
-                <div class="col-md-3">
-                    <div class="card" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); border: none;">
-                        <div class="card-body">
+                <div class="col-md-3 mb-4">
+                    <div class="card bg-gradient-primary" style="border: none;">
+                        <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="text-white text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; opacity: 0.9;">Total Participantes</h6>
-                                    <h2 class="mb-0 text-white" id="totalParticipantes" style="font-size: 2.5rem; font-weight: 700;">0</h2>
+                                    <h6 class="text-white text-uppercase mb-3" style="font-size: 0.8rem; font-weight: 600; opacity: 0.95; letter-spacing: 0.5px;">Total Participantes</h6>
+                                    <h2 class="mb-0 text-white" id="totalParticipantes" style="font-size: 3rem; font-weight: 700; line-height: 1;">0</h2>
                                 </div>
-                                <i class="fas fa-users fa-3x text-white" style="opacity: 0.3;"></i>
+                                <i class="far fa-users fa-3x text-white" style="opacity: 0.2;"></i>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card" style="background: linear-gradient(135deg, #28a745 0%, #218838 100%); border: none;">
-                        <div class="card-body">
+                <div class="col-md-3 mb-4">
+                    <div class="card bg-gradient-success" style="border: none;">
+                        <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="text-white text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; opacity: 0.9;">Aprobados</h6>
-                                    <h2 class="mb-0 text-white" id="totalAprobados" style="font-size: 2.5rem; font-weight: 700;">0</h2>
+                                    <h6 class="text-white text-uppercase mb-3" style="font-size: 0.8rem; font-weight: 600; opacity: 0.95; letter-spacing: 0.5px;">Aprobados</h6>
+                                    <h2 class="mb-0 text-white" id="totalAprobados" style="font-size: 3rem; font-weight: 700; line-height: 1;">0</h2>
                                 </div>
-                                <i class="fas fa-check-circle fa-3x text-white" style="opacity: 0.3;"></i>
+                                <i class="far fa-check-circle fa-3x text-white" style="opacity: 0.2;"></i>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card" style="background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%); border: none;">
-                        <div class="card-body">
+                <div class="col-md-3 mb-4">
+                    <div class="card" style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); border: none;">
+                        <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="text-white text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; opacity: 0.9;">Pendientes</h6>
-                                    <h2 class="mb-0 text-white" id="totalPendientes" style="font-size: 2.5rem; font-weight: 700;">0</h2>
+                                    <h6 class="text-white text-uppercase mb-3" style="font-size: 0.8rem; font-weight: 600; opacity: 0.95; letter-spacing: 0.5px;">Pendientes</h6>
+                                    <h2 class="mb-0 text-white" id="totalPendientes" style="font-size: 3rem; font-weight: 700; line-height: 1;">0</h2>
                                 </div>
-                                <i class="fas fa-clock fa-3x text-white" style="opacity: 0.3;"></i>
+                                <i class="far fa-clock fa-3x text-white" style="opacity: 0.2;"></i>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3 mb-4">
                     <div class="card" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); border: none;">
-                        <div class="card-body">
+                        <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="text-white text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; opacity: 0.9;">Rechazados</h6>
-                                    <h2 class="mb-0 text-white" id="totalRechazados" style="font-size: 2.5rem; font-weight: 700;">0</h2>
+                                    <h6 class="text-white text-uppercase mb-3" style="font-size: 0.8rem; font-weight: 600; opacity: 0.95; letter-spacing: 0.5px;">Rechazados</h6>
+                                    <h2 class="mb-0 text-white" id="totalRechazados" style="font-size: 3rem; font-weight: 700; line-height: 1;">0</h2>
                                 </div>
-                                <i class="fas fa-times-circle fa-3x text-white" style="opacity: 0.3;"></i>
+                                <i class="far fa-times-circle fa-3x text-white" style="opacity: 0.2;"></i>
                             </div>
                         </div>
                     </div>
@@ -86,26 +89,26 @@
 
             <!-- Gráficos -->
             <div class="row mb-4">
-                <div class="col-md-6">
+                <div class="col-md-6 mb-4">
                     <div class="card">
-                        <div class="card-header" style="background-color: #17a2b8; color: white;">
-                            <h3 class="card-title" style="color: white; margin: 0;">
-                                <i class="fas fa-chart-pie mr-2"></i>Distribución por Estado
+                        <div class="card-header bg-gradient-primary" style="color: white; border-radius: 12px 12px 0 0;">
+                            <h3 class="card-title" style="color: white; margin: 0; font-weight: 600;">
+                                <i class="far fa-chart-pie mr-2"></i>Distribución por Estado
                             </h3>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body p-4">
                             <canvas id="graficoEstadoParticipantes" height="250"></canvas>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6 mb-4">
                     <div class="card">
-                        <div class="card-header" style="background-color: #28a745; color: white;">
-                            <h3 class="card-title" style="color: white; margin: 0;">
-                                <i class="fas fa-chart-bar mr-2"></i>Participantes por Evento
+                        <div class="card-header bg-gradient-success" style="color: white; border-radius: 12px 12px 0 0;">
+                            <h3 class="card-title" style="color: white; margin: 0; font-weight: 600;">
+                                <i class="far fa-chart-bar mr-2"></i>Participantes por Evento
                             </h3>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body p-4">
                             <canvas id="graficoParticipantesPorEvento" height="250"></canvas>
                         </div>
                     </div>
@@ -114,9 +117,9 @@
 
             <!-- Lista Detallada de Participantes -->
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">
-                        <i class="fas fa-list mr-2 text-primary"></i> Lista Detallada de Participantes
+                <div class="card-header bg-white d-flex justify-content-between align-items-center" style="padding: 1.5rem;">
+                    <h5 class="mb-0" style="color: #0C2B44; font-weight: 600;">
+                        <i class="far fa-list mr-2" style="color: #00A36C;"></i> Lista Detallada de Participantes
                     </h5>
                     <div class="form-group mb-0" style="max-width: 300px;">
                         <select id="filtroEventoParticipantes" class="form-control form-control-sm">
@@ -160,14 +163,14 @@
             <!-- Estadísticas Generales -->
             <div class="row mb-4">
                 <div class="col-md-12">
-                    <div class="card" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); border: none;">
-                        <div class="card-body">
+                    <div class="card bg-gradient-primary-accent" style="border: none;">
+                        <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="text-white text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; opacity: 0.9;">Total de Reacciones</h6>
-                                    <h2 class="mb-0 text-white" id="totalReacciones" style="font-size: 2.5rem; font-weight: 700;">0</h2>
+                                    <h6 class="text-white text-uppercase mb-3" style="font-size: 0.8rem; font-weight: 600; opacity: 0.95; letter-spacing: 0.5px;">Total de Reacciones</h6>
+                                    <h2 class="mb-0 text-white" id="totalReacciones" style="font-size: 3rem; font-weight: 700; line-height: 1;">0</h2>
                                 </div>
-                                <i class="fas fa-heart fa-3x text-white" style="opacity: 0.3;"></i>
+                                <i class="far fa-heart fa-3x text-white" style="opacity: 0.2;"></i>
                             </div>
                         </div>
                     </div>
@@ -178,12 +181,12 @@
             <div class="row mb-4">
                 <div class="col-md-12">
                     <div class="card">
-                        <div class="card-header" style="background-color: #dc3545; color: white;">
-                            <h3 class="card-title" style="color: white; margin: 0;">
-                                <i class="fas fa-chart-bar mr-2"></i>Reacciones por Evento
+                        <div class="card-header bg-gradient-primary-accent" style="color: white; border-radius: 12px 12px 0 0;">
+                            <h3 class="card-title" style="color: white; margin: 0; font-weight: 600;">
+                                <i class="far fa-chart-bar mr-2"></i>Reacciones por Evento
                             </h3>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body p-4">
                             <canvas id="graficoReaccionesPorEvento" height="100"></canvas>
                         </div>
                     </div>
@@ -192,9 +195,9 @@
 
             <!-- Lista Detallada de Reacciones -->
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">
-                        <i class="fas fa-list mr-2 text-danger"></i> Lista Detallada de Reacciones
+                <div class="card-header bg-white d-flex justify-content-between align-items-center" style="padding: 1.5rem;">
+                    <h5 class="mb-0" style="color: #0C2B44; font-weight: 600;">
+                        <i class="far fa-list mr-2" style="color: #00A36C;"></i> Lista Detallada de Reacciones
                     </h5>
                     <div class="form-group mb-0" style="max-width: 300px;">
                         <select id="filtroEventoReacciones" class="form-control form-control-sm">
@@ -248,19 +251,21 @@
     .nav-tabs .nav-link {
         border: none;
         border-bottom: 3px solid transparent;
-        color: #6c757d;
+        color: #333333;
         font-weight: 500;
+        padding: 0.75rem 1.25rem;
     }
 
     .nav-tabs .nav-link:hover {
-        border-bottom-color: #dee2e6;
-        color: #495057;
+        border-bottom-color: #F5F5F5;
+        color: #0C2B44;
     }
 
     .nav-tabs .nav-link.active {
-        border-bottom-color: #007bff;
-        color: #007bff;
+        border-bottom-color: #00A36C;
+        color: #0C2B44;
         background: transparent;
+        font-weight: 600;
     }
 
     .table th {
@@ -374,7 +379,7 @@ async function cargarEstadisticasParticipantes() {
                         data.totales.pendientes,
                         data.totales.rechazados
                     ],
-                    backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
+                    backgroundColor: ['#00A36C', '#ffc107', '#dc3545'],
                     borderWidth: 3,
                     borderColor: '#fff',
                     hoverOffset: 6
@@ -431,7 +436,7 @@ async function cargarEstadisticasParticipantes() {
                     {
                         label: 'Aprobados',
                         data: data.estadisticas_por_evento.map(e => e.aprobados),
-                        backgroundColor: '#28a745',
+                        backgroundColor: '#00A36C',
                         borderRadius: 4,
                         borderSkipped: false
                     },
@@ -588,10 +593,10 @@ async function cargarListaParticipantes(eventoId = '') {
             const acciones = participante.estado === 'pendiente' 
                 ? `
                     <button class="btn btn-sm btn-success mr-1" onclick="aprobarParticipacion(${participante.id})" title="Aprobar">
-                        <i class="fas fa-check"></i>
+                        <i class="far fa-check-circle"></i>
                     </button>
                     <button class="btn btn-sm btn-danger" onclick="rechazarParticipacion(${participante.id})" title="Rechazar">
-                        <i class="fas fa-times"></i>
+                        <i class="far fa-times-circle"></i>
                     </button>
                 `
                 : '<span class="text-muted">-</span>';
@@ -772,7 +777,7 @@ async function cargarListaReacciones(eventoId = '') {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="5" class="text-center py-5 text-muted">
-                        <i class="fas fa-heart fa-3x mb-3 text-danger"></i>
+                        <i class="far fa-heart fa-3x mb-3 text-danger"></i>
                         <p>Aún no hay reacciones en tus eventos</p>
                     </td>
                 </tr>
@@ -830,7 +835,7 @@ async function aprobarParticipacion(participacionId) {
             text: 'El voluntario será notificado de la aprobación',
             icon: 'question',
             showCancelButton: true,
-            confirmButtonColor: '#28a745',
+            confirmButtonColor: '#00A36C',
             cancelButtonColor: '#6c757d',
             confirmButtonText: 'Sí, aprobar',
             cancelButtonText: 'Cancelar'

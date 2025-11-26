@@ -1,25 +1,21 @@
-@extends('adminlte::page')
+@extends('layouts.adminlte')
 
-@section('title', 'Dashboard de Eventos')
+@section('page_title', 'Dashboard de Eventos')
 
-@section('content_header')
-    <h1><i class="fas fa-chart-line"></i> Dashboard de Eventos</h1>
-@stop
-
-@section('content')
+@section('content_body')
 <div class="container-fluid">
     <!-- Estadísticas de Eventos -->
     <div class="row">
         <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-            <div class="card" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); border: none;">
-                <div class="card-body">
+            <div class="card stat-card" style="background: linear-gradient(135deg, #0C2B44 0%, #0a2338 100%); border: none; border-radius: 12px;">
+                <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="text-white text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; opacity: 0.9;">Total de Eventos</h6>
-                            <h2 class="mb-0 text-white" id="statTotal" style="font-size: 2.5rem; font-weight: 700;">0</h2>
+                            <h6 class="text-white text-uppercase mb-2 stat-label" style="font-size: 0.75rem; font-weight: 600; opacity: 0.9; letter-spacing: 0.5px;">Total de Eventos</h6>
+                            <h2 class="mb-0 text-white stat-number" id="statTotal" style="font-size: 2.5rem; font-weight: 700; line-height: 1;">0</h2>
                         </div>
-                        <div class="text-right">
-                            <i class="fas fa-calendar-alt fa-3x text-white" style="opacity: 0.3;"></i>
+                        <div class="text-right stat-icon-container">
+                            <i class="far fa-calendar fa-3x text-white stat-icon" style="opacity: 0.2;"></i>
                         </div>
                     </div>
                 </div>
@@ -27,15 +23,15 @@
         </div>
 
         <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-            <div class="card" style="background: linear-gradient(135deg, #28a745 0%, #218838 100%); border: none;">
-                <div class="card-body">
+            <div class="card stat-card" style="background: linear-gradient(135deg, #00A36C 0%, #008a5a 100%); border: none; border-radius: 12px;">
+                <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="text-white text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; opacity: 0.9;">Eventos Finalizados</h6>
-                            <h2 class="mb-0 text-white" id="statFinalizados" style="font-size: 2.5rem; font-weight: 700;">0</h2>
+                            <h6 class="text-white text-uppercase mb-2 stat-label" style="font-size: 0.75rem; font-weight: 600; opacity: 0.9; letter-spacing: 0.5px;">Eventos Finalizados</h6>
+                            <h2 class="mb-0 text-white stat-number" id="statFinalizados" style="font-size: 2.5rem; font-weight: 700; line-height: 1;">0</h2>
                         </div>
-                        <div class="text-right">
-                            <i class="fas fa-check-circle fa-3x text-white" style="opacity: 0.3;"></i>
+                        <div class="text-right stat-icon-container">
+                            <i class="far fa-check-circle fa-3x text-white stat-icon" style="opacity: 0.2;"></i>
                         </div>
                     </div>
                 </div>
@@ -43,15 +39,15 @@
         </div>
 
         <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-            <div class="card" style="background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%); border: none;">
-                <div class="card-body">
+            <div class="card stat-card" style="background: linear-gradient(135deg, #333333 0%, #2a2a2a 100%); border: none; border-radius: 12px;">
+                <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="text-white text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; opacity: 0.9;">Eventos en Curso</h6>
-                            <h2 class="mb-0 text-white" id="statEnCurso" style="font-size: 2.5rem; font-weight: 700;">0</h2>
+                            <h6 class="text-white text-uppercase mb-2 stat-label" style="font-size: 0.75rem; font-weight: 600; opacity: 0.9; letter-spacing: 0.5px;">Eventos en Curso</h6>
+                            <h2 class="mb-0 text-white stat-number" id="statEnCurso" style="font-size: 2.5rem; font-weight: 700; line-height: 1;">0</h2>
                         </div>
-                        <div class="text-right">
-                            <i class="fas fa-play-circle fa-3x text-white" style="opacity: 0.3;"></i>
+                        <div class="text-right stat-icon-container">
+                            <i class="far fa-play-circle fa-3x text-white stat-icon" style="opacity: 0.2;"></i>
                         </div>
                     </div>
                 </div>
@@ -59,15 +55,15 @@
         </div>
 
         <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-            <div class="card" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); border: none;">
-                <div class="card-body">
+            <div class="card stat-card" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border: none; border-radius: 12px;">
+                <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="text-white text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; opacity: 0.9;">Eventos Próximos</h6>
-                            <h2 class="mb-0 text-white" id="statProximos" style="font-size: 2.5rem; font-weight: 700;">0</h2>
+                            <h6 class="text-white text-uppercase mb-2 stat-label" style="font-size: 0.75rem; font-weight: 600; opacity: 0.9; letter-spacing: 0.5px;">Eventos Próximos</h6>
+                            <h2 class="mb-0 text-white stat-number" id="statProximos" style="font-size: 2.5rem; font-weight: 700; line-height: 1;">0</h2>
                         </div>
-                        <div class="text-right">
-                            <i class="fas fa-clock fa-3x text-white" style="opacity: 0.3;"></i>
+                        <div class="text-right stat-icon-container">
+                            <i class="far fa-clock fa-3x text-white stat-icon" style="opacity: 0.2;"></i>
                         </div>
                     </div>
                 </div>
@@ -78,25 +74,25 @@
     <!-- Gráficos de Estadísticas -->
     <div class="row mb-4">
         <div class="col-md-6 mb-4">
-            <div class="card">
-                <div class="card-header" style="background-color: #17a2b8; color: white;">
-                    <h3 class="card-title" style="color: white; margin: 0;">
-                        <i class="fas fa-chart-pie mr-2"></i>Eventos por Estado
+            <div class="card" style="border-radius: 12px; border: 1px solid #F5F5F5;">
+                <div class="card-header" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border-radius: 12px 12px 0 0;">
+                    <h3 class="card-title" style="color: white; margin: 0; font-weight: 600;">
+                        <i class="far fa-chart-pie mr-2"></i>Eventos por Estado
                     </h3>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     <canvas id="graficoPastelEstados" height="250"></canvas>
                 </div>
             </div>
         </div>
         <div class="col-md-6 mb-4">
-            <div class="card">
-                <div class="card-header" style="background-color: #28a745; color: white;">
-                    <h3 class="card-title" style="color: white; margin: 0;">
-                        <i class="fas fa-chart-bar mr-2"></i>Eventos por Tipo
+            <div class="card" style="border-radius: 12px; border: 1px solid #F5F5F5;">
+                <div class="card-header" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border-radius: 12px 12px 0 0;">
+                    <h3 class="card-title" style="color: white; margin: 0; font-weight: 600;">
+                        <i class="far fa-chart-bar mr-2"></i>Eventos por Tipo
                     </h3>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     <canvas id="graficoBarrasEstados" height="250"></canvas>
                 </div>
             </div>
@@ -104,19 +100,19 @@
     </div>
 
     <!-- Filtros y Búsqueda -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h3 class="card-title">
-                <i class="fas fa-filter mr-2"></i>Filtros
+    <div class="card mb-4" style="border-radius: 12px; border: 1px solid #F5F5F5;">
+        <div class="card-header" style="background: #F5F5F5; border-bottom: 1px solid #F5F5F5; border-radius: 12px 12px 0 0;">
+            <h3 class="card-title mb-0" style="color: #0C2B44; font-weight: 700;">
+                <i class="far fa-sliders-h mr-2" style="color: #00A36C;"></i>Filtros
             </h3>
         </div>
-        <div class="card-body">
+        <div class="card-body" style="padding: 1.5rem;">
             <div class="row">
                 <div class="col-md-4 mb-3 mb-md-0">
-                    <label for="filtroEstado" class="form-label">
-                        <i class="fas fa-info-circle mr-2"></i>Filtrar por Estado
+                    <label for="filtroEstado" class="form-label" style="color: #0C2B44; font-weight: 600; margin-bottom: 0.75rem;">
+                        <i class="far fa-info-circle mr-2" style="color: #00A36C;"></i>Filtrar por Estado
                     </label>
-                    <select id="filtroEstado" class="form-control">
+                    <select id="filtroEstado" class="form-control" style="border-radius: 8px; padding: 0.75rem;">
                         <option value="todos">Todos los eventos</option>
                         <option value="finalizados">Finalizados</option>
                         <option value="en_curso">En Curso</option>
@@ -127,15 +123,15 @@
                     </select>
                 </div>
                 <div class="col-md-6 mb-3 mb-md-0">
-                    <label for="buscador" class="form-label">
-                        <i class="fas fa-search mr-2"></i>Buscar
+                    <label for="buscador" class="form-label" style="color: #0C2B44; font-weight: 600; margin-bottom: 0.75rem;">
+                        <i class="far fa-search mr-2" style="color: #00A36C;"></i>Buscar
                     </label>
-                    <input type="text" id="buscador" class="form-control" placeholder="Buscar por título o descripción...">
+                    <input type="text" id="buscador" class="form-control" placeholder="Buscar por título..." style="border-radius: 8px; padding: 0.75rem;">
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label d-block">&nbsp;</label>
-                    <button id="btnLimpiar" class="btn btn-secondary btn-block">
-                        <i class="fas fa-times mr-2"></i>Limpiar
+                    <label class="form-label d-block" style="color: #0C2B44; font-weight: 600; margin-bottom: 0.75rem;">&nbsp;</label>
+                    <button id="btnLimpiar" class="btn btn-block" style="background: #F5F5F5; color: #0C2B44; border: none; border-radius: 8px; padding: 0.75rem; font-weight: 500;">
+                        <i class="far fa-times-circle mr-2"></i>Limpiar
                     </button>
                 </div>
             </div>
@@ -143,22 +139,24 @@
     </div>
 
     <!-- Lista de Eventos -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">
-                <i class="fas fa-list mr-2"></i>Lista de Eventos
+    <div class="card" style="border-radius: 12px; border: 1px solid #F5F5F5;">
+        <div class="card-header" style="background: #F5F5F5; border-bottom: 1px solid #F5F5F5; border-radius: 12px 12px 0 0;">
+            <h3 class="card-title mb-0" style="color: #0C2B44; font-weight: 700;">
+                <i class="far fa-list mr-2" style="color: #00A36C;"></i>Lista de Eventos
             </h3>
         </div>
-        <div class="card-body">
+        <div class="card-body" style="padding: 1.5rem;">
             <div id="eventosContainer" class="row">
                 <!-- Los eventos se cargarán aquí -->
             </div>
 
             <!-- Mensaje cuando no hay eventos -->
             <div id="mensajeVacio" class="text-center py-5 d-none">
-                <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
-                <h4 class="text-muted">No hay eventos que mostrar</h4>
-                <p class="text-muted">Intenta cambiar los filtros o crear un nuevo evento.</p>
+                <div style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <i class="far fa-calendar-times fa-3x text-white"></i>
+                </div>
+                <h4 style="color: #0C2B44; font-weight: 600;">No hay eventos que mostrar</h4>
+                <p style="color: #333333;">Intenta cambiar los filtros o crear un nuevo evento.</p>
             </div>
         </div>
     </div>
@@ -166,30 +164,34 @@
 
 <style>
     .card {
-        border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-        transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+        border-radius: 12px !important;
+        border: 1px solid #F5F5F5 !important;
+        box-shadow: 0 2px 8px rgba(12, 43, 68, 0.08) !important;
+        transition: all 0.3s ease !important;
     }
     
     .card:hover {
-        box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+        box-shadow: 0 4px 16px rgba(12, 43, 68, 0.15) !important;
+        transform: translateY(-2px) !important;
     }
     
     .evento-card {
         transition: transform 0.2s, box-shadow 0.2s;
-        border-radius: 8px;
+        border-radius: 12px;
         overflow: hidden;
+        border: 1px solid #F5F5F5;
     }
     
     .evento-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(12, 43, 68, 0.15);
+        border-color: #00A36C;
     }
     
     .badge-estado {
         font-size: 0.75rem;
         padding: 0.4em 0.8em;
-        border-radius: 4px;
+        border-radius: 20px;
         font-weight: 500;
     }
     
@@ -199,16 +201,241 @@
         max-height: 300px;
     }
     
-    .card-header {
-        background-color: #f8f9fa;
-        border-bottom: 1px solid #dee2e6;
+    /* ============================================
+       ANIMACIONES PARA TARJETAS DE ESTADÍSTICAS
+       ============================================ */
+    
+    /* Animación de entrada para las tarjetas */
+    .stat-card {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+        animation: slideInUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        position: relative;
+        overflow: hidden;
     }
     
-    .card-title {
-        margin-bottom: 0;
-        font-size: 1rem;
-        font-weight: 600;
-        color: #495057;
+    .stat-card:nth-child(1) {
+        animation-delay: 0s;
+    }
+    
+    .stat-card:nth-child(2) {
+        animation-delay: 0.1s;
+    }
+    
+    .stat-card:nth-child(3) {
+        animation-delay: 0.2s;
+    }
+    
+    .stat-card:nth-child(4) {
+        animation-delay: 0.3s;
+    }
+    
+    @keyframes slideInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+    
+    /* Efecto de brillo sutil en hover */
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.15),
+            transparent
+        );
+        transition: left 0.6s ease;
+        z-index: 1;
+    }
+    
+    .stat-card:hover::before {
+        left: 100%;
+    }
+    
+    /* Animación de hover para las tarjetas */
+    .stat-card {
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        cursor: pointer;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-8px) scale(1.03) !important;
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25) !important;
+    }
+    
+    /* Animación de los iconos */
+    .stat-icon {
+        transition: all 0.4s ease;
+        animation: floatIcon 3s ease-in-out infinite;
+    }
+    
+    .stat-card:hover .stat-icon {
+        transform: scale(1.2) rotate(5deg) !important;
+        opacity: 0.4 !important;
+    }
+    
+    @keyframes floatIcon {
+        0%, 100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+    
+    /* Animación de entrada para los labels */
+    .stat-label {
+        opacity: 0;
+        animation: fadeInUp 0.8s ease forwards;
+    }
+    
+    .stat-card:nth-child(1) .stat-label {
+        animation-delay: 0.2s;
+    }
+    
+    .stat-card:nth-child(2) .stat-label {
+        animation-delay: 0.3s;
+    }
+    
+    .stat-card:nth-child(3) .stat-label {
+        animation-delay: 0.4s;
+    }
+    
+    .stat-card:nth-child(4) .stat-label {
+        animation-delay: 0.5s;
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 0.9;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Animación de pulso sutil para los números */
+    .stat-number {
+        position: relative;
+        display: inline-block;
+        animation: numberGlow 2s ease-in-out infinite;
+    }
+    
+    @keyframes numberGlow {
+        0%, 100% {
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+        }
+        50% {
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.6), 0 0 25px rgba(255, 255, 255, 0.4);
+        }
+    }
+    
+    /* Animación de contador para los números */
+    .stat-number.counting {
+        animation: numberPop 0.5s ease, numberGlow 2s ease-in-out infinite;
+    }
+    
+    @keyframes numberPop {
+        0% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.15);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+    
+    /* Efecto de gradiente animado para la última tarjeta */
+    .stat-card:last-child {
+        background-size: 200% 200%;
+        animation: gradientShift 5s ease infinite, slideInUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    
+    @keyframes gradientShift {
+        0% {
+            background-position: 0% 50%;
+        }
+        50% {
+            background-position: 100% 50%;
+        }
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+    
+    /* Animación de entrada para el contenedor de iconos */
+    .stat-icon-container {
+        animation: iconSlideIn 0.8s ease forwards;
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    
+    .stat-card:nth-child(1) .stat-icon-container {
+        animation-delay: 0.4s;
+    }
+    
+    .stat-card:nth-child(2) .stat-icon-container {
+        animation-delay: 0.5s;
+    }
+    
+    .stat-card:nth-child(3) .stat-icon-container {
+        animation-delay: 0.6s;
+    }
+    
+    .stat-card:nth-child(4) .stat-icon-container {
+        animation-delay: 0.7s;
+    }
+    
+    @keyframes iconSlideIn {
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    /* Animación de ondas para el fondo de las tarjetas */
+    .stat-card::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        transform: translate(-50%, -50%);
+        animation: ripple 3s ease-out infinite;
+        z-index: 0;
+    }
+    
+    @keyframes ripple {
+        0% {
+            width: 0;
+            height: 0;
+            opacity: 0.8;
+        }
+        100% {
+            width: 300px;
+            height: 300px;
+            opacity: 0;
+        }
+    }
+    
+    /* Asegurar que el contenido esté por encima de las animaciones */
+    .stat-card .card-body {
+        position: relative;
+        z-index: 2;
     }
 </style>
 
@@ -281,23 +508,54 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function actualizarEstadisticas(stats) {
-        document.getElementById('statTotal').textContent = stats.total || 0;
-        document.getElementById('statFinalizados').textContent = stats.finalizados || 0;
-        document.getElementById('statEnCurso').textContent = stats.en_curso || 0;
-        document.getElementById('statProximos').textContent = stats.proximos || 0;
+        // Animación de contador para los números
+        animarContador('statTotal', stats.total || 0);
+        animarContador('statFinalizados', stats.finalizados || 0);
+        animarContador('statEnCurso', stats.en_curso || 0);
+        animarContador('statProximos', stats.proximos || 0);
         
         // Actualizar gráficos
         actualizarGraficos(stats);
     }
+    
+    // Función para animar el contador
+    function animarContador(elementId, valorFinal) {
+        const elemento = document.getElementById(elementId);
+        if (!elemento) return;
+        
+        const valorInicial = parseInt(elemento.textContent) || 0;
+        const duracion = 1500; // 1.5 segundos
+        const incremento = valorFinal / (duracion / 16); // 60 FPS
+        let valorActual = valorInicial;
+        
+        // Agregar clase de animación
+        elemento.classList.add('counting');
+        
+        const intervalo = setInterval(() => {
+            valorActual += incremento;
+            
+            if ((incremento > 0 && valorActual >= valorFinal) || 
+                (incremento < 0 && valorActual <= valorFinal)) {
+                elemento.textContent = valorFinal;
+                clearInterval(intervalo);
+                // Remover clase después de la animación
+                setTimeout(() => {
+                    elemento.classList.remove('counting');
+                }, 500);
+            } else {
+                elemento.textContent = Math.floor(valorActual);
+            }
+        }, 16);
+    }
 
     function actualizarGraficos(stats) {
-        // Colores AdminLTE - Ajustados para coincidir con el diseño
-        const coloresAdminLTE = {
-            finalizados: '#6c757d',    // gray
-            en_curso: '#17a2b8',        // info (cyan/teal)
-            proximos: '#28a745',        // success (green)
-            cancelados: '#dc3545',       // danger (red)
-            borradores: '#ffc107'       // warning (yellow)
+        // Nueva Paleta de Colores
+        const coloresPaleta = {
+            finalizados: '#00A36C',     // verde esmeralda
+            en_curso: '#333333',        // gris carbón
+            proximos: '#0C2B44',        // azul marino
+            cancelados: '#dc3545',      // rojo
+            borradores: '#ffc107'       // amarillo
         };
 
         // Gráfico de Pastel - Distribución de Estados
@@ -322,27 +580,27 @@ document.addEventListener('DOMContentLoaded', function() {
         if (datosPastel.finalizados > 0) {
             labelsPastel.push('Finalizados');
             dataPastel.push(datosPastel.finalizados);
-            coloresPastel.push(coloresAdminLTE.finalizados);
+            coloresPastel.push(coloresPaleta.finalizados);
         }
         if (datosPastel.en_curso > 0) {
             labelsPastel.push('En Curso');
             dataPastel.push(datosPastel.en_curso);
-            coloresPastel.push(coloresAdminLTE.en_curso);
+            coloresPastel.push(coloresPaleta.en_curso);
         }
         if (datosPastel.proximos > 0) {
             labelsPastel.push('Próximos');
             dataPastel.push(datosPastel.proximos);
-            coloresPastel.push(coloresAdminLTE.proximos);
+            coloresPastel.push(coloresPaleta.proximos);
         }
         if (datosPastel.cancelados > 0) {
             labelsPastel.push('Cancelados');
             dataPastel.push(datosPastel.cancelados);
-            coloresPastel.push(coloresAdminLTE.cancelados);
+            coloresPastel.push(coloresPaleta.cancelados);
         }
         if (datosPastel.borradores > 0) {
             labelsPastel.push('Borradores');
             dataPastel.push(datosPastel.borradores);
-            coloresPastel.push(coloresAdminLTE.borradores);
+            coloresPastel.push(coloresPaleta.borradores);
         }
 
         if (dataPastel.length > 0) {
@@ -422,11 +680,11 @@ document.addEventListener('DOMContentLoaded', function() {
             datosPastel.borradores
         ];
         const coloresBarras = [
-            coloresAdminLTE.finalizados,
-            coloresAdminLTE.en_curso,
-            coloresAdminLTE.proximos,
-            coloresAdminLTE.cancelados,
-            coloresAdminLTE.borradores
+            coloresPaleta.finalizados,
+            coloresPaleta.en_curso,
+            coloresPaleta.proximos,
+            coloresPaleta.cancelados,
+            coloresPaleta.borradores
         ];
 
         chartBarrasEstados = new Chart(ctxBarras, {
@@ -543,29 +801,29 @@ document.addEventListener('DOMContentLoaded', function() {
                             <img src="${imagen}" class="w-100 h-100" style="object-fit: cover;" onerror="this.style.display='none'">
                         </div>
                     ` : `
-                        <div style="height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-calendar fa-4x text-white" style="opacity: 0.5;"></i>
+                        <div style="height: 200px; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); display: flex; align-items: center; justify-content: center;">
+                            <i class="far fa-calendar fa-4x text-white" style="opacity: 0.3;"></i>
                         </div>
                     `}
-                    <div class="card-body">
+                    <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h5 class="card-title mb-0" style="font-size: 1.1rem; font-weight: 600; color: #495057;">${e.titulo || 'Sin título'}</h5>
+                            <h5 class="card-title mb-0" style="font-size: 1.1rem; font-weight: 700; color: #0C2B44;">${e.titulo || 'Sin título'}</h5>
                             ${estadoBadge}
                         </div>
-                        <p class="card-text text-muted" style="font-size: 0.9rem; line-height: 1.6;">
+                        <p class="card-text" style="font-size: 0.9rem; line-height: 1.6; color: #333333; margin-bottom: 1rem;">
                             ${(e.descripcion || 'Sin descripción').substring(0, 120)}${e.descripcion && e.descripcion.length > 120 ? '...' : ''}
                         </p>
-                        <div class="mt-3 pt-3 border-top">
-                            <small class="text-muted d-block mb-2">
-                                <i class="fas fa-calendar-alt mr-2"></i><strong>Inicio:</strong> ${fechaInicio}
+                        <div class="mt-3 pt-3" style="border-top: 1px solid #F5F5F5;">
+                            <small class="d-block mb-2" style="color: #333333;">
+                                <i class="far fa-calendar mr-2" style="color: #00A36C;"></i><strong>Inicio:</strong> ${fechaInicio}
                             </small>
-                            <small class="text-muted d-block">
-                                <i class="fas fa-calendar-check mr-2"></i><strong>Fin:</strong> ${fechaFin}
+                            <small class="d-block" style="color: #333333;">
+                                <i class="far fa-calendar-check mr-2" style="color: #00A36C;"></i><strong>Fin:</strong> ${fechaFin}
                             </small>
                         </div>
                         <div class="mt-3">
-                            <a href="/ong/eventos/${e.id}/detalle" class="btn btn-primary btn-sm btn-block">
-                                <i class="fas fa-eye mr-2"></i>Ver Detalles
+                            <a href="/ong/eventos/${e.id}/detalle" class="btn btn-sm btn-block" style="background: #0C2B44; color: white; border: none; border-radius: 8px; font-weight: 500;">
+                                <i class="far fa-eye mr-2"></i>Ver Detalles
                             </a>
                         </div>
                     </div>
@@ -575,20 +833,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function obtenerBadgeEstado(estadoDinamico) {
-        // Usar el estado dinámico que viene del backend
+        // Usar el estado dinámico que viene del backend con nueva paleta
         switch(estadoDinamico) {
             case 'finalizado':
-                return '<span class="badge badge-secondary badge-estado">Finalizado</span>';
+                return '<span class="badge badge-estado" style="background: #6c757d; color: white;">Finalizado</span>';
             case 'activo':
-                return '<span class="badge badge-info badge-estado">En Curso</span>';
+                return '<span class="badge badge-estado" style="background: #00A36C; color: white;">En Curso</span>';
             case 'proximo':
-                return '<span class="badge badge-success badge-estado">Próximo</span>';
+                return '<span class="badge badge-estado" style="background: #0C2B44; color: white;">Próximo</span>';
             case 'cancelado':
-                return '<span class="badge badge-danger badge-estado">Cancelado</span>';
+                return '<span class="badge badge-estado" style="background: #dc3545; color: white;">Cancelado</span>';
             case 'borrador':
-                return '<span class="badge badge-warning badge-estado">Borrador</span>';
+                return '<span class="badge badge-estado" style="background: #ffc107; color: #333333;">Borrador</span>';
             default:
-                return '<span class="badge badge-secondary badge-estado">' + estadoDinamico + '</span>';
+                return '<span class="badge badge-estado" style="background: #6c757d; color: white;">' + estadoDinamico + '</span>';
         }
     }
 

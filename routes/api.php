@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\DashboardOngController;
 use App\Http\Controllers\Api\VoluntarioController;
 use App\Http\Controllers\Api\ConfiguracionController;
 use App\Http\Controllers\Api\ParametrizacionController;
+use App\Http\Controllers\Api\EventoEmpresaParticipacionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MegaEventoController;
 use App\Http\Controllers\StorageController;
@@ -55,6 +56,26 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}/patrocinar', [EventController::class, 'agregarPatrocinador']);
     });
 
+    // ----------- EMPRESAS PARTICIPANTES (COLABORADORAS) -----------
+    Route::prefix('eventos/{eventoId}/empresas')->group(function () {
+        // Asignar empresas (ONG)
+        Route::post('/asignar', [EventoEmpresaParticipacionController::class, 'asignarEmpresas']);
+        // Remover empresas (ONG)
+        Route::post('/remover', [EventoEmpresaParticipacionController::class, 'removerEmpresas']);
+        // Ver empresas participantes
+        Route::get('/', [EventoEmpresaParticipacionController::class, 'empresasParticipantes']);
+        // Verificar participación
+        Route::get('/verificar', [EventoEmpresaParticipacionController::class, 'verificarParticipacion']);
+    });
+
+    // ----------- EMPRESAS: MIS EVENTOS -----------
+    Route::prefix('empresas')->group(function () {
+        // Confirmar participación
+        Route::post('/eventos/{eventoId}/confirmar', [EventoEmpresaParticipacionController::class, 'confirmarParticipacion']);
+        // Mis eventos como empresa colaboradora
+        Route::get('/mis-eventos', [EventoEmpresaParticipacionController::class, 'misEventos']);
+    });
+
     // ----------- PARTICIPACIÓN -----------
     Route::post('/participaciones/inscribir', [EventoParticipacionController::class, 'inscribir']);
     Route::post('/participaciones/cancelar',  [EventoParticipacionController::class, 'cancelar']);
@@ -68,12 +89,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reacciones/verificar/{eventoId}', [EventoReaccionController::class, 'verificar']);
     Route::get('/reacciones/evento/{eventoId}', [EventoReaccionController::class, 'usuariosQueReaccionaron']);
 
-    // ----------- NOTIFICACIONES -----------
+    // ----------- NOTIFICACIONES (ONG) -----------
     Route::prefix('notificaciones')->group(function () {
         Route::get('/', [NotificacionController::class, 'index']);
         Route::get('/contador', [NotificacionController::class, 'contador']);
         Route::put('/{id}/leida', [NotificacionController::class, 'marcarLeida']);
         Route::put('/marcar-todas', [NotificacionController::class, 'marcarTodasLeidas']);
+    });
+
+    // ----------- NOTIFICACIONES (EMPRESA) -----------
+    Route::prefix('empresas/notificaciones')->group(function () {
+        Route::get('/', [NotificacionController::class, 'indexEmpresa']);
+        Route::get('/contador', [NotificacionController::class, 'contadorEmpresa']);
+        Route::put('/{id}/leida', [NotificacionController::class, 'marcarLeidaEmpresa']);
+        Route::put('/marcar-todas', [NotificacionController::class, 'marcarTodasLeidasEmpresa']);
     });
 
     // ----------- DASHBOARD ONG -----------

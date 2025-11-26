@@ -274,11 +274,11 @@ async function cargarReacciones() {
 
     try {
         container.innerHTML = `
-            <div class="text-center py-3">
-                <div class="spinner-border text-primary" role="status">
+            <div class="text-center py-4">
+                <div class="spinner-border" role="status" style="color: #00A36C; width: 3rem; height: 3rem;">
                     <span class="sr-only">Cargando...</span>
                 </div>
-                <p class="mt-2 text-muted">Cargando reacciones...</p>
+                <p class="mt-3" style="color: #333333; font-weight: 500;">Cargando reacciones...</p>
             </div>
         `;
 
@@ -293,8 +293,8 @@ async function cargarReacciones() {
 
         if (!res.ok || !data.success) {
             container.innerHTML = `
-                <div class="alert alert-warning">
-                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                <div class="alert" style="background: #fff3cd; border: 1px solid #ffc107; color: #856404; border-radius: 8px; padding: 1rem;">
+                    <i class="far fa-exclamation-triangle mr-2"></i>
                     ${data.error || 'Error al cargar reacciones'}
                 </div>
             `;
@@ -303,9 +303,12 @@ async function cargarReacciones() {
 
         if (!data.reacciones || data.reacciones.length === 0) {
             container.innerHTML = `
-                <div class="alert alert-info text-center">
-                    <i class="fas fa-heart fa-2x mb-2 text-danger"></i>
-                    <p class="mb-0">Aún no hay reacciones en este evento</p>
+                <div class="text-center py-5" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border-radius: 12px; padding: 3rem 2rem;">
+                    <div style="background: rgba(255, 255, 255, 0.15); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; backdrop-filter: blur(10px);">
+                        <i class="far fa-heart" style="font-size: 2.5rem; color: white;"></i>
+                    </div>
+                    <h5 style="color: white; font-weight: 600; margin-bottom: 0.5rem;">Aún no hay reacciones</h5>
+                    <p style="color: rgba(255, 255, 255, 0.9); margin: 0; font-size: 0.95rem;">Usuarios que han marcado este evento como favorito con un corazón aparecerán aquí</p>
                 </div>
             `;
             return;
@@ -327,27 +330,29 @@ async function cargarReacciones() {
 
             html += `
                 <div class="col-md-6 col-lg-4 mb-3">
-                    <div class="card border-0 shadow-sm" style="border-radius: 8px; background: #f8f9fa; border-left: 3px solid #dc3545 !important;">
-                        <div class="card-body p-3">
-                            <div class="d-flex align-items-center mb-2">
+                    <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; border: 1px solid #F5F5F5; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(12, 43, 68, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center mb-3">
                                 ${fotoPerfil ? `
-                                    <img src="${fotoPerfil}" alt="${reaccion.nombre}" class="rounded-circle mr-3" style="width: 45px; height: 45px; object-fit: cover; border: 2px solid #dc3545;">
+                                    <img src="${fotoPerfil}" alt="${reaccion.nombre}" class="rounded-circle mr-3" style="width: 50px; height: 50px; object-fit: cover; border: 3px solid #00A36C;">
                                 ` : `
-                                    <div class="rounded-circle bg-danger text-white d-flex align-items-center justify-content-center mr-3" style="width: 45px; height: 45px; font-weight: 600; font-size: 1.1rem;">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 50px; height: 50px; font-weight: 600; font-size: 1.2rem; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white;">
                                         ${inicialNombre}
                                     </div>
                                 `}
                                 <div class="flex-grow-1">
-                                    <h6 class="mb-0" style="color: #2c3e50; font-weight: 600; font-size: 0.95rem;">${reaccion.nombre || 'N/A'}</h6>
-                                    <small class="text-muted" style="font-size: 0.8rem;">
-                                        <i class="fas fa-envelope mr-1"></i> ${reaccion.correo || 'N/A'}
+                                    <h6 class="mb-1" style="color: #0C2B44; font-weight: 700; font-size: 1rem;">${reaccion.nombre || 'N/A'}</h6>
+                                    <small style="color: #333333; font-size: 0.85rem;">
+                                        <i class="far fa-envelope mr-1" style="color: #00A36C;"></i> ${reaccion.correo || 'N/A'}
                                     </small>
                                 </div>
-                                <i class="fas fa-heart text-danger" style="font-size: 1.2rem;"></i>
+                                <div style="background: rgba(220, 53, 69, 0.1); width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                    <i class="far fa-heart" style="font-size: 1.3rem; color: #dc3545;"></i>
+                                </div>
                             </div>
-                            <div class="mt-2">
-                                <small class="text-muted" style="font-size: 0.75rem;">
-                                    <i class="fas fa-clock mr-1"></i> ${fechaReaccion}
+                            <div class="mt-3 pt-3" style="border-top: 1px solid #F5F5F5;">
+                                <small style="color: #333333; font-size: 0.8rem;">
+                                    <i class="far fa-clock mr-1" style="color: #00A36C;"></i> ${fechaReaccion}
                                 </small>
                             </div>
                         </div>
@@ -356,15 +361,15 @@ async function cargarReacciones() {
             `;
         });
         html += '</div>';
-        html += `<div class="mt-3"><small class="text-muted">Total: ${data.total} reacción(es)</small></div>`;
+        html += `<div class="mt-4 text-center"><span class="badge" style="background: #0C2B44; color: white; padding: 0.5em 1em; border-radius: 20px; font-weight: 500;">Total: ${data.total} reacción(es)</span></div>`;
 
         container.innerHTML = html;
 
     } catch (error) {
         console.error('Error cargando reacciones:', error);
         container.innerHTML = `
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-triangle mr-2"></i>
+            <div class="alert" style="background: #f8d7da; border: 1px solid #dc3545; color: #721c24; border-radius: 8px; padding: 1rem;">
+                <i class="far fa-exclamation-triangle mr-2"></i>
                 Error de conexión al cargar reacciones
             </div>
         `;
@@ -381,11 +386,11 @@ async function cargarParticipantes() {
 
     try {
         container.innerHTML = `
-            <div class="text-center py-3">
-                <div class="spinner-border text-primary" role="status">
+            <div class="text-center py-4">
+                <div class="spinner-border" role="status" style="color: #00A36C; width: 3rem; height: 3rem;">
                     <span class="sr-only">Cargando...</span>
                 </div>
-                <p class="mt-2 text-muted">Cargando participantes...</p>
+                <p class="mt-3" style="color: #333333; font-weight: 500;">Cargando participantes...</p>
             </div>
         `;
 
@@ -400,8 +405,8 @@ async function cargarParticipantes() {
 
         if (!res.ok || !data.success) {
             container.innerHTML = `
-                <div class="alert alert-warning">
-                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                <div class="alert" style="background: #fff3cd; border: 1px solid #ffc107; color: #856404; border-radius: 8px; padding: 1rem;">
+                    <i class="far fa-exclamation-triangle mr-2"></i>
                     ${data.error || 'Error al cargar participantes'}
                 </div>
             `;
@@ -410,9 +415,12 @@ async function cargarParticipantes() {
 
         if (!data.participantes || data.participantes.length === 0) {
             container.innerHTML = `
-                <div class="alert alert-info text-center">
-                    <i class="fas fa-info-circle fa-2x mb-2"></i>
-                    <p class="mb-0">No hay participantes inscritos aún</p>
+                <div class="text-center py-5" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border-radius: 12px; padding: 3rem 2rem;">
+                    <div style="background: rgba(255, 255, 255, 0.15); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; backdrop-filter: blur(10px);">
+                        <i class="far fa-users" style="font-size: 2.5rem; color: white;"></i>
+                    </div>
+                    <h5 style="color: white; font-weight: 600; margin-bottom: 0.5rem;">No hay participantes inscritos aún</h5>
+                    <p style="color: rgba(255, 255, 255, 0.9); margin: 0; font-size: 0.95rem;">Las solicitudes de participación aparecerán aquí cuando los usuarios se inscriban</p>
                 </div>
             `;
             return;
@@ -431,51 +439,55 @@ async function cargarParticipantes() {
 
             let estadoBadge = '';
             if (participante.estado === 'aprobada') {
-                estadoBadge = '<span class="badge badge-success">Aprobada</span>';
+                estadoBadge = '<span class="badge" style="background: #00A36C; color: white; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;">Aprobada</span>';
             } else if (participante.estado === 'rechazada') {
-                estadoBadge = '<span class="badge badge-danger">Rechazada</span>';
+                estadoBadge = '<span class="badge" style="background: #dc3545; color: white; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;">Rechazada</span>';
             } else {
-                estadoBadge = '<span class="badge badge-warning">Pendiente</span>';
+                estadoBadge = '<span class="badge" style="background: #ffc107; color: #333333; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;">Pendiente</span>';
             }
 
             const inicial = (participante.nombre || 'U').charAt(0).toUpperCase();
             const fotoPerfil = participante.foto_perfil || null;
 
             html += `
-                <div class="col-md-6 mb-3">
-                    <div class="participante-item">
-                        <div class="d-flex align-items-start mb-3">
-                            ${fotoPerfil ? `
-                                <img src="${fotoPerfil}" alt="${participante.nombre}" class="rounded-circle mr-3" style="width: 50px; height: 50px; object-fit: cover; border: 2px solid #007bff; flex-shrink: 0;">
-                            ` : `
-                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mr-3" style="width: 50px; height: 50px; font-weight: 600; font-size: 1.1rem; flex-shrink: 0;">
-                                    ${inicial}
-                                </div>
-                            `}
-                            <div class="flex-grow-1">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <h6 class="mb-0" style="color: #2c3e50; font-weight: 600;">${participante.nombre || 'N/A'}</h6>
-                                    ${estadoBadge}
-                                </div>
-                                <p class="mb-1 text-muted" style="font-size: 0.85rem;">
-                                    <i class="fas fa-envelope mr-1"></i> ${participante.correo || 'N/A'}
-                                </p>
-                                <p class="mb-1 text-muted" style="font-size: 0.85rem;">
-                                    <i class="fas fa-phone mr-1"></i> ${participante.telefono || 'N/A'}
-                                </p>
-                                <p class="mb-2 text-muted" style="font-size: 0.85rem;">
-                                    <i class="fas fa-calendar mr-1"></i> ${fechaInscripcion}
-                                </p>
-                                ${participante.estado === 'pendiente' ? `
-                                    <div class="d-flex gap-2">
-                                        <button class="btn btn-sm btn-success flex-fill" onclick="aprobarParticipacion(${participante.id})" title="Aprobar">
-                                            <i class="fas fa-check mr-1"></i> Aprobar
-                                        </button>
-                                        <button class="btn btn-sm btn-danger flex-fill" onclick="rechazarParticipacion(${participante.id})" title="Rechazar">
-                                            <i class="fas fa-times mr-1"></i> Rechazar
-                                        </button>
+                <div class="col-md-6 mb-4">
+                    <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; border: 1px solid #F5F5F5; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(12, 43, 68, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-start mb-3">
+                                ${fotoPerfil ? `
+                                    <img src="${fotoPerfil}" alt="${participante.nombre}" class="rounded-circle mr-3" style="width: 55px; height: 55px; object-fit: cover; border: 3px solid #00A36C; flex-shrink: 0;">
+                                ` : `
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 55px; height: 55px; font-weight: 600; font-size: 1.2rem; flex-shrink: 0; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white;">
+                                        ${inicial}
                                     </div>
-                                ` : ''}
+                                `}
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="mb-0" style="color: #0C2B44; font-weight: 700; font-size: 1.05rem;">${participante.nombre || 'N/A'}</h6>
+                                        ${estadoBadge}
+                                    </div>
+                                    <div class="mb-2">
+                                        <p class="mb-1" style="color: #333333; font-size: 0.9rem;">
+                                            <i class="far fa-envelope mr-2" style="color: #00A36C;"></i> ${participante.correo || 'N/A'}
+                                        </p>
+                                        <p class="mb-1" style="color: #333333; font-size: 0.9rem;">
+                                            <i class="far fa-phone mr-2" style="color: #00A36C;"></i> ${participante.telefono || 'N/A'}
+                                        </p>
+                                        <p class="mb-0" style="color: #333333; font-size: 0.9rem;">
+                                            <i class="far fa-calendar mr-2" style="color: #00A36C;"></i> ${fechaInscripcion}
+                                        </p>
+                                    </div>
+                                    ${participante.estado === 'pendiente' ? `
+                                        <div class="d-flex mt-3" style="gap: 0.5rem;">
+                                            <button class="btn btn-sm flex-fill" onclick="aprobarParticipacion(${participante.id})" title="Aprobar" style="background: #00A36C; color: white; border: none; border-radius: 8px; font-weight: 500;">
+                                                <i class="far fa-check-circle mr-1"></i> Aprobar
+                                            </button>
+                                            <button class="btn btn-sm flex-fill" onclick="rechazarParticipacion(${participante.id})" title="Rechazar" style="background: #dc3545; color: white; border: none; border-radius: 8px; font-weight: 500;">
+                                                <i class="far fa-times-circle mr-1"></i> Rechazar
+                                            </button>
+                                        </div>
+                                    ` : ''}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -483,15 +495,15 @@ async function cargarParticipantes() {
             `;
         });
         html += '</div>';
-        html += `<div class="mt-3"><small class="text-muted">Total: ${data.count} participante(s)</small></div>`;
+        html += `<div class="mt-4 text-center"><span class="badge" style="background: #0C2B44; color: white; padding: 0.5em 1em; border-radius: 20px; font-weight: 500;">Total: ${data.count} participante(s)</span></div>`;
 
         container.innerHTML = html;
 
     } catch (error) {
         console.error('Error cargando participantes:', error);
         container.innerHTML = `
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-triangle mr-2"></i>
+            <div class="alert" style="background: #f8d7da; border: 1px solid #dc3545; color: #721c24; border-radius: 8px; padding: 1rem;">
+                <i class="far fa-exclamation-triangle mr-2"></i>
                 Error de conexión al cargar participantes
             </div>
         `;

@@ -8,37 +8,37 @@
     <!-- Panel de Bienvenida -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card shadow-sm" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); border: none;">
-                <div class="card-body p-4">
+            <div class="card shadow-sm bg-gradient-primary-accent" style="border: none;">
+                <div class="card-body p-5">
                     <div class="row align-items-center">
 
                         <!-- Texto de bienvenida -->
                         <div class="col-md-8">
-                            <h2 class="text-white mb-2" style="font-weight: 600;">
-                                <i class="fas fa-hand-holding-heart mr-2"></i>
+                            <h2 class="text-white mb-3" style="font-weight: 700; font-size: 2rem;">
+                                <i class="far fa-hand-holding-heart mr-2"></i>
                                 ¡Bienvenido, <span id="nombreOng">ONG</span>!
                             </h2>
-                            <p class="text-white mb-0" style="opacity: 0.9; font-size: 1.1rem;">
+                            <p class="text-white mb-0" style="opacity: 0.95; font-size: 1.15rem; line-height: 1.6;">
                                 Gestiona tus eventos, voluntarios y actividades desde este panel centralizado.
                             </p>
                         </div>
 
                         <!-- Reloj Minimalista -->
                         <div class="col-md-4 text-right">
-                            <div class="p-2" style="display: inline-block;">
-                                <div class="text-white small mb-1" style="font-weight: 600; letter-spacing: 1px; text-transform: uppercase;">
+                            <div class="p-3" style="display: inline-block; background: rgba(255, 255, 255, 0.1); border-radius: 12px; backdrop-filter: blur(10px);">
+                                <div class="text-white small mb-2" style="font-weight: 600; letter-spacing: 1px; text-transform: uppercase; opacity: 0.9;">
                                     <i class="far fa-clock mr-1"></i>Hora Actual
                                 </div>
 
                                 <!-- Hora real -->
                                 <div id="relojTiempoReal" 
-                                     style="font-weight: 700; font-size: 2.8rem; font-family: 'Courier New', monospace; color: #ffffff;">
+                                     style="font-weight: 700; font-size: 2.8rem; font-family: 'Courier New', monospace; color: #ffffff; line-height: 1;">
                                     00:00:00
                                 </div>
 
                                 <!-- Fecha real -->
                                 <div id="fechaActual" 
-                                     style="font-size: 0.9rem; color: #e4e4e4; margin-top: 2px;">
+                                     style="font-size: 0.95rem; color: rgba(255, 255, 255, 0.9); margin-top: 4px; font-weight: 500;">
                                     Lunes, 1 de Enero 2025
                                 </div>
                             </div>
@@ -54,60 +54,60 @@
     <div class="row mb-4">
 
         <!-- Total Eventos -->
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); border: none;">
-                <div class="card-body">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card bg-gradient-primary" style="border: none;">
+                <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="text-white text-uppercase mb-2" style="font-size: 0.75rem; opacity: .9;">Total Eventos</h6>
-                            <h2 class="text-white" id="totalEventos" style="font-size: 2.5rem;">0</h2>
+                            <h6 class="text-white text-uppercase mb-3" style="font-size: 0.8rem; opacity: .95; font-weight: 600; letter-spacing: 0.5px;">Total Eventos</h6>
+                            <h2 class="text-white mb-0" id="totalEventos" style="font-size: 3rem; font-weight: 700; line-height: 1;">0</h2>
                         </div>
-                        <i class="fas fa-calendar-alt fa-3x text-white" style="opacity: .3;"></i>
+                        <i class="far fa-calendar fa-3x text-white" style="opacity: .2;"></i>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Total Mega Eventos -->
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card" style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%); border: none;">
-                <div class="card-body">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card bg-gradient-primary-accent" style="border: none;">
+                <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="text-white text-uppercase mb-2" style="font-size: 0.75rem; opacity: .9;">Mega Eventos</h6>
-                            <h2 class="text-white" id="totalMegaEventos" style="font-size: 2.5rem;">0</h2>
+                            <h6 class="text-white text-uppercase mb-3" style="font-size: 0.8rem; opacity: .95; font-weight: 600; letter-spacing: 0.5px;">Mega Eventos</h6>
+                            <h2 class="text-white mb-0" id="totalMegaEventos" style="font-size: 3rem; font-weight: 700; line-height: 1;">0</h2>
                         </div>
-                        <i class="fas fa-star fa-3x text-white" style="opacity: .3;"></i>
+                        <i class="far fa-star fa-3x text-white" style="opacity: .2;"></i>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Total Voluntarios -->
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card" style="background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); border: none;">
-                <div class="card-body">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card bg-gradient-success" style="border: none;">
+                <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="text-white text-uppercase mb-2" style="font-size: 0.75rem; opacity: .9;">Voluntarios</h6>
-                            <h2 class="text-white" id="totalVoluntarios" style="font-size: 2.5rem;">0</h2>
+                            <h6 class="text-white text-uppercase mb-3" style="font-size: 0.8rem; opacity: .95; font-weight: 600; letter-spacing: 0.5px;">Voluntarios</h6>
+                            <h2 class="text-white mb-0" id="totalVoluntarios" style="font-size: 3rem; font-weight: 700; line-height: 1;">0</h2>
                         </div>
-                        <i class="fas fa-users fa-3x text-white" style="opacity: .3;"></i>
+                        <i class="far fa-users fa-3x text-white" style="opacity: .2;"></i>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Total Reacciones -->
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card" style="background: linear-gradient(135deg, #dc3545 0%, #bd2130 100%); border: none;">
-                <div class="card-body">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border: none;">
+                <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="text-white text-uppercase mb-2" style="font-size: 0.75rem; opacity: .9;">Reacciones</h6>
-                            <h2 class="text-white" id="totalReacciones" style="font-size: 2.5rem;">0</h2>
+                            <h6 class="text-white text-uppercase mb-3" style="font-size: 0.8rem; opacity: .95; font-weight: 600; letter-spacing: 0.5px;">Reacciones</h6>
+                            <h2 class="text-white mb-0" id="totalReacciones" style="font-size: 3rem; font-weight: 700; line-height: 1;">0</h2>
                         </div>
-                        <i class="fas fa-heart fa-3x text-white" style="opacity: .3;"></i>
+                        <i class="far fa-heart fa-3x text-white" style="opacity: .2;"></i>
                     </div>
                 </div>
             </div>

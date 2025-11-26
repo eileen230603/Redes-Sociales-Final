@@ -1,12 +1,8 @@
-@extends('adminlte::page')
+@extends('layouts.adminlte')
 
-@section('title', 'Reportes | UNI2')
+@section('page_title', 'Reportes y Estadísticas')
 
-@section('content_header')
-    <h1><i class="fas fa-chart-bar text-primary"></i> Reportes y Estadísticas</h1>
-@stop
-
-@section('content')
+@section('content_body')
 <div class="container-fluid">
     <!-- Estadísticas principales -->
     <div class="row mb-4">

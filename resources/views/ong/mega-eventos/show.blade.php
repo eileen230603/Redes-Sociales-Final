@@ -5,34 +5,35 @@
 @section('content_body')
 <div class="container-fluid">
     <div id="loadingMessage" class="text-center py-5">
-        <div class="spinner-border text-primary" role="status">
+        <div class="spinner-border" role="status" style="color: #00A36C; width: 3rem; height: 3rem;">
             <span class="sr-only">Cargando...</span>
         </div>
-        <p class="mt-3 text-muted">Cargando información del mega evento...</p>
+        <p class="mt-3" style="color: #333333; font-weight: 500;">Cargando información del mega evento...</p>
     </div>
 
     <div id="megaEventoContent" style="display: none;">
         <!-- Header con imagen -->
-        <div class="card border-0 mb-4" style="box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden;">
-            <div id="headerImage" class="card-img-top" style="height: 250px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-calendar-check fa-4x text-white" style="opacity: 0.8;"></i>
+        <div class="card border-0 mb-4" style="border-radius: 12px; border: 1px solid #F5F5F5; box-shadow: 0 2px 8px rgba(12, 43, 68, 0.08); overflow: hidden;">
+            <div id="headerImage" class="card-img-top" style="height: 300px; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); display: flex; align-items: center; justify-content: center;">
+                <i class="far fa-calendar-check fa-4x text-white" style="opacity: 0.9;"></i>
             </div>
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="flex-grow-1">
-                        <h2 class="mb-2" id="titulo" style="font-size: 1.5rem; font-weight: 600; color: #2c3e50;">-</h2>
+                        <h2 class="mb-3" id="titulo" style="font-size: 2rem; font-weight: 700; color: #0C2B44; line-height: 1.3;">-</h2>
+                        <p id="descripcionHeader" class="mb-3" style="font-size: 1.1rem; color: #333333; line-height: 1.6; font-weight: 400;">-</p>
                         <div class="mb-3">
-                            <span id="estadoBadge" class="badge mr-1" style="font-size: 0.75rem;">-</span>
-                            <span id="publicoBadge" class="badge mr-1" style="font-size: 0.75rem;">-</span>
-                            <span id="categoriaBadge" class="badge" style="font-size: 0.75rem;">-</span>
+                            <span id="estadoBadge" class="badge mr-2 mb-2" style="font-size: 0.85rem; padding: 0.5em 0.8em; border-radius: 20px;">-</span>
+                            <span id="publicoBadge" class="badge mr-2 mb-2" style="font-size: 0.85rem; padding: 0.5em 0.8em; border-radius: 20px;">-</span>
+                            <span id="categoriaBadge" class="badge mb-2" style="font-size: 0.85rem; padding: 0.5em 0.8em; border-radius: 20px;">-</span>
                         </div>
                     </div>
                     <div class="ml-3">
-                        <a href="{{ route('ong.mega-eventos.index') }}" class="btn btn-sm btn-light border mr-2">
-                            <i class="fas fa-arrow-left"></i>
+                        <a href="{{ route('ong.mega-eventos.index') }}" class="btn btn-sm mr-2" style="background: #F5F5F5; color: #0C2B44; border: none; border-radius: 8px; padding: 0.5rem 1rem;">
+                            <i class="far fa-arrow-left mr-1"></i> Volver
                         </a>
-                        <a href="#" id="editLink" class="btn btn-sm btn-light border">
-                            <i class="fas fa-edit"></i>
+                        <a href="#" id="editLink" class="btn btn-sm" style="background: #00A36C; color: white; border: none; border-radius: 8px; padding: 0.5rem 1rem;">
+                            <i class="far fa-edit mr-1"></i> Editar
                         </a>
                     </div>
                 </div>
@@ -42,49 +43,49 @@
         <div class="row">
             <!-- Información Principal -->
             <div class="col-md-8">
-                <div class="card border-0 mb-4" style="box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div class="card border-0 mb-4" style="border-radius: 12px; border: 1px solid #F5F5F5; box-shadow: 0 2px 8px rgba(12, 43, 68, 0.08);">
                     <div class="card-body p-4">
-                        <h5 class="mb-4" style="font-size: 1rem; font-weight: 600; color: #2c3e50;">
-                            <i class="fas fa-info-circle mr-2" style="color: #6c757d;"></i> Información del Mega Evento
+                        <h5 class="mb-4" style="font-size: 1.1rem; font-weight: 700; color: #0C2B44;">
+                            <i class="far fa-info-circle mr-2" style="color: #00A36C;"></i> Información del Mega Evento
                         </h5>
                         <div class="mb-4">
-                            <small class="text-muted d-block mb-2" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Descripción</small>
-                            <p id="descripcion" class="mb-0" style="line-height: 1.7; color: #495057; font-size: 0.95rem;">-</p>
+                            <small class="d-block mb-2" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; color: #0C2B44;">Descripción</small>
+                            <p id="descripcion" class="mb-0" style="line-height: 1.8; color: #333333; font-size: 1rem;">-</p>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-4">
                                 <div class="d-flex align-items-start">
-                                    <div class="mr-3" style="width: 40px; height: 40px; background: #f0f4ff; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                                        <i class="far fa-calendar-alt" style="color: #4a90e2;"></i>
+                                    <div class="mr-3" style="width: 50px; height: 50px; background: rgba(12, 43, 68, 0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="far fa-calendar-alt" style="color: #0C2B44; font-size: 1.25rem;"></i>
                                     </div>
                                     <div>
-                                        <small class="text-muted d-block mb-1" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Fecha de Inicio</small>
-                                        <p id="fecha_inicio" class="mb-0" style="font-size: 0.95rem; font-weight: 500; color: #2c3e50;">-</p>
+                                        <small class="d-block mb-1" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; color: #0C2B44;">Fecha de Inicio</small>
+                                        <p id="fecha_inicio" class="mb-0" style="font-size: 1rem; font-weight: 500; color: #333333;">-</p>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-6 mb-4">
                                 <div class="d-flex align-items-start">
-                                    <div class="mr-3" style="width: 40px; height: 40px; background: #f0fdf4; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                                        <i class="far fa-calendar-check" style="color: #22c55e;"></i>
+                                    <div class="mr-3" style="width: 50px; height: 50px; background: rgba(0, 163, 108, 0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="far fa-calendar-check" style="color: #00A36C; font-size: 1.25rem;"></i>
                                     </div>
                                     <div>
-                                        <small class="text-muted d-block mb-1" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Fecha de Fin</small>
-                                        <p id="fecha_fin" class="mb-0" style="font-size: 0.95rem; font-weight: 500; color: #2c3e50;">-</p>
+                                        <small class="d-block mb-1" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; color: #0C2B44;">Fecha de Fin</small>
+                                        <p id="fecha_fin" class="mb-0" style="font-size: 1rem; font-weight: 500; color: #333333;">-</p>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-12 mb-4">
-                                <div class="card border-0" style="background: #f8f9fa; border-radius: 12px; padding: 1.25rem;">
+                                <div class="card border-0" style="background: #F5F5F5; border-radius: 12px; padding: 1.5rem; border: 1px solid rgba(12, 43, 68, 0.1);">
                                     <div class="d-flex align-items-start">
-                                        <div class="mr-3" style="width: 50px; height: 50px; background: #fff; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                                            <i class="fas fa-map-marker-alt" style="color: #ef4444; font-size: 1.25rem;"></i>
+                                        <div class="mr-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="far fa-map" style="color: #00A36C; font-size: 1.6rem;"></i>
                                         </div>
                                         <div class="flex-grow-1">
-                                            <small class="text-muted d-block mb-2" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Ubicación del Evento</small>
+                                            <small class="d-block mb-2" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; color: #0C2B44;">Ubicación del Evento</small>
                                             <div id="ubicacionContainer">
-                                                <p id="ubicacion" class="mb-0" style="font-size: 1rem; font-weight: 500; color: #2c3e50; line-height: 1.6;">-</p>
+                                                <p id="ubicacion" class="mb-0" style="font-size: 1.05rem; font-weight: 500; color: #333333; line-height: 1.7;">-</p>
                                             </div>
                                         </div>
                                     </div>
@@ -92,35 +93,37 @@
                             </div>
                             <div class="col-md-6 mb-4">
                                 <div class="d-flex align-items-start">
-                                    <div class="mr-3" style="width: 40px; height: 40px; background: #fffbeb; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                                        <i class="fas fa-users" style="color: #f59e0b;"></i>
+                                    <div class="mr-3" style="width: 50px; height: 50px; background: rgba(0, 163, 108, 0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="far fa-user" style="color: #00A36C; font-size: 1.4rem;"></i>
                                     </div>
                                     <div>
-                                        <small class="text-muted d-block mb-1" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Capacidad Máxima</small>
-                                        <p id="capacidad_maxima" class="mb-0" style="font-size: 0.95rem; font-weight: 500; color: #2c3e50;">-</p>
+                                        <small class="d-block mb-1" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; color: #0C2B44;">
+                                            <i class="far fa-user mr-1" style="color: #00A36C;"></i> Capacidad Máxima
+                                        </small>
+                                        <p id="capacidad_maxima" class="mb-0" style="font-size: 1rem; font-weight: 500; color: #333333;">-</p>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-12 mb-3">
                                 <div class="mb-3">
-                                    <small class="text-muted d-block mb-2" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">
-                                        <i class="fas fa-map mr-1" style="color: #6c757d;"></i> Mapa de Ubicación
+                                    <small class="d-block mb-2" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; color: #0C2B44;">
+                                        <i class="far fa-map mr-1" style="color: #00A36C;"></i> Mapa de Ubicación
                                     </small>
                                 </div>
-                                <div id="map" style="height: 350px; border-radius: 12px; border: 1px solid #e9ecef; overflow: hidden;"></div>
+                                <div id="map" style="height: 350px; border-radius: 12px; border: 1px solid #F5F5F5; overflow: hidden; box-shadow: 0 2px 8px rgba(12, 43, 68, 0.08);"></div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Imágenes -->
-                <div class="card border-0 mb-4" style="box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div class="card border-0 mb-4" style="border-radius: 12px; border: 1px solid #F5F5F5; box-shadow: 0 2px 8px rgba(12, 43, 68, 0.08);">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0" style="font-size: 1rem; font-weight: 600; color: #2c3e50;">
-                                <i class="fas fa-images mr-2" style="color: #6c757d;"></i> Imágenes Promocionales
+                            <h5 class="mb-0" style="font-size: 1.1rem; font-weight: 700; color: #0C2B44;">
+                                <i class="far fa-images mr-2" style="color: #00A36C;"></i> Imágenes Promocionales
                             </h5>
-                            <span id="imagenesCount" class="badge badge-light" style="font-size: 0.75rem; background: #e9ecef; color: #6c757d;">0</span>
+                            <span id="imagenesCount" class="badge" style="font-size: 0.85rem; background: #0C2B44; color: white; padding: 0.5em 0.8em; border-radius: 20px;">0</span>
                         </div>
                         <div id="imagenesContainer" class="row">
                             <div class="col-12 text-center py-3">
@@ -136,46 +139,52 @@
 
             <!-- Información Adicional -->
             <div class="col-md-4">
-                <div class="card border-0 mb-4" style="box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div class="card border-0 mb-4" style="border-radius: 12px; border: 1px solid #F5F5F5; box-shadow: 0 2px 8px rgba(12, 43, 68, 0.08);">
                     <div class="card-body p-4">
-                        <h6 class="mb-3" style="font-size: 0.875rem; font-weight: 600; color: #2c3e50; text-transform: uppercase; letter-spacing: 0.5px;">
-                            <i class="fas fa-building mr-2" style="color: #6c757d;"></i> ONG Organizadora
+                        <h6 class="mb-3" style="font-size: 0.9rem; font-weight: 700; color: #0C2B44; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <i class="far fa-building mr-2" style="color: #00A36C;"></i> ONG Organizadora
                         </h6>
-                        <p id="ong_organizadora" class="mb-0" style="font-size: 0.95rem; font-weight: 500; color: #495057;">-</p>
+                        <p id="ong_organizadora" class="mb-0" style="font-size: 1rem; font-weight: 500; color: #333333;">-</p>
                     </div>
                 </div>
 
-                <div class="card border-0 mb-4" style="box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div class="card border-0 mb-4" style="border-radius: 12px; border: 1px solid #F5F5F5; box-shadow: 0 2px 8px rgba(12, 43, 68, 0.08);">
                     <div class="card-body p-4">
-                        <h6 class="mb-3" style="font-size: 0.875rem; font-weight: 600; color: #2c3e50; text-transform: uppercase; letter-spacing: 0.5px;">
-                            <i class="fas fa-calendar mr-2" style="color: #6c757d;"></i> Fechas del Sistema
+                        <h6 class="mb-3" style="font-size: 0.9rem; font-weight: 700; color: #0C2B44; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <i class="far fa-calendar mr-2" style="color: #00A36C;"></i> Fechas del Sistema
                         </h6>
-                        <div class="mb-3 pb-3 border-bottom">
-                            <small class="text-muted d-block mb-1" style="font-size: 0.7rem;">Fecha de Creación</small>
-                            <p id="fecha_creacion" class="mb-0" style="font-size: 0.85rem; color: #6c757d;">-</p>
+                        <div class="mb-3 pb-3 border-bottom" style="border-color: #F5F5F5 !important;">
+                            <small class="d-block mb-1" style="font-size: 0.75rem; font-weight: 600; color: #0C2B44;">Fecha de Creación</small>
+                            <p id="fecha_creacion" class="mb-0" style="font-size: 0.9rem; color: #333333;">-</p>
                         </div>
                         <div>
-                            <small class="text-muted d-block mb-1" style="font-size: 0.7rem;">Última Actualización</small>
-                            <p id="fecha_actualizacion" class="mb-0" style="font-size: 0.85rem; color: #6c757d;">-</p>
+                            <small class="d-block mb-1" style="font-size: 0.75rem; font-weight: 600; color: #0C2B44;">Última Actualización</small>
+                            <p id="fecha_actualizacion" class="mb-0" style="font-size: 0.9rem; color: #333333;">-</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="card border-0" style="box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div class="card border-0" style="border-radius: 12px; border: 1px solid #F5F5F5; box-shadow: 0 2px 8px rgba(12, 43, 68, 0.08);">
                     <div class="card-body p-4">
-                        <h6 class="mb-3" style="font-size: 0.875rem; font-weight: 600; color: #2c3e50; text-transform: uppercase; letter-spacing: 0.5px;">
-                            <i class="fas fa-cog mr-2" style="color: #6c757d;"></i> Estado
+                        <h6 class="mb-3" style="font-size: 0.9rem; font-weight: 700; color: #0C2B44; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <i class="far fa-cog mr-2" style="color: #00A36C;"></i> Estado
                         </h6>
-                        <div class="mb-3 pb-3 border-bottom">
-                            <small class="text-muted d-block mb-1" style="font-size: 0.7rem;">Estado del Evento</small>
+                        <div class="mb-3 pb-3 border-bottom" style="border-color: #F5F5F5 !important;">
+                            <small class="d-block mb-1" style="font-size: 0.75rem; font-weight: 600; color: #0C2B44;">
+                                <i class="far fa-flag mr-1" style="color: #00A36C;"></i> Estado del Evento
+                            </small>
                             <div id="estado" class="mb-0">-</div>
                         </div>
-                        <div class="mb-3 pb-3 border-bottom">
-                            <small class="text-muted d-block mb-1" style="font-size: 0.7rem;">Visibilidad</small>
+                        <div class="mb-3 pb-3 border-bottom" style="border-color: #F5F5F5 !important;">
+                            <small class="d-block mb-1" style="font-size: 0.75rem; font-weight: 600; color: #0C2B44;">
+                                <i class="far fa-eye mr-1" style="color: #00A36C;"></i> Visibilidad
+                            </small>
                             <div id="es_publico" class="mb-0">-</div>
                         </div>
                         <div>
-                            <small class="text-muted d-block mb-1" style="font-size: 0.7rem;">Activo</small>
+                            <small class="d-block mb-1" style="font-size: 0.75rem; font-weight: 600; color: #0C2B44;">
+                                <i class="far fa-toggle-on mr-1" style="color: #00A36C;"></i> Activo
+                            </small>
                             <div id="activo" class="mb-0">-</div>
                         </div>
                     </div>
@@ -186,10 +195,10 @@
 </div>
 @endsection
 
-@section('css')
+@push('css')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-    /* Estilos minimalistas adicionales */
+    /* Estilos con nueva paleta de colores */
     #megaEventoContent {
         animation: fadeIn 0.3s ease-in;
     }
@@ -204,7 +213,7 @@
     }
     
     .card:hover {
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+        box-shadow: 0 4px 12px rgba(12, 43, 68, 0.12) !important;
     }
     
     /* Mejoras en las imágenes */
@@ -221,10 +230,36 @@
         transition: all 0.3s ease;
     }
     
-    /* Badges minimalistas */
+    /* Badges con nueva paleta */
     .badge {
         font-weight: 500;
-        padding: 0.35em 0.65em;
+        padding: 0.5em 0.8em;
+        border-radius: 20px;
+    }
+    
+    .badge-success {
+        background-color: #00A36C !important;
+        color: white !important;
+    }
+    
+    .badge-info {
+        background-color: #0C2B44 !important;
+        color: white !important;
+    }
+    
+    .badge-secondary {
+        background-color: #333333 !important;
+        color: white !important;
+    }
+    
+    .badge-primary {
+        background-color: #0C2B44 !important;
+        color: white !important;
+    }
+    
+    .badge-danger {
+        background-color: #dc3545 !important;
+        color: white !important;
     }
     
     /* Mejoras en el mapa */
@@ -233,12 +268,14 @@
     }
     
     #map:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 12px rgba(12, 43, 68, 0.15);
     }
 </style>
-@endsection
+@endpush
 
-@section('js')
+@push('js')
+{{-- Script global para icono de notificaciones --}}
+<script src="{{ asset('js/notificaciones-ong.js') }}"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="{{ asset('assets/js/config.js') }}"></script>
 <script>
@@ -305,8 +342,8 @@ async function loadMegaEvento() {
 
         if (!res.ok || !data.success) {
             loadingMessage.innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                <div class="alert alert-danger" style="background: #f8d7da; border: 1px solid #dc3545; color: #721c24; border-radius: 8px; padding: 1rem;">
+                    <i class="far fa-exclamation-triangle mr-2"></i>
                     Error: ${data.error || 'Error al cargar el mega evento'}
                 </div>
             `;
@@ -321,8 +358,8 @@ async function loadMegaEvento() {
     } catch (error) {
         console.error('Error:', error);
         loadingMessage.innerHTML = `
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-triangle mr-2"></i>
+            <div class="alert alert-danger" style="background: #f8d7da; border: 1px solid #dc3545; color: #721c24; border-radius: 8px; padding: 1rem;">
+                <i class="far fa-exclamation-triangle mr-2"></i>
                 Error de conexión al cargar el mega evento.
             </div>
         `;
@@ -333,8 +370,10 @@ function displayMegaEvento(mega) {
     // Título
     document.getElementById('titulo').textContent = mega.titulo || '-';
 
-    // Descripción
-    document.getElementById('descripcion').textContent = mega.descripcion || 'Sin descripción disponible.';
+    // Descripción en header y en sección
+    const descripcion = mega.descripcion || 'Sin descripción disponible.';
+    document.getElementById('descripcionHeader').textContent = descripcion;
+    document.getElementById('descripcion').textContent = descripcion;
 
     // Fechas
     if (mega.fecha_inicio) {
@@ -423,10 +462,10 @@ function displayMegaEvento(mega) {
         if (ubicacionParsed.direccion) {
             html += `
                 <div class="mb-2">
-                    <strong style="color: #495057; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                        <i class="fas fa-road mr-1" style="color: #6c757d;"></i> Dirección:
+                    <strong style="color: #0C2B44; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">
+                        <i class="far fa-road mr-1" style="color: #00A36C;"></i> Dirección:
                     </strong>
-                    <p class="mb-0 mt-1" style="font-size: 0.95rem; color: #2c3e50; font-weight: 500;">${ubicacionParsed.direccion}</p>
+                    <p class="mb-0 mt-1" style="font-size: 1.05rem; color: #333333; font-weight: 500;">${ubicacionParsed.direccion}</p>
                 </div>
             `;
         }
@@ -434,10 +473,10 @@ function displayMegaEvento(mega) {
         if (ubicacionParsed.ciudad) {
             html += `
                 <div class="mb-2">
-                    <strong style="color: #495057; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                        <i class="fas fa-city mr-1" style="color: #6c757d;"></i> Ciudad:
+                    <strong style="color: #0C2B44; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">
+                        <i class="far fa-city mr-1" style="color: #00A36C;"></i> Ciudad:
                     </strong>
-                    <p class="mb-0 mt-1" style="font-size: 0.95rem; color: #2c3e50; font-weight: 500;">${ubicacionParsed.ciudad}</p>
+                    <p class="mb-0 mt-1" style="font-size: 1.05rem; color: #333333; font-weight: 500;">${ubicacionParsed.ciudad}</p>
                 </div>
             `;
         }
@@ -445,23 +484,23 @@ function displayMegaEvento(mega) {
         if (ubicacionParsed.departamento) {
             html += `
                 <div>
-                    <strong style="color: #495057; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                        <i class="fas fa-map-marked-alt mr-1" style="color: #6c757d;"></i> Departamento:
+                    <strong style="color: #0C2B44; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">
+                        <i class="far fa-map-marked-alt mr-1" style="color: #00A36C;"></i> Departamento:
                     </strong>
-                    <p class="mb-0 mt-1" style="font-size: 0.95rem; color: #2c3e50; font-weight: 500;">${ubicacionParsed.departamento}</p>
+                    <p class="mb-0 mt-1" style="font-size: 1.05rem; color: #333333; font-weight: 500;">${ubicacionParsed.departamento}</p>
                 </div>
             `;
         }
         
         ubicacionContainer.innerHTML = html || `
-            <p class="mb-0" style="font-size: 1rem; font-weight: 500; color: #2c3e50; line-height: 1.6;">
-                <i class="fas fa-map-marker-alt mr-2" style="color: #ef4444;"></i>${ubicacion}
+            <p class="mb-0" style="font-size: 1.05rem; font-weight: 500; color: #333333; line-height: 1.7;">
+                <i class="far fa-map-marker-alt mr-2" style="color: #00A36C;"></i>${ubicacion}
             </p>
         `;
     } else {
         ubicacionContainer.innerHTML = `
-            <p class="mb-0 text-muted" style="font-size: 0.95rem;">
-                <i class="fas fa-exclamation-circle mr-2"></i>Ubicación no especificada
+            <p class="mb-0" style="font-size: 1rem; color: #333333; font-weight: 500;">
+                <i class="far fa-exclamation-circle mr-2" style="color: #00A36C;"></i>Ubicación no especificada
             </p>
         `;
     }
@@ -493,31 +532,31 @@ function displayMegaEvento(mega) {
         document.getElementById('fecha_actualizacion').textContent = '-';
     }
 
-    // Estados
+    // Estados con nueva paleta de colores
     const estadoBadges = {
-        'planificacion': '<span class="badge badge-secondary">Planificación</span>',
-        'activo': '<span class="badge badge-success">Activo</span>',
-        'en_curso': '<span class="badge badge-info">En Curso</span>',
-        'finalizado': '<span class="badge badge-primary">Finalizado</span>',
-        'cancelado': '<span class="badge badge-danger">Cancelado</span>'
+        'planificacion': '<span class="badge badge-secondary" style="background: #333333 !important; color: white !important;">Planificación</span>',
+        'activo': '<span class="badge badge-success" style="background: #00A36C !important; color: white !important;">Activo</span>',
+        'en_curso': '<span class="badge badge-info" style="background: #0C2B44 !important; color: white !important;">En Curso</span>',
+        'finalizado': '<span class="badge badge-primary" style="background: #0C2B44 !important; color: white !important;">Finalizado</span>',
+        'cancelado': '<span class="badge badge-danger" style="background: #dc3545 !important; color: white !important;">Cancelado</span>'
     };
-    document.getElementById('estadoBadge').innerHTML = estadoBadges[mega.estado] || '<span class="badge badge-secondary">' + (mega.estado || 'N/A') + '</span>';
-    document.getElementById('estado').innerHTML = estadoBadges[mega.estado] || '<span class="badge badge-secondary">' + (mega.estado || 'N/A') + '</span>';
+    document.getElementById('estadoBadge').innerHTML = estadoBadges[mega.estado] || '<span class="badge badge-secondary" style="background: #333333 !important; color: white !important;">' + (mega.estado || 'N/A') + '</span>';
+    document.getElementById('estado').innerHTML = estadoBadges[mega.estado] || '<span class="badge badge-secondary" style="background: #333333 !important; color: white !important;">' + (mega.estado || 'N/A') + '</span>';
 
     document.getElementById('publicoBadge').innerHTML = mega.es_publico 
-        ? '<span class="badge badge-info">Público</span>' 
-        : '<span class="badge badge-secondary">Privado</span>';
+        ? '<span class="badge badge-info" style="background: #0C2B44 !important; color: white !important;">Público</span>' 
+        : '<span class="badge badge-secondary" style="background: #333333 !important; color: white !important;">Privado</span>';
     document.getElementById('es_publico').innerHTML = mega.es_publico 
-        ? '<span class="badge badge-info">Público</span>' 
-        : '<span class="badge badge-secondary">Privado</span>';
+        ? '<span class="badge badge-info" style="background: #0C2B44 !important; color: white !important;">Público</span>' 
+        : '<span class="badge badge-secondary" style="background: #333333 !important; color: white !important;">Privado</span>';
 
     document.getElementById('categoriaBadge').innerHTML = mega.categoria 
-        ? '<span class="badge badge-success">' + mega.categoria.charAt(0).toUpperCase() + mega.categoria.slice(1) + '</span>' 
+        ? '<span class="badge badge-success" style="background: #00A36C !important; color: white !important;">' + mega.categoria.charAt(0).toUpperCase() + mega.categoria.slice(1) + '</span>' 
         : '';
 
     document.getElementById('activo').innerHTML = mega.activo 
-        ? '<span class="badge badge-success">Activo</span>' 
-        : '<span class="badge badge-danger">Inactivo</span>';
+        ? '<span class="badge badge-success" style="background: #00A36C !important; color: white !important;">Activo</span>' 
+        : '<span class="badge badge-danger" style="background: #dc3545 !important; color: white !important;">Inactivo</span>';
 
     // Imágenes (el modelo ya devuelve URLs completas)
     const imagenes = Array.isArray(mega.imagenes) ? mega.imagenes.filter(img => img && img.trim() !== '') : [];
@@ -530,9 +569,12 @@ function displayMegaEvento(mega) {
     if (imagenes.length === 0) {
         imagenesContainer.innerHTML = `
             <div class="col-12">
-                <div class="text-center py-5" style="background: #f8f9fa; border-radius: 8px;">
-                    <i class="fas fa-image fa-3x mb-3" style="color: #dee2e6;"></i>
-                    <p class="mb-0 text-muted" style="font-size: 0.9rem;">No hay imágenes disponibles</p>
+                <div class="text-center py-5" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border-radius: 12px; padding: 3rem 2rem;">
+                    <div style="background: rgba(255, 255, 255, 0.15); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; backdrop-filter: blur(10px);">
+                        <i class="far fa-images fa-3x text-white"></i>
+                    </div>
+                    <h5 style="color: white; font-weight: 600; margin-bottom: 0.5rem;">No hay imágenes disponibles</h5>
+                    <p style="color: rgba(255, 255, 255, 0.9); margin: 0;">Las imágenes aparecerán aquí cuando se agreguen al mega evento.</p>
                 </div>
             </div>
         `;
@@ -569,7 +611,7 @@ function displayMegaEvento(mega) {
             overlay.onmouseleave = function() { this.style.background = 'rgba(0,0,0,0)'; };
             
             const icon = document.createElement('i');
-            icon.className = 'fas fa-search-plus fa-lg text-white';
+            icon.className = 'far fa-search-plus fa-lg text-white';
             icon.style.cssText = 'opacity: 0; transition: opacity 0.3s;';
             icon.onmouseenter = function() { this.style.opacity = '1'; };
             icon.onmouseleave = function() { this.style.opacity = '0'; };
@@ -636,9 +678,9 @@ function displayMegaEvento(mega) {
                 headerImage.innerHTML = '';
             };
             testImg.onerror = function() {
-                // Si falla, usar placeholder
-                headerImage.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-                headerImage.innerHTML = '<i class="fas fa-calendar-check fa-4x text-white" style="opacity: 0.8;"></i>';
+                // Si falla, usar placeholder con nueva paleta
+                headerImage.style.background = 'linear-gradient(135deg, #0C2B44 0%, #00A36C 100%)';
+                headerImage.innerHTML = '<i class="far fa-calendar-check fa-4x text-white" style="opacity: 0.9;"></i>';
             };
             testImg.src = fullUrl;
         }
@@ -688,10 +730,10 @@ function displayMegaEvento(mega) {
         mapContainer.style.overflow = 'hidden';
     } else {
         mapContainer.innerHTML = `
-            <div class="d-flex align-items-center justify-content-center h-100" style="background: #f8f9fa; border-radius: 8px;">
+            <div class="d-flex align-items-center justify-content-center h-100" style="background: #F5F5F5; border-radius: 12px;">
                 <div class="text-center">
-                    <i class="fas fa-map-marker-alt fa-2x mb-2" style="color: #dee2e6;"></i>
-                    <p class="text-muted mb-0" style="font-size: 0.9rem;">No hay coordenadas disponibles</p>
+                    <i class="far fa-map-marker-alt fa-3x mb-3" style="color: #00A36C;"></i>
+                    <p class="mb-0" style="font-size: 1rem; color: #333333; font-weight: 500;">No hay coordenadas disponibles</p>
                 </div>
             </div>
         `;
@@ -724,5 +766,5 @@ function abrirImagen(url, index) {
     object-fit: contain;
 }
 </style>
-@endsection
+@endpush
 

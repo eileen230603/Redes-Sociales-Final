@@ -1,30 +1,25 @@
-@extends('adminlte::page')
+@extends('layouts.adminlte')
 
-@section('title', 'Eventos ONG')
+@section('page_title', 'Eventos ONG')
 
-@section('content_header')
-    <h1><i class="fas fa-calendar"></i> Eventos</h1>
-@stop
-
-@section('content')
-
+@section('content_body')
 <div class="container-fluid">
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="text-primary">Lista de eventos</h4>
-
+    <div class="d-flex justify-content-end align-items-center mb-3">
         <a href="{{ route('ong.eventos.create') }}" class="btn btn-success">
-            <i class="fas fa-plus"></i> Nuevo evento
+            <i class="far fa-plus-circle mr-2"></i> Nuevo evento
         </a>
     </div>
 
     <!-- Filtros y Búsqueda -->
-    <div class="card mb-4 shadow-sm">
-        <div class="card-body">
+    <div class="card mb-4 shadow-sm" style="border-radius: 12px; border: none; margin-top: -1rem;">
+        <div class="card-body" style="padding: 2rem 1.5rem;">
             <div class="row">
                 <div class="col-md-4 mb-3 mb-md-0">
-                    <label for="filtroTipo" class="form-label"><i class="fas fa-filter mr-2"></i>Tipo de Evento</label>
-                    <select id="filtroTipo" class="form-control">
+                    <label for="filtroTipo" class="form-label" style="color: #0C2B44; font-weight: 600; margin-bottom: 0.75rem;">
+                        <i class="far fa-sliders-h mr-2" style="color: #00A36C;"></i>Tipo de Evento
+                    </label>
+                    <select id="filtroTipo" class="form-control" style="border-radius: 8px; padding: 0.75rem;">
                         <option value="todos">Todos los tipos</option>
                         <option value="cultural">Cultural</option>
                         <option value="deportivo">Deportivo</option>
@@ -35,8 +30,10 @@
                     </select>
                 </div>
                 <div class="col-md-4 mb-3 mb-md-0">
-                    <label for="filtroEstado" class="form-label"><i class="fas fa-info-circle mr-2"></i>Estado</label>
-                    <select id="filtroEstado" class="form-control">
+                    <label for="filtroEstado" class="form-label" style="color: #0C2B44; font-weight: 600; margin-bottom: 0.75rem;">
+                        <i class="far fa-info-circle mr-2" style="color: #00A36C;"></i>Estado
+                    </label>
+                    <select id="filtroEstado" class="form-control" style="border-radius: 8px; padding: 0.75rem;">
                         <option value="todos">Todos los estados</option>
                         <option value="borrador">Borrador</option>
                         <option value="publicado">Publicado</option>
@@ -45,12 +42,14 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label for="buscador" class="form-label"><i class="fas fa-search mr-2"></i>Buscar</label>
+                    <label for="buscador" class="form-label" style="color: #0C2B44; font-weight: 600; margin-bottom: 0.75rem;">
+                        <i class="far fa-search mr-2" style="color: #00A36C;"></i>Buscar
+                    </label>
                     <div class="input-group">
-                        <input type="text" id="buscador" class="form-control" placeholder="Buscar por título o descripción...">
+                        <input type="text" id="buscador" class="form-control" placeholder="Buscar por título..." style="border-radius: 8px 0 0 8px; padding: 0.75rem;">
                         <div class="input-group-append">
-                            <button class="btn btn-outline-secondary" type="button" id="btnLimpiar">
-                                <i class="fas fa-times"></i>
+                            <button class="btn btn-outline-secondary" type="button" id="btnLimpiar" style="border-radius: 0 8px 8px 0; padding: 0.75rem 1rem;">
+                                <i class="far fa-times-circle"></i>
                             </button>
                         </div>
                     </div>
@@ -192,64 +191,66 @@ async function cargarEventos() {
                 minute: '2-digit'
             }) : 'Fecha no especificada';
 
-            // Estado badge - usar estado_dinamico si está disponible
+            // Estado badge - usar estado_dinamico si está disponible (se actualizará en el HTML)
             const estadoParaBadge = ev.estado_dinamico || ev.estado;
-            const estadoBadges = {
-                'borrador': '<span class="badge badge-warning">Borrador</span>',
-                'publicado': '<span class="badge badge-primary">Publicado</span>',
-                'cancelado': '<span class="badge badge-danger">Cancelado</span>',
-                'finalizado': '<span class="badge badge-secondary">Finalizado</span>',
-                'activo': '<span class="badge badge-success">En Curso</span>',
-                'proximo': '<span class="badge badge-info">Próximo</span>'
-            };
-            const estadoBadge = estadoBadges[estadoParaBadge] || '<span class="badge badge-secondary">' + (estadoParaBadge || 'N/A') + '</span>';
 
-            // Crear card con diseño minimalista
+            // Crear card con diseño minimalista - Cada evento en su propio container
             const cardDiv = document.createElement('div');
             cardDiv.className = 'col-md-4 mb-4';
             
+            // Actualizar badges con nueva paleta
+            const estadoBadgesActualizado = {
+                'borrador': '<span class="badge" style="background: #ffc107; color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;">Borrador</span>',
+                'publicado': '<span class="badge" style="background: #0C2B44; color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;">Publicado</span>',
+                'cancelado': '<span class="badge" style="background: #dc3545; color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;">Cancelado</span>',
+                'finalizado': '<span class="badge" style="background: #6c757d; color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;">Finalizado</span>',
+                'activo': '<span class="badge" style="background: #00A36C; color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;">En Curso</span>',
+                'proximo': '<span class="badge" style="background: #0C2B44; color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;">Próximo</span>'
+            };
+            const estadoBadgeActualizado = estadoBadgesActualizado[estadoParaBadge] || '<span class="badge" style="background: #6c757d; color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;">' + (estadoParaBadge || 'N/A') + '</span>';
+            
             cardDiv.innerHTML = `
-                <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;">
+                <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden; transition: transform 0.3s, box-shadow 0.3s; border: 1px solid #F5F5F5;">
                     ${imagenPrincipal 
-                        ? `<div class="position-relative" style="height: 200px; overflow: hidden; background: #f8f9fa;">
+                        ? `<div class="position-relative" style="height: 200px; overflow: hidden; background: #F5F5F5;">
                             <img src="${imagenPrincipal}" alt="${ev.titulo}" class="w-100 h-100" style="object-fit: cover;" 
-                                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'200\\'%3E%3Crect fill=\\'%23f8f9fa\\' width=\\'400\\' height=\\'200\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\' fill=\\'%23adb5bd\\' font-family=\\'Arial\\' font-size=\\'14\\'%3EImagen no disponible%3C/text%3E%3C/svg%3E'; this.style.objectFit='contain'; this.style.padding='20px';">
+                                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'200\\'%3E%3Crect fill=\\'%23F5F5F5\\' width=\\'400\\' height=\\'200\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\' fill=\\'%23adb5bd\\' font-family=\\'Arial\\' font-size=\\'14\\'%3EImagen no disponible%3C/text%3E%3C/svg%3E'; this.style.objectFit='contain'; this.style.padding='20px';">
                             <div class="position-absolute" style="top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: flex-start;">
-                                <span class="badge" style="background: rgba(74, 144, 226, 0.9); color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;">Evento</span>
-                                ${estadoBadge}
+                                <span class="badge" style="background: rgba(12, 43, 68, 0.9); color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;">Evento</span>
+                                ${estadoBadgeActualizado}
                             </div>
                            </div>`
-                        : `<div class="position-relative" style="height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-calendar fa-4x text-white" style="opacity: 0.7;"></i>
+                        : `<div class="position-relative" style="height: 200px; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); display: flex; align-items: center; justify-content: center;">
+                            <i class="far fa-calendar fa-4x text-white" style="opacity: 0.3;"></i>
                             <div class="position-absolute" style="top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: flex-start;">
-                                <span class="badge" style="background: rgba(74, 144, 226, 0.9); color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;">Evento</span>
-                                ${estadoBadge}
+                                <span class="badge" style="background: rgba(255, 255, 255, 0.2); color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500; backdrop-filter: blur(10px);">Evento</span>
+                                ${estadoBadgeActualizado}
                             </div>
                            </div>`
                     }
                     <div class="card-body p-4">
-                        <h5 class="mb-2" style="font-size: 1.1rem; font-weight: 600; color: #2c3e50;">${ev.titulo || 'Sin título'}</h5>
-                        <p class="text-muted mb-3" style="font-size: 0.9rem; line-height: 1.5; color: #6c757d; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                        <h5 class="mb-3" style="font-size: 1.15rem; font-weight: 700; color: #0C2B44; line-height: 1.4;">${ev.titulo || 'Sin título'}</h5>
+                        <p class="mb-3" style="font-size: 0.9rem; line-height: 1.6; color: #333333; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                             ${ev.descripcion || 'Sin descripción'}
                         </p>
-                        <div class="mb-3 d-flex align-items-center" style="color: #6c757d; font-size: 0.85rem;">
-                            <i class="far fa-calendar-alt mr-2"></i>
+                        <div class="mb-3 d-flex align-items-center" style="color: #333333; font-size: 0.85rem; font-weight: 500;">
+                            <i class="far fa-calendar mr-2" style="color: #00A36C;"></i>
                             <span>${fechaInicio}</span>
                         </div>
-                        <div class="d-flex align-items-center justify-content-between mt-3">
-                            <div class="d-flex align-items-center" style="color: #6c757d; font-size: 0.85rem;">
-                                <i class="fas fa-heart text-danger mr-1"></i>
+                        <div class="d-flex align-items-center justify-content-between mt-4 pt-3" style="border-top: 1px solid #F5F5F5;">
+                            <div class="d-flex align-items-center" style="color: #333333; font-size: 0.85rem; font-weight: 500;">
+                                <i class="far fa-heart mr-1" style="color: #dc3545;"></i>
                                 <span id="reacciones-${ev.id}">-</span>
                             </div>
-                            <div class="d-flex gap-2">
-                                <a href="/ong/eventos/${ev.id}/detalle" class="btn btn-sm" style="background: #e9ecef; color: #495057; border: none; border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500; transition: all 0.2s;">
-                                    Detalle
+                            <div class="d-flex" style="gap: 0.5rem;">
+                                <a href="/ong/eventos/${ev.id}/detalle" class="btn btn-sm" style="background: #F5F5F5; color: #0C2B44; border: none; border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500; transition: all 0.3s; font-size: 0.85rem;">
+                                    <i class="far fa-eye mr-1"></i>Detalle
                                 </a>
-                                <a href="/ong/eventos/${ev.id}/editar" class="btn btn-sm" style="background: #667eea; color: white; border: none; border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500; transition: all 0.2s;">
-                                    Editar
+                                <a href="/ong/eventos/${ev.id}/editar" class="btn btn-sm" style="background: #0C2B44; color: white; border: none; border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500; transition: all 0.3s; font-size: 0.85rem;">
+                                    <i class="far fa-edit mr-1"></i>Editar
                                 </a>
-                                <button onclick="eliminar(${ev.id})" class="btn btn-sm" style="background: #dc3545; color: white; border: none; border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500; transition: all 0.2s; cursor: pointer;">
-                                    Eliminar
+                                <button onclick="eliminar(${ev.id})" class="btn btn-sm" style="background: #dc3545; color: white; border: none; border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500; transition: all 0.3s; cursor: pointer; font-size: 0.85rem;">
+                                    <i class="far fa-trash-alt mr-1"></i>Eliminar
                                 </button>
                             </div>
                         </div>
@@ -257,15 +258,17 @@ async function cargarEventos() {
                 </div>
             `;
             
-            // Agregar efecto hover
+            // Agregar efecto hover con nueva paleta
             const card = cardDiv.querySelector('.card');
             card.onmouseenter = function() {
-                this.style.transform = 'translateY(-4px)';
-                this.style.boxShadow = '0 8px 16px rgba(0,0,0,0.1)';
+                this.style.transform = 'translateY(-6px)';
+                this.style.boxShadow = '0 12px 24px rgba(12, 43, 68, 0.15)';
+                this.style.borderColor = '#00A36C';
             };
             card.onmouseleave = function() {
                 this.style.transform = 'translateY(0)';
-                this.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+                this.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.08)';
+                this.style.borderColor = '#F5F5F5';
             };
             
             cont.appendChild(cardDiv);

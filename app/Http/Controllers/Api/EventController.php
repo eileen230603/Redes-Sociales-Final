@@ -6,10 +6,13 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Models\Evento;
 use App\Models\EventoParticipacion;
+use App\Models\EventoEmpresaParticipacion;
 use App\Models\EventoReaccion;
+use App\Models\Notificacion;
 use App\Models\User;
 use App\Models\Empresa;
 use App\Models\IntegranteExterno;
@@ -73,6 +76,86 @@ class EventController extends Controller
             }
         }
         return $enriquecidos;
+    }
+
+    /**
+     * Enriquecer auspiciadores con información completa (avatar y nombre)
+     */
+    private function enriquecerAuspiciadores($auspiciadores)
+    {
+        if (!is_array($auspiciadores) || empty($auspiciadores)) {
+            return [];
+        }
+
+        $enriquecidos = [];
+        foreach ($auspiciadores as $aus) {
+            // Si es un ID numérico, buscar la empresa
+            if (is_numeric($aus)) {
+                $empresa = Empresa::where('user_id', $aus)->first();
+                if ($empresa) {
+                    $enriquecidos[] = [
+                        'id' => $aus,
+                        'nombre' => $empresa->nombre_empresa,
+                        'avatar' => $empresa->foto_perfil_url ?? null,
+                        'tipo' => 'empresa'
+                    ];
+                }
+            } elseif (is_string($aus)) {
+                // Si es un string, puede ser un nombre o un ID como string
+                if (is_numeric($aus)) {
+                    $empresa = Empresa::where('user_id', (int)$aus)->first();
+                    if ($empresa) {
+                        $enriquecidos[] = [
+                            'id' => (int)$aus,
+                            'nombre' => $empresa->nombre_empresa,
+                            'avatar' => $empresa->foto_perfil_url ?? null,
+                            'tipo' => 'empresa'
+                        ];
+                    }
+                } else {
+                    // Si es solo texto, mantenerlo pero sin avatar
+                    $enriquecidos[] = [
+                        'id' => null,
+                        'nombre' => $aus,
+                        'avatar' => null,
+                        'tipo' => 'texto'
+                    ];
+                }
+            }
+        }
+        return $enriquecidos;
+    }
+
+    /**
+     * Enriquecer empresas colaboradoras con información completa desde la tabla de participaciones
+     */
+    private function enriquecerEmpresasColaboradoras($eventoId)
+    {
+        try {
+            $participaciones = \App\Models\EventoEmpresaParticipacion::where('evento_id', $eventoId)
+                ->where('activo', true)
+                ->with(['empresa'])
+                ->get();
+
+            $empresas = [];
+            foreach ($participaciones as $participacion) {
+                if ($participacion->empresa) {
+                    $empresas[] = [
+                        'id' => $participacion->empresa_id,
+                        'nombre' => $participacion->empresa->nombre_empresa ?? 'N/A',
+                        'avatar' => $participacion->empresa->foto_perfil_url ?? null,
+                        'tipo' => 'empresa_colaboradora',
+                        'estado' => $participacion->estado,
+                        'tipo_colaboracion' => $participacion->tipo_colaboracion,
+                        'descripcion_colaboracion' => $participacion->descripcion_colaboracion,
+                    ];
+                }
+            }
+            return $empresas;
+        } catch (\Throwable $e) {
+            \Log::error('Error enriqueciendo empresas colaboradoras: ' . $e->getMessage());
+            return [];
+        }
     }
 
     /**
@@ -314,11 +397,13 @@ class EventController extends Controller
 
             \Log::info("Eventos encontrados: " . $eventos->count());
 
-            // Enriquecer patrocinadores e invitados con información completa
+            // Enriquecer patrocinadores, auspiciadores, invitados y empresas colaboradoras con información completa
             // Y calcular estado dinámico basado en fechas
             $eventos->transform(function ($e) {
                 $e->patrocinadores = $this->enriquecerPatrocinadores($this->safeArray($e->patrocinadores));
+                $e->auspiciadores = $this->enriquecerAuspiciadores($this->safeArray($e->auspiciadores ?? []));
                 $e->invitados = $this->enriquecerInvitados($this->safeArray($e->invitados));
+                $e->empresas_colaboradoras = $this->enriquecerEmpresasColaboradoras($e->id);
                 // El accessor del modelo ya genera URLs completas
                 $e->makeVisible(['imagenes', 'fecha_finalizacion']);
                 // Agregar estado dinámico calculado
@@ -372,7 +457,9 @@ class EventController extends Controller
 
             $eventos->transform(function ($e) {
                 $e->patrocinadores = $this->enriquecerPatrocinadores($this->safeArray($e->patrocinadores));
+                $e->auspiciadores = $this->enriquecerAuspiciadores($this->safeArray($e->auspiciadores ?? []));
                 $e->invitados = $this->enriquecerInvitados($this->safeArray($e->invitados));
+                $e->empresas_colaboradoras = $this->enriquecerEmpresasColaboradoras($e->id);
                 // El accessor del modelo ya genera URLs completas
                 $e->makeVisible(['imagenes', 'fecha_finalizacion']);
                 // Agregar estado dinámico calculado
@@ -413,7 +500,12 @@ class EventController extends Controller
             }
 
             $evento->patrocinadores = $this->enriquecerPatrocinadores($this->safeArray($evento->patrocinadores));
+            $evento->auspiciadores = $this->enriquecerAuspiciadores($this->safeArray($evento->auspiciadores ?? []));
             $evento->invitados = $this->enriquecerInvitados($this->safeArray($evento->invitados));
+            
+            // Agregar empresas colaboradoras desde la tabla de participaciones
+            $evento->empresas_colaboradoras = $this->enriquecerEmpresasColaboradoras($evento->id);
+            
             // El accessor del modelo ya genera URLs completas
             $evento->makeVisible(['imagenes', 'fecha_finalizacion']);
             // Agregar estado dinámico calculado
@@ -444,11 +536,32 @@ class EventController extends Controller
             $requestData = $request->all();
             
             // Convertir strings JSON vacíos a arrays vacíos para patrocinadores e invitados
-            if (isset($requestData['patrocinadores']) && is_string($requestData['patrocinadores']) && $requestData['patrocinadores'] === '[]') {
+            if (isset($requestData['patrocinadores'])) {
+                if (is_string($requestData['patrocinadores']) && $requestData['patrocinadores'] === '[]') {
+                $requestData['patrocinadores'] = [];
+                } elseif (!is_array($requestData['patrocinadores'])) {
+                    // Si viene como string pero no es '[]', intentar decodificarlo
+                    $decoded = json_decode($requestData['patrocinadores'], true);
+                    $requestData['patrocinadores'] = is_array($decoded) ? $decoded : [];
+            }
+            } else {
                 $requestData['patrocinadores'] = [];
             }
+            
             if (isset($requestData['invitados']) && is_string($requestData['invitados']) && $requestData['invitados'] === '[]') {
                 $requestData['invitados'] = [];
+            }
+            
+            // Procesar auspiciadores si vienen
+            if (isset($requestData['auspiciadores'])) {
+                if (is_string($requestData['auspiciadores']) && $requestData['auspiciadores'] === '[]') {
+                    $requestData['auspiciadores'] = [];
+                } elseif (!is_array($requestData['auspiciadores'])) {
+                    $decoded = json_decode($requestData['auspiciadores'], true);
+                    $requestData['auspiciadores'] = is_array($decoded) ? $decoded : [];
+                }
+            } else {
+                $requestData['auspiciadores'] = [];
             }
             
             $validator = Validator::make($requestData, [
@@ -527,6 +640,9 @@ class EventController extends Controller
             $patrocinadores = [];
             if (isset($data['patrocinadores']) && is_array($data['patrocinadores'])) {
                 $patrocinadores = array_map('intval', array_filter($data['patrocinadores'], 'is_numeric'));
+                \Log::info("Patrocinadores recibidos al crear evento: " . json_encode($patrocinadores));
+            } else {
+                \Log::info("No se recibieron patrocinadores o no es un array. Valor recibido: " . json_encode($data['patrocinadores'] ?? 'no definido'));
             }
 
             $invitados = [];
@@ -534,6 +650,15 @@ class EventController extends Controller
                 $invitados = array_map('intval', array_filter($data['invitados'], 'is_numeric'));
             }
 
+            // Procesar auspiciadores
+            $auspiciadores = [];
+            if (isset($data['auspiciadores']) && is_array($data['auspiciadores'])) {
+                $auspiciadores = array_map('intval', array_filter($data['auspiciadores'], 'is_numeric'));
+            }
+
+            // TRANSACCIÓN: Crear evento + procesar imágenes + crear patrocinadores
+            $evento = DB::transaction(function () use ($data, $request, $patrocinadores, $invitados, $auspiciadores) {
+                // 1. Crear evento
             $evento = Evento::create([
                 "ong_id" => $data['ong_id'],
                 "titulo" => $data['titulo'],
@@ -552,14 +677,45 @@ class EventController extends Controller
                 "patrocinadores" => $patrocinadores,
                 "invitados" => $invitados,
                 "imagenes" => [],
-                "auspiciadores" => $this->safeArray($data['auspiciadores'] ?? []),
+                    "auspiciadores" => $auspiciadores,
             ]);
 
-            // Procesar imágenes después de crear el evento
+                // 2. Procesar imágenes después de crear el evento
             $imagenes = $this->processImages($request, $evento->id);
             if (!empty($imagenes)) {
                 $evento->update(['imagenes' => $imagenes]);
             }
+                
+                // 3. Crear registros en evento_empresas_participantes para los patrocinadores
+                if (!empty($patrocinadores)) {
+                    foreach ($patrocinadores as $empresaId) {
+                        // Verificar que la empresa existe
+                        $empresa = Empresa::where('user_id', $empresaId)->first();
+                        if (!$empresa) {
+                            \Log::warning("Empresa con user_id {$empresaId} no encontrada al crear patrocinador para evento {$evento->id}");
+                            continue;
+                        }
+
+                        // Verificar si ya existe una participación
+                        $existe = EventoEmpresaParticipacion::where('evento_id', $evento->id)
+                            ->where('empresa_id', $empresaId)
+                            ->exists();
+
+                        if (!$existe) {
+                            EventoEmpresaParticipacion::create([
+                                'evento_id' => $evento->id,
+                                'empresa_id' => $empresaId,
+                                'estado' => 'asignada', // Patrocinadores se asignan automáticamente
+                                'activo' => true,
+                                'tipo_colaboracion' => 'Patrocinador', // Marcar como patrocinador
+                            ]);
+                            \Log::info("Patrocinador {$empresaId} agregado a evento {$evento->id} en tabla de participaciones");
+                        }
+                    }
+                }
+                
+                return $evento;
+            });
             
             // Forzar refresh para obtener las imágenes procesadas
             $evento->refresh();
@@ -669,7 +825,69 @@ class EventController extends Controller
                 $data['auspiciadores'] = $this->safeArray($data['auspiciadores']);
             }
 
+            // TRANSACCIÓN: Actualizar evento + sincronizar patrocinadores
+            DB::transaction(function () use ($evento, $data, $request) {
+                // 1. Actualizar evento
             $evento->update($data);
+                
+                // 2. Sincronizar patrocinadores en la tabla evento_empresas_participantes
+                if (isset($data['patrocinadores']) && is_array($data['patrocinadores'])) {
+                    $nuevosPatrocinadores = array_map('intval', array_filter($data['patrocinadores'], 'is_numeric'));
+                    // Obtener patrocinadores actuales en la tabla (donde tipo_colaboracion = 'Patrocinador')
+                    $patrocinadoresActuales = EventoEmpresaParticipacion::where('evento_id', $evento->id)
+                        ->where('tipo_colaboracion', 'Patrocinador')
+                        ->pluck('empresa_id')
+                        ->toArray();
+                    
+                    // Eliminar patrocinadores que ya no están en la lista
+                    $patrocinadoresAEliminar = array_diff($patrocinadoresActuales, $nuevosPatrocinadores);
+                    if (!empty($patrocinadoresAEliminar)) {
+                        EventoEmpresaParticipacion::where('evento_id', $evento->id)
+                            ->whereIn('empresa_id', $patrocinadoresAEliminar)
+                            ->where('tipo_colaboracion', 'Patrocinador')
+                            ->delete();
+                        \Log::info("Patrocinadores eliminados del evento {$evento->id}: " . implode(', ', $patrocinadoresAEliminar));
+                    }
+                    
+                    // Agregar nuevos patrocinadores
+                    foreach ($nuevosPatrocinadores as $empresaId) {
+                        // Verificar que la empresa existe
+                        $empresa = Empresa::where('user_id', $empresaId)->first();
+                        if (!$empresa) {
+                            \Log::warning("Empresa con user_id {$empresaId} no encontrada al actualizar patrocinador para evento {$evento->id}");
+                            continue;
+                        }
+
+                        // Verificar si ya existe una participación (como patrocinador o colaborador)
+                        $existe = EventoEmpresaParticipacion::where('evento_id', $evento->id)
+                            ->where('empresa_id', $empresaId)
+                            ->exists();
+
+                        if (!$existe) {
+                            EventoEmpresaParticipacion::create([
+                                'evento_id' => $evento->id,
+                                'empresa_id' => $empresaId,
+                                'estado' => 'asignada',
+                                'activo' => true,
+                                'tipo_colaboracion' => 'Patrocinador',
+                            ]);
+                            \Log::info("Patrocinador {$empresaId} agregado a evento {$evento->id} en tabla de participaciones");
+                        } else {
+                            // Si ya existe pero no es patrocinador, actualizar el tipo
+                            $participacion = EventoEmpresaParticipacion::where('evento_id', $evento->id)
+                                ->where('empresa_id', $empresaId)
+                                ->first();
+                            if ($participacion && $participacion->tipo_colaboracion !== 'Patrocinador') {
+                                // No cambiar si ya es colaborador, solo actualizar si no tiene tipo
+                                if (empty($participacion->tipo_colaboracion)) {
+                                    $participacion->tipo_colaboracion = 'Patrocinador';
+                                    $participacion->save();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
             
             // Forzar refresh para obtener las imágenes procesadas
             $evento->refresh();
@@ -761,7 +979,9 @@ class EventController extends Controller
             // Enriquecer datos y agregar estado dinámico
             $eventos->transform(function ($e) {
                 $e->patrocinadores = $this->enriquecerPatrocinadores($this->safeArray($e->patrocinadores));
+                $e->auspiciadores = $this->enriquecerAuspiciadores($this->safeArray($e->auspiciadores ?? []));
                 $e->invitados = $this->enriquecerInvitados($this->safeArray($e->invitados));
+                $e->empresas_colaboradoras = $this->enriquecerEmpresasColaboradoras($e->id);
                 $e->imagenes = $this->safeArray($e->imagenes);
                 $e->makeVisible(['fecha_finalizacion']);
                 // Agregar estado dinámico calculado
@@ -800,17 +1020,43 @@ class EventController extends Controller
     // ======================================================
     public function destroy($id)
     {
+        try {
         $evento = Evento::find($id);
 
-        if (!$evento)
+            if (!$evento) {
             return response()->json(["success" => false, "message" => "No encontrado"], 404);
+            }
 
+            // TRANSACCIÓN: Eliminar evento + datos relacionados
+            DB::transaction(function () use ($evento) {
+                // 1. Eliminar participaciones relacionadas
+                EventoParticipacion::where('evento_id', $evento->id)->delete();
+
+                // 2. Eliminar empresas participantes relacionadas
+                EventoEmpresaParticipacion::where('evento_id', $evento->id)->delete();
+
+                // 3. Eliminar reacciones relacionadas
+                EventoReaccion::where('evento_id', $evento->id)->delete();
+
+                // 4. Eliminar notificaciones relacionadas
+                Notificacion::where('evento_id', $evento->id)->delete();
+
+                // 5. Eliminar el evento
         $evento->delete();
+            });
 
         return response()->json([
             "success" => true,
-            "message" => "Evento eliminado"
+                "message" => "Evento eliminado correctamente"
         ]);
+
+        } catch (\Throwable $e) {
+            \Log::error('Error al eliminar evento: ' . $e->getMessage());
+            return response()->json([
+                "success" => false,
+                "error" => "Error al eliminar el evento"
+            ], 500);
+        }
     }
 
     // ======================================================

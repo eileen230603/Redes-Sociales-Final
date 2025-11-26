@@ -34,7 +34,7 @@ return [
     |--------------------------------------------------------------------------
     */
     'logo' => '<b>UNI</b>2',
-    'logo_img' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
+    'logo_img' => 'assets/img/UNI2 - copia.png',
     'logo_img_class' => 'brand-image img-circle elevation-3',
     'logo_img_alt' => 'UNI2 Logo',
 
@@ -46,7 +46,7 @@ return [
     'auth_logo' => [
         'enabled' => true,
         'img' => [
-            'path' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
+            'path' => 'assets/img/UNI2 - copia.png',
             'alt' => 'Auth Logo',
             'class' => 'rounded-circle shadow',
             'width' => 70,
@@ -63,7 +63,7 @@ return [
         'enabled' => true,
         'mode' => 'fullscreen',
         'img' => [
-            'path' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
+            'path' => 'assets/img/UNI2 - copia.png',
             'alt' => 'Cargando UNI2...',
             'effect' => 'animation__shake',
             'width' => 60,
@@ -78,7 +78,7 @@ return [
     */
     'usermenu_enabled' => true,
     'usermenu_header' => true,
-    'usermenu_header_class' => 'bg-primary',
+    'usermenu_header_class' => 'bg-brand-primario',
     'usermenu_image' => false,
     'usermenu_desc' => true,
     'usermenu_profile_url' => true,
@@ -94,6 +94,14 @@ return [
     'layout_fixed_navbar' => true,
     'layout_fixed_footer' => null,
     'layout_dark_mode' => false,
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Panel de Navegación (Sidebar)
+    |--------------------------------------------------------------------------
+    */
+    'sidebar_enabled' => true,
+    'sidebar_collapse_on_load' => false,
 
     /*
     |--------------------------------------------------------------------------
@@ -109,13 +117,28 @@ return [
     |--------------------------------------------------------------------------
     */
     'classes_body' => '',
-    'classes_brand' => 'bg-primary',
+    'classes_brand' => 'bg-brand-primario',
     'classes_brand_text' => '',
     'classes_sidebar' => 'sidebar-dark-primary elevation-4',
     'classes_topnav' => 'navbar-white navbar-light',
     'classes_content_wrapper' => '',
     'classes_content_header' => '',
     'classes_content' => '',
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Paleta de Colores - Nueva Identidad Visual
+    |--------------------------------------------------------------------------
+    */
+    'colors' => [
+        'brand' => [
+            'primario' => '#0C2B44',      // Azul Marino
+            'acento' => '#00A36C',        // Verde Esmeralda
+            'blanco' => '#FFFFFF',        // Blanco Puro
+            'gris_oscuro' => '#333333',   // Gris Carbón
+            'gris_suave' => '#F5F5F5',    // Gris Suave
+        ],
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -163,7 +186,7 @@ return [
         [
             'text' => 'Inicio',
             'url'  => '/home-ong',
-            'icon' => 'fas fa-fw fa-home',
+            'icon' => 'far fa-fw fa-home',
         ],
         [
             'text' => 'Eventos',
@@ -172,57 +195,59 @@ return [
                 [
                     'text' => 'Lista de Eventos',
                     'url'  => '/ong/eventos',
+                    'icon' => 'far fa-list',
                 ],
                 [
                     'text' => 'Dashboard de Eventos',
                     'url'  => '/ong/eventos-dashboard',
+                    'icon' => 'far fa-chart-bar',
                 ],
             ],
-            'icon' => 'fas fa-calendar-alt',
+            'icon' => 'far fa-calendar',
         ],
         [
             'text' => 'Voluntarios',
             'url'  => '/voluntarios',
-            'icon' => 'fas fa-users',
+            'icon' => 'far fa-users',
         ],
         [
             'text' => 'Dashboard',
             'url'  => '/ong/dashboard',
-            'icon' => 'fas fa-tachometer-alt',
+            'icon' => 'far fa-tachometer-alt',
         ],
         [
             'text' => 'Mega Eventos',
             'url'  => '/ong/mega-eventos',
-            'icon' => 'fas fa-calendar-check',
+            'icon' => 'far fa-calendar-check',
         ],
         [
             'text' => 'Reportes',
             'url'  => '/reportes',
-            'icon' => 'fas fa-chart-line',
+            'icon' => 'far fa-chart-bar',
         ],
         [
             'text' => 'Mi Perfil',
             'url'  => '/perfil/ong',
-            'icon' => 'fas fa-user-circle',
+            'icon' => 'far fa-user-circle',
         ],
         [
             'text' => 'Notificaciones',
             'url'  => '/ong/notificaciones',
-            'icon' => 'fas fa-bell',
+            'icon' => 'far fa-bell',
         ],
         [
             'text' => 'Configuraciones',
-            'icon' => 'fas fa-cogs',
+            'icon' => 'far fa-cogs',
             'submenu' => [
                 [
                     'text' => 'Perfil',
                     'url'  => '/perfil/ong',
-                    'icon' => 'fas fa-user-circle',
+                    'icon' => 'far fa-user-circle',
                 ],
                 [
                     'text' => 'Parámetros',
                     'url'  => '/configuracion',
-                    'icon' => 'fas fa-sliders-h',
+                    'icon' => 'far fa-sliders-h',
                 ],
             ],
         ],
@@ -230,12 +255,12 @@ return [
         [
             'text' => 'Ir a página pública',
             'url'  => '/home-publica',
-            'icon' => 'fas fa-globe-americas',
+            'icon' => 'far fa-globe',
         ],
         [
             'text' => 'Cerrar sesión',
             'url'  => '/logout',
-            'icon' => 'fas fa-sign-out-alt',
+            'icon' => 'far fa-sign-out-alt',
             'label_color' => 'danger',
         ],
     ],

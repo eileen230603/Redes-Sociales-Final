@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class ProfileController extends Controller
 {
@@ -155,16 +156,7 @@ class ProfileController extends Controller
                 ], 422);
             }
 
-            // Actualizar datos del usuario
-            if ($request->has('nombre_usuario')) {
-                $user->nombre_usuario = $request->nombre_usuario;
-            }
-
-            if ($request->has('correo_electronico')) {
-                $user->correo_electronico = $request->correo_electronico;
-            }
-
-            // Actualizar contraseña si se proporciona
+            // Validar contraseña antes de la transacción
             if ($request->has('contrasena_actual') && $request->has('nueva_contrasena')) {
                 if (!Hash::check($request->contrasena_actual, $user->contrasena)) {
                     return response()->json([
@@ -172,7 +164,22 @@ class ProfileController extends Controller
                         'error' => 'La contraseña actual es incorrecta'
                     ], 422);
                 }
-                $user->contrasena = Hash::make($request->nueva_contrasena);
+            }
+
+            // TRANSACCIÓN: Actualizar usuario + entidad relacionada
+            DB::transaction(function () use ($request, $user) {
+                // 1. Actualizar datos del usuario
+                if ($request->has('nombre_usuario')) {
+                    $user->nombre_usuario = $request->nombre_usuario;
+                }
+
+                if ($request->has('correo_electronico')) {
+                    $user->correo_electronico = $request->correo_electronico;
+                }
+
+                // Actualizar contraseña si se proporciona
+                if ($request->has('contrasena_actual') && $request->has('nueva_contrasena')) {
+                    $user->contrasena = Hash::make($request->nueva_contrasena);
             }
 
             // Procesar foto de perfil para usuario base
@@ -183,7 +190,7 @@ class ProfileController extends Controller
             }
             $user->save();
 
-            // Actualizar información específica según el tipo
+                // 2. Actualizar información específica según el tipo
             if ($user->esOng() && $user->ong) {
                 $ong = $user->ong;
                 if ($request->has('nombre_ong')) $ong->nombre_ong = $request->nombre_ong;
@@ -201,9 +208,6 @@ class ProfileController extends Controller
                 }
                 
                 $ong->save();
-                
-                // Recargar la relación para asegurar que los cambios se reflejen
-                $user->load('ong');
             } elseif ($user->esEmpresa() && $user->empresa) {
                 $empresa = $user->empresa;
                 if ($request->has('nombre_empresa')) $empresa->nombre_empresa = $request->nombre_empresa;
@@ -221,9 +225,6 @@ class ProfileController extends Controller
                 }
                 
                 $empresa->save();
-                
-                // Recargar la relación para asegurar que los cambios se reflejen
-                $user->load('empresa');
             } elseif ($user->esIntegranteExterno() && $user->integranteExterno) {
                 $externo = $user->integranteExterno;
                 if ($request->has('nombres')) $externo->nombres = $request->nombres;
@@ -241,13 +242,19 @@ class ProfileController extends Controller
                 }
                 
                 $externo->save();
+                }
+            });
                 
-                // Recargar la relación para asegurar que los cambios se reflejen
+            // Recargar el usuario y relaciones para obtener los datos actualizados
+            $user->refresh();
+            
+            if ($user->esOng()) {
+                $user->load('ong');
+            } elseif ($user->esEmpresa()) {
+                $user->load('empresa');
+            } elseif ($user->esIntegranteExterno()) {
                 $user->load('integranteExterno');
             }
-
-            // Recargar el usuario para obtener los datos actualizados
-            $user->refresh();
             
             // Si es ONG, recargar también la relación
             if ($user->esOng()) {

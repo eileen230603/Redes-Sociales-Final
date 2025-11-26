@@ -2,22 +2,22 @@
 
 @section('page_title', 'Mi Perfil')
 
-@section('css')
+@push('css')
 <style>
     :root {
-        --primary-color: #2c3e50;
-        --secondary-color: #34495e;
-        --accent-color: #3498db;
-        --success-color: #27ae60;
+        --primary-color: #0C2B44;
+        --secondary-color: #333333;
+        --accent-color: #00A36C;
+        --success-color: #00A36C;
         --warning-color: #f39c12;
         --danger-color: #e74c3c;
-        --light-bg: #f8f9fa;
+        --light-bg: #F5F5F5;
         --border-color: #e1e8ed;
-        --text-primary: #2c3e50;
+        --text-primary: #0C2B44;
         --text-secondary: #7f8c8d;
-        --shadow-sm: 0 2px 4px rgba(0,0,0,0.04);
-        --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
-        --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+        --shadow-sm: 0 2px 4px rgba(12,43,68,0.04);
+        --shadow-md: 0 4px 6px rgba(12,43,68,0.08);
+        --shadow-lg: 0 10px 15px rgba(12,43,68,0.12);
     }
 
     body {
@@ -26,7 +26,7 @@
     }
 
     .profile-header {
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%);
         color: white;
         padding: 2.5rem 2rem;
         border-radius: 12px;
@@ -74,28 +74,12 @@
         margin: 0;
     }
 
-    .card-header.bg-info {
-        background: linear-gradient(135deg, #3498db15 0%, #2980b915 100%) !important;
-        border-bottom-color: var(--accent-color);
-    }
-
-    .card-header.bg-success {
-        background: linear-gradient(135deg, #27ae6015 0%, #229a5615 100%) !important;
-        border-bottom-color: var(--success-color);
-    }
-
-    .card-header.bg-primary {
-        background: linear-gradient(135deg, #2c3e5015 0%, #34495e15 100%) !important;
-        border-bottom-color: var(--primary-color);
-    }
-
+    .card-header.bg-info,
+    .card-header.bg-success,
+    .card-header.bg-primary,
     .card-header.bg-warning {
-        background: linear-gradient(135deg, #f39c1215 0%, #e67e2215 100%) !important;
-        border-bottom-color: var(--warning-color);
-    }
-
-    .card-header .text-white {
-        color: var(--text-primary) !important;
+        background: #FFFFFF !important;
+        border-bottom-color: #F5F5F5 !important;
     }
 
     .info-item {
@@ -149,7 +133,7 @@
     }
 
     .btn-edit {
-        background: var(--primary-color);
+        background: var(--accent-color);
         border: none;
         padding: 0.875rem 2.5rem;
         font-weight: 600;
@@ -161,7 +145,7 @@
     }
 
     .btn-edit:hover {
-        background: var(--secondary-color);
+        background: #00885b;
         transform: translateY(-2px);
         box-shadow: var(--shadow-lg);
         color: white;
@@ -216,7 +200,7 @@
     }
 
     .btn-success {
-        background: var(--success-color);
+        background: var(--accent-color);
         border: none;
         border-radius: 8px;
         font-weight: 600;
@@ -273,14 +257,8 @@
         font-size: 1.1rem;
     }
 
-    h5.text-primary {
-        color: var(--accent-color) !important;
-    }
-
-    h5.text-success {
-        color: var(--success-color) !important;
-    }
-
+    h5.text-primary,
+    h5.text-success,
     h5.text-info {
         color: var(--accent-color) !important;
     }
@@ -371,8 +349,11 @@
             font-size: 0.9rem;
         }
     }
+    .spinner-border.loading-spinner {
+        color: var(--accent-color);
+    }
 </style>
-@endsection
+@endpush
 
 @section('content_body')
 <div class="container-fluid">
@@ -396,7 +377,7 @@
                             <div class="avatar-container mr-4">
                                 <img id="avatarPreview" src="" alt="Foto de perfil" class="avatar-img" style="display: none;">
                                 <div id="avatarPlaceholder" class="avatar-placeholder">
-                                    <i class="fas fa-user fa-3x"></i>
+                                    <i class="far fa-user fa-3x"></i>
                                 </div>
                                 <label for="fotoPerfilInput" class="avatar-upload-btn" title="Cambiar foto de perfil">
                                     <i class="fas fa-camera"></i>
@@ -415,14 +396,14 @@
                 <div class="card info-card mb-4">
                     <div class="card-header bg-primary text-white">
                         <h4 class="card-title mb-0">
-                            <i class="fas fa-image mr-2"></i> Foto de Perfil
+                            <i class="far fa-image mr-2"></i> Foto de Perfil
                         </h4>
                     </div>
                     <div class="card-body p-4">
                         <!-- Subir archivo -->
                         <div class="form-group mb-4">
-                            <label for="fotoPerfilFile">
-                                <i class="fas fa-upload mr-2"></i> Subir Imagen desde Dispositivo
+                                <label for="fotoPerfilFile">
+                                <i class="far fa-upload mr-2"></i> Subir Imagen desde Dispositivo
                             </label>
                             <input type="file" class="form-control" id="fotoPerfilFile" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp">
                             <small class="form-text text-muted">
@@ -434,7 +415,7 @@
                         <div id="filePreviewContainer" class="mb-4" style="display: none;">
                             <label class="d-block mb-2"><strong>Vista Previa:</strong></label>
                             <div class="position-relative d-inline-block">
-                                <img id="filePreviewImg" src="" alt="Preview" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #007bff;">
+                                <img id="filePreviewImg" src="" alt="Preview" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #00A36C;">
                                 <button type="button" class="btn btn-danger btn-sm position-absolute" style="top: 0; right: 0; border-radius: 50%; width: 30px; height: 30px; padding: 0;" onclick="removeFilePreview()" title="Eliminar">
                                     <i class="fas fa-times"></i>
                                 </button>
@@ -444,13 +425,13 @@
                         <!-- Agregar por URL -->
                         <div class="form-group mt-4">
                             <label for="fotoPerfilUrl">
-                                <i class="fas fa-link mr-2"></i> O Agregar Imagen por URL (Opcional)
+                                <i class="far fa-link mr-2"></i> O Agregar Imagen por URL (Opcional)
                             </label>
                             <div class="input-group">
                                 <input type="url" class="form-control" id="fotoPerfilUrl" placeholder="https://ejemplo.com/imagen.jpg">
                                 <div class="input-group-append">
-                                    <button type="button" class="btn btn-primary" id="btnAgregarUrl">
-                                        <i class="fas fa-plus"></i> Agregar
+                                    <button type="button" class="btn btn-success" id="btnAgregarUrl">
+                                        <i class="far fa-plus-square"></i> Agregar
                                     </button>
                                 </div>
                             </div>
@@ -463,7 +444,7 @@
                         <div id="urlPreviewContainer" class="mb-4" style="display: none;">
                             <label class="d-block mb-2"><strong>Imagen desde URL:</strong></label>
                             <div class="position-relative d-inline-block">
-                                <img id="urlPreviewImg" src="" alt="Preview URL" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #28a745;">
+                                <img id="urlPreviewImg" src="" alt="Preview URL" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #00A36C;">
                                 <button type="button" class="btn btn-danger btn-sm position-absolute" style="top: 0; right: 0; border-radius: 50%; width: 30px; height: 30px; padding: 0;" onclick="removeUrlPreview()" title="Eliminar">
                                     <i class="fas fa-times"></i>
                                 </button>
@@ -472,7 +453,7 @@
 
                         <div class="mt-3">
                             <button type="button" class="btn btn-success btn-lg" onclick="guardarFotoPerfil()">
-                                <i class="fas fa-save mr-2"></i> Guardar Foto de Perfil
+                                <i class="far fa-save mr-2"></i> Guardar Foto de Perfil
                             </button>
                         </div>
                     </div>
@@ -484,37 +465,37 @@
                         <div class="card info-card">
                             <div class="card-header bg-info text-white">
                                 <h4 class="card-title mb-0">
-                                    <i class="fas fa-user mr-2"></i> Información de Usuario
+                                    <i class="far fa-user mr-2"></i> Información de Usuario
                                 </h4>
                             </div>
                             <div class="card-body p-0">
                                 <div class="info-item">
                                     <div class="info-label">
-                                        <i class="fas fa-user-tag"></i> Nombre de Usuario
+                                        <i class="far fa-user-tag"></i> Nombre de Usuario
                                     </div>
                                     <div class="info-value" id="nombre_usuario">-</div>
                                 </div>
                                 <div class="info-item">
                                     <div class="info-label">
-                                        <i class="fas fa-envelope"></i> Correo Electrónico
+                                        <i class="far fa-envelope"></i> Correo Electrónico
                                     </div>
                                     <div class="info-value" id="correo_electronico">-</div>
                                 </div>
                                 <div class="info-item">
                                     <div class="info-label">
-                                        <i class="fas fa-user-tie"></i> Tipo de Usuario
+                                        <i class="far fa-user-tie"></i> Tipo de Usuario
                                     </div>
                                     <div class="info-value" id="tipo_usuario">-</div>
                                 </div>
                                 <div class="info-item">
                                     <div class="info-label">
-                                        <i class="fas fa-calendar-alt"></i> Fecha de Registro
+                                        <i class="far fa-calendar-alt"></i> Fecha de Registro
                                     </div>
                                     <div class="info-value" id="fecha_registro">-</div>
                                 </div>
                                 <div class="info-item">
                                     <div class="info-label">
-                                        <i class="fas fa-check-circle"></i> Estado
+                                        <i class="far fa-check-circle"></i> Estado
                                     </div>
                                     <div class="info-value" id="estado">-</div>
                                 </div>
@@ -527,37 +508,37 @@
                         <div class="card info-card">
                             <div class="card-header bg-success text-white">
                                 <h4 class="card-title mb-0">
-                                    <i class="fas fa-hand-holding-heart mr-2"></i> Información de la ONG
+                                    <i class="far fa-hand-holding-heart mr-2"></i> Información de la ONG
                                 </h4>
                             </div>
                             <div class="card-body p-0">
                                 <div class="info-item">
                                     <div class="info-label">
-                                        <i class="fas fa-building"></i> Nombre de la ONG
+                                        <i class="far fa-building"></i> Nombre de la ONG
                                     </div>
                                     <div class="info-value" id="nombre_ong">-</div>
                                 </div>
                                 <div class="info-item">
                                     <div class="info-label">
-                                        <i class="fas fa-id-card"></i> NIT
+                                        <i class="far fa-id-card"></i> NIT
                                     </div>
                                     <div class="info-value" id="nit">-</div>
                                 </div>
                                 <div class="info-item">
                                     <div class="info-label">
-                                        <i class="fas fa-phone"></i> Teléfono
+                                        <i class="far fa-phone"></i> Teléfono
                                     </div>
                                     <div class="info-value" id="telefono">-</div>
                                 </div>
                                 <div class="info-item">
                                     <div class="info-label">
-                                        <i class="fas fa-map-marker-alt"></i> Dirección
+                                        <i class="far fa-map-marker-alt"></i> Dirección
                                     </div>
                                     <div class="info-value" id="direccion">-</div>
                                 </div>
                                 <div class="info-item">
                                     <div class="info-label">
-                                        <i class="fas fa-globe"></i> Sitio Web
+                                        <i class="far fa-globe"></i> Sitio Web
                                     </div>
                                     <div class="info-value" id="sitio_web">-</div>
                                 </div>
@@ -570,7 +551,7 @@
                         <div class="card info-card">
                             <div class="card-header bg-primary text-white">
                                 <h4 class="card-title mb-0">
-                                    <i class="fas fa-align-left mr-2"></i> Descripción
+                                    <i class="far fa-align-left mr-2"></i> Descripción
                                 </h4>
                             </div>
                             <div class="card-body">
@@ -583,17 +564,17 @@
                 <!-- Botón de Editar -->
                 <div class="text-center mt-4 mb-4">
                     <button type="button" class="btn btn-edit text-white" onclick="toggleEditMode()">
-                        <i class="fas fa-edit mr-2"></i> Editar Perfil
+                        <i class="far fa-edit mr-2"></i> Editar Perfil
                     </button>
                 </div>
             </div>
 
             <!-- Formulario de Edición -->
             <div id="editForm" style="display: none;">
-                <div class="card card-warning card-outline">
-                    <div class="card-header bg-warning">
-                        <h3 class="card-title mb-0" style="font-weight: 600; color: var(--text-primary);">
-                            <i class="fas fa-edit mr-2"></i> Editar Perfil
+                <div class="card card-warning card-outline" style="border-color: #00A36C;">
+                    <div class="card-header" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: #FFFFFF;">
+                        <h3 class="card-title mb-0" style="font-weight: 600;">
+                            <i class="far fa-edit mr-2"></i> Editar Perfil
                         </h3>
                     </div>
                     <div class="card-body" style="padding: 2rem;">
@@ -601,27 +582,27 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <h5 class="text-primary mb-3">
-                                        <i class="fas fa-user mr-2"></i> Información de Usuario
+                                        <i class="far fa-user mr-2"></i> Información de Usuario
                                     </h5>
                                     <div class="form-group">
-                                        <label><i class="fas fa-user-tag mr-1"></i> Nombre de Usuario</label>
+                                        <label><i class="far fa-user-tag mr-1"></i> Nombre de Usuario</label>
                                         <input type="text" class="form-control" id="edit_nombre_usuario" name="nombre_usuario" required>
                                     </div>
                                     <div class="form-group">
-                                        <label><i class="fas fa-envelope mr-1"></i> Correo Electrónico</label>
+                                        <label><i class="far fa-envelope mr-1"></i> Correo Electrónico</label>
                                         <input type="email" class="form-control" id="edit_correo_electronico" name="correo_electronico" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <h5 class="text-success mb-3">
-                                        <i class="fas fa-lock mr-2"></i> Cambiar Contraseña (Opcional)
+                                        <i class="far fa-lock mr-2"></i> Cambiar Contraseña (Opcional)
                                     </h5>
                                     <div class="form-group">
-                                        <label><i class="fas fa-key mr-1"></i> Contraseña Actual</label>
+                                        <label><i class="far fa-key mr-1"></i> Contraseña Actual</label>
                                         <input type="password" class="form-control" id="edit_contrasena_actual" name="contrasena_actual">
                                     </div>
                                     <div class="form-group">
-                                        <label><i class="fas fa-key mr-1"></i> Nueva Contraseña</label>
+                                        <label><i class="far fa-key mr-1"></i> Nueva Contraseña</label>
                                         <input type="password" class="form-control" id="edit_nueva_contrasena" name="nueva_contrasena" minlength="6">
                                         <small class="form-text text-muted">Mínimo 6 caracteres</small>
                                     </div>
@@ -633,42 +614,42 @@
                             <div class="row">
                                 <div class="col-md-12">
                                     <h5 class="text-info mb-3">
-                                        <i class="fas fa-hand-holding-heart mr-2"></i> Información de la ONG
+                                        <i class="far fa-hand-holding-heart mr-2"></i> Información de la ONG
                                     </h5>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label><i class="fas fa-building mr-1"></i> Nombre de la ONG</label>
+                                        <label><i class="far fa-building mr-1"></i> Nombre de la ONG</label>
                                         <input type="text" class="form-control" id="edit_nombre_ong" name="nombre_ong" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label><i class="fas fa-id-card mr-1"></i> NIT</label>
+                                        <label><i class="far fa-id-card mr-1"></i> NIT</label>
                                         <input type="text" class="form-control" id="edit_nit" name="NIT">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label><i class="fas fa-phone mr-1"></i> Teléfono</label>
+                                        <label><i class="far fa-phone mr-1"></i> Teléfono</label>
                                         <input type="text" class="form-control" id="edit_telefono" name="telefono">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label><i class="fas fa-map-marker-alt mr-1"></i> Dirección</label>
+                                        <label><i class="far fa-map-marker-alt mr-1"></i> Dirección</label>
                                         <input type="text" class="form-control" id="edit_direccion" name="direccion">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label><i class="fas fa-globe mr-1"></i> Sitio Web</label>
+                                        <label><i class="far fa-globe mr-1"></i> Sitio Web</label>
                                         <input type="url" class="form-control" id="edit_sitio_web" name="sitio_web" placeholder="https://ejemplo.com">
                                     </div>
                                 </div>
                                 <div class="col-md-12">
                                     <div class="form-group">
-                                        <label><i class="fas fa-align-left mr-1"></i> Descripción</label>
+                                        <label><i class="far fa-align-left mr-1"></i> Descripción</label>
                                         <textarea class="form-control" id="edit_descripcion" name="descripcion" rows="4" placeholder="Describe tu ONG..."></textarea>
                                     </div>
                                 </div>
@@ -676,10 +657,10 @@
 
                             <div class="mt-4 text-center">
                                 <button type="submit" class="btn btn-success btn-lg px-5">
-                                    <i class="fas fa-save mr-2"></i> Guardar Cambios
+                                    <i class="far fa-save mr-2"></i> Guardar Cambios
                                 </button>
                                 <button type="button" class="btn btn-secondary btn-lg px-5 ml-2" onclick="toggleEditMode()">
-                                    <i class="fas fa-times mr-2"></i> Cancelar
+                                    <i class="far fa-times mr-2"></i> Cancelar
                                 </button>
                             </div>
                         </form>
@@ -691,7 +672,9 @@
 </div>
 @endsection
 
-@section('js')
+@push('js')
+{{-- Script global para icono de notificaciones --}}
+<script src="{{ asset('js/notificaciones-ong.js') }}"></script>
 <script src="{{ asset('assets/js/config.js') }}"></script>
 <script>
 let profileData = null;
@@ -703,7 +686,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!token) {
         Swal.fire({
             icon: 'warning',
-            title: 'Sesión Expirada',
+            title: 'Sesión expirada',
             text: 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',
             confirmButtonText: 'Ir al Login'
         }).then(() => {
@@ -734,8 +717,8 @@ async function loadProfile() {
 
         if (!res.ok || !data.success) {
             loadingMessage.innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                <div class="alert alert-danger" style="background: #f8d7da; border: 1px solid #dc3545; color: #721c24; border-radius: 8px; padding: 1rem;">
+                    <i class="far fa-exclamation-triangle mr-2"></i>
                     Error: ${data.error || 'Error al cargar el perfil'}
                 </div>
             `;
@@ -750,8 +733,8 @@ async function loadProfile() {
     } catch (error) {
         console.error('Error:', error);
         loadingMessage.innerHTML = `
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-triangle mr-2"></i>
+            <div class="alert alert-danger" style="background: #f8d7da; border: 1px solid #dc3545; color: #721c24; border-radius: 8px; padding: 1rem;">
+                <i class="far fa-exclamation-triangle mr-2"></i>
                 Error de conexión al cargar el perfil.
             </div>
         `;
@@ -796,7 +779,7 @@ function displayProfile(data) {
         document.getElementById('telefono').textContent = data.ong.telefono || '-';
         document.getElementById('direccion').textContent = data.ong.direccion || '-';
         document.getElementById('sitio_web').innerHTML = data.ong.sitio_web 
-            ? `<a href="${data.ong.sitio_web}" target="_blank" class="text-primary"><i class="fas fa-external-link-alt mr-1"></i>${data.ong.sitio_web}</a>` 
+            ? `<a href="${data.ong.sitio_web}" target="_blank" class="text-primary"><i class="far fa-external-link-alt mr-1"></i>${data.ong.sitio_web}</a>` 
             : '-';
         document.getElementById('descripcion').textContent = data.ong.descripcion || 'No hay descripción disponible.';
     }
@@ -831,8 +814,8 @@ async function guardarFotoPerfil() {
             // Validar tamaño (5MB)
             if (fotoFile.size > 5 * 1024 * 1024) {
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Archivo muy grande',
+                icon: 'error',
+                title: 'Archivo muy grande',
                     text: 'El archivo no debe exceder 5MB'
                 });
                 return;
@@ -1072,7 +1055,7 @@ document.getElementById('profileForm').addEventListener('submit', async (e) => {
     if (data.nueva_contrasena && !data.contrasena_actual) {
         Swal.fire({
             icon: 'error',
-            title: 'Error de Validación',
+            title: 'Error de validación',
             text: 'Debe proporcionar la contraseña actual para cambiar la contraseña.',
             confirmButtonText: 'Entendido'
         });
@@ -1104,8 +1087,8 @@ document.getElementById('profileForm').addEventListener('submit', async (e) => {
 
         if (!res.ok || !result.success) {
             Swal.fire({
-                icon: 'error',
-                title: 'Error',
+            icon: 'error',
+            title: 'Error',
                 text: result.error || 'Error al actualizar el perfil',
                 confirmButtonText: 'Entendido'
             });
@@ -1115,7 +1098,7 @@ document.getElementById('profileForm').addEventListener('submit', async (e) => {
         // Éxito
         Swal.fire({
             icon: 'success',
-            title: '¡Perfil Actualizado!',
+            title: '¡Perfil actualizado!',
             text: 'Tu perfil se ha actualizado correctamente.',
             confirmButtonText: 'Perfecto',
             timer: 2000,
@@ -1129,11 +1112,11 @@ document.getElementById('profileForm').addEventListener('submit', async (e) => {
         console.error('Error:', error);
         Swal.fire({
             icon: 'error',
-            title: 'Error de Conexión',
+            title: 'Error de conexión',
             text: 'No se pudo conectar con el servidor. Por favor, intenta nuevamente.',
             confirmButtonText: 'Entendido'
         });
     }
 });
-</script>
-@endsection
+ </script>
+@endpush

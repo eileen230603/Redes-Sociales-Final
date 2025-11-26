@@ -101,6 +101,11 @@ Route::prefix('empresa/mega-eventos')->name('empresa.mega-eventos.')->group(func
     Route::view('/{id}/detalle', 'empresa.mega-eventos.show')->name('show');
 });
 
+// ---------------- EMPRESA: NOTIFICACIONES ----------------
+Route::prefix('empresa/notificaciones')->name('empresa.notificaciones.')->group(function () {
+    Route::view('/', 'empresa.notificaciones.index')->name('index');
+});
+
 // ---------------- EMPRESA: EVENTOS ----------------
 Route::prefix('empresa/eventos')->name('empresa.eventos.')->group(function () {
     Route::view('/', 'empresa.eventos.index')->name('index');

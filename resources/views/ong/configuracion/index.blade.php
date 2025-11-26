@@ -1,30 +1,9 @@
 @extends('layouts.adminlte')
 
-@section('title', 'Configuración - Parámetros del Sistema')
+@section('page_title', 'Configuración del Sistema')
 
-@section('content')
-<div class="content-wrapper">
-    <section class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1>
-                        <i class="fas fa-sliders-h mr-2"></i>
-                        Configuración del Sistema
-                    </h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="/home-ong">Inicio</a></li>
-                        <li class="breadcrumb-item active">Configuración</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="content">
-        <div class="container-fluid">
+@section('content_body')
+<div class="container-fluid">
             <!-- Filtros y Búsqueda -->
             <div class="card card-primary card-outline mb-3">
                 <div class="card-header">
@@ -113,7 +92,6 @@
                 </div>
             </div>
         </div>
-    </section>
 </div>
 
 <!-- Modal Crear/Editar -->
@@ -305,7 +283,7 @@
         </div>
     </div>
 </div>
-@endsection
+@stop
 
 @section('css')
 <style>
@@ -314,10 +292,10 @@
         padding: 0.35em 0.65em;
     }
 </style>
-@endsection
+@stop
 
 @section('js')
 <script src="{{ asset('assets/js/config.js') }}"></script>
 <script src="{{ asset('assets/js/ong/configuracion.js') }}"></script>
-@endsection
+@stop
 

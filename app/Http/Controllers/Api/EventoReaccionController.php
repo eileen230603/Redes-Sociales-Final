@@ -9,6 +9,7 @@ use App\Models\Notificacion;
 use App\Models\IntegranteExterno;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class EventoReaccionController extends Controller
 {
@@ -52,14 +53,17 @@ class EventoReaccionController extends Controller
                     'total_reacciones' => EventoReaccion::where('evento_id', $eventoId)->count()
                 ]);
             } else {
-                // Agregar reacción
-                $nuevaReaccion = EventoReaccion::create([
+                // TRANSACCIÓN: Crear reacción + notificación
+                DB::transaction(function () use ($eventoId, $externoId, $evento) {
+                    // 1. Crear reacción
+                    EventoReaccion::create([
                     'evento_id' => $eventoId,
                     'externo_id' => $externoId
                 ]);
 
-                // Crear notificación para la ONG
+                    // 2. Crear notificación para la ONG
                 $this->crearNotificacionReaccion($evento, $externoId);
+                });
 
                 return response()->json([
                     'success' => true,

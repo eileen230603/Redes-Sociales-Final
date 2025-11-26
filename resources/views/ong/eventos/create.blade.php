@@ -1,21 +1,37 @@
-@extends('adminlte::page')
+@extends('layouts.adminlte')
 
-@section('title', 'Crear Evento | UNI2')
+@section('page_title', 'Crear Evento')
 
-@section('content_header')
-    <h1><i class="fas fa-calendar-plus text-success"></i> Crear nuevo evento</h1>
-@stop
-
-@section('content')
+@section('content_body')
 <div class="container-fluid">
-    <div class="card shadow-sm">
-        <div class="card-body">
+    <div class="card shadow-sm" style="border-radius: 12px; border: 1px solid #F5F5F5;">
+        <div class="card-header" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: #FFFFFF; border-radius: 12px 12px 0 0;">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                <div>
+                    <h3 class="mb-1" style="font-weight: 700; font-size: 1.4rem;">
+                        <i class="far fa-calendar-plus mr-2"></i> Crear nuevo evento
+                    </h3>
+                    <p class="mb-0" style="font-size: 0.9rem; opacity: 0.9;">
+                        Define la información principal, ubicación, imágenes y empresas participantes de tu evento.
+                    </p>
+                </div>
+                <div class="mt-3 mt-md-0">
+                    <a href="{{ route('ong.eventos.index') }}" class="btn btn-sm" style="background: rgba(255,255,255,0.15); color: #FFFFFF; border-radius: 999px; border: none; padding: 0.5rem 1.25rem;">
+                        <i class="far fa-arrow-left mr-1"></i> Volver a eventos
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-4">
 
             <form id="createEventJsonForm" enctype="multipart/form-data">
 
                 <!-- Información básica -->
-                <div class="mb-4 border-bottom pb-3">
-                    <h4 class="text-primary"><i class="fas fa-info-circle"></i> Información básica</h4>
+                <div class="mb-4 pb-3" style="border-bottom: 1px solid #F5F5F5;">
+                    <h4 class="mb-1" style="color: #0C2B44; font-weight: 700;">
+                        <i class="far fa-info-circle mr-2" style="color: #00A36C;"></i> Información básica
+                    </h4>
+                    <p class="mb-0 text-muted" style="font-size: 0.9rem;">Completa los datos generales del evento.</p>
                 </div>
 
                 <div class="form-group mb-3">
@@ -83,8 +99,12 @@
                 </div>
 
                 <!-- MAPA -->
-                <hr>
-                <h4 class="text-success mt-4"><i class="fas fa-map-marker-alt"></i> Ubicación del evento</h4>
+                <div class="mt-4 mb-3" style="border-top: 1px solid #F5F5F5; padding-top: 1.5rem;">
+                    <h4 class="mb-1" style="color: #0C2B44; font-weight: 700;">
+                        <i class="far fa-map mr-2" style="color: #00A36C;"></i> Ubicación del evento
+                    </h4>
+                    <p class="mb-0 text-muted" style="font-size: 0.9rem;">Selecciona en el mapa el lugar donde se realizará el evento.</p>
+                </div>
 
                 <div id="map" class="rounded mb-3" style="height: 300px; border: 1px solid #ced4da;"></div>
 
@@ -99,8 +119,12 @@
                 <input type="hidden" id="lng">
 
                 <!-- IMÁGENES -->
-                <hr>
-                <h4 class="text-warning mt-4"><i class="fas fa-images"></i> Imágenes promocionales</h4>
+                <div class="mt-4 mb-3" style="border-top: 1px solid #F5F5F5; padding-top: 1.5rem;">
+                    <h4 class="mb-1" style="color: #0C2B44; font-weight: 700;">
+                        <i class="far fa-images mr-2" style="color: #00A36C;"></i> Imágenes promocionales
+                    </h4>
+                    <p class="mb-0 text-muted" style="font-size: 0.9rem;">Sube imágenes que representen tu evento para destacarlo en la plataforma.</p>
+                </div>
 
                 <!-- Subir imágenes desde dispositivo -->
                 <div class="form-group mb-3">
@@ -127,32 +151,45 @@
 
                 <div id="urlImagesContainer" class="d-flex flex-wrap gap-2 mb-3"></div>
 
-                <!-- EMPRESAS -->
-                <hr>
-                <h4 class="text-info mt-4"><i class="fas fa-handshake"></i> Empresas colaboradoras</h4>
-
-                <div class="row" id="patrocinadoresBox">
-                    <p class="text-muted px-3">Cargando empresas...</p>
+                <!-- PATROCINADORES -->
+                <div class="mt-4 mb-2" style="border-top: 1px solid #F5F5F5; padding-top: 1.5rem;">
+                    <h4 class="mb-1" style="color: #0C2B44; font-weight: 700;">
+                        <i class="far fa-handshake mr-2" style="color: #00A36C;"></i> Patrocinadores
+                    </h4>
+                </div>
+                <p class="text-muted"><small>Selecciona las empresas que patrocinarán este evento. Los patrocinadores aparecerán en los detalles del evento.</small></p>
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="row" id="patrocinadoresBox">
+                            <div class="col-12 text-center py-3">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="sr-only">Cargando...</span>
+                                </div>
+                                <p class="mt-2 text-muted">Cargando empresas disponibles...</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- INVITADOS -->
-                <hr>
-                <h4 class="text-info mt-4"><i class="fas fa-user-friends"></i> Invitados</h4>
+                <div class="mt-4 mb-2" style="border-top: 1px solid #F5F5F5; padding-top: 1.5rem;">
+                    <h4 class="mb-1" style="color: #0C2B44; font-weight: 700;">
+                        <i class="far fa-user-friends mr-2" style="color: #00A36C;"></i> Invitados
+                    </h4>
+                </div>
 
                 <div class="row" id="invitadosBox">
                     <p class="text-muted px-3">Cargando invitados...</p>
                 </div>
 
                 <!-- BOTONES -->
-                <hr class="mt-4 mb-3">
-
-                <div class="d-flex justify-content-end">
-                    <button type="button" class="btn btn-secondary mr-2" id="saveDraftBtn">
-                        <i class="fas fa-save"></i> Guardar borrador
+                <div class="mt-4 pt-3 d-flex justify-content-end" style="border-top: 1px solid #F5F5F5;">
+                    <button type="button" class="btn btn-outline-secondary mr-2" id="saveDraftBtn" style="border-radius: 8px;">
+                        <i class="far fa-save mr-1"></i> Guardar borrador
                     </button>
 
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-check-circle"></i> Publicar evento
+                    <button type="submit" class="btn btn-success" style="border-radius: 8px; min-width: 190px; font-weight: 600;">
+                        <i class="far fa-check-circle mr-1"></i> Publicar evento
                     </button>
                 </div>
 
@@ -160,20 +197,52 @@
 
         </div>
     </div>
+    </div>
 </div>
-@stop
+@endsection
 
-@section('css')
+@push('css')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
 <style>
+    /* Layout general del formulario de creación de eventos */
+    #createEventJsonForm .form-group label,
+    #createEventJsonForm .form-label {
+        font-weight: 600;
+        color: #0C2B44;
+        font-size: 0.9rem;
+    }
+
+    #createEventJsonForm .form-control {
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        padding: 0.6rem 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    #createEventJsonForm .form-control:focus {
+        border-color: #00A36C;
+        box-shadow: 0 0 0 0.15rem rgba(0, 163, 108, 0.2);
+    }
+
+    #createEventJsonForm small.form-text {
+        font-size: 0.8rem;
+    }
+
+    /* Tarjeta de mapa */
+    #map {
+        border-radius: 12px;
+        border: 1px solid #F5F5F5;
+        box-shadow: 0 2px 8px rgba(12, 43, 68, 0.08);
+    }
+
     #previewContainer img,
     #urlImagesContainer img {
         width: 150px;
         height: 150px;
         object-fit: cover;
         border-radius: 8px;
-        border: 2px solid #ddd;
+        border: 2px solid #F5F5F5;
         margin: 5px;
         cursor: pointer;
         transition: transform 0.2s;
@@ -209,7 +278,7 @@
         font-size: 12px;
     }
     #urlImagesContainer .image-preview-wrapper {
-        border: 2px solid #28a745;
+        border: 2px solid #00A36C;
     }
     #urlImagesContainer img {
         width: 100%;
@@ -226,14 +295,12 @@
         box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
     }
 </style>
-@stop
+@endpush
 
-@section('js')
+@push('js')
 {{-- Script global para icono de notificaciones --}}
 <script src="{{ asset('js/notificaciones-ong.js') }}"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="{{ asset('assets/js/config.js') }}"></script>
-
-<!-- TU ARCHIVO JS FINAL -->
 <script src="{{ asset('assets/js/ong/create-event.js') }}"></script>
-@stop
+@endpush

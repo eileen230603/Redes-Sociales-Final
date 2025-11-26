@@ -4,32 +4,47 @@
 
 @section('content_body')
 <div class="container-fluid">
-    <div class="card shadow-sm">
-        <div class="card-header bg-warning text-dark">
-            <h3 class="card-title mb-0">
-                <i class="fas fa-edit mr-2"></i> Editar Mega Evento
-            </h3>
+    <div class="card shadow-sm" style="border-radius: 12px; border: 1px solid #F5F5F5;">
+        <div class="card-header" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: #FFFFFF; border-radius: 12px 12px 0 0;">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                <div>
+                    <h3 class="card-title mb-1" style="font-weight: 700; font-size: 1.4rem;">
+                        <i class="far fa-edit mr-2"></i> Editar mega evento
+                    </h3>
+                    <p class="mb-0" style="font-size: 0.9rem; opacity: 0.9;">
+                        Actualiza la información, ubicación e imágenes de tu mega evento.
+                    </p>
+                </div>
+                <div class="mt-3 mt-md-0">
+                    <a href="{{ route('ong.mega-eventos.show', ['id' => request()->segment(3)]) }}" class="btn btn-sm" style="background: rgba(255,255,255,0.15); color: #FFFFFF; border-radius: 999px; border: none; padding: 0.5rem 1.25rem;">
+                        <i class="far fa-eye mr-1"></i> Ver detalle
+                    </a>
+                    <a href="{{ route('ong.mega-eventos.index') }}" class="btn btn-sm ml-2" style="background: rgba(255,255,255,0.15); color: #FFFFFF; border-radius: 999px; border: none; padding: 0.5rem 1.25rem;">
+                        <i class="far fa-arrow-left mr-1"></i> Volver
+                    </a>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
+        <div class="card-body p-4">
             <div id="loadingMessage" class="text-center py-5">
-                <div class="spinner-border text-warning" role="status">
+                <div class="spinner-border" role="status" style="color: #00A36C; width: 3rem; height: 3rem;">
                     <span class="sr-only">Cargando...</span>
                 </div>
-                <p class="mt-3 text-muted">Cargando información del mega evento...</p>
+                <p class="mt-3" style="color: #333333; font-weight: 500;">Cargando información del mega evento...</p>
             </div>
 
             <form id="editMegaEventoForm" enctype="multipart/form-data" style="display: none;">
                 <!-- Información Básica -->
-                <div class="mb-4 border-bottom pb-3">
-                    <h4 class="text-primary">
-                        <i class="fas fa-info-circle mr-2"></i> Información Básica
+                <div class="mb-4 border-bottom pb-3" style="border-bottom: 1px solid #F5F5F5;">
+                    <h4 class="mb-1" style="color: #0C2B44; font-weight: 700;">
+                        <i class="far fa-info-circle mr-2" style="color: #00A36C;"></i> Información básica
                     </h4>
                 </div>
 
                 <div class="row">
                     <div class="col-md-8">
                         <div class="form-group">
-                            <label for="titulo">Título del Mega Evento *</label>
+                            <label for="titulo">Título del mega evento *</label>
                             <input type="text" id="titulo" name="titulo" class="form-control" required 
                                    maxlength="200">
                         </div>
@@ -56,9 +71,9 @@
                 </div>
 
                 <!-- Fechas -->
-                <div class="mb-4 border-bottom pb-3 mt-4">
-                    <h4 class="text-info">
-                        <i class="fas fa-calendar-alt mr-2"></i> Fechas del Evento
+                <div class="mb-4 border-bottom pb-3 mt-4" style="border-bottom: 1px solid #F5F5F5;">
+                    <h4 class="mb-1" style="color: #0C2B44; font-weight: 700;">
+                        <i class="far fa-calendar-alt mr-2" style="color: #00A36C;"></i> Fechas del evento
                     </h4>
                 </div>
 
@@ -80,9 +95,9 @@
                 </div>
 
                 <!-- Ubicación y Capacidad -->
-                <div class="mb-4 border-bottom pb-3 mt-4">
-                    <h4 class="text-warning">
-                        <i class="fas fa-map-marker-alt mr-2"></i> Ubicación y Capacidad
+                <div class="mb-4 border-bottom pb-3 mt-4" style="border-bottom: 1px solid #F5F5F5;">
+                    <h4 class="mb-1" style="color: #0C2B44; font-weight: 700;">
+                        <i class="far fa-map mr-2" style="color: #00A36C;"></i> Ubicación y capacidad
                     </h4>
                 </div>
 
@@ -118,9 +133,9 @@
                 </div>
 
                 <!-- Configuración -->
-                <div class="mb-4 border-bottom pb-3 mt-4">
-                    <h4 class="text-secondary">
-                        <i class="fas fa-cogs mr-2"></i> Configuración
+                <div class="mb-4 border-bottom pb-3 mt-4" style="border-bottom: 1px solid #F5F5F5;">
+                    <h4 class="mb-1" style="color: #0C2B44; font-weight: 700;">
+                        <i class="far fa-cogs mr-2" style="color: #00A36C;"></i> Configuración
                     </h4>
                 </div>
 
@@ -158,18 +173,18 @@
                 </div>
 
                 <!-- Imágenes Existentes -->
-                <div class="mb-4 border-bottom pb-3 mt-4">
-                    <h4 class="text-danger">
-                        <i class="fas fa-images mr-2"></i> Imágenes Actuales
+                <div class="mb-4 border-bottom pb-3 mt-4" style="border-bottom: 1px solid #F5F5F5;">
+                    <h4 class="mb-1" style="color: #0C2B44; font-weight: 700;">
+                        <i class="far fa-images mr-2" style="color: #00A36C;"></i> Imágenes actuales
                     </h4>
                 </div>
 
                 <div id="existingImagesContainer" class="row mb-3"></div>
 
                 <!-- Agregar Nuevas Imágenes -->
-                <div class="mb-4 border-bottom pb-3 mt-4">
-                    <h4 class="text-danger">
-                        <i class="fas fa-plus-circle mr-2"></i> Agregar Nuevas Imágenes
+                <div class="mb-4 border-bottom pb-3 mt-4" style="border-bottom: 1px solid #F5F5F5;">
+                    <h4 class="mb-1" style="color: #0C2B44; font-weight: 700;">
+                        <i class="far fa-plus-square mr-2" style="color: #00A36C;"></i> Agregar nuevas imágenes
                     </h4>
                 </div>
 
@@ -209,12 +224,12 @@
                 <div id="formMessage" class="alert" style="display: none;"></div>
 
                 <!-- Botones -->
-                <div class="d-flex justify-content-end mt-4">
-                    <a href="{{ route('ong.mega-eventos.index') }}" class="btn btn-secondary mr-2">
-                        <i class="fas fa-times mr-2"></i> Cancelar
+                <div class="d-flex justify-content-end mt-4 pt-3" style="border-top: 1px solid #F5F5F5;">
+                    <a href="{{ route('ong.mega-eventos.index') }}" class="btn btn-outline-secondary mr-2" style="border-radius: 8px;">
+                        <i class="far fa-times mr-1"></i> Cancelar
                     </a>
-                    <button type="submit" class="btn btn-warning btn-lg">
-                        <i class="fas fa-save mr-2"></i> Guardar Cambios
+                    <button type="submit" class="btn btn-success btn-lg" style="border-radius: 8px; min-width: 190px; font-weight: 600; background-color: #00A36C; border-color: #00A36C;">
+                        <i class="far fa-save mr-1"></i> Guardar cambios
                     </button>
                 </div>
             </form>
@@ -223,7 +238,7 @@
 </div>
 @endsection
 
-@section('css')
+@push('css')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
     #previewContainer img {
@@ -231,7 +246,7 @@
         height: 150px;
         object-fit: cover;
         border-radius: 8px;
-        border: 2px solid #ddd;
+        border: 2px solid #F5F5F5;
         margin: 5px;
         cursor: pointer;
         transition: transform 0.2s;
@@ -278,9 +293,11 @@
         transform: scale(1.1);
     }
 </style>
-@endsection
+@endpush
 
-@section('js')
+@push('js')
+{{-- Script global para icono de notificaciones --}}
+<script src="{{ asset('js/notificaciones-ong.js') }}"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="{{ asset('assets/js/config.js') }}"></script>
 <script>
@@ -362,7 +379,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!token || tipoUsuario !== 'ONG') {
         Swal.fire({
             icon: 'warning',
-            title: 'Acceso Denegado',
+            title: 'Acceso denegado',
             text: 'Debes iniciar sesión como ONG para editar mega eventos.',
             confirmButtonText: 'Ir al Login'
         }).then(() => {
@@ -451,7 +468,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             fechaFin.value = '';
             Swal.fire({
                 icon: 'warning',
-                title: 'Fecha Inválida',
+                title: 'Fecha inválida',
                 text: 'La fecha de fin debe ser posterior a la fecha de inicio'
             });
         }
@@ -478,8 +495,8 @@ async function loadMegaEvento() {
 
         if (!res.ok || !data.success) {
             loadingMessage.innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                <div class="alert alert-danger" style="background: #f8d7da; border: 1px solid #dc3545; color: #721c24; border-radius: 8px; padding: 1rem;">
+                    <i class="far fa-exclamation-triangle mr-2"></i>
                     Error: ${data.error || 'Error al cargar el mega evento'}
                 </div>
             `;
@@ -523,8 +540,8 @@ async function loadMegaEvento() {
     } catch (error) {
         console.error('Error:', error);
         loadingMessage.innerHTML = `
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-triangle mr-2"></i>
+            <div class="alert alert-danger" style="background: #f8d7da; border: 1px solid #dc3545; color: #721c24; border-radius: 8px; padding: 1rem;">
+                <i class="far fa-exclamation-triangle mr-2"></i>
                 Error de conexión al cargar el mega evento.
             </div>
         `;
@@ -536,7 +553,7 @@ function displayExistingImages() {
     container.innerHTML = '';
 
     if (existingImages.length === 0) {
-        container.innerHTML = '<div class="col-12"><p class="text-muted"><i class="fas fa-image mr-2"></i>No hay imágenes cargadas</p></div>';
+        container.innerHTML = '<div class="col-12"><p class="text-muted"><i class="far fa-image mr-2"></i>No hay imágenes cargadas</p></div>';
         return;
     }
 
@@ -565,7 +582,7 @@ function displayExistingImages() {
         removeBtn.type = 'button';
         removeBtn.className = 'remove-image btn btn-danger btn-sm';
         removeBtn.title = 'Eliminar imagen';
-        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        removeBtn.innerHTML = '<i class="far fa-times"></i>';
         removeBtn.onclick = () => removeExistingImage(imgUrl);
 
         const imageWrapper = document.createElement('div');
@@ -650,7 +667,7 @@ function updatePreview() {
             wrapper.innerHTML = `
                 <img src="${e.target.result}" alt="Preview ${index + 1}">
                 <button type="button" class="remove-image" onclick="removeNewImage(${index})" title="Eliminar">
-                    <i class="fas fa-times"></i>
+                    <i class="far fa-times"></i>
                 </button>
             `;
             container.appendChild(wrapper);
@@ -708,7 +725,7 @@ function updateUrlImagesPreviewEdit() {
         removeBtn.className = 'remove-image btn btn-danger btn-sm';
         removeBtn.style.cssText = 'position: absolute; top: 5px; right: 5px; width: 30px; height: 30px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center;';
         removeBtn.title = 'Eliminar imagen';
-        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        removeBtn.innerHTML = '<i class="far fa-times"></i>';
         removeBtn.onclick = () => removeUrlImageEdit(index);
         
         wrapper.appendChild(img);
@@ -851,7 +868,7 @@ document.getElementById('editMegaEventoForm').addEventListener('submit', async (
             icon: 'success',
             title: '¡Actualizado!',
             text: 'El mega evento se ha actualizado correctamente',
-            confirmButtonText: 'Ver Mega Eventos',
+            confirmButtonText: 'Ver mega eventos',
             timer: 2000,
             timerProgressBar: true
         }).then(() => {
@@ -862,11 +879,11 @@ document.getElementById('editMegaEventoForm').addEventListener('submit', async (
         console.error('Error:', error);
         Swal.fire({
             icon: 'error',
-            title: 'Error de Conexión',
+            title: 'Error de conexión',
             text: 'No se pudo conectar con el servidor'
         });
     }
 });
 </script>
-@endsection
+@endpush
 

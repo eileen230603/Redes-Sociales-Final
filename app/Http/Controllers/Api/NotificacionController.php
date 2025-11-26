@@ -136,4 +136,147 @@ class NotificacionController extends Controller
             ], 500);
         }
     }
+
+    // ============================================
+    // MÉTODOS PARA EMPRESAS
+    // ============================================
+
+    /**
+     * Obtener todas las notificaciones de la empresa
+     */
+    public function indexEmpresa(Request $request)
+    {
+        try {
+            $empresaId = $request->user()->id_usuario;
+
+            // Notificaciones para empresas: ong_id es null y externo_id es el user_id de la empresa
+            $notificaciones = Notificacion::where('externo_id', $empresaId)
+                ->whereNull('ong_id') // Solo notificaciones para empresas
+                ->whereIn('tipo', ['empresa_asignada', 'empresa_confirmada']) // Tipos de notificaciones para empresas
+                ->with(['evento:id,titulo'])
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function($notificacion) {
+                    return [
+                        'id' => $notificacion->id,
+                        'tipo' => $notificacion->tipo,
+                        'titulo' => $notificacion->titulo,
+                        'mensaje' => $notificacion->mensaje,
+                        'leida' => $notificacion->leida,
+                        'evento_id' => $notificacion->evento_id,
+                        'evento_titulo' => $notificacion->evento ? $notificacion->evento->titulo : null,
+                        'fecha' => $notificacion->created_at,
+                    ];
+                });
+
+            $noLeidas = Notificacion::where('externo_id', $empresaId)
+                ->whereNull('ong_id')
+                ->whereIn('tipo', ['empresa_asignada', 'empresa_confirmada'])
+                ->where('leida', false)
+                ->count();
+
+            return response()->json([
+                'success' => true,
+                'notificaciones' => $notificaciones,
+                'no_leidas' => $noLeidas
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al obtener notificaciones: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener solo el contador de notificaciones no leídas para empresa
+     */
+    public function contadorEmpresa(Request $request)
+    {
+        try {
+            $empresaId = $request->user()->id_usuario;
+
+            $noLeidas = Notificacion::where('externo_id', $empresaId)
+                ->whereNull('ong_id')
+                ->whereIn('tipo', ['empresa_asignada', 'empresa_confirmada'])
+                ->where('leida', false)
+                ->count();
+
+            return response()->json([
+                'success' => true,
+                'no_leidas' => $noLeidas
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al obtener contador: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Marcar notificación como leída (empresa)
+     */
+    public function marcarLeidaEmpresa(Request $request, $id)
+    {
+        try {
+            $empresaId = $request->user()->id_usuario;
+
+            $notificacion = Notificacion::where('id', $id)
+                ->where('externo_id', $empresaId)
+                ->whereNull('ong_id')
+                ->whereIn('tipo', ['empresa_asignada', 'empresa_confirmada'])
+                ->first();
+
+            if (!$notificacion) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Notificación no encontrada'
+                ], 404);
+            }
+
+            $notificacion->leida = true;
+            $notificacion->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Notificación marcada como leída'
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al marcar notificación: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Marcar todas las notificaciones como leídas (empresa)
+     */
+    public function marcarTodasLeidasEmpresa(Request $request)
+    {
+        try {
+            $empresaId = $request->user()->id_usuario;
+
+            Notificacion::where('externo_id', $empresaId)
+                ->whereNull('ong_id')
+                ->whereIn('tipo', ['empresa_asignada', 'empresa_confirmada'])
+                ->where('leida', false)
+                ->update(['leida' => true]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Todas las notificaciones marcadas como leídas'
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al marcar notificaciones: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

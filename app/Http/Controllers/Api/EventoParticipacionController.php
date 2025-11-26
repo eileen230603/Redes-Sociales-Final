@@ -9,6 +9,7 @@ use App\Models\IntegranteExterno;
 use App\Models\Notificacion;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class EventoParticipacionController extends Controller
 {
@@ -37,7 +38,10 @@ class EventoParticipacionController extends Controller
             return response()->json(["success" => false, "error" => "Ya estás inscrito"], 400);
         }
 
-        $data = EventoParticipacion::create([
+        // TRANSACCIÓN: Crear participación + notificación
+        $data = DB::transaction(function () use ($eventoId, $externoId, $evento) {
+            // 1. Crear participación
+            $participacion = EventoParticipacion::create([
             "evento_id" => $eventoId,
             "externo_id" => $externoId,
             "estado" => "aprobada", // Aprobación automática
@@ -45,8 +49,11 @@ class EventoParticipacionController extends Controller
             "puntos" => 0
         ]);
 
-        // Crear notificación para la ONG
+            // 2. Crear notificación para la ONG
         $this->crearNotificacionParticipacion($evento, $externoId);
+
+            return $participacion;
+        });
 
         return response()->json(["success" => true, "message" => "Inscripción exitosa y aprobada automáticamente", "data" => $data]);
     }
@@ -65,7 +72,19 @@ class EventoParticipacionController extends Controller
             return response()->json(["success" => false, "error" => "No estás inscrito"], 404);
         }
 
+        // TRANSACCIÓN: Eliminar participación + limpiar datos relacionados
+        DB::transaction(function () use ($registro, $eventoId, $externoId) {
+            // 1. Eliminar participación
         $registro->delete();
+            
+            // 2. Eliminar notificaciones relacionadas (opcional, para mantener consistencia)
+            // Las notificaciones de participación se pueden mantener para historial
+            // o eliminarse si se requiere limpieza completa
+            // Notificacion::where('evento_id', $eventoId)
+            //     ->where('externo_id', $externoId)
+            //     ->where('tipo', 'participacion')
+            //     ->delete();
+        });
 
         return response()->json(["success" => true, "message" => "Inscripción cancelada"]);
     }

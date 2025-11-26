@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use App\Models\MegaEvento;
+use App\Models\Notificacion;
 use Illuminate\Support\Str;
 
 class MegaEventoController extends Controller
@@ -398,18 +399,15 @@ class MegaEventoController extends Controller
                 'imagenes_json_input' => $request->input('imagenes_json')
             ]);
             
-            // Combinar imágenes existentes con nuevas
+            // TRANSACCIÓN: Procesar imágenes + actualizar mega evento
+            DB::transaction(function () use ($megaEvento, $data, $imagenesActuales, $nuevasImagenes) {
+                // 1. Combinar imágenes existentes con nuevas
             $imagenesActuales = array_merge($imagenesActuales, $nuevasImagenes);
             
-            // Eliminar duplicados y valores nulos, reindexar array
+                // 2. Eliminar duplicados y valores nulos, reindexar array
             $data['imagenes'] = array_values(array_unique(array_filter($imagenesActuales)));
             
-            // Log final antes de guardar
-            \Log::info('Mega Evento Update - Imágenes finales a guardar', [
-                'imagenes' => $data['imagenes']
-            ]);
-
-            // Asegurar que lat y lng se guarden correctamente
+                // 3. Asegurar que lat y lng se guarden correctamente
             if (isset($data['lat']) && $data['lat'] === '') {
                 $data['lat'] = null;
             }
@@ -417,7 +415,9 @@ class MegaEventoController extends Controller
                 $data['lng'] = null;
             }
 
+                // 4. Actualizar mega evento
             $megaEvento->update($data);
+            });
             
             // Forzar refresh para obtener las imágenes procesadas
             $megaEvento->refresh();
@@ -612,7 +612,9 @@ class MegaEventoController extends Controller
                 ], 400);
             }
 
-            // Crear participación automáticamente aprobada
+            // TRANSACCIÓN: Insertar participación + crear notificación
+            DB::transaction(function () use ($megaEventoId, $integranteExterno, $megaEvento, $externoId) {
+                // 1. Crear participación
             DB::table('mega_evento_participantes_externos')->insert([
                 'mega_evento_id' => $megaEventoId,
                 'integrante_externo_id' => $integranteExterno->user_id,
@@ -621,8 +623,9 @@ class MegaEventoController extends Controller
                 'activo' => true
             ]);
 
-            // Crear notificación para la ONG
+                // 2. Crear notificación para la ONG
             $this->crearNotificacionMegaEvento($megaEvento, $externoId);
+            });
 
             return response()->json([
                 'success' => true,

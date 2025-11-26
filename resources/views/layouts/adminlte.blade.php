@@ -5,9 +5,9 @@
 
 {{-- HEADER --}}
 @section('content_header')
-<div class="d-flex align-items-center justify-content-between">
+<div class="d-flex align-items-center justify-content-between" style="margin-bottom: 0.5rem;">
     <h1 class="mb-0 text-primary">
-        <i class="fas fa-layer-group mr-2"></i>
+        <i class="far fa-layer-group mr-2"></i>
         @yield('page_title', 'Panel UNI2')
     </h1>
 </div>
@@ -25,18 +25,18 @@
     {{-- 🔔 Ícono de Notificaciones - POSICIONADO ANTES DEL MENÚ DE USUARIO (círculo gris) --}}
     <li class="nav-item" id="notificacionesNavItem" style="display: flex !important; align-items: center; order: 998;">
         <a href="{{ route('ong.notificaciones.index') }}" class="nav-link position-relative" id="notificacionesIcono" title="Notificaciones" style="display: flex !important; align-items: center; justify-content: center; padding: 0.5rem 0.75rem !important; min-width: 45px; color: #6c757d !important;">
-            <i class="fas fa-bell" style="font-size: 1.25rem !important; display: block !important;"></i>
+            <i class="far fa-bell" style="font-size: 1.25rem !important; display: block !important;"></i>
             <span class="badge badge-danger position-absolute" id="contadorNotificaciones" style="top: 2px; right: 2px; display: none; font-size: 0.7rem; padding: 4px 7px; min-width: 20px; height: 20px; line-height: 12px; border-radius: 10px; font-weight: bold; z-index: 10; background-color: #dc3545 !important; color: white !important; box-shadow: 0 2px 4px rgba(0,0,0,0.2); align-items: center; justify-content: center;">0</span>
         </a>
     </li>
     <li class="nav-item d-none d-sm-inline-block">
         <a href="/home-publica" class="nav-link">
-            <i class="fas fa-globe-americas mr-1"></i> Ir a página pública
+            <i class="far fa-globe mr-1"></i> Ir a página pública
         </a>
     </li>
     <li class="nav-item d-none d-sm-inline-block">
         <a href="#" onclick="cerrarSesion(event)" class="nav-link text-danger">
-            <i class="fas fa-sign-out-alt mr-1"></i> Cerrar sesión
+            <i class="far fa-sign-out-alt mr-1"></i> Cerrar sesión
         </a>
     </li>
 @endpush
@@ -49,7 +49,7 @@
         {{-- 🏠 Inicio --}}
         <li class="nav-item">
             <a href="/home-ong" class="nav-link {{ request()->is('home-ong') ? 'active' : '' }}">
-                <i class="nav-icon fas fa-home"></i>
+                <i class="nav-icon far fa-home"></i>
                 <p>Inicio</p>
             </a>
         </li>
@@ -57,10 +57,10 @@
         {{-- 📅 Eventos --}}
         <li class="nav-item has-treeview {{ request()->is('ong/eventos*') ? 'menu-open' : '' }}">
             <a href="#" class="nav-link {{ request()->is('ong/eventos*') ? 'active' : '' }}">
-                <i class="nav-icon fas fa-calendar-alt"></i>
+                <i class="nav-icon far fa-calendar"></i>
                 <p>
                     Eventos
-                    <i class="right fas fa-angle-left"></i>
+                    <i class="right far fa-angle-left"></i>
                 </p>
             </a>
             <ul class="nav nav-treeview">
@@ -69,7 +69,7 @@
                 <li class="nav-item">
                     <a href="{{ route('ong.eventos.index') }}" 
                        class="nav-link {{ request()->is('ong/eventos') ? 'active' : '' }}">
-                        <i class="fas fa-list nav-icon text-primary"></i>
+                        <i class="far fa-list nav-icon text-primary"></i>
                         <p>Ver eventos</p>
                     </a>
                 </li>
@@ -78,7 +78,7 @@
                 <li class="nav-item">
                     <a href="{{ route('ong.eventos.create') }}" 
                        class="nav-link {{ request()->is('ong/eventos/crear') ? 'active' : '' }}">
-                        <i class="fas fa-calendar-plus nav-icon text-success"></i>
+                        <i class="far fa-calendar-plus nav-icon text-success"></i>
                         <p>Crear evento</p>
                     </a>
                 </li>
@@ -88,7 +88,7 @@
         {{-- 👥 Voluntarios --}}
         <li class="nav-item">
             <a href="{{ route('ong.voluntarios.index') }}" class="nav-link {{ request()->is('ong/voluntarios*') ? 'active' : '' }}">
-                <i class="nav-icon fas fa-users"></i>
+                <i class="nav-icon far fa-users"></i>
                 <p>Voluntarios</p>
             </a>
         </li>
@@ -96,7 +96,7 @@
         {{-- 📊 Dashboard --}}
         <li class="nav-item">
             <a href="{{ route('ong.dashboard.index') }}" class="nav-link {{ request()->is('ong/dashboard*') ? 'active' : '' }}">
-                <i class="nav-icon fas fa-tachometer-alt"></i>
+                <i class="nav-icon far fa-tachometer-alt"></i>
                 <p>Dashboard</p>
             </a>
         </li>
@@ -104,7 +104,7 @@
         {{-- 📊 Reportes --}}
         <li class="nav-item">
             <a href="{{ route('ong.reportes.index') }}" class="nav-link {{ request()->is('ong/reportes*') ? 'active' : '' }}">
-                <i class="nav-icon fas fa-chart-bar"></i>
+                <i class="nav-icon far fa-chart-bar"></i>
                 <p>Reportes</p>
             </a>
         </li>
@@ -112,7 +112,7 @@
         {{-- 🔔 Notificaciones --}}
         <li class="nav-item">
             <a href="{{ route('ong.notificaciones.index') }}" class="nav-link {{ request()->is('ong/notificaciones*') ? 'active' : '' }}">
-                <i class="nav-icon fas fa-bell"></i>
+                <i class="nav-icon far fa-bell"></i>
                 <p>Notificaciones</p>
             </a>
         </li>
@@ -120,7 +120,7 @@
         {{-- 👤 Perfil --}}
         <li class="nav-item">
             <a href="{{ route('perfil.ong') }}" class="nav-link {{ request()->is('perfil/ong') ? 'active' : '' }}">
-                <i class="nav-icon fas fa-user-circle"></i>
+                <i class="nav-icon far fa-user-circle"></i>
                 <p>Mi Perfil</p>
             </a>
         </li>
@@ -130,14 +130,14 @@
 
         <li class="nav-item">
             <a href="/home-publica" class="nav-link">
-                <i class="nav-icon fas fa-globe"></i>
+                <i class="nav-icon far fa-globe"></i>
                 <p>Ir a página pública</p>
             </a>
         </li>
 
         <li class="nav-item">
             <a href="#" onclick="cerrarSesion(event)" class="nav-link text-danger">
-                <i class="nav-icon fas fa-sign-out-alt"></i>
+                <i class="nav-icon far fa-sign-out-alt"></i>
                 <p>Cerrar sesión</p>
             </a>
         </li>
@@ -151,6 +151,532 @@
 <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/adminlte.min.css') }}">
 <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
 <style>
+    /* ============================================
+       NUEVA PALETA DE COLORES - AZUL MARINO Y VERDE ESMERALDA
+       DEFINIDA SOLO EN ESTE LAYOUT
+       ============================================ */
+    :root {
+        --brand-primario: #0C2B44;   /* Azul Marino */
+        --brand-acento: #00A36C;     /* Verde Esmeralda */
+        --brand-blanco: #FFFFFF;     /* Blanco Puro */
+        --brand-gris-oscuro: #333333;/* Gris Carbón */
+        --brand-gris-suave: #F5F5F5; /* Gris Suave */
+    }
+
+    /* Helper para clases bg-brand-primario (logo, usermenu, etc.) */
+    .bg-brand-primario {
+        background-color: var(--brand-primario) !important;
+        color: #ffffff !important;
+    }
+
+    /* Sidebar - Azul Marino Oscuro con Nueva Paleta */
+    .main-sidebar,
+    .sidebar-dark-primary {
+        background-color: #0C2B44 !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    /* Brand/Logo del Sidebar */
+    .sidebar-dark-primary .brand-link,
+    .main-sidebar .brand-link,
+    .brand-link.bg-primary {
+        background-color: #0C2B44 !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        padding: 1rem 1.25rem !important;
+    }
+    
+    .sidebar-dark-primary .brand-text,
+    .main-sidebar .brand-text,
+    .brand-text {
+        color: white !important;
+        font-weight: 700 !important;
+        font-size: 1.5rem !important;
+    }
+    
+    .sidebar-dark-primary .brand-link:hover,
+    .main-sidebar .brand-link:hover,
+    .brand-link.bg-primary:hover {
+        background-color: #0a2338 !important;
+    }
+    
+    /* Logo Image */
+    .sidebar-dark-primary .brand-image,
+    .main-sidebar .brand-image,
+    .brand-image {
+        opacity: 1 !important;
+        max-width: 50px !important;
+        max-height: 50px !important;
+        object-fit: contain !important;
+    }
+    
+    /* Override de bg-primary en sidebar */
+    .main-sidebar .bg-primary,
+    .sidebar-dark-primary .bg-primary {
+        background-color: #0C2B44 !important;
+    }
+    
+    /* Enlaces del Sidebar */
+    .sidebar-dark-primary .nav-sidebar .nav-link,
+    .main-sidebar .nav-sidebar .nav-link {
+        color: rgba(255, 255, 255, 0.85) !important;
+        border-radius: 8px !important;
+        margin: 0.25rem 0.5rem !important;
+        padding: 0.75rem 1rem !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    /* Enlaces Activos */
+    .sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link.active,
+    .sidebar-dark-primary .nav-sidebar .nav-link.active,
+    .main-sidebar .nav-sidebar > .nav-item > .nav-link.active,
+    .main-sidebar .nav-sidebar .nav-link.active {
+        background-color: #00A36C !important;
+        color: white !important;
+        font-weight: 600 !important;
+        box-shadow: 0 2px 8px rgba(0, 163, 108, 0.3) !important;
+    }
+    
+    /* Hover de Enlaces */
+    .sidebar-dark-primary .nav-sidebar .nav-link:hover:not(.active),
+    .main-sidebar .nav-sidebar .nav-link:hover:not(.active) {
+        background-color: rgba(0, 163, 108, 0.15) !important;
+        color: white !important;
+        transform: translateX(4px) !important;
+    }
+    
+    /* Iconos del Sidebar */
+    .sidebar-dark-primary .nav-sidebar .nav-link .nav-icon,
+    .main-sidebar .nav-sidebar .nav-link .nav-icon {
+        color: rgba(255, 255, 255, 0.7) !important;
+        margin-right: 0.75rem !important;
+    }
+    
+    .sidebar-dark-primary .nav-sidebar .nav-link.active .nav-icon,
+    .sidebar-dark-primary .nav-sidebar .nav-link:hover .nav-icon,
+    .main-sidebar .nav-sidebar .nav-link.active .nav-icon,
+    .main-sidebar .nav-sidebar .nav-link:hover .nav-icon {
+        color: white !important;
+    }
+    
+    /* Iconos con clases de color (text-primary, text-success) */
+    .sidebar-dark-primary .nav-sidebar .nav-link .text-primary,
+    .main-sidebar .nav-sidebar .nav-link .text-primary {
+        color: #00A36C !important;
+    }
+    
+    .sidebar-dark-primary .nav-sidebar .nav-link.active .text-primary,
+    .main-sidebar .nav-sidebar .nav-link.active .text-primary {
+        color: white !important;
+    }
+    
+    .sidebar-dark-primary .nav-sidebar .nav-link .text-success,
+    .main-sidebar .nav-sidebar .nav-link .text-success {
+        color: #00A36C !important;
+    }
+    
+    .sidebar-dark-primary .nav-sidebar .nav-link.active .text-success,
+    .main-sidebar .nav-sidebar .nav-link.active .text-success {
+        color: white !important;
+    }
+    
+    /* Submenús (Treeview) */
+    .sidebar-dark-primary .nav-treeview,
+    .main-sidebar .nav-treeview {
+        background-color: rgba(0, 0, 0, 0.1) !important;
+        border-radius: 8px !important;
+        margin: 0.5rem 0 !important;
+        padding: 0.5rem 0 !important;
+    }
+    
+    .sidebar-dark-primary .nav-treeview .nav-link,
+    .main-sidebar .nav-treeview .nav-link {
+        padding-left: 2.5rem !important;
+        font-size: 0.9rem !important;
+    }
+    
+    .sidebar-dark-primary .nav-treeview .nav-link.active,
+    .main-sidebar .nav-treeview .nav-link.active {
+        background-color: rgba(0, 163, 108, 0.3) !important;
+        border-left: 3px solid #00A36C !important;
+    }
+    
+    /* Headers de Sección */
+    .sidebar-dark-primary .nav-header,
+    .main-sidebar .nav-header {
+        color: rgba(255, 255, 255, 0.6) !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1px !important;
+        padding: 1rem 1rem 0.5rem 1rem !important;
+        margin-top: 1rem !important;
+    }
+    
+    /* Separador después de header */
+    .sidebar-dark-primary .nav-header + .nav-item,
+    .main-sidebar .nav-header + .nav-item {
+        margin-top: 0.5rem !important;
+    }
+    
+    /* Flecha de Treeview */
+    .sidebar-dark-primary .nav-link .right,
+    .main-sidebar .nav-link .right {
+        color: rgba(255, 255, 255, 0.6) !important;
+    }
+    
+    .sidebar-dark-primary .nav-link.active .right,
+    .sidebar-dark-primary .nav-link:hover .right,
+    .main-sidebar .nav-link.active .right,
+    .main-sidebar .nav-link:hover .right {
+        color: white !important;
+    }
+    
+    /* Enlace de Cerrar Sesión */
+    .sidebar-dark-primary .nav-link.text-danger,
+    .main-sidebar .nav-link.text-danger {
+        color: rgba(220, 53, 69, 0.8) !important;
+    }
+    
+    .sidebar-dark-primary .nav-link.text-danger:hover,
+    .main-sidebar .nav-link.text-danger:hover {
+        background-color: rgba(220, 53, 69, 0.2) !important;
+        color: #dc3545 !important;
+    }
+    
+    /* Override de AdminLTE para asegurar colores */
+    .sidebar-dark-primary.nav-sidebar .nav-item .nav-link {
+        color: rgba(255, 255, 255, 0.85) !important;
+    }
+    
+    /* Asegurar que el sidebar tenga el fondo correcto */
+    body .main-sidebar.sidebar-dark-primary {
+        background-color: #0C2B44 !important;
+    }
+    
+    /* Menu abierto (has-treeview menu-open) */
+    .sidebar-dark-primary .nav-item.menu-open > .nav-link,
+    .main-sidebar .nav-item.menu-open > .nav-link {
+        background-color: rgba(0, 163, 108, 0.1) !important;
+        color: white !important;
+    }
+    
+    /* Scrollbar del Sidebar */
+    .main-sidebar::-webkit-scrollbar {
+        width: 6px !important;
+    }
+    
+    .main-sidebar::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .main-sidebar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2) !important;
+        border-radius: 3px !important;
+    }
+    
+    .main-sidebar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3) !important;
+    }
+
+    /* Navbar Superior - Nueva Paleta */
+    .main-header {
+        background-color: white !important;
+        border-bottom: 2px solid var(--brand-gris-suave) !important;
+        box-shadow: 0 2px 4px rgba(12, 43, 68, 0.08) !important;
+    }
+    
+    .navbar-primary,
+    .main-header .navbar {
+        background-color: white !important;
+        border-bottom: 2px solid var(--brand-gris-suave) !important;
+    }
+    
+    .navbar-primary .navbar-nav .nav-link,
+    .main-header .navbar-nav .nav-link {
+        color: var(--brand-gris-oscuro) !important;
+        font-weight: 500 !important;
+        padding: 0.75rem 1rem !important;
+        border-radius: 8px !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .navbar-primary .navbar-nav .nav-link:hover,
+    .main-header .navbar-nav .nav-link:hover {
+        color: var(--brand-primario) !important;
+        background-color: rgba(12, 43, 68, 0.05) !important;
+    }
+    
+    /* Icono de Notificaciones en Navbar */
+    .main-header #notificacionesNavItem .nav-link {
+        color: var(--brand-gris-oscuro) !important;
+    }
+    
+    .main-header #notificacionesNavItem .nav-link:hover {
+        color: var(--brand-primario) !important;
+        background-color: rgba(12, 43, 68, 0.05) !important;
+    }
+    
+    .main-header #notificacionesNavItem .nav-link i {
+        color: var(--brand-gris-oscuro) !important;
+    }
+    
+    .main-header #notificacionesNavItem .nav-link:hover i {
+        color: var(--brand-primario) !important;
+    }
+    
+    /* Badge de Notificaciones */
+    .main-header #contadorNotificaciones {
+        background-color: #dc3545 !important;
+        color: white !important;
+    }
+
+    /* Header de contenido fijo (sticky) para todas las pantallas ONG */
+    .content-header {
+        position: sticky;
+        top: 56px; /* altura aproximada del navbar */
+        z-index: 1029;
+        background-color: #f5f5f5;
+        padding-top: 0.75rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .content-header h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--brand-primario);
+        margin: 0;
+    }
+
+    .content-header h1 i {
+        color: var(--brand-acento);
+    }
+    
+    /* User Menu en Navbar */
+    .main-header .user-menu {
+        color: var(--brand-gris-oscuro) !important;
+    }
+    
+    .main-header .user-menu:hover {
+        color: var(--brand-primario) !important;
+        background-color: rgba(12, 43, 68, 0.05) !important;
+    }
+
+    /* Header de Contenido */
+    .content-header h1 {
+        color: var(--brand-primario) !important;
+        font-weight: 700 !important;
+    }
+    
+    .content-header h1 i {
+        color: var(--brand-acento) !important;
+    }
+
+    /* Cards - Mejor Espaciado */
+    .card {
+        border-radius: 12px !important;
+        border: none !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+        margin-bottom: 1.5rem !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .card:hover {
+        box-shadow: 0 4px 16px rgba(12, 43, 68, 0.12) !important;
+        transform: translateY(-2px) !important;
+    }
+    
+    .card-body {
+        padding: 1.5rem !important;
+    }
+    
+    .card-header {
+        padding: 1.25rem 1.5rem !important;
+        background-color: white !important;
+        border-bottom: 1px solid var(--brand-gris-suave) !important;
+        border-radius: 12px 12px 0 0 !important;
+    }
+    
+    .card-header h3, .card-header h5 {
+        color: var(--brand-gris-oscuro) !important;
+        font-weight: 600 !important;
+        margin: 0 !important;
+    }
+
+    /* Botones */
+    .btn-primary {
+        background-color: var(--brand-primario) !important;
+        border-color: var(--brand-primario) !important;
+        border-radius: 8px !important;
+        padding: 0.5rem 1.25rem !important;
+        font-weight: 500 !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .btn-primary:hover {
+        background-color: #0a2338 !important;
+        border-color: #0a2338 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 12px rgba(12, 43, 68, 0.3) !important;
+    }
+    
+    .btn-success {
+        background-color: var(--brand-acento) !important;
+        border-color: var(--brand-acento) !important;
+        border-radius: 8px !important;
+    }
+    
+    .btn-success:hover {
+        background-color: #008a5a !important;
+        border-color: #008a5a !important;
+    }
+    
+    .btn-outline-primary {
+        color: var(--brand-primario) !important;
+        border-color: var(--brand-primario) !important;
+        border-radius: 8px !important;
+    }
+    
+    .btn-outline-primary:hover {
+        background-color: var(--brand-primario) !important;
+        color: white !important;
+    }
+
+    /* Badges */
+    .badge-primary {
+        background-color: var(--brand-primario) !important;
+    }
+    
+    .badge-success {
+        background-color: var(--brand-acento) !important;
+    }
+
+    /* Tabs */
+    .nav-tabs {
+        border-bottom: 2px solid var(--brand-gris-suave) !important;
+    }
+    
+    .nav-tabs .nav-link {
+        border: none !important;
+        border-bottom: 3px solid transparent !important;
+        color: var(--brand-gris-oscuro) !important;
+        font-weight: 500 !important;
+        padding: 0.75rem 1.25rem !important;
+        margin-right: 0.5rem !important;
+    }
+    
+    .nav-tabs .nav-link:hover {
+        border-bottom-color: var(--brand-gris-suave) !important;
+        color: var(--brand-primario) !important;
+    }
+    
+    .nav-tabs .nav-link.active {
+        border-bottom-color: var(--brand-acento) !important;
+        color: var(--brand-primario) !important;
+        background: transparent !important;
+        font-weight: 600 !important;
+    }
+
+    /* Tablas */
+    .table {
+        border-radius: 8px !important;
+        overflow: hidden !important;
+    }
+    
+    .table thead th {
+        background-color: var(--brand-gris-suave) !important;
+        color: var(--brand-gris-oscuro) !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        font-size: 0.75rem !important;
+        letter-spacing: 0.5px !important;
+        padding: 1rem !important;
+        border: none !important;
+    }
+    
+    .table tbody td {
+        padding: 1rem !important;
+        vertical-align: middle !important;
+        border-top: 1px solid var(--brand-gris-suave) !important;
+    }
+    
+    .table tbody tr:hover {
+        background-color: rgba(12, 43, 68, 0.02) !important;
+    }
+
+    /* Iconos - Más Visibles */
+    .nav-icon, .fas, .far, .fab {
+        font-size: 1.1rem !important;
+        width: 20px !important;
+        text-align: center !important;
+    }
+    
+    .card-body i.fa-3x {
+        opacity: 0.15 !important;
+    }
+
+    /* Contenedores con Mejor Espaciado */
+    .container-fluid {
+        padding: 1.5rem !important;
+    }
+    
+    .row {
+        margin-left: -0.75rem !important;
+        margin-right: -0.75rem !important;
+    }
+    
+    .row > [class*="col-"] {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+
+    /* Formularios */
+    .form-control {
+        border-radius: 8px !important;
+        border: 1px solid #dee2e6 !important;
+        padding: 0.625rem 1rem !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .form-control:focus {
+        border-color: var(--brand-acento) !important;
+        box-shadow: 0 0 0 0.2rem rgba(0, 163, 108, 0.15) !important;
+    }
+
+    /* Espaciado General Mejorado */
+    .mb-4 {
+        margin-bottom: 2rem !important;
+    }
+    
+    .mt-4 {
+        margin-top: 2rem !important;
+    }
+    
+    .p-4 {
+        padding: 2rem !important;
+    }
+
+    /* Gradientes con Nueva Paleta */
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, var(--brand-primario) 0%, #0a2338 100%) !important;
+    }
+    
+    .bg-gradient-success {
+        background: linear-gradient(135deg, var(--brand-acento) 0%, #008a5a 100%) !important;
+    }
+    
+    .bg-gradient-primary-accent {
+        background: linear-gradient(135deg, var(--brand-primario) 0%, var(--brand-acento) 100%) !important;
+    }
+
+    /* Notificaciones */
+    #notificacionesIcono:hover {
+        background-color: rgba(12, 43, 68, 0.1) !important;
+        color: var(--brand-primario) !important;
+    }
+    
+    #contadorNotificaciones {
+        background-color: var(--brand-acento) !important;
+    }
     /* Animación de pulso para notificaciones nuevas */
     @keyframes pulse {
         0% {
@@ -528,7 +1054,7 @@ window.addEventListener('load', () => {
             link.style.cssText = 'display: flex !important; align-items: center; justify-content: center; padding: 0.5rem 0.75rem !important; min-width: 45px; color: #6c757d !important;';
             
             const bellIcon = document.createElement('i');
-            bellIcon.className = 'fas fa-bell';
+            bellIcon.className = 'far fa-bell';
             bellIcon.style.cssText = 'font-size: 1.25rem !important; display: block !important;';
             
             const badge = document.createElement('span');

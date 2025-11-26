@@ -67,6 +67,26 @@ class Evento extends Model
         );
     }
 
+    // Empresas participantes (colaboradoras)
+    public function empresasParticipantes()
+    {
+        return $this->hasMany(EventoEmpresaParticipacion::class, 'evento_id');
+    }
+
+    // Empresas colaboradoras (relación many-to-many)
+    public function empresas()
+    {
+        return $this->belongsToMany(
+            Empresa::class,
+            'evento_empresas_participantes',
+            'evento_id',
+            'empresa_id',
+            'id',
+            'user_id'
+        )->withPivot(['estado', 'asistio', 'tipo_colaboracion', 'descripcion_colaboracion', 'activo'])
+          ->wherePivot('activo', true);
+    }
+
     /**
      * Calcular el estado dinámico del evento basado en fechas
      * Retorna: 'proximo', 'activo', 'finalizado' o el estado guardado si es 'borrador' o 'cancelado'
