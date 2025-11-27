@@ -172,7 +172,7 @@ async function cargarEventosExterno() {
 
             // Estilos para eventos inscritos
             const cardStyleInscrito = estaInscrito 
-                ? 'background: #f8f9fa; border: 2px solid #28a745 !important;' 
+                ? 'background: #f8f9fa; border: 2px solid #00A36C !important;' 
                 : '';
             const cardClassInscrito = estaInscrito ? 'evento-inscrito' : '';
 
@@ -194,8 +194,8 @@ async function cargarEventosExterno() {
                                 ${estadoBadge}
                             </div>
                            </div>`
-                        : `<div class="position-relative" style="height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-calendar fa-4x text-white" style="opacity: 0.7;"></i>
+                        : `<div class="position-relative" style="height: 200px; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); display: flex; align-items: center; justify-content: center;">
+                            <i class="far fa-calendar fa-4x text-white" style="opacity: 0.7;"></i>
                             <div class="position-absolute" style="top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: flex-start;">
                                 <div>
                                     <span class="badge" style="background: rgba(74, 144, 226, 0.9); color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;">Evento</span>
@@ -220,8 +220,8 @@ async function cargarEventosExterno() {
                             <span>${fechaInicio}</span>
                         </div>
                         ${e.tipo_evento ? `<span class="badge badge-info mb-3" style="font-size: 0.75rem;">${e.tipo_evento}</span>` : ''}
-                        <a href="/externo/eventos/${e.id}/detalle" class="btn btn-sm btn-block mt-auto" style="background: ${estaInscrito ? '#28a745' : '#667eea'}; color: white; border: none; border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500; transition: all 0.2s;">
-                            ${estaInscrito ? '<i class="fas fa-eye mr-1"></i> Ver Detalles' : 'Ver Detalles'}
+                        <a href="/externo/eventos/${e.id}/detalle" class="btn btn-sm btn-block mt-auto" style="background: ${estaInscrito ? 'linear-gradient(135deg, #00A36C 0%, #008a5a 100%)' : 'linear-gradient(135deg, #0C2B44 0%, #00A36C 100%)'}; color: white; border: none; border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500; transition: all 0.2s;">
+                            ${estaInscrito ? '<i class="far fa-eye mr-1"></i> Ver Detalles' : '<i class="far fa-eye mr-1"></i> Ver Detalles'}
                         </a>
                     </div>
                 </div>
@@ -232,9 +232,9 @@ async function cargarEventosExterno() {
             card.onmouseenter = function() {
                 this.style.transform = 'translateY(-4px)';
                 if (estaInscrito) {
-                    this.style.boxShadow = '0 8px 16px rgba(40, 167, 69, 0.3)';
+                    this.style.boxShadow = '0 8px 16px rgba(0, 163, 108, 0.3)';
                 } else {
-                    this.style.boxShadow = '0 8px 16px rgba(0,0,0,0.1)';
+                    this.style.boxShadow = '0 8px 16px rgba(12, 43, 68, 0.15)';
                 }
             };
             card.onmouseleave = function() {
@@ -370,7 +370,7 @@ async function cargarMegaEventos() {
             cardDiv.className = 'col-md-4 mb-4';
             
             cardDiv.innerHTML = `
-                <div class="card border-0 shadow-sm h-100 ${estaParticipando ? 'evento-inscrito' : ''}" style="border-radius: 12px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; ${estaParticipando ? 'background: #f8f9fa; border: 2px solid #28a745 !important;' : ''}">
+                <div class="card border-0 shadow-sm h-100 ${estaParticipando ? 'evento-inscrito' : ''}" style="border-radius: 12px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; ${estaParticipando ? 'background: #f8f9fa; border: 2px solid #00A36C !important;' : ''}">
                     ${imagenPrincipal 
                         ? `<div class="position-relative" style="height: 200px; overflow: hidden; background: #f8f9fa;">
                             <img src="${imagenPrincipal}" alt="${mega.titulo}" class="w-100 h-100" style="object-fit: cover;" 
@@ -413,8 +413,8 @@ async function cargarMegaEventos() {
                             ? `<button class="btn btn-sm btn-block btn-success mt-auto" disabled style="border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500;">
                                 <i class="fas fa-check-circle mr-1"></i> Ya estás participando
                             </button>`
-                            : `<button class="btn btn-sm btn-block btn-primary mt-auto" onclick="participarMegaEvento(${mega.mega_evento_id})" style="border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500; border: none;">
-                                <i class="fas fa-user-plus mr-1"></i> Participar
+                            : `<button class="btn btn-sm btn-block mt-auto" onclick="participarMegaEvento(${mega.mega_evento_id})" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500; border: none;">
+                                <i class="far fa-user-plus mr-1"></i> Participar
                             </button>`
                         }
                     </div>
@@ -425,8 +425,8 @@ async function cargarMegaEventos() {
             card.onmouseenter = function() {
                 this.style.transform = 'translateY(-4px)';
                 this.style.boxShadow = estaParticipando 
-                    ? '0 8px 16px rgba(40, 167, 69, 0.3)' 
-                    : '0 8px 16px rgba(0,0,0,0.1)';
+                    ? '0 8px 16px rgba(0, 163, 108, 0.3)' 
+                    : '0 8px 16px rgba(12, 43, 68, 0.15)';
             };
             card.onmouseleave = function() {
                 this.style.transform = 'translateY(0)';

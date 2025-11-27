@@ -80,12 +80,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       msg.textContent = '✅ ONG registrada con éxito';
-      msg.className = 'text-sm text-green-700 font-medium';
+      msg.className = 'text-sm text-green-700';
       setTimeout(() => (window.location.href = '/login'), 1500);
     } catch (err) {
       console.error(err);
       msg.textContent = `❌ ${err.message}`;
-      msg.className = 'text-sm text-red-600 font-medium';
+      msg.className = 'text-sm text-red-600';
     }
   });
 });

@@ -4,17 +4,46 @@
 
 @section('content_body')
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="text-primary"><i class="fas fa-star"></i> Mega Eventos Disponibles</h4>
+<!-- Header con diseño mejorado - Paleta de colores -->
+<div class="card mb-4 shadow-sm" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border: none; border-radius: 15px; overflow: hidden;">
+    <div class="card-body py-4 px-4">
+        <div class="row align-items-center">
+            <div class="col-md-10">
+                <div class="d-flex align-items-center">
+                    <div class="bg-white rounded-circle p-3 mr-3 shadow-sm" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                        <i class="far fa-star" style="font-size: 1.8rem; color: #00A36C;"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-white mb-1" style="font-weight: 700; font-size: 1.75rem;">
+                            Mega Eventos Disponibles
+                        </h3>
+                        <p class="text-white mb-0" style="opacity: 0.95; font-size: 1rem;">
+                            Descubre grandes oportunidades para participar y colaborar
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 text-right d-none d-md-block">
+                <i class="far fa-star" style="font-size: 4.5rem; color: rgba(255,255,255,0.15);"></i>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Filtros y Búsqueda -->
-<div class="card mb-4 shadow-sm">
-    <div class="card-body">
+<div class="card mb-4 shadow-sm" style="border-radius: 12px; border: 1px solid #F5F5F5;">
+    <div class="card-header bg-white border-0" style="border-radius: 12px 12px 0 0;">
+        <h5 class="mb-0" style="color: #0C2B44; font-weight: 600;">
+            <i class="far fa-sliders-h mr-2" style="color: #00A36C;"></i>Filtros de Búsqueda
+        </h5>
+    </div>
+    <div class="card-body" style="padding: 1.5rem;">
         <div class="row">
             <div class="col-md-4 mb-3 mb-md-0">
-                <label for="filtroCategoria" class="form-label"><i class="fas fa-filter mr-2"></i>Categoría</label>
-                <select id="filtroCategoria" class="form-control">
+                <label for="filtroCategoria" class="form-label font-weight-bold" style="color: #0C2B44; font-weight: 600; margin-bottom: 0.75rem;">
+                    <i class="far fa-filter mr-2" style="color: #00A36C;"></i>Categoría
+                </label>
+                <select id="filtroCategoria" class="form-control" style="border-radius: 8px; padding: 0.75rem; border: 1px solid #e9ecef;">
                     <option value="todos">Todas las categorías</option>
                     <option value="social">Social</option>
                     <option value="cultural">Cultural</option>
@@ -26,12 +55,14 @@
                 </select>
             </div>
             <div class="col-md-8">
-                <label for="buscador" class="form-label"><i class="fas fa-search mr-2"></i>Buscar</label>
+                <label for="buscador" class="form-label font-weight-bold" style="color: #0C2B44; font-weight: 600; margin-bottom: 0.75rem;">
+                    <i class="far fa-search mr-2" style="color: #00A36C;"></i>Buscar
+                </label>
                 <div class="input-group">
-                    <input type="text" id="buscador" class="form-control" placeholder="Buscar por título o descripción...">
+                    <input type="text" id="buscador" class="form-control" placeholder="Buscar por título o descripción..." style="border-radius: 8px 0 0 8px; padding: 0.75rem; border: 1px solid #e9ecef; border-right: none;">
                     <div class="input-group-append">
-                        <button class="btn btn-outline-secondary" type="button" id="btnLimpiar">
-                            <i class="fas fa-times"></i>
+                        <button class="btn btn-outline-secondary" type="button" id="btnLimpiar" style="border-radius: 0 8px 8px 0; border: 1px solid #e9ecef; border-left: none; padding: 0.75rem 1rem;">
+                            <i class="far fa-times-circle"></i>
                         </button>
                     </div>
                 </div>
@@ -41,15 +72,21 @@
 </div>
 
 <div class="row" id="listaMegaEventos">
-    <p class="text-muted px-3">Cargando mega eventos...</p>
+    <div class="col-12 text-center py-5">
+        <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; color: #00A36C;">
+            <span class="sr-only">Cargando...</span>
+        </div>
+        <p class="text-muted mt-3">Cargando mega eventos disponibles...</p>
+    </div>
 </div>
 
 @stop
 
-@section('css')
+@push('css')
 <style>
     .mega-evento-inscrito {
         position: relative;
+        border-radius: 12px;
     }
     
     .mega-evento-inscrito::before {
@@ -58,22 +95,47 @@
         top: 0;
         left: 0;
         right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, #ffc107 0%, #ff9800 100%);
+        height: 5px;
+        background: linear-gradient(90deg, #00A36C 0%, #008a5a 100%);
         z-index: 1;
     }
     
     .mega-evento-inscrito .card-body {
-        background: linear-gradient(to bottom, rgba(255, 193, 7, 0.05) 0%, rgba(248, 249, 250, 1) 10%);
+        background: linear-gradient(to bottom, rgba(0, 163, 108, 0.05) 0%, rgba(248, 249, 250, 1) 15%);
     }
     
     .mega-evento-inscrito:hover {
-        box-shadow: 0 8px 16px rgba(255, 193, 7, 0.2) !important;
+        box-shadow: 0 8px 16px rgba(0, 163, 108, 0.3) !important;
+        transform: translateY(-3px);
+        transition: all 0.3s ease;
+    }
+
+    /* Mejoras para las tarjetas */
+    .card {
+        transition: all 0.3s ease;
+        border-radius: 12px;
+        border: 1px solid #F5F5F5;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(12, 43, 68, 0.15) !important;
+    }
+
+    /* Estilos para los inputs */
+    .form-control:focus {
+        border-color: #00A36C;
+        box-shadow: 0 0 0 0.2rem rgba(0, 163, 108, 0.15);
+    }
+
+    select.form-control:focus {
+        border-color: #00A36C;
+        box-shadow: 0 0 0 0.2rem rgba(0, 163, 108, 0.15);
     }
 </style>
-@endsection
+@endpush
 
-@section('js')
+@push('js')
 <script src="{{ asset('assets/js/config.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
@@ -94,7 +156,7 @@ async function cargarMegaEventos() {
         return;
     }
 
-    cont.innerHTML = '<div class="col-12 text-center py-3"><div class="spinner-border text-primary" role="status"><span class="sr-only">Cargando...</span></div><p class="mt-2 text-muted">Cargando mega eventos...</p></div>';
+    cont.innerHTML = '<div class="col-12 text-center py-3"><div class="spinner-border" role="status" style="width: 3rem; height: 3rem; color: #00A36C;"><span class="sr-only">Cargando...</span></div><p class="mt-2 text-muted">Cargando mega eventos...</p></div>';
 
     try {
         const params = new URLSearchParams();
@@ -185,24 +247,24 @@ async function cargarMegaEventos() {
             cardDiv.className = 'col-md-4 mb-4';
             
             cardDiv.innerHTML = `
-                <div class="card border-0 shadow-sm h-100 ${estaParticipando ? 'mega-evento-inscrito' : ''}" style="border-radius: 12px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; ${estaParticipando ? 'background: #f8f9fa; border: 2px solid #ffc107 !important;' : ''}">
+                <div class="card border-0 shadow-sm h-100 ${estaParticipando ? 'mega-evento-inscrito' : ''}" style="border-radius: 12px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; ${estaParticipando ? 'background: #f8f9fa; border: 2px solid #00A36C !important;' : ''}">
                     ${imagenPrincipal 
                         ? `<div class="position-relative" style="height: 200px; overflow: hidden; background: #f8f9fa;">
                             <img src="${imagenPrincipal}" alt="${mega.titulo}" class="w-100 h-100" style="object-fit: cover;" 
                                  onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'200\\'%3E%3Crect fill=\\'%23f8f9fa\\' width=\\'400\\' height=\\'200\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\' fill=\\'%23adb5bd\\' font-family=\\'Arial\\' font-size=\\'14\\'%3EImagen no disponible%3C/text%3E%3C/svg%3E'; this.style.objectFit='contain'; this.style.padding='20px';">
                             <div class="position-absolute" style="top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: flex-start;">
                                 <div>
-                                    <span class="badge" style="background: rgba(255, 193, 7, 0.9); color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;"><i class="fas fa-star mr-1"></i>Mega Evento</span>
-                                    ${estaParticipando ? '<span class="badge badge-success ml-2" style="font-size: 0.7rem; padding: 0.3em 0.6em; border-radius: 15px;"><i class="fas fa-check-circle mr-1"></i>Participando</span>' : ''}
+                                    <span class="badge" style="background: rgba(12, 43, 68, 0.9); color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;"><i class="far fa-star mr-1"></i>Mega Evento</span>
+                                    ${estaParticipando ? '<span class="badge badge-success ml-2" style="background: #00A36C; font-size: 0.7rem; padding: 0.3em 0.6em; border-radius: 15px;"><i class="far fa-check-circle mr-1"></i>Participando</span>' : ''}
                                 </div>
                             </div>
                            </div>`
-                        : `<div class="position-relative" style="height: 200px; background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-star fa-4x text-white" style="opacity: 0.7;"></i>
+                        : `<div class="position-relative" style="height: 200px; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); display: flex; align-items: center; justify-content: center;">
+                            <i class="far fa-star fa-4x text-white" style="opacity: 0.7;"></i>
                             <div class="position-absolute" style="top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: flex-start;">
                                 <div>
-                                    <span class="badge" style="background: rgba(255, 193, 7, 0.9); color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;"><i class="fas fa-star mr-1"></i>Mega Evento</span>
-                                    ${estaParticipando ? '<span class="badge badge-success ml-2" style="font-size: 0.7rem; padding: 0.3em 0.6em; border-radius: 15px;"><i class="fas fa-check-circle mr-1"></i>Participando</span>' : ''}
+                                    <span class="badge" style="background: rgba(12, 43, 68, 0.9); color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;"><i class="far fa-star mr-1"></i>Mega Evento</span>
+                                    ${estaParticipando ? '<span class="badge badge-success ml-2" style="background: #00A36C; font-size: 0.7rem; padding: 0.3em 0.6em; border-radius: 15px;"><i class="far fa-check-circle mr-1"></i>Participando</span>' : ''}
                                 </div>
                             </div>
                            </div>`
@@ -233,8 +295,8 @@ async function cargarMegaEventos() {
                             } else if (currentPath.includes('/empresa/mega-eventos')) {
                                 basePath = '/empresa/mega-eventos';
                             }
-                            return `<a href="${basePath}/${mega.mega_evento_id}/detalle" class="btn btn-sm btn-block mt-auto" style="background: ${estaParticipando ? '#28a745' : '#ffc107'}; color: white; border: none; border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500; transition: all 0.2s;">
-                                ${estaParticipando ? '<i class="fas fa-eye mr-1"></i> Ver Detalles' : '<i class="fas fa-info-circle mr-1"></i> Ver Detalles'}
+                            return `<a href="${basePath}/${mega.mega_evento_id}/detalle" class="btn btn-sm btn-block mt-auto" style="background: ${estaParticipando ? 'linear-gradient(135deg, #00A36C 0%, #008a5a 100%)' : 'linear-gradient(135deg, #0C2B44 0%, #00A36C 100%)'}; color: white; border: none; border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500; transition: all 0.2s;">
+                                ${estaParticipando ? '<i class="far fa-eye mr-1"></i> Ver Detalles' : '<i class="far fa-info-circle mr-1"></i> Ver Detalles'}
                             </a>`;
                         })()}
                     </div>
@@ -245,8 +307,8 @@ async function cargarMegaEventos() {
             card.onmouseenter = function() {
                 this.style.transform = 'translateY(-4px)';
                 this.style.boxShadow = estaParticipando 
-                    ? '0 8px 16px rgba(255, 193, 7, 0.3)' 
-                    : '0 8px 16px rgba(0,0,0,0.1)';
+                    ? '0 8px 16px rgba(0, 163, 108, 0.3)' 
+                    : '0 8px 16px rgba(12, 43, 68, 0.15)';
             };
             card.onmouseleave = function() {
                 this.style.transform = 'translateY(0)';
@@ -293,6 +355,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 });
 </script>
-@stop
+@endpush
 
 

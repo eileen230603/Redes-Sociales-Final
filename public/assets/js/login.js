@@ -39,6 +39,8 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   localStorage.setItem("id_usuario", data.user.id_usuario);
   localStorage.setItem("id_entidad", data.user.id_entidad);
   localStorage.setItem("tipo_usuario", data.user.tipo_usuario);
+  localStorage.setItem("nombre_usuario", data.user.nombre_usuario ?? "");
+  localStorage.setItem("usuario", JSON.stringify(data.user));
 
   // REDIRECCIÓN
   let ruta = "/";

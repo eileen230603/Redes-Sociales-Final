@@ -4,17 +4,66 @@
 
 @section('content_body')
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="text-primary"><i class="fas fa-hand-holding-heart"></i> Eventos Disponibles para Patrocinar</h4>
+<!-- Header con diseño mejorado - Paleta de colores -->
+<div class="card mb-4 shadow-sm" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border: none; border-radius: 15px; overflow: hidden;">
+    <div class="card-body py-4 px-4">
+        <div class="row align-items-center">
+            <div class="col-md-10">
+                <div class="d-flex align-items-center">
+                    <div class="bg-white rounded-circle p-3 mr-3 shadow-sm" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                        <i class="far fa-hand-holding-heart" style="font-size: 1.8rem; color: #00A36C;"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-white mb-1" style="font-weight: 700; font-size: 1.75rem;">
+                            Eventos Disponibles para Patrocinar
+                        </h3>
+                        <p class="text-white mb-0" style="opacity: 0.95; font-size: 1rem;">
+                            Descubre oportunidades para patrocinar y colaborar con eventos
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 text-right d-none d-md-block">
+                <i class="far fa-heart" style="font-size: 4.5rem; color: rgba(255,255,255,0.15);"></i>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="row" id="eventosContainer">
-    <p class="text-muted px-3">Cargando eventos...</p>
+    <div class="col-12 text-center py-5">
+        <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; color: #00A36C;">
+            <span class="sr-only">Cargando...</span>
+        </div>
+        <p class="text-muted mt-3">Cargando eventos disponibles...</p>
+    </div>
 </div>
 
 @stop
 
-@section('js')
+@push('css')
+<style>
+    /* Mejoras para las tarjetas de eventos */
+    .card {
+        transition: all 0.3s ease;
+        border-radius: 12px;
+        border: 1px solid #F5F5F5;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(12, 43, 68, 0.15) !important;
+    }
+
+    /* Estilos para los inputs */
+    .form-control:focus {
+        border-color: #00A36C;
+        box-shadow: 0 0 0 0.2rem rgba(0, 163, 108, 0.15);
+    }
+</style>
+@endpush
+
+@push('js')
 <script src="{{ asset('assets/js/config.js') }}"></script>
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
@@ -27,9 +76,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log("Empresa ID:", empresaId);
 
     if (!token) {
-        cont.innerHTML = `<div class="alert alert-warning">
-            <p>Debes iniciar sesión para ver los eventos.</p>
-            <a href="/login" class="btn btn-primary">Iniciar sesión</a>
+        cont.innerHTML = `<div class="alert text-center" style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 12px; padding: 2rem;">
+            <i class="far fa-exclamation-triangle fa-3x mb-3" style="color: #ffc107;"></i>
+            <h5 style="color: #856404; font-weight: 600;">Debes iniciar sesión</h5>
+            <p class="mb-3" style="color: #856404;">Para ver los eventos disponibles necesitas iniciar sesión.</p>
+            <a href="/login" class="btn" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: none; border-radius: 8px; padding: 0.6rem 1.5rem; font-weight: 600;">
+                <i class="far fa-sign-in-alt mr-2"></i> Iniciar sesión
+            </a>
         </div>`;
         return;
     }
@@ -47,9 +100,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (!res.ok) {
             const errorData = await res.json().catch(() => ({}));
-            cont.innerHTML = `<div class="alert alert-danger">
-                <p>Error al cargar eventos (${res.status})</p>
-                <small>${errorData.error || 'Error del servidor'}</small>
+            cont.innerHTML = `<div class="alert text-center" style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 12px; padding: 2rem;">
+                <i class="far fa-exclamation-circle fa-3x mb-3" style="color: #dc3545;"></i>
+                <h5 style="color: #721c24; font-weight: 600;">Error al cargar eventos (${res.status})</h5>
+                <p class="mb-0" style="color: #721c24;">${errorData.error || 'Error del servidor'}</p>
             </div>`;
             return;
         }
@@ -58,8 +112,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.log("Datos recibidos:", data);
 
         if (!data.success) {
-            cont.innerHTML = `<div class="alert alert-danger">
-                <p>Error: ${data.error || 'Error desconocido'}</p>
+            cont.innerHTML = `<div class="alert text-center" style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 12px; padding: 2rem;">
+                <i class="far fa-exclamation-circle fa-3x mb-3" style="color: #dc3545;"></i>
+                <h5 style="color: #721c24; font-weight: 600;">Error</h5>
+                <p class="mb-0" style="color: #721c24;">${data.error || 'Error desconocido'}</p>
             </div>`;
             return;
         }
@@ -95,9 +151,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.log("Empresa ID:", empresaId);
 
         if (eventosDisponibles.length === 0) {
-            cont.innerHTML = `<div class="alert alert-info">
-                <p class="mb-0">No hay eventos disponibles para patrocinar en este momento.</p>
-                <small>Todos los eventos publicados ya tienen tu patrocinio.</small>
+            cont.innerHTML = `<div class="alert text-center" style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px; padding: 3rem;">
+                <i class="far fa-info-circle fa-3x mb-3" style="color: #00A36C;"></i>
+                <h5 style="color: #0C2B44; font-weight: 600;">No hay eventos disponibles para patrocinar</h5>
+                <p class="mb-0" style="color: #6c757d;">Todos los eventos publicados ya tienen tu patrocinio.</p>
             </div>`;
             return;
         }
@@ -112,6 +169,41 @@ document.addEventListener("DOMContentLoaded", async () => {
                 hour: '2-digit',
                 minute: '2-digit'
             }) : 'Fecha no especificada';
+
+            // Formatear fecha límite de inscripción
+            let fechaLimiteHTML = '';
+            if (e.fecha_limite_inscripcion) {
+                const fechaLimite = new Date(e.fecha_limite_inscripcion);
+                const fechaFormateada = fechaLimite.toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                const ahora = new Date();
+                const diasRestantes = Math.ceil((fechaLimite - ahora) / (1000 * 60 * 60 * 24));
+                
+                fechaLimiteHTML = `
+                    <div class="mb-3 p-3" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border-radius: 10px; color: white;">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="far fa-calendar-times mr-2" style="font-size: 1.1rem; opacity: 0.9;"></i>
+                            <span style="font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Cierre de Inscripción</span>
+                        </div>
+                        <div style="font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem;">${fechaFormateada}</div>
+                        ${diasRestantes >= 0 
+                            ? `<div style="font-size: 0.8rem; opacity: 0.9;">
+                                <i class="far fa-clock mr-1"></i>
+                                ${diasRestantes === 0 ? 'Último día' : diasRestantes === 1 ? '1 día restante' : `${diasRestantes} días restantes`}
+                               </div>`
+                            : `<div style="font-size: 0.8rem; opacity: 0.9; color: #ffc107;">
+                                <i class="far fa-exclamation-triangle mr-1"></i>
+                                Inscripción cerrada
+                               </div>`
+                        }
+                    </div>
+                `;
+            }
 
             // Procesar imágenes
             let imagenes = [];
@@ -131,21 +223,39 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             const imagenPrincipal = imagenes.length > 0 ? getImageUrl(imagenes[0]) : null;
             const imagenHTML = imagenPrincipal 
-                ? `<img src="${imagenPrincipal}" class="card-img-top" alt="${e.titulo}" style="height: 200px; object-fit: cover;" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'card-img-top bg-light d-flex align-items-center justify-content-center\\' style=\\'height: 200px;\\'><i class=\\'fas fa-image fa-3x text-muted\\'></i></div>';">`
-                : `<div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;"><i class="fas fa-image fa-3x text-muted"></i></div>`;
+                ? `<div class="position-relative" style="height: 200px; overflow: hidden; background: #f8f9fa;">
+                    <img src="${imagenPrincipal}" alt="${e.titulo}" class="w-100 h-100" style="object-fit: cover;" 
+                         onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'200\\'%3E%3Crect fill=\\'%23f8f9fa\\' width=\\'400\\' height=\\'200\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\' fill=\\'%23adb5bd\\' font-family=\\'Arial\\' font-size=\\'14\\'%3EImagen no disponible%3C/text%3E%3C/svg%3E'; this.style.objectFit='contain'; this.style.padding='20px';">
+                    <div class="position-absolute" style="top: 12px; left: 12px;">
+                        <span class="badge" style="background: rgba(12, 43, 68, 0.9); color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;">Evento</span>
+                    </div>
+                   </div>`
+                : `<div class="position-relative" style="height: 200px; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); display: flex; align-items: center; justify-content: center;">
+                    <i class="far fa-calendar fa-4x text-white" style="opacity: 0.7;"></i>
+                    <div class="position-absolute" style="top: 12px; left: 12px;">
+                        <span class="badge" style="background: rgba(12, 43, 68, 0.9); color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;">Evento</span>
+                    </div>
+                   </div>`;
 
             cont.innerHTML += `
-            <div class="col-md-4 mb-3">
-                <div class="card shadow-sm h-100">
+            <div class="col-md-4 mb-4">
+                <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;">
                     ${imagenHTML}
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title text-primary">${e.titulo}</h5>
-                        <p class="card-text flex-grow-1">${e.descripcion || 'Sin descripción'}</p>
-                        ${e.ciudad ? `<p class="text-muted"><i class="fas fa-map-marker-alt"></i> ${e.ciudad}</p>` : ''}
-                        <p class="text-muted small"><i class="far fa-calendar"></i> ${fechaInicio}</p>
-                        ${e.tipo_evento ? `<span class="badge badge-info mb-2">${e.tipo_evento}</span>` : ''}
-                        <button onclick="patrocinarEvento(${e.id}, ${empresaId}, this)" class="btn btn-success btn-block mt-auto" id="btn-patrocinar-${e.id}">
-                            <i class="fas fa-hand-holding-heart"></i> Patrocinar
+                    <div class="card-body p-4 d-flex flex-column">
+                        <h5 class="mb-2" style="font-size: 1.1rem; font-weight: 600; color: #0C2B44;">${e.titulo || 'Sin título'}</h5>
+                        <p class="text-muted mb-3 flex-grow-1" style="font-size: 0.9rem; line-height: 1.5; color: #6c757d; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                            ${e.descripcion || 'Sin descripción'}
+                        </p>
+                        ${e.ciudad ? `<p class="text-muted mb-2" style="font-size: 0.85rem;"><i class="far fa-map-marker-alt mr-1" style="color: #00A36C;"></i> ${e.ciudad}</p>` : ''}
+                        <div class="mb-3 d-flex align-items-center" style="color: #6c757d; font-size: 0.85rem;">
+                            <i class="far fa-calendar-alt mr-2" style="color: #00A36C;"></i>
+                            <span>${fechaInicio}</span>
+                        </div>
+                        ${fechaLimiteHTML}
+                        ${e.tipo_evento ? `<span class="badge mb-2" style="font-size: 0.75rem; background: #0C2B44; color: white; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;">${e.tipo_evento}</span>` : ''}
+                        ${e.ong && e.ong.nombre_ong ? `<p class="text-muted mb-2" style="font-size: 0.85rem;"><i class="far fa-building mr-1" style="color: #00A36C;"></i> Organizado por: <strong style="color: #0C2B44;">${e.ong.nombre_ong}</strong></p>` : ''}
+                        <button onclick="patrocinarEvento(${e.id}, ${empresaId}, this)" class="btn btn-block mt-auto" id="btn-patrocinar-${e.id}" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: none; border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500; transition: all 0.2s;">
+                            <i class="far fa-hand-holding-heart mr-2"></i> Patrocinar
                         </button>
                     </div>
                 </div>
@@ -154,9 +264,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     } catch (error) {
         console.error("Error al cargar eventos:", error);
-        cont.innerHTML = `<div class="alert alert-danger">
-            <p>Error de conexión al cargar eventos.</p>
-            <small>${error.message}</small>
+        cont.innerHTML = `<div class="alert text-center" style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 12px; padding: 2rem;">
+            <i class="far fa-exclamation-circle fa-3x mb-3" style="color: #dc3545;"></i>
+            <h5 style="color: #721c24; font-weight: 600;">Error de conexión</h5>
+            <p class="mb-0" style="color: #721c24;">Error al cargar eventos.</p>
+            <small class="text-muted">${error.message}</small>
         </div>`;
     }
 });
@@ -171,7 +283,7 @@ async function patrocinarEvento(eventoId, empresaId, boton) {
     
     // Deshabilitar botón y mostrar loading
     boton.disabled = true;
-    boton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+    boton.innerHTML = '<i class="far fa-spinner fa-spin mr-2"></i> Procesando...';
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/eventos/${eventoId}/patrocinar`, {
@@ -197,17 +309,18 @@ async function patrocinarEvento(eventoId, empresaId, boton) {
         }
 
         // Mostrar éxito y actualizar botón
-        boton.innerHTML = '<i class="fas fa-check-circle"></i> Patrocinando';
-        boton.classList.remove('btn-success');
-        boton.classList.add('btn-outline-success');
+        boton.innerHTML = '<i class="far fa-check-circle mr-2"></i> Patrocinando';
+        boton.style.background = '#00A36C';
+        boton.style.color = 'white';
         boton.disabled = true;
 
         // Agregar badge de confirmación
         const cardBody = boton.closest('.card-body');
         if (cardBody) {
             const badge = document.createElement('span');
-            badge.className = 'badge badge-success mb-2';
-            badge.innerHTML = '<i class="fas fa-check"></i> Patrocinador';
+            badge.className = 'badge mb-2';
+            badge.style.cssText = 'background: #00A36C; color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;';
+            badge.innerHTML = '<i class="far fa-check mr-1"></i> Patrocinador';
             cardBody.insertBefore(badge, boton);
         }
 
@@ -226,9 +339,11 @@ async function patrocinarEvento(eventoId, empresaId, boton) {
                     // Si no quedan eventos, mostrar mensaje
                     const cont = document.getElementById('eventosContainer');
                     if (cont && cont.querySelectorAll('.col-md-4').length === 0) {
-                        cont.innerHTML = `<div class="alert alert-success">
-                            <p class="mb-0">¡Excelente! Has patrocinado todos los eventos disponibles.</p>
-                            <small>Puedes ver tus eventos patrocinados en la sección "Eventos Patrocinados".</small>
+                        cont.innerHTML = `<div class="alert text-center" style="background: #d4edda; border: 1px solid #00A36C; border-radius: 12px; padding: 3rem;">
+                            <i class="far fa-check-circle fa-3x mb-3" style="color: #00A36C;"></i>
+                            <h5 style="color: #155724; font-weight: 600;">¡Excelente!</h5>
+                            <p class="mb-0" style="color: #155724;">Has patrocinado todos los eventos disponibles.</p>
+                            <small class="text-muted">Puedes ver tus eventos patrocinados en la sección "Eventos Patrocinados".</small>
                         </div>`;
                     }
                 }, 500);
@@ -243,5 +358,5 @@ async function patrocinarEvento(eventoId, empresaId, boton) {
     }
 }
 </script>
-@stop
+@endpush
 

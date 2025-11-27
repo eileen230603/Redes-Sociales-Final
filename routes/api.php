@@ -120,7 +120,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // ----------- PERFIL -----------
     Route::prefix('perfil')->group(function () {
         Route::get('/', [ProfileController::class, 'show']);
-        Route::put('/', [ProfileController::class, 'update']);
+        Route::post('/', [ProfileController::class, 'update']); // Cambiado a POST para mejor compatibilidad con FormData
+        Route::put('/', [ProfileController::class, 'update']); // Mantener PUT para compatibilidad
     });
 
     // ----------- MEGA EVENTOS -----------

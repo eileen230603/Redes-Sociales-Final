@@ -31,7 +31,7 @@ Route::view('/register-externo', 'auth.register-externo')->name('register.extern
 Route::view('/home-publica', 'home-publica')->name('home.publica');
 Route::view('/home-ong', 'home-ong')->name('home.ong');
 Route::view('/home-empresa', 'home-empresa')->name('home.empresa');
-Route::view('/home-externo', 'externo.home')->name('home.externo');
+Route::view('/home-externo', 'home-externo')->name('home.externo');
 
 // ---------------- EXTERNO: EVENTOS ----------------
 Route::prefix('externo/eventos')->group(function () {

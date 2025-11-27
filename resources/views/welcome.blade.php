@@ -717,11 +717,11 @@
                         </li>
                         <li class="flex items-center">
                             <i class="fas fa-phone mr-3 text-brand-acento"></i>
-                            <span>+57 (1) 234 5678</span>
+                            <span>+591 12345678</span>
                         </li>
                         <li class="flex items-center">
                             <i class="fas fa-map-marker-alt mr-3 text-brand-acento"></i>
-                            <span>Bogotá, Colombia</span>
+                            <span>Santa Cruz de la Sierra, Bolivia</span>
                         </li>
                     </ul>
                 </div>

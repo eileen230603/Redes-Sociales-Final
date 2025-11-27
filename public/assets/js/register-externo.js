@@ -9,8 +9,10 @@ document.addEventListener('DOMContentLoaded', () => {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    msg.textContent = 'Registrando...';
-    msg.className = 'text-sm text-blue-700';
+    msg.textContent = '⏳ Registrando...';
+    msg.className = '';
+    msg.style.background = 'rgba(255, 255, 255, 0.1)';
+    msg.style.color = 'rgba(255, 255, 255, 0.9)';
 
     const payload = {
       tipo_usuario: 'Integrante externo',
@@ -21,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
       apellidos: form.apellidos.value.trim(),
       fecha_nacimiento: form.fecha_nacimiento.value || null,
       telefono: form.telefono.value.trim() || null,
+      direccion: form.direccion.value.trim() || null,
       descripcion: form.descripcion.value.trim() || null
     };
 
@@ -43,14 +46,14 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error(data.error || 'Error al registrar usuario externo');
       }
 
-      msg.textContent = '✅ Usuario externo registrado con éxito';
-      msg.className = 'text-sm text-green-700 font-medium';
-      setTimeout(() => (window.location.href = '/login'), 1500);
+      msg.textContent = '✅ Usuario registrado con éxito. Redirigiendo...';
+      msg.className = 'success';
+      setTimeout(() => (window.location.href = '/login'), 2000);
 
     } catch (err) {
       console.error(err);
       msg.textContent = `❌ ${err.message}`;
-      msg.className = 'text-sm text-red-600 font-medium';
+      msg.className = 'error';
     }
   });
 });

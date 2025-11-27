@@ -51,19 +51,20 @@
         [
             'text' => 'Cerrar sesión',
             'url'  => '#',
-            'icon' => 'fas fa-sign-out-alt',
+            'icon' => 'far fa-sign-out-alt',
             'label_color' => 'danger',
             'attributes' => [
-                'onclick' => 'cerrarSesion(event); return false;'
+                'onclick' => 'event.preventDefault(); event.stopPropagation(); cerrarSesion(event); return false;',
+                'class' => 'logout-link'
             ],
         ],
     ]]);
 @endphp
 
 @section('content_header')
-<div class="d-flex align-items-center justify-content-between">
-    <h1 class="mb-0 text-primary">
-        <i class="fas fa-building mr-2"></i>
+<div class="d-flex align-items-center justify-content-between" style="margin-bottom: 0.5rem;">
+    <h1 class="mb-0" style="color: #0C2B44; font-weight: 700;">
+        <i class="far fa-building mr-2" style="color: #00A36C;"></i>
         @yield('page_title', 'Panel de Empresa')
     </h1>
 </div>
@@ -90,19 +91,133 @@
         </a>
     </li>
     <li class="nav-item d-none d-sm-inline-block">
-        <a href="#" onclick="cerrarSesion(event)" class="nav-link text-danger">
-            <i class="fas fa-sign-out-alt mr-1"></i> Cerrar sesión
+        <a href="#" class="nav-link text-danger logout-link" onclick="event.preventDefault(); event.stopPropagation(); cerrarSesion(event); return false;">
+            <i class="far fa-sign-out-alt mr-1"></i> Cerrar sesión
         </a>
     </li>
 @endpush
 
-@section('css')
+@push('css')
+<link rel="stylesheet" href="{{ asset('vendor/fontawesome-free/css/all.min.css') }}">
 <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/adminlte.min.css') }}">
 <style>
-    /* Estilos específicos para panel de empresa */
-    .main-sidebar {
-        background-color: #343a40 !important;
+    /* ============================================
+       NUEVA PALETA DE COLORES - AZUL MARINO Y VERDE ESMERALDA
+       ============================================ */
+    :root {
+        --brand-primario: #0C2B44;   /* Azul Marino */
+        --brand-acento: #00A36C;     /* Verde Esmeralda */
+        --brand-blanco: #FFFFFF;     /* Blanco Puro */
+        --brand-gris-oscuro: #333333;/* Gris Carbón */
+        --brand-gris-suave: #F5F5F5; /* Gris Suave */
     }
+
+    /* Sidebar - Azul Marino Oscuro con Nueva Paleta */
+    .main-sidebar,
+    .sidebar-dark-primary {
+        background-color: #0C2B44 !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    /* Brand/Logo del Sidebar */
+    .sidebar-dark-primary .brand-link,
+    .main-sidebar .brand-link,
+    .brand-link.bg-primary {
+        background-color: #0C2B44 !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        padding: 1rem 1.25rem !important;
+    }
+    
+    .sidebar-dark-primary .brand-text,
+    .main-sidebar .brand-text,
+    .brand-text {
+        color: white !important;
+        font-weight: 700 !important;
+        font-size: 1.5rem !important;
+    }
+    
+    .sidebar-dark-primary .brand-link:hover,
+    .main-sidebar .brand-link:hover,
+    .brand-link.bg-primary:hover {
+        background-color: #0a2338 !important;
+    }
+    
+    /* Logo Image */
+    .sidebar-dark-primary .brand-image,
+    .main-sidebar .brand-image,
+    .brand-image {
+        opacity: 1 !important;
+        max-width: 50px !important;
+        max-height: 50px !important;
+        object-fit: contain !important;
+    }
+    
+    /* Enlaces del Sidebar */
+    .sidebar-dark-primary .nav-sidebar .nav-link,
+    .main-sidebar .nav-sidebar .nav-link {
+        color: rgba(255, 255, 255, 0.85) !important;
+        border-radius: 8px !important;
+        margin: 0.25rem 0.5rem !important;
+        padding: 0.75rem 1rem !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        position: relative !important;
+        overflow: hidden !important;
+    }
+    
+    /* Enlaces Activos */
+    .sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link.active,
+    .sidebar-dark-primary .nav-sidebar .nav-link.active,
+    .main-sidebar .nav-sidebar > .nav-item > .nav-link.active,
+    .main-sidebar .nav-sidebar .nav-link.active {
+        background-color: #00A36C !important;
+        color: white !important;
+        font-weight: 600 !important;
+        box-shadow: 0 2px 8px rgba(0, 163, 108, 0.3) !important;
+        transform: translateX(4px) !important;
+        border-right: 3px solid rgba(255, 255, 255, 0.3) !important;
+    }
+    
+    /* Hover de Enlaces */
+    .sidebar-dark-primary .nav-sidebar .nav-link:hover:not(.active),
+    .main-sidebar .nav-sidebar .nav-link:hover:not(.active) {
+        background-color: rgba(0, 163, 108, 0.2) !important;
+        color: white !important;
+        transform: translateX(4px) !important;
+    }
+    
+    /* Iconos del Sidebar */
+    .sidebar-dark-primary .nav-sidebar .nav-link i,
+    .main-sidebar .nav-sidebar .nav-link i {
+        margin-right: 0.75rem !important;
+        width: 20px !important;
+        text-align: center !important;
+        transition: transform 0.3s ease !important;
+    }
+    
+    .sidebar-dark-primary .nav-sidebar .nav-link:hover:not(.active) i,
+    .main-sidebar .nav-sidebar .nav-link:hover:not(.active) i {
+        transform: scale(1.1) !important;
+    }
+    
+    /* Headers del Sidebar */
+    .sidebar-dark-primary .nav-header,
+    .main-sidebar .nav-header {
+        color: rgba(255, 255, 255, 0.6) !important;
+        font-weight: 600 !important;
+        font-size: 0.75rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1px !important;
+        padding: 1rem 1.25rem 0.5rem !important;
+        margin-top: 0.5rem !important;
+    }
+    
+    /* Content Header */
+    .content-header h1 {
+        color: #0C2B44 !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Estilos específicos para panel de empresa */
     
     /* Animación para el contador de notificaciones */
     @keyframes pulse {
@@ -227,9 +342,9 @@
         opacity: 1 !important;
     }
 </style>
-@stop
+@endpush
 
-@section('js')
+@push('js')
 <script src="{{ asset('vendor/adminlte/dist/js/adminlte.min.js') }}"></script>
 <script src="{{ asset('assets/js/config.js') }}"></script>
 <script>
@@ -240,10 +355,16 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Agregar listener para el botón de cerrar sesión en el sidebar
     setTimeout(() => {
-        // Buscar todos los enlaces que tengan el atributo onclick con cerrarSesion
-        const logoutLinks = document.querySelectorAll('a[onclick*="cerrarSesion"]');
+        // Buscar todos los enlaces con clase logout-link o que tengan el atributo onclick con cerrarSesion
+        const logoutLinks = document.querySelectorAll('a.logout-link, a[onclick*="cerrarSesion"]');
         logoutLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
+            // Remover listeners anteriores para evitar duplicados
+            const newLink = link.cloneNode(true);
+            link.parentNode.replaceChild(newLink, link);
+            
+            newLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
                 cerrarSesion(e);
             });
         });
@@ -252,7 +373,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const sidebarLinks = document.querySelectorAll('.sidebar a, .main-sidebar a, nav.sidebar a');
         sidebarLinks.forEach(link => {
             const text = link.textContent.trim();
-            if (text === 'Cerrar sesión' || text.includes('Cerrar sesión')) {
+            if ((text === 'Cerrar sesión' || text.includes('Cerrar sesión')) && !link.classList.contains('logout-link')) {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -505,5 +626,5 @@ setTimeout(inicializarNotificacionesEmpresa, 2000);
 // Hacer la función disponible globalmente
 window.actualizarContadorNotificacionesEmpresa = actualizarContadorNotificacionesEmpresa;
 </script>
-@stop
+@endpush
 

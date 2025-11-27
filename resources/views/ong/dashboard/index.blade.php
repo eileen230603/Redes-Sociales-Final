@@ -8,7 +8,7 @@
         <h3 class="mb-0" style="color: #0C2B44; font-weight: 700;">
             <i class="far fa-chart-line mr-2" style="color: #00A36C;"></i>Dashboard de Análisis
         </h3>
-        <button class="btn btn-outline-primary" onclick="cargarDatos()">
+        <button class="btn" onclick="cargarDatos()" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 500; transition: all 0.3s;">
             <i class="far fa-sync mr-2"></i> Actualizar
         </button>
     </div>
@@ -34,7 +34,7 @@
             <!-- Estadísticas Generales -->
             <div class="row mb-4">
                 <div class="col-md-3 mb-4">
-                    <div class="card bg-gradient-primary" style="border: none;">
+                    <div class="card" style="background: linear-gradient(135deg, #0C2B44 0%, #0a2338 100%); border: none; border-radius: 12px;">
                         <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
@@ -47,7 +47,7 @@
                     </div>
                 </div>
                 <div class="col-md-3 mb-4">
-                    <div class="card bg-gradient-success" style="border: none;">
+                    <div class="card" style="background: linear-gradient(135deg, #00A36C 0%, #008a5a 100%); border: none; border-radius: 12px;">
                         <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
@@ -60,7 +60,7 @@
                     </div>
                 </div>
                 <div class="col-md-3 mb-4">
-                    <div class="card" style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); border: none;">
+                    <div class="card" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border: none; border-radius: 12px;">
                         <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
@@ -73,7 +73,7 @@
                     </div>
                 </div>
                 <div class="col-md-3 mb-4">
-                    <div class="card" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); border: none;">
+                    <div class="card" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); border: none; border-radius: 12px;">
                         <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
@@ -90,8 +90,8 @@
             <!-- Gráficos -->
             <div class="row mb-4">
                 <div class="col-md-6 mb-4">
-                    <div class="card">
-                        <div class="card-header bg-gradient-primary" style="color: white; border-radius: 12px 12px 0 0;">
+                    <div class="card" style="border-radius: 12px; border: 1px solid #F5F5F5;">
+                        <div class="card-header" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border-radius: 12px 12px 0 0;">
                             <h3 class="card-title" style="color: white; margin: 0; font-weight: 600;">
                                 <i class="far fa-chart-pie mr-2"></i>Distribución por Estado
                             </h3>
@@ -102,8 +102,8 @@
                     </div>
                 </div>
                 <div class="col-md-6 mb-4">
-                    <div class="card">
-                        <div class="card-header bg-gradient-success" style="color: white; border-radius: 12px 12px 0 0;">
+                    <div class="card" style="border-radius: 12px; border: 1px solid #F5F5F5;">
+                        <div class="card-header" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border-radius: 12px 12px 0 0;">
                             <h3 class="card-title" style="color: white; margin: 0; font-weight: 600;">
                                 <i class="far fa-chart-bar mr-2"></i>Participantes por Evento
                             </h3>
@@ -163,7 +163,7 @@
             <!-- Estadísticas Generales -->
             <div class="row mb-4">
                 <div class="col-md-12">
-                    <div class="card bg-gradient-primary-accent" style="border: none;">
+                    <div class="card" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border: none; border-radius: 12px;">
                         <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
@@ -180,8 +180,8 @@
             <!-- Gráfico de Reacciones -->
             <div class="row mb-4">
                 <div class="col-md-12">
-                    <div class="card">
-                        <div class="card-header bg-gradient-primary-accent" style="color: white; border-radius: 12px 12px 0 0;">
+                    <div class="card" style="border-radius: 12px; border: 1px solid #F5F5F5;">
+                        <div class="card-header" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border-radius: 12px 12px 0 0;">
                             <h3 class="card-title" style="color: white; margin: 0; font-weight: 600;">
                                 <i class="far fa-chart-bar mr-2"></i>Reacciones por Evento
                             </h3>
@@ -236,7 +236,7 @@
 </div>
 @endsection
 
-@section('css')
+@push('css')
 <style>
     .card {
         border-radius: 8px;
@@ -292,7 +292,7 @@
         width: 40px;
         height: 40px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -300,10 +300,17 @@
         font-weight: 600;
         font-size: 0.9rem;
     }
+    
+    /* Estilos para botones con gradiente */
+    button[style*="linear-gradient"]:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(0, 163, 108, 0.3) !important;
+        opacity: 0.9 !important;
+    }
 </style>
-@endsection
+@endpush
 
-@section('js')
+@push('js')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="{{ asset('assets/js/config.js') }}"></script>
 <script>
@@ -332,6 +339,7 @@ async function cargarDatos() {
         cargarListaReacciones()
     ]);
 }
+
 
 // ========== PARTICIPANTES ==========
 async function cargarEstadisticasParticipantes() {
@@ -379,7 +387,7 @@ async function cargarEstadisticasParticipantes() {
                         data.totales.pendientes,
                         data.totales.rechazados
                     ],
-                    backgroundColor: ['#00A36C', '#ffc107', '#dc3545'],
+                    backgroundColor: ['#00A36C', '#0C2B44', '#dc3545'],
                     borderWidth: 3,
                     borderColor: '#fff',
                     hoverOffset: 6
@@ -443,7 +451,7 @@ async function cargarEstadisticasParticipantes() {
                     {
                         label: 'Pendientes',
                         data: data.estadisticas_por_evento.map(e => e.pendientes),
-                        backgroundColor: '#ffc107',
+                        backgroundColor: '#0C2B44',
                         borderRadius: 4,
                         borderSkipped: false
                     },
@@ -668,8 +676,8 @@ async function cargarEstadisticasReacciones() {
                 datasets: [{
                     label: 'Reacciones',
                     data: data.estadisticas_por_evento.map(e => e.total_reacciones),
-                    backgroundColor: '#dc3545',
-                    borderColor: '#c82333',
+                    backgroundColor: '#00A36C',
+                    borderColor: '#008a5a',
                     borderWidth: 1,
                     borderRadius: 4,
                     borderSkipped: false
@@ -950,7 +958,7 @@ async function rechazarParticipacion(participacionId) {
             });
         }
     }
-}
+    }
 </script>
-@endsection
+@endpush
 

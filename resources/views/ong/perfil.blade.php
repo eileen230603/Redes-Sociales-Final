@@ -402,7 +402,7 @@
                     <div class="card-body p-4">
                         <!-- Subir archivo -->
                         <div class="form-group mb-4">
-                                <label for="fotoPerfilFile">
+                            <label for="fotoPerfilFile">
                                 <i class="far fa-upload mr-2"></i> Subir Imagen desde Dispositivo
                             </label>
                             <input type="file" class="form-control" id="fotoPerfilFile" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp">
@@ -675,7 +675,13 @@
 @push('js')
 {{-- Script global para icono de notificaciones --}}
 <script src="{{ asset('js/notificaciones-ong.js') }}"></script>
-<script src="{{ asset('assets/js/config.js') }}"></script>
+<script>
+// Definir API_BASE_URL solo si no está definido
+if (typeof API_BASE_URL === 'undefined') {
+    window.API_BASE_URL = "{{ env('APP_URL', 'http://127.0.0.1:8000') }}";
+    console.log("🌐 API_BASE_URL definido:", window.API_BASE_URL);
+}
+</script>
 <script>
 let profileData = null;
 let isEditMode = false;
@@ -792,13 +798,22 @@ let selectedUrl = null;
 // Función para guardar foto de perfil (mejorada, similar a mega-eventos)
 async function guardarFotoPerfil() {
     const token = localStorage.getItem('token');
-    const fotoFile = document.getElementById('fotoPerfilFile').files[0];
-    const fotoUrlInput = document.getElementById('fotoPerfilUrl').value.trim();
+    const inputFile = document.getElementById('fotoPerfilFile');
+    const fotoFile = inputFile ? inputFile.files[0] : null;
+    const fotoUrlInput = document.getElementById('fotoPerfilUrl') ? document.getElementById('fotoPerfilUrl').value.trim() : '';
+
+    console.log('🔍 DEBUG guardarFotoPerfil:');
+    console.log('  - inputFile existe:', !!inputFile);
+    console.log('  - fotoFile existe:', !!fotoFile);
+    console.log('  - fotoFile name:', fotoFile ? fotoFile.name : 'N/A');
+    console.log('  - fotoFile size:', fotoFile ? fotoFile.size : 'N/A');
+    console.log('  - fotoUrlInput:', fotoUrlInput);
 
     // Usar el archivo seleccionado o la URL agregada
     const fotoUrl = selectedUrl || fotoUrlInput;
 
     if (!fotoFile && !fotoUrl) {
+        console.error('❌ No hay archivo ni URL');
         Swal.fire({
             icon: 'warning',
             title: 'Sin foto',
@@ -814,16 +829,38 @@ async function guardarFotoPerfil() {
             // Validar tamaño (5MB)
             if (fotoFile.size > 5 * 1024 * 1024) {
                 Swal.fire({
-                icon: 'error',
-                title: 'Archivo muy grande',
+                    icon: 'error',
+                    title: 'Archivo muy grande',
                     text: 'El archivo no debe exceder 5MB'
                 });
                 return;
             }
-            formData.append('foto_perfil', fotoFile);
+            console.log('📤 Agregando archivo al FormData:', fotoFile.name, fotoFile.size, 'bytes', 'tipo:', fotoFile.type);
+            formData.append('foto_perfil', fotoFile, fotoFile.name);
+            console.log('✅ Archivo agregado al FormData');
+            console.log('📋 Verificación - FormData tiene foto_perfil:', formData.has('foto_perfil'));
+            console.log('📋 Verificación - FormData get foto_perfil:', formData.get('foto_perfil'));
         } else if (fotoUrl) {
             // Enviar URL (similar a imagenes_urls en mega-eventos)
+            console.log('📤 Agregando URL al FormData:', fotoUrl);
             formData.append('foto_perfil_url', fotoUrl);
+        } else {
+            console.error('❌ No hay archivo ni URL para enviar');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sin foto',
+                text: 'Por favor, selecciona una imagen o ingresa una URL'
+            });
+            return;
+        }
+
+        console.log('🔄 Enviando petición a:', `${API_BASE_URL}/api/perfil`);
+        console.log('📋 FormData tiene foto_perfil:', formData.has('foto_perfil'));
+        
+        // Mostrar todas las claves del FormData
+        console.log('📋 FormData entries:');
+        for (let pair of formData.entries()) {
+            console.log('  -', pair[0], ':', pair[1]);
         }
 
         Swal.fire({
@@ -836,15 +873,18 @@ async function guardarFotoPerfil() {
         });
 
         const res = await fetch(`${API_BASE_URL}/api/perfil`, {
-            method: 'PUT',
+            method: 'POST', // Cambiado a POST para mejor compatibilidad con FormData
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Accept': 'application/json'
+                // NO incluir 'Content-Type' - el navegador lo establecerá automáticamente con boundary para FormData
             },
             body: formData
         });
 
+        console.log('📥 Respuesta recibida. Status:', res.status);
         const data = await res.json();
+        console.log('📥 Datos recibidos:', data);
 
         if (!res.ok || !data.success) {
             Swal.fire({
@@ -855,6 +895,32 @@ async function guardarFotoPerfil() {
             return;
         }
 
+        // Actualizar el avatar inmediatamente con la respuesta del servidor
+        if (data.foto_perfil || (data.data && data.data.foto_perfil)) {
+            const fotoPerfilUrl = data.foto_perfil || data.data.foto_perfil;
+            const avatarImg = document.getElementById('avatarPreview');
+            const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+            
+            if (avatarImg && avatarPlaceholder) {
+                // Agregar timestamp para evitar caché
+                const urlConCache = fotoPerfilUrl + (fotoPerfilUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
+                avatarImg.src = urlConCache;
+                avatarImg.style.display = 'block';
+                avatarPlaceholder.style.display = 'none';
+                
+                // Manejar error de carga de imagen
+                avatarImg.onerror = function() {
+                    console.error('Error al cargar la imagen:', urlConCache);
+                    avatarImg.style.display = 'none';
+                    avatarPlaceholder.style.display = 'block';
+                };
+                
+                avatarImg.onload = function() {
+                    console.log('Avatar cargado correctamente:', urlConCache);
+                };
+            }
+        }
+
         Swal.fire({
             icon: 'success',
             title: '¡Foto guardada!',
@@ -863,8 +929,10 @@ async function guardarFotoPerfil() {
             showConfirmButton: false
         });
 
-        // Recargar perfil
-        await loadProfile();
+        // Recargar perfil completo después de un breve delay
+        setTimeout(async () => {
+            await loadProfile();
+        }, 500);
         
         // Limpiar formulario y previews
         document.getElementById('fotoPerfilFile').value = '';
@@ -1087,8 +1155,8 @@ document.getElementById('profileForm').addEventListener('submit', async (e) => {
 
         if (!res.ok || !result.success) {
             Swal.fire({
-            icon: 'error',
-            title: 'Error',
+                icon: 'error',
+                title: 'Error',
                 text: result.error || 'Error al actualizar el perfil',
                 confirmButtonText: 'Entendido'
             });
@@ -1118,5 +1186,5 @@ document.getElementById('profileForm').addEventListener('submit', async (e) => {
         });
     }
 });
- </script>
+</script>
 @endpush

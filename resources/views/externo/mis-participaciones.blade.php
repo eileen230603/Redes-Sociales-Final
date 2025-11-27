@@ -4,15 +4,35 @@
 
 @section('content_body')
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="text-primary">
-            <i class="fas fa-calendar-check mr-2"></i> Mis Participaciones en Eventos
-        </h2>
+    <!-- Header con diseño mejorado - Paleta de colores -->
+    <div class="card mb-4 shadow-sm" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border: none; border-radius: 15px; overflow: hidden;">
+        <div class="card-body py-4 px-4">
+            <div class="row align-items-center">
+                <div class="col-md-10">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white rounded-circle p-3 mr-3 shadow-sm" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                            <i class="far fa-calendar-check" style="font-size: 1.8rem; color: #00A36C;"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-white mb-1" style="font-weight: 700; font-size: 1.75rem;">
+                                Mis Participaciones en Eventos
+                            </h3>
+                            <p class="text-white mb-0" style="opacity: 0.95; font-size: 1rem;">
+                                Revisa todos los eventos en los que estás participando
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2 text-right d-none d-md-block">
+                    <i class="far fa-calendar-check" style="font-size: 4.5rem; color: rgba(255,255,255,0.15);"></i>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="participacionesContainer" class="row">
         <div class="col-12 text-center py-5">
-            <div class="spinner-border text-primary" role="status">
+            <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; color: #00A36C;">
                 <span class="sr-only">Cargando...</span>
             </div>
             <p class="mt-3 text-muted">Cargando tus participaciones...</p>
@@ -21,7 +41,37 @@
 </div>
 @endsection
 
-@section('js')
+@push('css')
+<style>
+    .card {
+        transition: all 0.3s ease;
+        border-radius: 12px;
+        border: 1px solid #F5F5F5;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(12, 43, 68, 0.15) !important;
+    }
+
+    .badge-success {
+        background-color: #00A36C !important;
+        color: white !important;
+    }
+
+    .badge-warning {
+        background-color: #ffc107 !important;
+        color: #212529 !important;
+    }
+
+    .badge-danger {
+        background-color: #dc3545 !important;
+        color: white !important;
+    }
+</style>
+@endpush
+
+@push('js')
 <script src="{{ asset('assets/js/config.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
@@ -47,7 +97,7 @@ async function cargarMisParticipaciones() {
     try {
         container.innerHTML = `
             <div class="col-12 text-center py-5">
-                <div class="spinner-border text-primary" role="status">
+                <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; color: #00A36C;">
                     <span class="sr-only">Cargando...</span>
                 </div>
                 <p class="mt-3 text-muted">Cargando tus participaciones...</p>
@@ -82,8 +132,8 @@ async function cargarMisParticipaciones() {
                         <i class="fas fa-info-circle fa-3x mb-3"></i>
                         <h4>No tienes participaciones registradas</h4>
                         <p class="mb-3">Explora eventos disponibles e inscríbete</p>
-                        <a href="/externo/eventos" class="btn btn-primary">
-                            <i class="fas fa-calendar-alt mr-2"></i> Ver Eventos Disponibles
+                        <a href="/externo/eventos" class="btn" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: none; border-radius: 8px; padding: 0.75rem 1.5rem; font-weight: 500;">
+                            <i class="far fa-calendar-alt mr-2"></i> Ver Eventos Disponibles
                         </a>
                     </div>
                 </div>
@@ -135,11 +185,11 @@ async function cargarMisParticipaciones() {
                 <div class="card h-100 border-0 shadow-sm" style="border-radius: 12px; transition: transform 0.2s, box-shadow 0.2s;">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-start mb-3">
-                            <h5 class="card-title mb-0" style="font-size: 1.1rem; font-weight: 600; color: #2c3e50;">
+                            <h5 class="card-title mb-0" style="font-size: 1.1rem; font-weight: 600; color: #0C2B44;">
                                 ${evento.titulo || 'Sin título'}
                             </h5>
-                            <span class="badge badge-${estadoColor}">
-                                <i class="fas ${estadoIcon} mr-1"></i>${estadoBadge}
+                            <span class="badge badge-${estadoColor}" style="${estadoColor === 'success' ? 'background-color: #00A36C !important;' : estadoColor === 'warning' ? 'background-color: #ffc107 !important;' : 'background-color: #dc3545 !important;'} color: white; padding: 0.4em 0.8em; border-radius: 8px;">
+                                <i class="far ${estadoIcon} mr-1"></i>${estadoBadge}
                             </span>
                         </div>
                         
@@ -149,24 +199,24 @@ async function cargarMisParticipaciones() {
                         
                         <div class="mb-3">
                             <div class="d-flex align-items-center mb-2" style="color: #6c757d; font-size: 0.85rem;">
-                                <i class="far fa-calendar-alt mr-2"></i>
+                                <i class="far fa-calendar-alt mr-2" style="color: #00A36C;"></i>
                                 <span><strong>Fecha:</strong> ${fechaInicio}</span>
                             </div>
                             <div class="d-flex align-items-center mb-2" style="color: #6c757d; font-size: 0.85rem;">
-                                <i class="fas fa-calendar-check mr-2"></i>
+                                <i class="far fa-calendar-check mr-2" style="color: #00A36C;"></i>
                                 <span><strong>Inscrito:</strong> ${fechaInscripcion}</span>
                             </div>
                             ${evento.ciudad ? `
                                 <div class="d-flex align-items-center" style="color: #6c757d; font-size: 0.85rem;">
-                                    <i class="fas fa-map-marker-alt mr-2"></i>
+                                    <i class="far fa-map-marker-alt mr-2" style="color: #00A36C;"></i>
                                     <span>${evento.ciudad}</span>
                                 </div>
                             ` : ''}
                         </div>
                         
                         <div class="mt-3 pt-3 border-top">
-                            <a href="/externo/eventos/${evento.id}/detalle" class="btn btn-sm btn-block" style="background: #667eea; color: white; border: none; border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500;">
-                                <i class="fas fa-eye mr-2"></i> Ver Detalles
+                            <a href="/externo/eventos/${evento.id}/detalle" class="btn btn-sm btn-block" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: none; border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500; transition: all 0.3s;">
+                                <i class="far fa-eye mr-2"></i> Ver Detalles
                             </a>
                         </div>
                     </div>
@@ -175,13 +225,20 @@ async function cargarMisParticipaciones() {
             
             // Efecto hover
             const card = colDiv.querySelector('.card');
+            const btn = colDiv.querySelector('.btn');
             card.onmouseenter = function() {
                 this.style.transform = 'translateY(-4px)';
-                this.style.boxShadow = '0 8px 16px rgba(0,0,0,0.1)';
+                this.style.boxShadow = '0 8px 16px rgba(12, 43, 68, 0.15)';
+                if (btn) {
+                    btn.style.transform = 'scale(1.02)';
+                }
             };
             card.onmouseleave = function() {
                 this.style.transform = 'translateY(0)';
                 this.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+                if (btn) {
+                    btn.style.transform = 'scale(1)';
+                }
             };
             
             container.appendChild(colDiv);
@@ -200,5 +257,5 @@ async function cargarMisParticipaciones() {
     }
 }
 </script>
-@endsection
+@endpush
 

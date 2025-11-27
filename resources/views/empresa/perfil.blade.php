@@ -2,22 +2,22 @@
 
 @section('page_title', 'Mi Perfil')
 
-@section('css')
+@push('css')
 <style>
     :root {
-        --primary-color: #2c3e50;
-        --secondary-color: #34495e;
-        --accent-color: #3498db;
-        --success-color: #27ae60;
+        --primary-color: #0C2B44;
+        --secondary-color: #333333;
+        --accent-color: #00A36C;
+        --success-color: #00A36C;
         --warning-color: #f39c12;
         --danger-color: #e74c3c;
-        --light-bg: #f8f9fa;
+        --light-bg: #F5F5F5;
         --border-color: #e1e8ed;
-        --text-primary: #2c3e50;
+        --text-primary: #0C2B44;
         --text-secondary: #7f8c8d;
-        --shadow-sm: 0 2px 4px rgba(0,0,0,0.04);
-        --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
-        --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+        --shadow-sm: 0 2px 4px rgba(12,43,68,0.04);
+        --shadow-md: 0 4px 6px rgba(12,43,68,0.08);
+        --shadow-lg: 0 10px 15px rgba(12,43,68,0.12);
     }
 
     body {
@@ -26,7 +26,7 @@
     }
 
     .profile-header {
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%);
         color: white;
         padding: 2.5rem 2rem;
         border-radius: 12px;
@@ -75,17 +75,17 @@
     }
 
     .card-header.bg-info {
-        background: linear-gradient(135deg, #3498db15 0%, #2980b915 100%) !important;
+        background: linear-gradient(135deg, rgba(0, 163, 108, 0.08) 0%, rgba(12, 43, 68, 0.08) 100%) !important;
         border-bottom-color: var(--accent-color);
     }
 
     .card-header.bg-success {
-        background: linear-gradient(135deg, #27ae6015 0%, #229a5615 100%) !important;
+        background: linear-gradient(135deg, rgba(0, 163, 108, 0.08) 0%, rgba(0, 138, 90, 0.08) 100%) !important;
         border-bottom-color: var(--success-color);
     }
 
     .card-header.bg-primary {
-        background: linear-gradient(135deg, #2c3e5015 0%, #34495e15 100%) !important;
+        background: linear-gradient(135deg, rgba(12, 43, 68, 0.08) 0%, rgba(10, 35, 56, 0.08) 100%) !important;
         border-bottom-color: var(--primary-color);
     }
 
@@ -175,12 +175,12 @@
     }
 
     .badge-success {
-        background-color: #27ae6020;
+        background-color: rgba(0, 163, 108, 0.12);
         color: var(--success-color);
     }
 
     .badge-danger {
-        background-color: #e74c3c20;
+        background-color: rgba(231, 76, 60, 0.12);
         color: var(--danger-color);
     }
 
@@ -216,23 +216,24 @@
     }
 
     .btn-success {
-        background: var(--success-color);
+        background: linear-gradient(135deg, #00A36C 0%, #008a5a 100%);
         border: none;
         border-radius: 8px;
         font-weight: 600;
         padding: 0.875rem 2.5rem;
         box-shadow: var(--shadow-md);
         transition: all 0.3s ease;
+        color: white;
     }
 
     .btn-success:hover {
-        background: #229a56;
+        background: linear-gradient(135deg, #008a5a 0%, #007a4d 100%);
         transform: translateY(-2px);
         box-shadow: var(--shadow-lg);
     }
 
     .btn-secondary {
-        background: #95a5a6;
+        background: #6c757d;
         border: none;
         border-radius: 8px;
         font-weight: 600;
@@ -340,7 +341,7 @@
     }
 
     .avatar-upload-btn:hover {
-        background: #2980b9;
+        background: #00A36C;
         transform: scale(1.1);
     }
 
@@ -372,7 +373,7 @@
         }
     }
 </style>
-@endsection
+@endpush
 
 @section('content_body')
 <div class="container-fluid">
@@ -689,10 +690,16 @@
         </div>
     </div>
 </div>
-@endsection
+@stop
 
-@section('js')
-<script src="{{ asset('assets/js/config.js') }}"></script>
+@push('js')
+<script>
+// Definir API_BASE_URL solo si no está definido
+if (typeof API_BASE_URL === 'undefined') {
+    window.API_BASE_URL = "{{ env('APP_URL', 'http://127.0.0.1:8000') }}";
+    console.log("🌐 API_BASE_URL definido:", window.API_BASE_URL);
+}
+</script>
 <script>
 let profileData = null;
 let isEditMode = false;
@@ -837,7 +844,7 @@ async function guardarFotoPerfil() {
                 });
                 return;
             }
-            formData.append('foto_perfil', fotoFile);
+            formData.append('foto_perfil', fotoFile, fotoFile.name);
         } else if (fotoUrl) {
             // Enviar URL (similar a imagenes_urls en mega-eventos)
             formData.append('foto_perfil_url', fotoUrl);
@@ -853,10 +860,11 @@ async function guardarFotoPerfil() {
         });
 
         const res = await fetch(`${API_BASE_URL}/api/perfil`, {
-            method: 'PUT',
+            method: 'POST', // Cambiado a POST para mejor compatibilidad con FormData
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Accept': 'application/json'
+                // NO incluir 'Content-Type' - el navegador lo establecerá automáticamente con boundary para FormData
             },
             body: formData
         });
@@ -872,6 +880,32 @@ async function guardarFotoPerfil() {
             return;
         }
 
+        // Actualizar el avatar inmediatamente con la respuesta del servidor
+        if (data.foto_perfil || (data.data && data.data.foto_perfil)) {
+            const fotoPerfilUrl = data.foto_perfil || data.data.foto_perfil;
+            const avatarImg = document.getElementById('avatarPreview');
+            const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+            
+            if (avatarImg && avatarPlaceholder) {
+                // Agregar timestamp para evitar caché
+                const urlConCache = fotoPerfilUrl + (fotoPerfilUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
+                avatarImg.src = urlConCache;
+                avatarImg.style.display = 'block';
+                avatarPlaceholder.style.display = 'none';
+                
+                // Manejar error de carga de imagen
+                avatarImg.onerror = function() {
+                    console.error('Error al cargar la imagen:', urlConCache);
+                    avatarImg.style.display = 'none';
+                    avatarPlaceholder.style.display = 'block';
+                };
+                
+                avatarImg.onload = function() {
+                    console.log('Avatar cargado correctamente:', urlConCache);
+                };
+            }
+        }
+
         Swal.fire({
             icon: 'success',
             title: '¡Foto guardada!',
@@ -880,8 +914,10 @@ async function guardarFotoPerfil() {
             showConfirmButton: false
         });
 
-        // Recargar perfil
-        await loadProfile();
+        // Recargar perfil completo después de un breve delay
+        setTimeout(async () => {
+            await loadProfile();
+        }, 500);
         
         // Limpiar formulario y previews
         document.getElementById('fotoPerfilFile').value = '';
@@ -1136,4 +1172,4 @@ document.getElementById('profileForm').addEventListener('submit', async (e) => {
     }
 });
 </script>
-@endsection
+@endpush

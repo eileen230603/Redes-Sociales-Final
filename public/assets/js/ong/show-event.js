@@ -257,7 +257,18 @@ async function cargarContadorReacciones(eventoId) {
 
         const data = await res.json();
         if (data.success) {
-            contador.textContent = data.total_reacciones || 0;
+            const nuevoTotal = data.total_reacciones || 0;
+            const totalAnterior = parseInt(contador.textContent) || 0;
+            
+            // Animación si el número cambió
+            if (nuevoTotal !== totalAnterior) {
+                contador.classList.add('animate');
+                setTimeout(() => {
+                    contador.classList.remove('animate');
+                }, 500);
+            }
+            
+            contador.textContent = nuevoTotal;
         }
     } catch (error) {
         console.warn('Error cargando contador de reacciones:', error);
@@ -316,7 +327,7 @@ async function cargarReacciones() {
 
         // Crear grid de usuarios que reaccionaron
         let html = '<div class="row">';
-        data.reacciones.forEach(reaccion => {
+        data.reacciones.forEach((reaccion, index) => {
             const fechaReaccion = new Date(reaccion.fecha_reaccion).toLocaleString('es-ES', {
                 year: 'numeric',
                 month: 'long',
@@ -329,14 +340,14 @@ async function cargarReacciones() {
             const fotoPerfil = reaccion.foto_perfil || null;
 
             html += `
-                <div class="col-md-6 col-lg-4 mb-3">
+                <div class="col-md-6 col-lg-4 mb-3 reaccion-card" style="animation-delay: ${index * 0.1}s;">
                     <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; border: 1px solid #F5F5F5; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(12, 43, 68, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';">
                         <div class="card-body p-4">
                             <div class="d-flex align-items-center mb-3">
                                 ${fotoPerfil ? `
-                                    <img src="${fotoPerfil}" alt="${reaccion.nombre}" class="rounded-circle mr-3" style="width: 50px; height: 50px; object-fit: cover; border: 3px solid #00A36C;">
+                                    <img src="${fotoPerfil}" alt="${reaccion.nombre}" class="rounded-circle mr-3" style="width: 50px; height: 50px; object-fit: cover; border: 3px solid #00A36C; animation: fadeInUp 0.5s ease-out;">
                                 ` : `
-                                    <div class="rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 50px; height: 50px; font-weight: 600; font-size: 1.2rem; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white;">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 50px; height: 50px; font-weight: 600; font-size: 1.2rem; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; animation: fadeInUp 0.5s ease-out;">
                                         ${inicialNombre}
                                     </div>
                                 `}
@@ -346,8 +357,8 @@ async function cargarReacciones() {
                                         <i class="far fa-envelope mr-1" style="color: #00A36C;"></i> ${reaccion.correo || 'N/A'}
                                     </small>
                                 </div>
-                                <div style="background: rgba(220, 53, 69, 0.1); width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                    <i class="far fa-heart" style="font-size: 1.3rem; color: #dc3545;"></i>
+                                <div style="background: rgba(220, 53, 69, 0.1); width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;">
+                                    <i class="far fa-heart" style="font-size: 1.3rem; color: #dc3545; transition: all 0.3s ease;"></i>
                                 </div>
                             </div>
                             <div class="mt-3 pt-3" style="border-top: 1px solid #F5F5F5;">
@@ -364,6 +375,20 @@ async function cargarReacciones() {
         html += `<div class="mt-4 text-center"><span class="badge" style="background: #0C2B44; color: white; padding: 0.5em 1em; border-radius: 20px; font-weight: 500;">Total: ${data.total} reacción(es)</span></div>`;
 
         container.innerHTML = html;
+        
+        // Agregar animación de entrada a las tarjetas de reacciones
+        setTimeout(() => {
+            const cards = container.querySelectorAll('.reaccion-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease-out';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        }, 100);
 
     } catch (error) {
         console.error('Error cargando reacciones:', error);
@@ -453,40 +478,40 @@ async function cargarParticipantes() {
                 <div class="col-md-6 mb-4">
                     <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; border: 1px solid #F5F5F5; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(12, 43, 68, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';">
                         <div class="card-body p-4">
-                            <div class="d-flex align-items-start mb-3">
-                                ${fotoPerfil ? `
+                        <div class="d-flex align-items-start mb-3">
+                            ${fotoPerfil ? `
                                     <img src="${fotoPerfil}" alt="${participante.nombre}" class="rounded-circle mr-3" style="width: 55px; height: 55px; object-fit: cover; border: 3px solid #00A36C; flex-shrink: 0;">
-                                ` : `
+                            ` : `
                                     <div class="rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 55px; height: 55px; font-weight: 600; font-size: 1.2rem; flex-shrink: 0; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white;">
-                                        ${inicial}
-                                    </div>
-                                `}
-                                <div class="flex-grow-1">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                    ${inicial}
+                                </div>
+                            `}
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
                                         <h6 class="mb-0" style="color: #0C2B44; font-weight: 700; font-size: 1.05rem;">${participante.nombre || 'N/A'}</h6>
-                                        ${estadoBadge}
-                                    </div>
+                                    ${estadoBadge}
+                                </div>
                                     <div class="mb-2">
                                         <p class="mb-1" style="color: #333333; font-size: 0.9rem;">
                                             <i class="far fa-envelope mr-2" style="color: #00A36C;"></i> ${participante.correo || 'N/A'}
-                                        </p>
+                                </p>
                                         <p class="mb-1" style="color: #333333; font-size: 0.9rem;">
                                             <i class="far fa-phone mr-2" style="color: #00A36C;"></i> ${participante.telefono || 'N/A'}
-                                        </p>
+                                </p>
                                         <p class="mb-0" style="color: #333333; font-size: 0.9rem;">
                                             <i class="far fa-calendar mr-2" style="color: #00A36C;"></i> ${fechaInscripcion}
-                                        </p>
+                                </p>
                                     </div>
-                                    ${participante.estado === 'pendiente' ? `
+                                ${participante.estado === 'pendiente' ? `
                                         <div class="d-flex mt-3" style="gap: 0.5rem;">
                                             <button class="btn btn-sm flex-fill" onclick="aprobarParticipacion(${participante.id})" title="Aprobar" style="background: #00A36C; color: white; border: none; border-radius: 8px; font-weight: 500;">
                                                 <i class="far fa-check-circle mr-1"></i> Aprobar
-                                            </button>
+                                        </button>
                                             <button class="btn btn-sm flex-fill" onclick="rechazarParticipacion(${participante.id})" title="Rechazar" style="background: #dc3545; color: white; border: none; border-radius: 8px; font-weight: 500;">
                                                 <i class="far fa-times-circle mr-1"></i> Rechazar
-                                            </button>
-                                        </div>
-                                    ` : ''}
+                                        </button>
+                                    </div>
+                                ` : ''}
                                 </div>
                             </div>
                         </div>

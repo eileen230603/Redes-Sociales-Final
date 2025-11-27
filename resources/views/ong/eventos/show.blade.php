@@ -25,9 +25,9 @@
             <a href="/ong/eventos" class="btn" style="background: #F5F5F5; color: #0C2B44; border: none; border-radius: 8px;">
                 <i class="far fa-arrow-left mr-2"></i> Volver
             </a>
-            <div class="btn" style="background: #F5F5F5; color: #dc3545; border: none; border-radius: 50px; cursor: default;">
-                <i class="far fa-heart mr-2"></i>
-                <span id="contadorReaccionesOng">0</span> reacciones
+            <div class="btn" style="background: #F5F5F5; color: #dc3545; border: none; border-radius: 50px; cursor: default; transition: all 0.3s ease;">
+                <i class="far fa-heart mr-2" style="transition: all 0.3s ease;"></i>
+                <span id="contadorReaccionesOng" style="transition: all 0.3s ease;">0</span> reacciones
             </div>
             <a id="btnEditar" href="#" class="btn" style="background: #0C2B44; color: white; border: none; border-radius: 8px;">
                 <i class="far fa-edit mr-2"></i> Editar Evento
@@ -142,7 +142,7 @@
                             <h4 class="mb-0" style="color: #0C2B44; font-weight: 700;">
                                 <i class="far fa-heart mr-2" style="color: #dc3545;"></i> Reacciones y Favoritos
                             </h4>
-                            <button class="btn btn-sm" onclick="cargarReacciones()" style="background: #F5F5F5; color: #0C2B44; border: none; border-radius: 8px;">
+                            <button class="btn btn-sm btn-actualizar-reacciones" onclick="cargarReacciones()" style="background: #F5F5F5; color: #0C2B44; border: none; border-radius: 8px; transition: transform 0.5s ease;">
                                 <i class="far fa-sync mr-1"></i> Actualizar
                             </button>
                         </div>
@@ -300,10 +300,80 @@
     .card:hover {
         border-color: #00A36C !important;
     }
+
+    /* Animaciones para reacciones */
+    @keyframes heartBeat {
+        0%, 100% {
+            transform: scale(1);
+        }
+        25% {
+            transform: scale(1.2);
+        }
+        50% {
+            transform: scale(1.1);
+        }
+        75% {
+            transform: scale(1.15);
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+    }
+
+    .reaccion-card {
+        animation: fadeInUp 0.5s ease-out;
+    }
+
+    .reaccion-card .fa-heart {
+        animation: heartBeat 0.6s ease-in-out;
+    }
+
+    .reaccion-card:hover .fa-heart {
+        animation: pulse 1s ease-in-out infinite;
+        color: #dc3545 !important;
+    }
+
+    /* Animación para el contador de reacciones */
+    #contadorReaccionesOng {
+        transition: all 0.3s ease;
+    }
+
+    #contadorReaccionesOng.animate {
+        animation: pulse 0.5s ease-in-out;
+        color: #dc3545;
+        font-weight: 700;
+    }
+
+    /* Animación para el botón de actualizar reacciones */
+    .btn-actualizar-reacciones:active {
+        transform: rotate(360deg);
+        transition: transform 0.5s ease;
+    }
 </style>
-@endsection
+@parent
+@stop
 
 @section('js')
+@parent
 {{-- Script global para icono de notificaciones --}}
 <script src="{{ asset('js/notificaciones-ong.js') }}"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

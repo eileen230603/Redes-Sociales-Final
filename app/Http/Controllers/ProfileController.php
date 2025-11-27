@@ -98,6 +98,19 @@ class ProfileController extends Controller
     public function update(Request $request)
     {
         try {
+            \Log::info("=== INICIO UPDATE PERFIL ===");
+            \Log::info("Content-Type: " . ($request->header('Content-Type') ?? 'NO HEADER'));
+            \Log::info("Request method: " . $request->method());
+            \Log::info("Request tiene foto_perfil file: " . ($request->hasFile('foto_perfil') ? 'SÍ' : 'NO'));
+            \Log::info("Request tiene foto_perfil_url: " . ($request->has('foto_perfil_url') ? 'SÍ' : 'NO'));
+            \Log::info("Request all keys: " . implode(', ', array_keys($request->all())));
+            \Log::info("Request allFiles keys: " . implode(', ', array_keys($request->allFiles())));
+            \Log::info("Request input keys: " . implode(', ', array_keys($request->input())));
+            \Log::info("Request files count: " . count($request->allFiles()));
+            
+            // Debug: verificar $_FILES directamente
+            \Log::info("_FILES superglobal: " . json_encode($_FILES ?? []));
+            
             $user = $request->user();
 
             if (!$user) {
@@ -106,6 +119,8 @@ class ProfileController extends Controller
                     'error' => 'Usuario no autenticado'
                 ], 401);
             }
+            
+            \Log::info("Usuario autenticado: {$user->id_usuario}, tipo: {$user->tipo_usuario}");
 
             // Validación según el tipo de usuario
             $rules = [
@@ -180,17 +195,19 @@ class ProfileController extends Controller
                 // Actualizar contraseña si se proporciona
                 if ($request->has('contrasena_actual') && $request->has('nueva_contrasena')) {
                     $user->contrasena = Hash::make($request->nueva_contrasena);
-            }
+                }
+                
+                // Procesar foto de perfil para usuario base (también guardar en tabla usuarios)
+                $fotoPerfilUsuario = $this->processFotoPerfil($request, $user, 'usuario');
+                if ($fotoPerfilUsuario !== null && !empty($fotoPerfilUsuario)) {
+                    $user->foto_perfil = $fotoPerfilUsuario;
+                    \Log::info("Guardando foto_perfil en tabla usuarios: $fotoPerfilUsuario");
+                }
+                
+                $user->save();
+                \Log::info("Usuario guardado. foto_perfil en tabla usuarios: " . ($user->foto_perfil ?? 'NULL'));
 
-            // Procesar foto de perfil para usuario base
-            $fotoPerfil = $this->processFotoPerfil($request, $user, 'usuario');
-            if ($fotoPerfil !== null && !empty($fotoPerfil)) {
-                $user->foto_perfil = $fotoPerfil;
-                \Log::info("Guardando foto_perfil en usuario base: $fotoPerfil");
-            }
-            $user->save();
-
-                // 2. Actualizar información específica según el tipo
+            // 2. Actualizar información específica según el tipo
             if ($user->esOng() && $user->ong) {
                 $ong = $user->ong;
                 if ($request->has('nombre_ong')) $ong->nombre_ong = $request->nombre_ong;
@@ -200,14 +217,18 @@ class ProfileController extends Controller
                 if ($request->has('sitio_web')) $ong->sitio_web = $request->sitio_web;
                 if ($request->has('descripcion')) $ong->descripcion = $request->descripcion;
                 
-                // Procesar foto de perfil para ONG
+                // Procesar foto de perfil para ONG (solo una vez, no para usuario base)
                 $fotoPerfilOng = $this->processFotoPerfil($request, $user, 'ong');
+                \Log::info("Resultado processFotoPerfil para ONG: " . ($fotoPerfilOng ?? 'NULL'));
                 if ($fotoPerfilOng !== null && !empty($fotoPerfilOng)) {
                     $ong->foto_perfil = $fotoPerfilOng;
                     \Log::info("Guardando foto_perfil en ONG: $fotoPerfilOng");
+                } else {
+                    \Log::warning("processFotoPerfil retornó null o vacío para ONG");
                 }
                 
                 $ong->save();
+                \Log::info("ONG guardada. foto_perfil en BD: " . ($ong->foto_perfil ?? 'NULL'));
             } elseif ($user->esEmpresa() && $user->empresa) {
                 $empresa = $user->empresa;
                 if ($request->has('nombre_empresa')) $empresa->nombre_empresa = $request->nombre_empresa;
@@ -217,14 +238,18 @@ class ProfileController extends Controller
                 if ($request->has('sitio_web')) $empresa->sitio_web = $request->sitio_web;
                 if ($request->has('descripcion')) $empresa->descripcion = $request->descripcion;
                 
-                // Procesar foto de perfil para Empresa
+                // Procesar foto de perfil para Empresa (solo una vez, no para usuario base)
                 $fotoPerfilEmpresa = $this->processFotoPerfil($request, $user, 'empresa');
+                \Log::info("Resultado processFotoPerfil para Empresa: " . ($fotoPerfilEmpresa ?? 'NULL'));
                 if ($fotoPerfilEmpresa !== null && !empty($fotoPerfilEmpresa)) {
                     $empresa->foto_perfil = $fotoPerfilEmpresa;
                     \Log::info("Guardando foto_perfil en Empresa: $fotoPerfilEmpresa");
+                } else {
+                    \Log::warning("processFotoPerfil retornó null o vacío para Empresa");
                 }
                 
                 $empresa->save();
+                \Log::info("Empresa guardada. foto_perfil en BD: " . ($empresa->foto_perfil ?? 'NULL'));
             } elseif ($user->esIntegranteExterno() && $user->integranteExterno) {
                 $externo = $user->integranteExterno;
                 if ($request->has('nombres')) $externo->nombres = $request->nombres;
@@ -234,55 +259,63 @@ class ProfileController extends Controller
                 if ($request->has('phone_number')) $externo->phone_number = $request->phone_number;
                 if ($request->has('descripcion')) $externo->descripcion = $request->descripcion;
                 
-                // Procesar foto de perfil para Externo
+                // Procesar foto de perfil para Externo (solo una vez, no para usuario base)
                 $fotoPerfilExterno = $this->processFotoPerfil($request, $user, 'externo');
+                \Log::info("Resultado processFotoPerfil para Externo: " . ($fotoPerfilExterno ?? 'NULL'));
                 if ($fotoPerfilExterno !== null && !empty($fotoPerfilExterno)) {
                     $externo->foto_perfil = $fotoPerfilExterno;
                     \Log::info("Guardando foto_perfil en Externo: $fotoPerfilExterno");
+                } else {
+                    \Log::warning("processFotoPerfil retornó null o vacío para Externo");
                 }
                 
                 $externo->save();
+                \Log::info("Externo guardado. foto_perfil en BD: " . ($externo->foto_perfil ?? 'NULL'));
                 }
             });
                 
             // Recargar el usuario y relaciones para obtener los datos actualizados
             $user->refresh();
             
+            // Recargar relaciones según el tipo de usuario
             if ($user->esOng()) {
                 $user->load('ong');
+                $entidad = $user->ong;
             } elseif ($user->esEmpresa()) {
                 $user->load('empresa');
+                $entidad = $user->empresa;
             } elseif ($user->esIntegranteExterno()) {
                 $user->load('integranteExterno');
-            }
-            
-            // Si es ONG, recargar también la relación
-            if ($user->esOng()) {
-                $user->load('ong');
-            } elseif ($user->esEmpresa()) {
-                $user->load('empresa');
-            } elseif ($user->esIntegranteExterno()) {
-                $user->load('integranteExterno');
+                $entidad = $user->integranteExterno;
+            } else {
+                $entidad = null;
             }
             
             // Obtener la foto de perfil actualizada según el tipo
             $fotoPerfilActualizada = null;
-            if ($user->esOng() && $user->ong) {
-                $fotoPerfilActualizada = $user->ong->foto_perfil_url ?? null;
-            } elseif ($user->esEmpresa() && $user->empresa) {
-                $fotoPerfilActualizada = $user->empresa->foto_perfil_url ?? null;
-            } elseif ($user->esIntegranteExterno() && $user->integranteExterno) {
-                $fotoPerfilActualizada = $user->integranteExterno->foto_perfil_url ?? null;
+            if ($entidad) {
+                // Recargar la entidad desde la base de datos para obtener el valor actualizado
+                $entidad->refresh();
+                $fotoPerfilActualizada = $entidad->foto_perfil_url ?? null;
+                \Log::info("Foto de perfil desde entidad ({$user->tipo_usuario}): " . ($fotoPerfilActualizada ?? 'null'));
+                \Log::info("Valor raw de foto_perfil en BD: " . ($entidad->foto_perfil ?? 'null'));
             } else {
+                $user->refresh();
                 $fotoPerfilActualizada = $user->foto_perfil_url ?? null;
+                \Log::info("Foto de perfil desde usuario base: " . ($fotoPerfilActualizada ?? 'null'));
+                \Log::info("Valor raw de foto_perfil en BD: " . ($user->foto_perfil ?? 'null'));
             }
             
-            \Log::info("Perfil actualizado. Foto de perfil: " . ($fotoPerfilActualizada ?? 'null'));
+            \Log::info("Perfil actualizado. Foto de perfil final: " . ($fotoPerfilActualizada ?? 'null'));
             
             return response()->json([
                 'success' => true,
                 'message' => 'Perfil actualizado correctamente',
-                'foto_perfil' => $fotoPerfilActualizada
+                'foto_perfil' => $fotoPerfilActualizada,
+                'data' => [
+                    'foto_perfil' => $fotoPerfilActualizada,
+                    'tipo_usuario' => $user->tipo_usuario
+                ]
             ]);
 
         } catch (\Throwable $e) {
@@ -300,11 +333,14 @@ class ProfileController extends Controller
     private function processFotoPerfil(Request $request, User $user, $tipo = 'usuario')
     {
         \Log::info("processFotoPerfil iniciado para tipo: {$tipo}, usuario: {$user->id_usuario}");
+        \Log::info("hasFile('foto_perfil'): " . ($request->hasFile('foto_perfil') ? 'SÍ' : 'NO'));
+        \Log::info("all() keys: " . implode(', ', array_keys($request->all())));
+        \Log::info("files() keys: " . implode(', ', array_keys($request->allFiles())));
         
         // Prioridad: archivo subido > URL proporcionada
         if ($request->hasFile('foto_perfil')) {
             $file = $request->file('foto_perfil');
-            \Log::info("Archivo recibido: " . $file->getClientOriginalName() . ", tamaño: " . $file->getSize());
+            \Log::info("✅ Archivo recibido: " . $file->getClientOriginalName() . ", tamaño: " . $file->getSize() . " bytes");
             
             // Verificar que el archivo sea válido
             if (!$file->isValid()) {
@@ -340,22 +376,37 @@ class ProfileController extends Controller
             // Solo eliminar si es un archivo local (no URL externa)
             if ($fotoAnterior && !str_starts_with($fotoAnterior, 'http://') && !str_starts_with($fotoAnterior, 'https://')) {
                 try {
-                    // Limpiar la ruta para eliminar
+                    // Limpiar la ruta para eliminar (similar a eventos)
                     $rutaAnterior = str_replace('storage/', '', $fotoAnterior);
                     $rutaAnterior = str_replace('/storage/', '', $rutaAnterior);
                     $rutaAnterior = ltrim($rutaAnterior, '/');
                     
-                    // Eliminar de storage/app/public/
-                    if (Storage::disk('public')->exists($rutaAnterior)) {
-                        Storage::disk('public')->delete($rutaAnterior);
-                        \Log::info("Eliminada foto anterior de storage para tipo {$tipo}: {$rutaAnterior}");
-                    }
-                    
-                    // Eliminar también de public/storage/
-                    $publicPathAnterior = public_path('storage/' . $rutaAnterior);
-                    if (file_exists($publicPathAnterior) && is_file($publicPathAnterior)) {
-                        unlink($publicPathAnterior);
-                        \Log::info("Eliminada foto anterior de public/storage para tipo {$tipo}: {$publicPathAnterior}");
+                    // Si la ruta contiene "perfil/", es la nueva estructura
+                    if (strpos($rutaAnterior, 'perfil/') === 0) {
+                        // Eliminar de storage/app/public/
+                        if (Storage::disk('public')->exists($rutaAnterior)) {
+                            Storage::disk('public')->delete($rutaAnterior);
+                            \Log::info("Eliminada foto anterior de storage para tipo {$tipo}: {$rutaAnterior}");
+                        }
+                        
+                        // Eliminar también de public/storage/
+                        $publicPathAnterior = public_path('storage/' . $rutaAnterior);
+                        if (file_exists($publicPathAnterior) && is_file($publicPathAnterior)) {
+                            unlink($publicPathAnterior);
+                            \Log::info("Eliminada foto anterior de public/storage para tipo {$tipo}: {$publicPathAnterior}");
+                        }
+                    } else {
+                        // Compatibilidad con rutas antiguas (perfiles/)
+                        if (Storage::disk('public')->exists($rutaAnterior)) {
+                            Storage::disk('public')->delete($rutaAnterior);
+                            \Log::info("Eliminada foto anterior (ruta antigua) de storage para tipo {$tipo}: {$rutaAnterior}");
+                        }
+                        
+                        $publicPathAnterior = public_path('storage/' . $rutaAnterior);
+                        if (file_exists($publicPathAnterior) && is_file($publicPathAnterior)) {
+                            unlink($publicPathAnterior);
+                            \Log::info("Eliminada foto anterior (ruta antigua) de public/storage para tipo {$tipo}: {$publicPathAnterior}");
+                        }
                     }
                 } catch (\Exception $e) {
                     \Log::warning("Error al eliminar foto anterior para tipo {$tipo}: " . $e->getMessage());
@@ -364,39 +415,59 @@ class ProfileController extends Controller
 
             // Guardar nueva foto usando el mismo sistema mejorado que eventos y mega eventos
             try {
-                // Generar nombre único para el archivo
+                // Generar nombre único para el archivo (similar a eventos: perfil/{tipo}/{id_usuario}/{uuid}.{ext})
                 $extension = $file->getClientOriginalExtension();
-                $nombreArchivo = 'perfil_' . $user->id_usuario . '_' . time() . '_' . \Illuminate\Support\Str::random(8) . '.' . $extension;
-                $ruta = 'perfiles/' . $tipo . '/' . $user->id_usuario;
-                $filename = $ruta . '/' . $nombreArchivo;
+                $uuid = \Illuminate\Support\Str::uuid();
+                $rutaDirectorio = 'perfil/' . $tipo . '/' . $user->id_usuario;
+                $nombreArchivo = $uuid . '.' . $extension;
+                $filename = $rutaDirectorio . '/' . $nombreArchivo;
                 
-                // Guardar usando el disco 'public' explícitamente
+                // Asegurar que el directorio existe antes de guardar
+                $directorioCompleto = storage_path('app/public/' . $rutaDirectorio);
+                if (!file_exists($directorioCompleto)) {
+                    if (!mkdir($directorioCompleto, 0755, true)) {
+                        \Log::error("No se pudo crear el directorio: $directorioCompleto");
+                        return null;
+                    }
+                    \Log::info("Directorio creado: $directorioCompleto");
+                }
+                
+                // Guardar usando el disco 'public' explícitamente (igual que eventos)
                 $path = Storage::disk('public')->putFileAs(
-                    $ruta,
+                    $rutaDirectorio,
                     $file,
                     $nombreArchivo
                 );
+                
+                \Log::info("Archivo guardado con Storage::putFileAs. Path retornado: $path");
                 
                 // Verificar que el archivo se guardó correctamente
                 $fullPath = storage_path('app/public/' . $path);
                 if (!file_exists($fullPath) || !is_file($fullPath)) {
                     \Log::error("No se pudo guardar la foto de perfil: $fullPath");
+                    \Log::error("Path retornado por Storage: $path");
+                    \Log::error("Directorio completo esperado: $directorioCompleto");
                     return null;
                 }
                 
                 // Verificar que el archivo tiene contenido
-                if (filesize($fullPath) === 0) {
+                $fileSize = filesize($fullPath);
+                if ($fileSize === 0) {
                     \Log::error("La foto de perfil se guardó vacía: $fullPath");
                     Storage::disk('public')->delete($path);
                     return null;
                 }
+                
+                \Log::info("Archivo guardado correctamente. Tamaño: $fileSize bytes. Ruta: $fullPath");
                 
                 // Copiar también a public/storage/ para que el servidor de PHP pueda servirlo directamente
                 $publicPath = public_path('storage/' . $path);
                 $publicDir = dirname($publicPath);
                 if (!file_exists($publicDir)) {
                     if (!mkdir($publicDir, 0755, true)) {
-                        \Log::warning("No se pudo crear el directorio: $publicDir");
+                        \Log::warning("No se pudo crear el directorio público: $publicDir");
+                    } else {
+                        \Log::info("Directorio público creado: $publicDir");
                     }
                 }
                 
@@ -408,17 +479,10 @@ class ProfileController extends Controller
                     }
                 }
                 
-                // Obtener la URL pública (ruta relativa)
-                $url = Storage::disk('public')->url($path);
-                
-                // Verificar que la URL se generó correctamente
-                if (empty($url)) {
-                    \Log::error("No se pudo generar la URL para la foto de perfil: $path");
-                    return null;
-                }
-                
-                \Log::info("Foto de perfil guardada exitosamente para tipo {$tipo}: $url -> $fullPath (también copiada a $publicPath)");
-                return $url; // Retorna /storage/perfiles/...
+                // Retornar la ruta relativa (sin /storage/) para guardar en BD
+                // El accessor del modelo se encargará de generar la URL completa
+                \Log::info("Foto de perfil guardada exitosamente para tipo {$tipo}: $path -> $fullPath (también copiada a $publicPath)");
+                return $path; // Retorna perfil/{tipo}/{id_usuario}/{uuid}.{ext}
                 
             } catch (\Exception $e) {
                 \Log::error("Error al guardar foto de perfil tipo {$tipo}: " . $e->getMessage());

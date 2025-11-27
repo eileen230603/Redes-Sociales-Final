@@ -39,7 +39,7 @@
         </div>
 
         <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-            <div class="card stat-card" style="background: linear-gradient(135deg, #333333 0%, #2a2a2a 100%); border: none; border-radius: 12px;">
+            <div class="card stat-card" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border: none; border-radius: 12px;">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -130,7 +130,7 @@
                 </div>
                 <div class="col-md-2">
                     <label class="form-label d-block" style="color: #0C2B44; font-weight: 600; margin-bottom: 0.75rem;">&nbsp;</label>
-                    <button id="btnLimpiar" class="btn btn-block" style="background: #F5F5F5; color: #0C2B44; border: none; border-radius: 8px; padding: 0.75rem; font-weight: 500;">
+                    <button id="btnLimpiar" class="btn btn-block" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: none; border-radius: 8px; padding: 0.75rem; font-weight: 500; transition: all 0.3s;">
                         <i class="far fa-times-circle mr-2"></i>Limpiar
                     </button>
                 </div>
@@ -173,6 +173,17 @@
     .card:hover {
         box-shadow: 0 4px 16px rgba(12, 43, 68, 0.15) !important;
         transform: translateY(-2px) !important;
+    }
+    
+    /* Estilos para botones con gradiente */
+    button[style*="linear-gradient"], a[style*="linear-gradient"] {
+        transition: all 0.3s ease !important;
+    }
+    
+    button[style*="linear-gradient"]:hover, a[style*="linear-gradient"]:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(0, 163, 108, 0.3) !important;
+        opacity: 0.9 !important;
     }
     
     .evento-card {
@@ -336,7 +347,7 @@
         }
         50% {
             text-shadow: 0 0 15px rgba(255, 255, 255, 0.6), 0 0 25px rgba(255, 255, 255, 0.4);
-        }
+    }
     }
     
     /* Animación de contador para los números */
@@ -552,8 +563,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Nueva Paleta de Colores
         const coloresPaleta = {
             finalizados: '#00A36C',     // verde esmeralda
-            en_curso: '#333333',        // gris carbón
-            proximos: '#0C2B44',        // azul marino
+            en_curso: '#0C2B44',        // azul marino
+            proximos: '#00A36C',        // verde esmeralda
             cancelados: '#dc3545',      // rojo
             borradores: '#ffc107'       // amarillo
         };
@@ -822,7 +833,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             </small>
                         </div>
                         <div class="mt-3">
-                            <a href="/ong/eventos/${e.id}/detalle" class="btn btn-sm btn-block" style="background: #0C2B44; color: white; border: none; border-radius: 8px; font-weight: 500;">
+                            <a href="/ong/eventos/${e.id}/detalle" class="btn btn-sm btn-block" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: none; border-radius: 8px; font-weight: 500; transition: all 0.3s;">
                                 <i class="far fa-eye mr-2"></i>Ver Detalles
                             </a>
                         </div>

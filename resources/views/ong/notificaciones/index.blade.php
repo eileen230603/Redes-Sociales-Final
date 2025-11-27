@@ -17,14 +17,14 @@
                 </div>
                 <button class="btn btn-sm" onclick="marcarTodasLeidas()" style="background: rgba(255,255,255,0.15); color: white; border: none; border-radius: 8px; padding: 0.5rem 1.25rem; font-weight: 500;">
                     <i class="far fa-check-double mr-1"></i> Marcar todas como leídas
-                </button>
-            </div>
+        </button>
+    </div>
         </div>
         <div class="card-body p-4">
-            <div id="notificacionesContainer">
-                <div class="text-center py-5">
+    <div id="notificacionesContainer">
+        <div class="text-center py-5">
                     <div class="spinner-border" role="status" style="color: #00A36C; width: 3rem; height: 3rem;">
-                        <span class="sr-only">Cargando...</span>
+                <span class="sr-only">Cargando...</span>
                     </div>
                     <p class="mt-3" style="color: #333333; font-weight: 500;">Cargando notificaciones...</p>
                 </div>
@@ -223,23 +223,23 @@ async function cargarNotificaciones() {
                                     <div class="flex-grow-1">
                                         <div class="d-flex align-items-center mb-1">
                                             <h5 class="mb-0" style="font-size: 1.1rem; font-weight: ${notif.leida ? '500' : '700'}; color: ${notif.leida ? '#333333' : '#0C2B44'};">
-                                                ${notif.titulo}
-                                            </h5>
+                                        ${notif.titulo}
+                                    </h5>
                                             ${!notif.leida ? '<span class="badge ml-2" style="background: #00A36C !important; color: white !important; font-weight: 600; padding: 0.25em 0.6em; border-radius: 20px; font-size: 0.75rem;"><i class="far fa-circle" style="font-size: 0.4rem; margin-right: 4px;"></i>Nueva</span>' : '<span class="badge ml-2" style="background: #333333 !important; color: white !important; opacity: 0.7; font-weight: 500; padding: 0.25em 0.6em; border-radius: 20px; font-size: 0.75rem;"><i class="far fa-check" style="font-size: 0.7rem; margin-right: 4px;"></i>Leída</span>'}
-                                        </div>
+                                </div>
                                         <p class="mb-2" style="color: #333333; font-size: 0.95rem; line-height: 1.6;">
-                                            ${notif.mensaje}
-                                        </p>
-                                        ${notif.evento_titulo ? `
+                                    ${notif.mensaje}
+                                </p>
+                                ${notif.evento_titulo ? `
                                             <p class="mb-2" style="font-size: 0.9rem;">
                                                 <i class="far fa-calendar-alt mr-1" style="color: #00A36C;"></i>
                                                 <strong style="color: #0C2B44;">Evento:</strong> 
                                                 <a href="/ong/eventos/${notif.evento_id}/detalle" style="color: #0C2B44; font-weight: 600; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#00A36C'" onmouseout="this.style.color='#0C2B44'">${notif.evento_titulo}</a>
-                                            </p>
-                                        ` : ''}
+                                    </p>
+                                ` : ''}
                                         <small style="color: #333333; font-size: 0.85rem;">
                                             <i class="far fa-clock mr-1" style="color: #00A36C;"></i> ${fecha}
-                                        </small>
+                                </small>
                                     </div>
                                 </div>
                             </div>

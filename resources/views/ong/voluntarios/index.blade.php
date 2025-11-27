@@ -9,7 +9,7 @@
             <div class="d-flex justify-content-between align-items-center">
                 <h3 class="card-title mb-0" style="color: #0C2B44; font-weight: 700;">
                     <i class="far fa-users mr-2" style="color: #00A36C;"></i> Lista de Participantes en Eventos
-                </h3>
+            </h3>
                 <span class="badge badge-lg" id="totalVoluntarios" style="background: #0C2B44; color: white; padding: 0.5em 1em; border-radius: 20px; font-weight: 500;">0 participantes</span>
             </div>
         </div>

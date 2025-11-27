@@ -149,7 +149,6 @@
 @section('css')
 <link rel="stylesheet" href="{{ asset('vendor/fontawesome-free/css/all.min.css') }}">
 <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/adminlte.min.css') }}">
-<link rel="stylesheet" href="{{ asset('css/custom.css') }}">
 <style>
     /* ============================================
        NUEVA PALETA DE COLORES - AZUL MARINO Y VERDE ESMERALDA
@@ -215,6 +214,75 @@
         background-color: #0C2B44 !important;
     }
     
+    /* Animación de entrada del sidebar */
+    @keyframes slideInLeft {
+        from {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    /* Animación de entrada de elementos del menú */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Animación de activación del elemento del menú */
+    @keyframes menuItemActivate {
+        0% {
+            background-color: rgba(0, 163, 108, 0);
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.02);
+        }
+        100% {
+            background-color: #00A36C;
+            transform: scale(1);
+        }
+    }
+    
+    /* Animación de pulso para elementos activos */
+    @keyframes activePulse {
+        0%, 100% {
+            box-shadow: 0 2px 8px rgba(0, 163, 108, 0.3);
+        }
+        50% {
+            box-shadow: 0 2px 12px rgba(0, 163, 108, 0.5);
+        }
+    }
+    
+    /* Aplicar animación de entrada al sidebar */
+    .main-sidebar {
+        animation: slideInLeft 0.5s ease-out !important;
+    }
+    
+    /* Animación de entrada escalonada para elementos del menú */
+    .nav-sidebar > .nav-item {
+        animation: fadeInUp 0.4s ease-out backwards;
+    }
+    
+    .nav-sidebar > .nav-item:nth-child(1) { animation-delay: 0.1s; }
+    .nav-sidebar > .nav-item:nth-child(2) { animation-delay: 0.15s; }
+    .nav-sidebar > .nav-item:nth-child(3) { animation-delay: 0.2s; }
+    .nav-sidebar > .nav-item:nth-child(4) { animation-delay: 0.25s; }
+    .nav-sidebar > .nav-item:nth-child(5) { animation-delay: 0.3s; }
+    .nav-sidebar > .nav-item:nth-child(6) { animation-delay: 0.35s; }
+    .nav-sidebar > .nav-item:nth-child(7) { animation-delay: 0.4s; }
+    .nav-sidebar > .nav-item:nth-child(8) { animation-delay: 0.45s; }
+    .nav-sidebar > .nav-item:nth-child(9) { animation-delay: 0.5s; }
+    
     /* Enlaces del Sidebar */
     .sidebar-dark-primary .nav-sidebar .nav-link,
     .main-sidebar .nav-sidebar .nav-link {
@@ -222,7 +290,27 @@
         border-radius: 8px !important;
         margin: 0.25rem 0.5rem !important;
         padding: 0.75rem 1rem !important;
-        transition: all 0.3s ease !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        position: relative !important;
+        overflow: hidden !important;
+    }
+    
+    /* Efecto de brillo al pasar el mouse */
+    .sidebar-dark-primary .nav-sidebar .nav-link::before,
+    .main-sidebar .nav-sidebar .nav-link::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transition: left 0.5s;
+    }
+    
+    .sidebar-dark-primary .nav-sidebar .nav-link:hover::before,
+    .main-sidebar .nav-sidebar .nav-link:hover::before {
+        left: 100%;
     }
     
     /* Enlaces Activos */
@@ -234,21 +322,27 @@
         color: white !important;
         font-weight: 600 !important;
         box-shadow: 0 2px 8px rgba(0, 163, 108, 0.3) !important;
+        animation: menuItemActivate 0.5s ease-out, activePulse 2s ease-in-out infinite !important;
+        transform: translateX(4px) !important;
+        border-right: 3px solid rgba(255, 255, 255, 0.3) !important;
     }
     
     /* Hover de Enlaces */
     .sidebar-dark-primary .nav-sidebar .nav-link:hover:not(.active),
     .main-sidebar .nav-sidebar .nav-link:hover:not(.active) {
-        background-color: rgba(0, 163, 108, 0.15) !important;
+        background-color: rgba(0, 163, 108, 0.2) !important;
         color: white !important;
-        transform: translateX(4px) !important;
+        transform: translateX(4px) scale(1.02) !important;
+        box-shadow: 0 2px 6px rgba(0, 163, 108, 0.2) !important;
     }
     
-    /* Iconos del Sidebar */
+    /* Iconos del Sidebar con animación */
     .sidebar-dark-primary .nav-sidebar .nav-link .nav-icon,
     .main-sidebar .nav-sidebar .nav-link .nav-icon {
         color: rgba(255, 255, 255, 0.7) !important;
         margin-right: 0.75rem !important;
+        transition: all 0.3s ease !important;
+        display: inline-block !important;
     }
     
     .sidebar-dark-primary .nav-sidebar .nav-link.active .nav-icon,
@@ -256,6 +350,25 @@
     .main-sidebar .nav-sidebar .nav-link.active .nav-icon,
     .main-sidebar .nav-sidebar .nav-link:hover .nav-icon {
         color: white !important;
+        transform: scale(1.1) rotate(5deg) !important;
+    }
+    
+    /* Animación de rotación para iconos al activar */
+    @keyframes iconBounce {
+        0%, 100% {
+            transform: scale(1) rotate(0deg);
+        }
+        25% {
+            transform: scale(1.15) rotate(-5deg);
+        }
+        75% {
+            transform: scale(1.15) rotate(5deg);
+        }
+    }
+    
+    .sidebar-dark-primary .nav-sidebar .nav-link.active .nav-icon,
+    .main-sidebar .nav-sidebar .nav-link.active .nav-icon {
+        animation: iconBounce 0.6s ease-out !important;
     }
     
     /* Iconos con clases de color (text-primary, text-success) */
@@ -279,6 +392,20 @@
         color: white !important;
     }
     
+    /* Animación de apertura de submenús */
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            max-height: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            max-height: 500px;
+            transform: translateY(0);
+        }
+    }
+    
     /* Submenús (Treeview) */
     .sidebar-dark-primary .nav-treeview,
     .main-sidebar .nav-treeview {
@@ -286,18 +413,56 @@
         border-radius: 8px !important;
         margin: 0.5rem 0 !important;
         padding: 0.5rem 0 !important;
+        animation: slideDown 0.4s ease-out !important;
+        overflow: hidden !important;
     }
     
     .sidebar-dark-primary .nav-treeview .nav-link,
     .main-sidebar .nav-treeview .nav-link {
         padding-left: 2.5rem !important;
         font-size: 0.9rem !important;
+        transition: all 0.3s ease !important;
+        position: relative !important;
+    }
+    
+    .sidebar-dark-primary .nav-treeview .nav-link::before,
+    .main-sidebar .nav-treeview .nav-link::before {
+        content: '';
+        position: absolute;
+        left: 1.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 6px;
+        height: 6px;
+        background-color: rgba(255, 255, 255, 0.4);
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+    
+    .sidebar-dark-primary .nav-treeview .nav-link:hover::before,
+    .main-sidebar .nav-treeview .nav-link:hover::before {
+        background-color: #00A36C;
+        transform: translateY(-50%) scale(1.5);
     }
     
     .sidebar-dark-primary .nav-treeview .nav-link.active,
     .main-sidebar .nav-treeview .nav-link.active {
         background-color: rgba(0, 163, 108, 0.3) !important;
         border-left: 3px solid #00A36C !important;
+        transform: translateX(4px) !important;
+        font-weight: 600 !important;
+    }
+    
+    .sidebar-dark-primary .nav-treeview .nav-link.active::before,
+    .main-sidebar .nav-treeview .nav-link.active::before {
+        background-color: #00A36C;
+        transform: translateY(-50%) scale(1.5);
+    }
+    
+    .sidebar-dark-primary .nav-treeview .nav-link:hover:not(.active),
+    .main-sidebar .nav-treeview .nav-link:hover:not(.active) {
+        background-color: rgba(0, 163, 108, 0.15) !important;
+        transform: translateX(4px) !important;
     }
     
     /* Headers de Sección */
@@ -318,10 +483,28 @@
         margin-top: 0.5rem !important;
     }
     
+    /* Animación de rotación para flechas */
+    @keyframes rotateArrow {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(-90deg);
+        }
+    }
+    
     /* Flecha de Treeview */
     .sidebar-dark-primary .nav-link .right,
     .main-sidebar .nav-link .right {
         color: rgba(255, 255, 255, 0.6) !important;
+        transition: all 0.3s ease !important;
+        display: inline-block !important;
+    }
+    
+    .sidebar-dark-primary .nav-item.menu-open > .nav-link .right,
+    .main-sidebar .nav-item.menu-open > .nav-link .right {
+        transform: rotate(-90deg) !important;
+        color: white !important;
     }
     
     .sidebar-dark-primary .nav-link.active .right,
@@ -329,6 +512,11 @@
     .main-sidebar .nav-link.active .right,
     .main-sidebar .nav-link:hover .right {
         color: white !important;
+    }
+    
+    .sidebar-dark-primary .nav-link:hover .right,
+    .main-sidebar .nav-link:hover .right {
+        transform: translateX(2px) !important;
     }
     
     /* Enlace de Cerrar Sesión */
@@ -430,6 +618,23 @@
         color: white !important;
     }
 
+    /* Animación de entrada del contenido */
+    @keyframes fadeInContent {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Aplicar animación al contenido principal */
+    .content-wrapper > .content {
+        animation: fadeInContent 0.5s ease-out !important;
+    }
+    
     /* Header de contenido fijo (sticky) para todas las pantallas ONG */
     .content-header {
         position: sticky;
@@ -438,6 +643,7 @@
         background-color: #f5f5f5;
         padding-top: 0.75rem;
         padding-bottom: 0.5rem;
+        animation: fadeInContent 0.4s ease-out !important;
     }
 
     .content-header h1 {
@@ -449,6 +655,11 @@
 
     .content-header h1 i {
         color: var(--brand-acento);
+        transition: transform 0.3s ease !important;
+    }
+    
+    .content-header h1:hover i {
+        transform: rotate(15deg) scale(1.1) !important;
     }
     
     /* User Menu en Navbar */
@@ -1023,6 +1234,44 @@ document.addEventListener('DOMContentLoaded', () => {
             icono.style.setProperty('opacity', '1', 'important');
         }
     }, 100);
+});
+
+// =======================================================
+// 🎨 ANIMACIONES DE TRANSICIÓN DE PÁGINA
+// =======================================================
+
+// Agregar clase de transición al hacer clic en enlaces del sidebar
+document.addEventListener('DOMContentLoaded', () => {
+    const sidebarLinks = document.querySelectorAll('.nav-sidebar .nav-link[href]');
+    
+    sidebarLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            // Solo aplicar si no es un enlace que abre un submenú
+            if (!this.closest('.has-treeview') || this.getAttribute('href') !== '#') {
+                // Agregar clase de transición al contenido
+                const contentWrapper = document.querySelector('.content-wrapper > .content');
+                if (contentWrapper) {
+                    contentWrapper.style.opacity = '0';
+                    contentWrapper.style.transform = 'translateY(20px)';
+                    contentWrapper.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                }
+                
+                // Restaurar después de un breve delay (para permitir la navegación)
+                setTimeout(() => {
+                    if (contentWrapper) {
+                        contentWrapper.style.opacity = '1';
+                        contentWrapper.style.transform = 'translateY(0)';
+                    }
+                }, 100);
+            }
+        });
+    });
+    
+    // Animar elementos del menú al cargar
+    const menuItems = document.querySelectorAll('.nav-sidebar > .nav-item');
+    menuItems.forEach((item, index) => {
+        item.style.animationDelay = `${index * 0.05}s`;
+    });
 });
 
 // Asegurar visibilidad del icono cuando se navega entre páginas

@@ -93,15 +93,15 @@
                         <label for="capacidad_maxima" style="color: #0C2B44; font-weight: 600; font-size: 0.9rem;">Capacidad máxima</label>
                         <input type="text" id="capacidad_maxima" class="form-control" pattern="[0-9]*" inputmode="numeric" placeholder="Solo números" style="border-radius: 8px; border: 1px solid #dee2e6; padding: 0.6rem 0.9rem;">
                         <small class="form-text text-muted" style="font-size: 0.8rem;">Ingrese solo números (sin letras, símbolos ni espacios)</small>
-                    </div>
+                </div>
 
                     <div class="form-group col-md-4 mb-3">
                         <label for="estado" style="color: #0C2B44; font-weight: 600; font-size: 0.9rem;">Estado del evento *</label>
                         <select id="estado" class="form-control" required style="border-radius: 8px; border: 1px solid #dee2e6; padding: 0.6rem 0.9rem;">
-                            <option value="borrador">Borrador</option>
-                            <option value="publicado">Publicado</option>
-                            <option value="cancelado">Cancelado</option>
-                        </select>
+                        <option value="borrador">Borrador</option>
+                        <option value="publicado">Publicado</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
                     </div>
                 </div>
 
