@@ -3,6 +3,72 @@
 
 @section('title', 'UNI2 • Panel Principal')
 
+@push('js')
+    {{-- Lucide icons: reemplazar Font Awesome visualmente en todo el panel --}}
+    <script type="module">
+        import { createIcons, icons } from "https://unpkg.com/lucide@latest/dist/esm/lucide.js";
+
+        const faToLucide = {
+            // Generales
+            'fa-home': 'home',
+            'fa-layer-group': 'layout-dashboard',
+            'fa-bell': 'bell',
+            'fa-globe': 'globe-2',
+            'fa-sign-out-alt': 'log-out',
+            'fa-users': 'users',
+            'fa-user-circle': 'user-round',
+            'fa-tachometer-alt': 'gauge',
+            'fa-chart-bar': 'bar-chart-3',
+            'fa-info-circle': 'info',
+            'fa-exclamation-triangle': 'alert-triangle',
+            'fa-hand-holding-heart': 'hand-heart',
+
+            // Calendario / eventos
+            'fa-calendar': 'calendar',
+            'fa-calendar-alt': 'calendar-range',
+            'fa-calendar-check': 'calendar-check',
+            'fa-calendar-plus': 'calendar-plus',
+            'fa-list': 'list',
+            'fa-angle-left': 'chevron-left',
+            'fa-history': 'history',
+
+            // Iconos de UI varios
+            'fa-heart': 'heart',
+            'fa-star': 'star',
+            'fa-share-alt': 'share-2',
+            'fa-images': 'images',
+            'fa-map-marker-alt': 'map-pin',
+            'fa-user-plus': 'user-plus',
+            'fa-check-circle': 'check-circle-2',
+            'fa-times-circle': 'x-circle',
+            'fa-phone': 'phone',
+            'fa-envelope': 'mail',
+            'fa-clock': 'clock',
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                document.querySelectorAll('i[class*="fa-"]').forEach(el => {
+                    const classes = el.className.split(/\s+/);
+                    const faClass = classes.find(c => c.startsWith('fa-'));
+                    if (!faClass) return;
+
+                    const lucideName = faToLucide[faClass];
+                    if (!lucideName || !icons[lucideName]) return;
+
+                    el.setAttribute('data-lucide', lucideName);
+                    // Quitamos las clases de icono de FA, pero dejamos espaciados (mr-2, etc.)
+                    el.className = classes.filter(c => !c.startsWith('fa')).join(' ').trim();
+                });
+
+                createIcons({ icons });
+            } catch (e) {
+                console.warn('Lucide no pudo inicializarse:', e);
+            }
+        });
+    </script>
+@endpush
+
 {{-- HEADER --}}
 @section('content_header')
 <div class="d-flex align-items-center justify-content-between" style="margin-bottom: 0.5rem;">
@@ -20,26 +86,62 @@
 </div>
 @stop
 
-{{-- NAVBAR SUPERIOR --}}
-@push('adminlte_topnav')
-    {{-- 🔔 Ícono de Notificaciones - POSICIONADO ANTES DEL MENÚ DE USUARIO (círculo gris) --}}
-    <li class="nav-item" id="notificacionesNavItem" style="display: flex !important; align-items: center; order: 998;">
-        <a href="{{ route('ong.notificaciones.index') }}" class="nav-link position-relative" id="notificacionesIcono" title="Notificaciones" style="display: flex !important; align-items: center; justify-content: center; padding: 0.5rem 0.75rem !important; min-width: 45px; color: #6c757d !important;">
-            <i class="far fa-bell" style="font-size: 1.25rem !important; display: block !important;"></i>
-            <span class="badge badge-danger position-absolute" id="contadorNotificaciones" style="top: 2px; right: 2px; display: none; font-size: 0.7rem; padding: 4px 7px; min-width: 20px; height: 20px; line-height: 12px; border-radius: 10px; font-weight: bold; z-index: 10; background-color: #dc3545 !important; color: white !important; box-shadow: 0 2px 4px rgba(0,0,0,0.2); align-items: center; justify-content: center;">0</span>
-        </a>
+{{-- NAVBAR SUPERIOR (lado derecho) --}}
+@section('content_top_nav_right')
+    {{-- Solo avatar + nombre de usuario, alineado a la derecha --}}
+    <li class="nav-item d-flex align-items-center ml-auto">
+        {{-- Mini perfil del usuario ONG --}}
+        <div class="d-flex align-items-center pl-3 pr-3"
+             style="background: #ffffff; border-radius: 999px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 4px 12px;">
+            @php
+                $user = Auth::user();
+                $ong  = optional($user)->ong;
+                $nombreUsuario = $ong->nombre_ong ?? ($user->nombre_usuario ?? ($user->name ?? 'Usuario'));
+                $inicial = mb_substr(trim($nombreUsuario), 0, 1, 'UTF-8');
+                // Prioridad de avatar: foto de ONG > foto de usuario > null
+                $foto = $ong->foto_perfil_url ?? ($user->foto_perfil_url ?? null);
+            @endphp
+            <div class="rounded-circle d-flex align-items-center justify-content-center mr-2"
+                 style="width: 32px; height: 32px; overflow: hidden; background: #e9f5ff; font-weight: 600; color: #0C2B44;">
+                <img id="headerAvatarOng"
+                     src="{{ $foto ?? '' }}"
+                     alt="Foto perfil"
+                     style="width: 100%; height: 100%; object-fit: cover; {{ $foto ? '' : 'display:none;' }}">
+                <span id="headerAvatarInicialOng"
+                      style="font-size: 0.95rem; {{ $foto ? 'display:none;' : '' }}">{{ $inicial }}</span>
+            </div>
+            <div class="d-flex flex-column mr-2" style="max-width: 160px;">
+                <span id="headerNombreOng"
+                      style="font-size: 0.9rem; color: #2c3e50; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    {{ $nombreUsuario }}
+                </span>
+                @if($ong && $ong->nombre_ong)
+                    <small style="font-size: 0.75rem; color: #8c9aa8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        ONG
+                    </small>
+                @endif
+            </div>
+            <div class="dropdown">
+                <a class="text-muted dropdown-toggle" href="#" role="button" id="dropdownPerfilOng"
+                   data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                   style="font-size: 0.75rem;">
+                </a>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownPerfilOng">
+                    <a class="dropdown-item" href="/perfil/ong">
+                        <i class="far fa-user mr-2"></i> Mi perfil
+                    </a>
+                    <a class="dropdown-item" href="/home-publica">
+                        <i class="far fa-globe mr-2"></i> Ir a página pública
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item text-danger" href="#" onclick="cerrarSesion(event)">
+                        <i class="far fa-sign-out-alt mr-2"></i> Cerrar sesión
+                    </a>
+                </div>
+            </div>
+        </div>
     </li>
-    <li class="nav-item d-none d-sm-inline-block">
-        <a href="/home-publica" class="nav-link">
-            <i class="far fa-globe mr-1"></i> Ir a página pública
-        </a>
-    </li>
-    <li class="nav-item d-none d-sm-inline-block">
-        <a href="#" onclick="cerrarSesion(event)" class="nav-link text-danger">
-            <i class="far fa-sign-out-alt mr-1"></i> Cerrar sesión
-        </a>
-    </li>
-@endpush
+@endsection
 
 {{-- SIDEBAR --}}
 @push('adminlte_sidebar')
@@ -64,13 +166,30 @@
                 </p>
             </a>
             <ul class="nav nav-treeview">
-
-                {{-- Ver eventos --}}
+                {{-- Lista de eventos --}}
                 <li class="nav-item">
                     <a href="{{ route('ong.eventos.index') }}" 
                        class="nav-link {{ request()->is('ong/eventos') ? 'active' : '' }}">
                         <i class="far fa-list nav-icon text-primary"></i>
-                        <p>Ver eventos</p>
+                        <p>Lista de eventos</p>
+                    </a>
+                </li>
+
+                {{-- Dashboard de eventos --}}
+                <li class="nav-item">
+                    <a href="{{ route('ong.eventos-dashboard.index') }}" 
+                       class="nav-link {{ request()->is('ong/eventos-dashboard*') ? 'active' : '' }}">
+                        <i class="far fa-chart-bar nav-icon text-info"></i>
+                        <p>Dashboard de eventos</p>
+                    </a>
+                </li>
+
+                {{-- Historial de eventos --}}
+                <li class="nav-item">
+                    <a href="{{ route('ong.eventos.historial') }}" 
+                       class="nav-link {{ request()->is('ong/eventos/historial*') ? 'active' : '' }}">
+                        <i class="far fa-history nav-icon text-warning"></i>
+                        <p>Historial de eventos</p>
                     </a>
                 </li>
 
@@ -1120,13 +1239,24 @@ async function actualizarContadorNotificaciones() {
             
             if (contadorNavbar) {
                 if (contador > 0) {
-                    // Mostrar "10+" cuando hay 10 o más notificaciones, o el número exacto si es menor
-                    contadorNavbar.textContent = contador >= 10 ? '10+' : contador.toString();
+                    // Formatear número estilo TikTok (mostrar "999+" si es mayor a 999)
+                    const mostrarNumero = contador > 999 ? '999+' : contador.toString();
+                    contadorNavbar.textContent = mostrarNumero;
                     contadorNavbar.style.display = 'flex';
                     contadorNavbar.style.visibility = 'visible';
                     contadorNavbar.style.opacity = '1';
-                    contadorNavbar.style.backgroundColor = '#dc3545';
+                    // Aplicar estilo TikTok
+                    contadorNavbar.style.background = 'linear-gradient(135deg, #ff0050 0%, #ff4081 100%)';
                     contadorNavbar.style.color = 'white';
+                    contadorNavbar.style.fontWeight = '900';
+                    contadorNavbar.style.fontSize = '0.85rem';
+                    contadorNavbar.style.boxShadow = '0 3px 8px rgba(255, 0, 80, 0.5), 0 0 0 2px white';
+                    contadorNavbar.style.border = '2px solid white';
+                    contadorNavbar.style.top = '-8px';
+                    contadorNavbar.style.right = '-8px';
+                    contadorNavbar.style.minWidth = '22px';
+                    contadorNavbar.style.height = '22px';
+                    contadorNavbar.style.borderRadius = '11px';
                     contadorNavbar.style.alignItems = 'center';
                     contadorNavbar.style.justifyContent = 'center';
                     

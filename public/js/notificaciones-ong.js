@@ -94,7 +94,8 @@
         const badge = document.createElement('span');
         badge.className = 'badge badge-danger position-absolute';
         badge.id = 'contadorNotificaciones';
-        badge.style.cssText = 'top: 5px; right: 5px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; padding: 3px 6px; min-width: 18px; height: 18px; border-radius: 9px; font-weight: bold; z-index: 1000; background-color: #dc3545 !important; color: white !important; box-shadow: 0 2px 4px rgba(0,0,0,0.3);';
+        // Estilo TikTok: número grande y visible
+        badge.style.cssText = 'top: -8px; right: -8px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 900; padding: 4px 8px; min-width: 22px; height: 22px; border-radius: 11px; z-index: 1000; background: linear-gradient(135deg, #ff0050 0%, #ff4081 100%) !important; color: white !important; box-shadow: 0 3px 8px rgba(255, 0, 80, 0.5), 0 0 0 2px white; border: 2px solid white; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; letter-spacing: -0.5px;';
         badge.textContent = '0';
         
         link.appendChild(bellIcon);
@@ -132,6 +133,85 @@
         console.log('📍 Posición del icono:', navItem.getBoundingClientRect());
         
         return navItem;
+    }
+    
+    // ================================
+    // Actualizar header con nombre/avatar desde la API de dashboard ONG
+    // ================================
+    async function actualizarHeaderOng() {
+        try {
+            const nombreSpan = document.getElementById('headerNombreOng');
+            const avatarImg = document.getElementById('headerAvatarOng');
+            const inicialSpan = document.getElementById('headerAvatarInicialOng');
+
+            if (!nombreSpan) return;
+
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            let API_BASE_URL = window.location.origin;
+            if (typeof window !== 'undefined' && window.API_BASE_URL) {
+                API_BASE_URL = window.API_BASE_URL;
+            }
+
+            const res = await fetch(`${API_BASE_URL}/api/dashboard-ong/estadisticas-generales`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                },
+                cache: 'no-store'
+            });
+
+            const data = await res.json();
+            if (!data || data.success === false) {
+                console.warn('⚠️ No se pudo obtener datos del dashboard');
+                return;
+            }
+
+            // Obtener nombre: prioridad ONG > usuario
+            const nombre = (data.ong && data.ong.nombre) || (data.usuario && data.usuario.nombre_usuario) || null;
+            
+            // Obtener foto: prioridad ONG > usuario
+            const foto = (data.ong && data.ong.foto_perfil) || (data.usuario && data.usuario.foto_perfil) || null;
+
+            // Actualizar nombre
+            if (nombre && nombreSpan) {
+                nombreSpan.textContent = nombre;
+            }
+
+            // Actualizar avatar
+            if (avatarImg && inicialSpan) {
+                if (foto && foto.trim() !== '') {
+                    // Hay foto: mostrar imagen, ocultar inicial
+                    avatarImg.src = foto;
+                    avatarImg.onerror = function() {
+                        // Si la imagen falla al cargar, mostrar inicial
+                        avatarImg.style.display = 'none';
+                        inicialSpan.style.display = 'block';
+                        if (nombre) {
+                            inicialSpan.textContent = nombre.charAt(0).toUpperCase();
+                        }
+                    };
+                    avatarImg.onload = function() {
+                        // Imagen cargada correctamente
+                        avatarImg.style.display = 'block';
+                        inicialSpan.style.display = 'none';
+                    };
+                    avatarImg.style.display = 'block';
+                    inicialSpan.style.display = 'none';
+                } else {
+                    // No hay foto: mostrar inicial, ocultar imagen
+                    avatarImg.style.display = 'none';
+                    inicialSpan.style.display = 'block';
+                    if (nombre) {
+                        inicialSpan.textContent = nombre.charAt(0).toUpperCase();
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('⚠️ Error actualizando header ONG:', e);
+        }
     }
     
     // Función para actualizar el contador
@@ -183,16 +263,29 @@
                 const badges = document.querySelectorAll('#contadorNotificaciones');
                 console.log('🏷️ Badges encontrados:', badges.length);
                 
+                // Formatear número estilo TikTok (mostrar "999+" si es mayor a 999)
+                const mostrarNumero = contador > 999 ? '999+' : contador.toString();
+                
                 badges.forEach((badge, index) => {
                     console.log(`🏷️ Actualizando badge ${index + 1}:`, badge);
                     
                     if (contador > 0) {
-                        badge.textContent = contador >= 10 ? '10+' : contador.toString();
+                        badge.textContent = mostrarNumero;
                         badge.style.display = 'flex';
                         badge.style.visibility = 'visible';
                         badge.style.opacity = '1';
-                        badge.style.backgroundColor = '#dc3545';
+                        // Aplicar estilo TikTok
+                        badge.style.background = 'linear-gradient(135deg, #ff0050 0%, #ff4081 100%)';
                         badge.style.color = 'white';
+                        badge.style.fontWeight = '900';
+                        badge.style.fontSize = '0.85rem';
+                        badge.style.boxShadow = '0 3px 8px rgba(255, 0, 80, 0.5), 0 0 0 2px white';
+                        badge.style.border = '2px solid white';
+                        badge.style.top = '-8px';
+                        badge.style.right = '-8px';
+                        badge.style.minWidth = '22px';
+                        badge.style.height = '22px';
+                        badge.style.borderRadius = '11px';
                         console.log(`✅ Badge ${index + 1} actualizado a:`, badge.textContent);
                     } else {
                         badge.style.display = 'none';
@@ -210,8 +303,9 @@
                         const badgePrueba = document.createElement('span');
                         badgePrueba.className = 'badge badge-danger position-absolute';
                         badgePrueba.id = 'contadorNotificaciones';
-                        badgePrueba.style.cssText = 'top: 5px; right: 5px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; padding: 3px 6px; min-width: 18px; height: 18px; border-radius: 9px; font-weight: bold; z-index: 1000; background-color: #dc3545 !important; color: white !important; box-shadow: 0 2px 4px rgba(0,0,0,0.3);';
-                        badgePrueba.textContent = contador >= 10 ? '10+' : contador.toString();
+                        const mostrarNumero = contador > 999 ? '999+' : contador.toString();
+                        badgePrueba.style.cssText = 'top: -8px; right: -8px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 900; padding: 4px 8px; min-width: 22px; height: 22px; border-radius: 11px; z-index: 1000; background: linear-gradient(135deg, #ff0050 0%, #ff4081 100%) !important; color: white !important; box-shadow: 0 3px 8px rgba(255, 0, 80, 0.5), 0 0 0 2px white; border: 2px solid white; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; letter-spacing: -0.5px;';
+                        badgePrueba.textContent = mostrarNumero;
                         icono.appendChild(badgePrueba);
                         console.log('✅ Badge de prueba creado');
                     }
@@ -228,16 +322,12 @@
     function inicializar() {
         console.log('🚀 Inicializando sistema de notificaciones...');
         
-        const icono = crearIconoNotificaciones();
-        
-        if (icono) {
-            console.log('✅ Icono creado, actualizando contador...');
+        // Solo mantenemos el sistema de contador, ya no insertamos un nuevo icono
             setTimeout(actualizarContador, 500);
             setTimeout(actualizarContador, 1500);
-        } else {
-            console.warn('⚠️ No se pudo crear el icono, reintentando...');
-            setTimeout(inicializar, 1000);
-        }
+
+        // Actualizar header (avatar + nombre) una vez cargado
+        actualizarHeaderOng();
     }
     
     // Ejecutar cuando el DOM esté listo

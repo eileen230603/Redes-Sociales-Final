@@ -4,6 +4,44 @@
 
 @section('title', 'UNI2 • Panel de Empresa')
 
+@push('js')
+    {{-- Lucide icons para panel Empresa --}}
+    <script type="module">
+        import { createIcons, icons } from "https://unpkg.com/lucide@latest/dist/esm/lucide.js";
+
+        const faToLucide = {
+            'fa-home': 'home',
+            'fa-calendar-check': 'calendar-check',
+            'fa-hand-holding-heart': 'hand-heart',
+            'fa-bell': 'bell',
+            'fa-chart-bar': 'bar-chart-3',
+            'fa-user-circle': 'user-round',
+            'fa-globe': 'globe-2',
+            'fa-sign-out-alt': 'log-out',
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                document.querySelectorAll('i[class*=\"fa-\"]').forEach(el => {
+                    const classes = el.className.split(/\\s+/);
+                    const faClass = classes.find(c => c.startsWith('fa-'));
+                    if (!faClass) return;
+
+                    const lucideName = faToLucide[faClass];
+                    if (!lucideName || !icons[lucideName]) return;
+
+                    el.setAttribute('data-lucide', lucideName);
+                    el.className = classes.filter(c => !c.startsWith('fa')).join(' ').trim();
+                });
+
+                createIcons({ icons });
+            } catch (e) {
+                console.warn('Lucide empresa no pudo inicializarse:', e);
+            }
+        });
+    </script>
+@endpush
+
 @php
     // Configuración específica para empresas
     config(['adminlte.layout_topnav' => null]);
@@ -85,15 +123,86 @@
             <span class="badge badge-danger position-absolute" id="contadorNotificacionesEmpresa" style="top: 2px; right: 2px; display: none; font-size: 0.7rem; padding: 4px 7px; min-width: 20px; height: 20px; line-height: 12px; border-radius: 10px; font-weight: bold; z-index: 10; background-color: #dc3545 !important; color: white !important; box-shadow: 0 2px 4px rgba(0,0,0,0.2); align-items: center; justify-content: center;">0</span>
         </a>
     </li>
-    <li class="nav-item d-none d-sm-inline-block">
-        <a href="/home-publica" class="nav-link">
-            <i class="fas fa-globe-americas mr-1"></i> Ir a página pública
-        </a>
-    </li>
-    <li class="nav-item d-none d-sm-inline-block">
-        <a href="#" class="nav-link text-danger logout-link" onclick="event.preventDefault(); event.stopPropagation(); cerrarSesion(event); return false;">
-            <i class="far fa-sign-out-alt mr-1"></i> Cerrar sesión
-        </a>
+    
+    {{-- Avatar y nombre del usuario empresa - COMPLETAMENTE A LA DERECHA --}}
+    <li class="nav-item d-flex align-items-center ml-auto" style="order: 999; margin-left: auto !important; margin-right: 0 !important;">
+        <div class="d-flex align-items-center pl-3 pr-3"
+             style="background: #ffffff; border-radius: 999px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 4px 16px; margin-right: 0 !important; min-width: 220px;">
+            @php
+                $user = Auth::user();
+                $empresa = optional($user)->empresa;
+                
+                // Nombre: nombre_empresa > nombre_usuario > name > 'Usuario'
+                $nombreUsuario = 'Usuario';
+                if ($empresa) {
+                    $nombreUsuario = trim($empresa->nombre_empresa ?? '') ?: ($user->nombre_usuario ?? ($user->name ?? 'Usuario'));
+                } else {
+                    $nombreUsuario = $user->nombre_usuario ?? ($user->name ?? 'Usuario');
+                }
+                
+                $inicial = mb_substr(trim($nombreUsuario), 0, 1, 'UTF-8');
+                
+                // Prioridad de avatar: foto de empresa > foto de usuario > null
+                $foto = null;
+                if ($empresa) {
+                    try {
+                        $foto = $empresa->foto_perfil_url ?? null;
+                    } catch (\Exception $e) {}
+                }
+                if (!$foto && $user) {
+                    try {
+                        $foto = $user->foto_perfil_url ?? null;
+                    } catch (\Exception $e) {
+                        $foto = null;
+                    }
+                }
+            @endphp
+            
+            {{-- Avatar redondo --}}
+            <div class="mr-3" id="avatarContainerEmpresa"
+                 style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: #e9f5ff; flex-shrink: 0; position: relative; display: flex; align-items: center; justify-content: center;">
+                <img id="headerAvatarEmpresa"
+                     src="{{ $foto ?? '' }}"
+                     alt="Foto perfil"
+                     style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%; display: {{ $foto ? 'block' : 'none' }}; margin: 0; padding: 0;">
+                <span id="headerAvatarInicialEmpresa"
+                      style="font-size: 1rem; display: {{ $foto ? 'none' : 'flex' }}; align-items: center; justify-content: center; width: 40px; height: 40px; margin: 0; padding: 0; border-radius: 50%;">{{ $inicial }}</span>
+            </div>
+            
+            {{-- Nombre + etiqueta --}}
+            <div class="d-flex flex-column mr-3" style="max-width: 200px; min-width: 120px; flex-grow: 1;">
+                <span id="headerNombreEmpresa"
+                      style="font-size: 0.9rem; color: #2c3e50; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">
+                    {{ $nombreUsuario }}
+                </span>
+                @if($empresa)
+                    <small style="font-size: 0.75rem; color: #8c9aa8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">
+                        Empresa
+                    </small>
+                @endif
+            </div>
+            
+            {{-- Dropdown de opciones --}}
+            <div class="dropdown" style="flex-shrink: 0;">
+                <a class="text-muted" href="#" role="button" id="dropdownPerfilEmpresa"
+                   data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                   style="font-size: 0.75rem; text-decoration: none; padding: 0.25rem;">
+                    <i class="fas fa-chevron-down"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownPerfilEmpresa">
+                    <a class="dropdown-item" href="/perfil/empresa">
+                        <i class="far fa-user mr-2"></i> Mi perfil
+                    </a>
+                    <a class="dropdown-item" href="/home-publica">
+                        <i class="far fa-globe mr-2"></i> Ir a página pública
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item text-danger" href="#" onclick="cerrarSesion(event)">
+                        <i class="far fa-sign-out-alt mr-2"></i> Cerrar sesión
+                    </a>
+                </div>
+            </div>
+        </div>
     </li>
 @endpush
 
@@ -341,6 +450,63 @@
         visibility: visible !important;
         opacity: 1 !important;
     }
+
+    /* Estilos para el bloque de avatar y nombre del usuario empresa */
+    .main-header .navbar-nav .nav-item.ml-auto {
+        margin-left: auto !important;
+        margin-right: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    
+    /* Asegurar que el bloque esté completamente a la derecha */
+    #bloqueUsuarioEmpresa {
+        margin-left: auto !important;
+        margin-right: 0 !important;
+    }
+    
+    #bloqueUsuarioEmpresa > div {
+        margin-right: 0 !important;
+    }
+    
+    .main-header .navbar-nav .nav-item .dropdown-toggle,
+    .main-header .navbar-nav .nav-item #dropdownPerfilEmpresa {
+        border: none;
+        background: transparent;
+        padding: 0.25rem 0.5rem;
+        color: #6c757d;
+    }
+    
+    .main-header .navbar-nav .nav-item .dropdown-toggle:hover,
+    .main-header .navbar-nav .nav-item #dropdownPerfilEmpresa:hover {
+        color: var(--brand-primario) !important;
+    }
+    
+    /* Ocultar el pseudo-elemento ::after de Bootstrap que agrega una flecha automática */
+    .main-header .navbar-nav .nav-item #dropdownPerfilEmpresa::after {
+        display: none !important;
+    }
+    
+    /* Asegurar que el avatar sea un círculo perfecto */
+    #avatarContainerEmpresa {
+        width: 40px !important;
+        height: 40px !important;
+        border-radius: 50% !important;
+        overflow: hidden !important;
+    }
+    
+    #headerAvatarEmpresa {
+        width: 40px !important;
+        height: 40px !important;
+        object-fit: cover !important;
+        border-radius: 50% !important;
+    }
+    
+    #headerAvatarInicialEmpresa {
+        width: 40px !important;
+        height: 40px !important;
+        border-radius: 50% !important;
+    }
 </style>
 @endpush
 
@@ -443,6 +609,283 @@ async function cerrarSesion(event) {
 
 // Asegurar que la función esté disponible globalmente
 window.cerrarSesion = cerrarSesion;
+
+// ================================
+// Función para crear e insertar el bloque de avatar y nombre en el navbar
+// ================================
+function crearBloqueUsuarioEmpresa() {
+    // Buscar el navbar de diferentes formas
+    let navbar = document.querySelector('.main-header .navbar-nav');
+    if (!navbar) {
+        navbar = document.querySelector('.navbar-nav');
+    }
+    if (!navbar) {
+        navbar = document.querySelector('.main-header nav ul');
+    }
+    if (!navbar) {
+        navbar = document.querySelector('nav.navbar ul');
+    }
+    
+    if (!navbar) {
+        console.warn('⚠️ Navbar no encontrado, reintentando...');
+        setTimeout(crearBloqueUsuarioEmpresa, 300);
+        return;
+    }
+
+    // Verificar si ya existe
+    if (document.getElementById('bloqueUsuarioEmpresa')) {
+        console.log('✅ Bloque de usuario empresa ya existe');
+        return;
+    }
+    
+    console.log('🔍 Creando bloque de usuario empresa...');
+
+    // Crear el elemento
+    const li = document.createElement('li');
+    li.className = 'nav-item d-flex align-items-center ml-auto';
+    li.id = 'bloqueUsuarioEmpresa';
+    li.style.cssText = 'order: 999; display: flex !important; align-items: center !important; margin-left: auto !important; margin-right: 0 !important;';
+
+    @php
+        $user = Auth::user();
+        $empresa = optional($user)->empresa;
+        
+        $nombreUsuario = 'Usuario';
+        if ($empresa) {
+            $nombreUsuario = trim($empresa->nombre_empresa ?? '') ?: ($user->nombre_usuario ?? ($user->name ?? 'Usuario'));
+        } else {
+            $nombreUsuario = $user->nombre_usuario ?? ($user->name ?? 'Usuario');
+        }
+        
+        $inicial = mb_substr(trim($nombreUsuario), 0, 1, 'UTF-8');
+        
+        $foto = null;
+        if ($empresa) {
+            try {
+                $foto = $empresa->foto_perfil_url ?? null;
+            } catch (\Exception $e) {}
+        }
+        if (!$foto && $user) {
+            try {
+                $foto = $user->foto_perfil_url ?? null;
+            } catch (\Exception $e) {
+                $foto = null;
+            }
+        }
+    @endphp
+
+    li.innerHTML = `
+        <div class="d-flex align-items-center pl-3 pr-3"
+             style="background: #ffffff; border-radius: 999px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 4px 16px; margin-right: 0 !important; min-width: 220px;">
+            <div class="mr-3" id="avatarContainerEmpresa"
+                 style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: #e9f5ff; flex-shrink: 0; position: relative; display: flex; align-items: center; justify-content: center;">
+                <img id="headerAvatarEmpresa"
+                     src="{{ $foto ?? '' }}"
+                     alt="Foto perfil"
+                     style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%; display: {{ $foto ? 'block' : 'none' }}; margin: 0; padding: 0;">
+                <span id="headerAvatarInicialEmpresa"
+                      style="font-size: 1rem; display: {{ $foto ? 'none' : 'flex' }}; align-items: center; justify-content: center; width: 40px; height: 40px; margin: 0; padding: 0; border-radius: 50%;">{{ $inicial }}</span>
+            </div>
+            <div class="d-flex flex-column mr-3" style="max-width: 200px; min-width: 120px; flex-grow: 1;">
+                <span id="headerNombreEmpresa"
+                      style="font-size: 0.9rem; color: #2c3e50; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">
+                    {{ $nombreUsuario }}
+                </span>
+                @if($empresa)
+                    <small style="font-size: 0.75rem; color: #8c9aa8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">
+                        Empresa
+                    </small>
+                @endif
+            </div>
+            <div class="dropdown" style="flex-shrink: 0;">
+                <a class="text-muted" href="#" role="button" id="dropdownPerfilEmpresa"
+                   data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                   style="font-size: 0.75rem; text-decoration: none; padding: 0.25rem;">
+                    <i class="fas fa-chevron-down"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownPerfilEmpresa">
+                    <a class="dropdown-item" href="/perfil/empresa">
+                        <i class="far fa-user mr-2"></i> Mi perfil
+                    </a>
+                    <a class="dropdown-item" href="/home-publica">
+                        <i class="far fa-globe mr-2"></i> Ir a página pública
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item text-danger" href="#" onclick="cerrarSesion(event)">
+                        <i class="far fa-sign-out-alt mr-2"></i> Cerrar sesión
+                    </a>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Insertar al final del navbar
+    navbar.appendChild(li);
+    console.log('✅ Bloque de usuario empresa creado e insertado en:', navbar);
+    
+    // Inicializar el dropdown de Bootstrap si está disponible
+    if (typeof $ !== 'undefined' && $.fn.dropdown) {
+        $('#dropdownPerfilEmpresa').dropdown();
+    }
+    
+    // Llamar a actualizarHeaderEmpresa para cargar datos desde la API
+    setTimeout(actualizarHeaderEmpresa, 500);
+}
+
+// ================================
+// Actualizar header con nombre/avatar desde la API de perfil
+// ================================
+async function actualizarHeaderEmpresa() {
+    try {
+        const nombreSpan = document.getElementById('headerNombreEmpresa');
+        const avatarImg = document.getElementById('headerAvatarEmpresa');
+        const inicialSpan = document.getElementById('headerAvatarInicialEmpresa');
+
+        if (!nombreSpan) return;
+
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        let API_BASE_URL = window.location.origin;
+        if (typeof window !== 'undefined' && window.API_BASE_URL) {
+            API_BASE_URL = window.API_BASE_URL;
+        }
+
+        const res = await fetch(`${API_BASE_URL}/api/perfil`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            },
+            cache: 'no-store'
+        });
+
+        const data = await res.json();
+        if (!data || data.success === false) {
+            console.warn('⚠️ No se pudo obtener datos del perfil');
+            return;
+        }
+
+        // Obtener nombre: prioridad empresa > usuario
+        let nombre = null;
+        if (data.data && data.data.empresa) {
+            nombre = data.data.empresa.nombre_empresa || null;
+        }
+        if (!nombre && data.data && data.data.nombre_usuario) {
+            nombre = data.data.nombre_usuario;
+        }
+
+        // Obtener foto: prioridad empresa > usuario
+        const foto = (data.data && data.data.empresa && data.data.empresa.foto_perfil) 
+            || (data.data && data.data.foto_perfil) 
+            || null;
+
+        // Actualizar nombre
+        if (nombre && nombreSpan) {
+            nombreSpan.textContent = nombre;
+        }
+
+        // Actualizar avatar - asegurar círculo perfecto
+        if (avatarImg && inicialSpan) {
+            // Aplicar estilos para círculo perfecto
+            const avatarContainer = document.getElementById('avatarContainerEmpresa');
+            if (avatarContainer) {
+                avatarContainer.style.cssText = 'width: 40px !important; height: 40px !important; border-radius: 50% !important; overflow: hidden !important; background: #e9f5ff; flex-shrink: 0; position: relative; display: flex; align-items: center; justify-content: center; margin-right: 0.75rem;';
+            }
+            
+            // Estilos para la imagen - círculo perfecto
+            avatarImg.style.cssText = 'width: 40px !important; height: 40px !important; border-radius: 50% !important; object-fit: cover !important; margin: 0 !important; padding: 0 !important; display: block;';
+            
+            // Estilos para la inicial - círculo perfecto
+            inicialSpan.style.cssText = 'width: 40px !important; height: 40px !important; border-radius: 50% !important; margin: 0 !important; padding: 0 !important; display: flex; align-items: center; justify-content: center; font-size: 1rem; position: absolute; top: 0; left: 0;';
+            
+            if (foto && foto.trim() !== '') {
+                // Hay foto: mostrar imagen, ocultar inicial
+                avatarImg.src = foto;
+                avatarImg.onerror = function() {
+                    // Si la imagen falla al cargar, mostrar inicial
+                    avatarImg.style.display = 'none';
+                    inicialSpan.style.display = 'flex';
+                    if (nombre) {
+                        inicialSpan.textContent = nombre.charAt(0).toUpperCase();
+                    }
+                };
+                avatarImg.onload = function() {
+                    // Imagen cargada correctamente
+                    avatarImg.style.display = 'block';
+                    inicialSpan.style.display = 'none';
+                };
+                avatarImg.style.display = 'block';
+                inicialSpan.style.display = 'none';
+            } else {
+                // No hay foto: mostrar inicial, ocultar imagen
+                avatarImg.style.display = 'none';
+                inicialSpan.style.display = 'flex';
+                if (nombre) {
+                    inicialSpan.textContent = nombre.charAt(0).toUpperCase();
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('⚠️ Error actualizando header Empresa:', e);
+    }
+}
+
+// Inicializar cuando el DOM esté listo
+function inicializarHeaderEmpresa() {
+    // Esperar a que el navbar esté renderizado
+    const navbar = document.querySelector('.main-header .navbar-nav');
+    if (navbar) {
+        crearBloqueUsuarioEmpresa();
+    } else {
+        // Reintentar si el navbar aún no está listo
+        setTimeout(inicializarHeaderEmpresa, 200);
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(inicializarHeaderEmpresa, 300);
+        setTimeout(crearBloqueUsuarioEmpresa, 1000);
+        setTimeout(actualizarHeaderEmpresa, 2000);
+    });
+} else {
+    setTimeout(inicializarHeaderEmpresa, 300);
+    setTimeout(crearBloqueUsuarioEmpresa, 1000);
+    setTimeout(actualizarHeaderEmpresa, 2000);
+}
+
+// También actualizar cuando la página recupera el foco
+window.addEventListener('focus', () => {
+    setTimeout(actualizarHeaderEmpresa, 500);
+});
+
+// Observer para detectar cuando el navbar se agregue al DOM
+const observerEmpresa = new MutationObserver((mutations) => {
+    const navbar = document.querySelector('.main-header .navbar-nav') || 
+                   document.querySelector('.navbar-nav') ||
+                   document.querySelector('.main-header nav ul') ||
+                   document.querySelector('nav.navbar ul');
+    
+    if (navbar && !document.getElementById('bloqueUsuarioEmpresa')) {
+        console.log('🔍 Navbar detectado por observer, creando bloque empresa...');
+        crearBloqueUsuarioEmpresa();
+    }
+});
+
+// Observar cambios en el DOM
+if (document.body) {
+    observerEmpresa.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+}
+
+// También intentar crear el bloque cuando la ventana se carga completamente
+window.addEventListener('load', () => {
+    setTimeout(crearBloqueUsuarioEmpresa, 1000);
+    setTimeout(crearBloqueUsuarioEmpresa, 2000);
+});
 
 // ===============================
 // 🔔 SISTEMA DE NOTIFICACIONES PARA EMPRESA

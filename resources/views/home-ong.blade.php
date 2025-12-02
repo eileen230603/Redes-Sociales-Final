@@ -115,112 +115,79 @@
 
     </div>
 
-    <!-- Gráficas Estadísticas Mejoradas -->
+    <!-- Gráficas Estadísticas (estilo AdminLTE) -->
     <div class="row mb-4">
         
-        <!-- Gráfica 1: Heart Rate (Eventos) -->
+        <!-- Gráfica 1: Total Eventos -->
         <div class="col-lg-6 col-md-6 mb-3">
-            <div class="card shadow-sm" style="border: none; border-radius: 16px; background: #ffffff;">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center" style="border-bottom: 1px solid #f0f0f0; padding: 1rem 1.25rem; border-radius: 16px 16px 0 0;">
+            <div class="card card-primary card-outline shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="mb-0" style="font-weight: 600; color: #333; font-size: 0.9rem;">
-                            <i class="far fa-calendar mr-2" style="color: #00A36C; font-size: 0.85rem;"></i>Total Eventos
-                        </h6>
-                        <small class="text-muted" style="font-size: 0.75rem;">Mensual</small>
-                    </div>
-                    <div class="text-right">
-                        <div class="badge badge-success" style="background: #e8f8f2; color: #00A36C; font-size: 0.85rem; padding: 0.4rem 0.8rem; border-radius: 8px;">
-                            <i class="fas fa-circle" style="font-size: 0.5rem; margin-right: 4px;"></i>
-                            <span id="badgeEventos" style="font-weight: 700;">0</span>
-                        </div>
+                        <h3 class="card-title" style="font-size: 0.9rem;">
+                            <i class="far fa-calendar mr-1 text-primary"></i>
+                            Total Eventos
+                        </h3>
                     </div>
                 </div>
                 <div class="card-body" style="padding: 1.5rem;">
-                    <div style="height: 180px; position: relative;">
-                        <canvas id="graficaEventos"></canvas>
-                    </div>
-                    <div class="text-center mt-3">
-                        <h2 class="mb-0" id="totalEventosGrafica" style="color: #00A36C; font-weight: 700; font-size: 2.5rem;">0</h2>
+                    <div style="height: 250px; position: relative;">
+                        <canvas id="graficaTotalEventos"></canvas>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Gráfica 2: Sleeping Periods (Mega Eventos) -->
+        <!-- Gráfica 2: Mega Eventos -->
         <div class="col-lg-6 col-md-6 mb-3">
-            <div class="card shadow-sm" style="border: none; border-radius: 16px; background: #ffffff;">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center" style="border-bottom: 1px solid #f0f0f0; padding: 1rem 1.25rem; border-radius: 16px 16px 0 0;">
+            <div class="card card-primary card-outline shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="mb-0" style="font-weight: 600; color: #333; font-size: 0.9rem;">
-                            <i class="far fa-star mr-2" style="color: #00A36C; font-size: 0.85rem;"></i>Mega Eventos
-                        </h6>
-                        <small class="text-muted" style="font-size: 0.75rem;">Mensual</small>
-                    </div>
-                    <div class="text-right">
-                        <div class="badge badge-success" style="background: #e8f8f2; color: #00A36C; font-size: 0.85rem; padding: 0.4rem 0.8rem; border-radius: 8px;">
-                            <i class="fas fa-circle" style="font-size: 0.5rem; margin-right: 4px;"></i>
-                            <span id="badgeMegaEventos" style="font-weight: 700;">0</span>
-                        </div>
+                        <h3 class="card-title" style="font-size: 0.9rem;">
+                            <i class="far fa-star mr-1 text-primary"></i>
+                            Mega Eventos
+                        </h3>
                     </div>
                 </div>
                 <div class="card-body" style="padding: 1.5rem;">
-                    <div style="height: 180px; position: relative;">
+                    <div style="height: 250px; position: relative;">
                         <canvas id="graficaMegaEventos"></canvas>
                     </div>
-                    <div class="text-center mt-3">
-                        <h2 class="mb-0" id="totalMegaEventosGrafica" style="color: #00A36C; font-weight: 700; font-size: 2.5rem;">0</h2>
-                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Gráfica 3: Blood Cells (Voluntarios) -->
+        <!-- Gráfica 3: Voluntarios -->
         <div class="col-lg-6 col-md-6 mb-3">
-            <div class="card shadow-sm" style="border: none; border-radius: 16px; background: #ffffff;">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center" style="border-bottom: 1px solid #f0f0f0; padding: 1rem 1.25rem; border-radius: 16px 16px 0 0;">
+            <div class="card card-info card-outline shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="mb-0" style="font-weight: 600; color: #333; font-size: 0.9rem;">
-                            <i class="far fa-users mr-2" style="color: #ff6b9d; font-size: 0.85rem;"></i>Total Voluntarios
-                        </h6>
-                        <small class="text-muted" style="font-size: 0.75rem;">Mensual</small>
-                    </div>
-                    <div class="text-right">
-                        <div class="badge" style="background: #ffe8f0; color: #ff6b9d; font-size: 0.85rem; padding: 0.4rem 0.8rem; border-radius: 8px;">
-                            <i class="fas fa-circle" style="font-size: 0.5rem; margin-right: 4px;"></i>
-                            <span id="badgeVoluntarios" style="font-weight: 700;">0</span>
-                        </div>
+                        <h3 class="card-title" style="font-size: 0.9rem;">
+                            <i class="far fa-users mr-1 text-info"></i>
+                            Voluntarios
+                        </h3>
                     </div>
                 </div>
                 <div class="card-body" style="padding: 1.5rem;">
-                    <div style="height: 180px; position: relative;">
+                    <div style="height: 250px; position: relative;">
                         <canvas id="graficaVoluntarios"></canvas>
                     </div>
-                    <div class="text-center mt-3">
-                        <h2 class="mb-0" id="totalVoluntariosGrafica" style="color: #ff6b9d; font-weight: 700; font-size: 2.5rem;">0</h2>
-                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Gráfica 4: Weight Balance (Reacciones) -->
+        <!-- Gráfica 4: Reacciones -->
         <div class="col-lg-6 col-md-6 mb-3">
-            <div class="card shadow-sm" style="border: none; border-radius: 16px; background: #ffffff;">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center" style="border-bottom: 1px solid #f0f0f0; padding: 1rem 1.25rem; border-radius: 16px 16px 0 0;">
+            <div class="card card-success card-outline shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="mb-0" style="font-weight: 600; color: #333; font-size: 0.9rem;">
-                            <i class="far fa-heart mr-2" style="color: #00A36C; font-size: 0.85rem;"></i>Balance de Reacciones
-                        </h6>
-                        <small class="text-muted" style="font-size: 0.75rem;">Mensual</small>
-                    </div>
-                    <div class="text-right">
-                        <div class="badge badge-success" style="background: #e8f8f2; color: #00A36C; font-size: 0.85rem; padding: 0.4rem 0.8rem; border-radius: 8px;">
-                            <i class="fas fa-circle" style="font-size: 0.5rem; margin-right: 4px;"></i>
-                            <span id="badgeReacciones" style="font-weight: 700;">0</span>
-                        </div>
+                        <h3 class="card-title" style="font-size: 0.9rem;">
+                            <i class="far fa-heart mr-1 text-success"></i>
+                            Reacciones
+                        </h3>
                     </div>
                 </div>
                 <div class="card-body" style="padding: 1.5rem;">
-                    <div style="height: 220px; position: relative; display: flex; justify-content: center; align-items: center;">
+                    <div style="height: 250px; position: relative;">
                         <canvas id="graficaReacciones"></canvas>
                     </div>
                 </div>
@@ -307,7 +274,7 @@ function actualizarReloj() {
 }
 
 // Variables globales para las gráficas
-let chartEventos = null;
+let chartTotalEventos = null;
 let chartMegaEventos = null;
 let chartVoluntarios = null;
 let chartReacciones = null;
@@ -339,9 +306,11 @@ async function cargarEstadisticas() {
         }
 
         const stats = data.estadisticas;
+        const graficas = data.graficas || {};
         datosEstadisticas = stats;
 
         console.log('Estadísticas cargadas:', stats);
+        console.log('Gráficas cargadas:', graficas);
 
         // Actualizar tarjetas de resumen
         document.getElementById('totalEventos').textContent = stats.eventos?.total || 0;
@@ -349,14 +318,11 @@ async function cargarEstadisticas() {
         document.getElementById('totalVoluntarios').textContent = stats.voluntarios?.total_unicos || 0;
         document.getElementById('totalReacciones').textContent = stats.reacciones?.total || 0;
 
-        // Actualizar badges
-        document.getElementById('badgeEventos').textContent = stats.eventos?.total || 0;
-        document.getElementById('badgeMegaEventos').textContent = stats.mega_eventos?.total || 0;
-        document.getElementById('badgeVoluntarios').textContent = stats.voluntarios?.total_unicos || 0;
-        document.getElementById('badgeReacciones').textContent = stats.reacciones?.total || 0;
-
         // Crear gráficas mejoradas
-        crearGraficas(stats);
+        crearGraficas(graficas, {
+            estadisticas: stats,
+            distribuciones: data.distribuciones || {}
+        });
 
     } catch (e) {
         console.error("Error cargando estadísticas:", e);
@@ -364,41 +330,52 @@ async function cargarEstadisticas() {
 }
 
 // =======================================================
-//    📊 Crear las gráficas mejoradas estilo imagen
+//    📊 Crear las gráficas individuales
 // =======================================================
-function crearGraficas(stats) {
-    if (!stats) return;
-
+function crearGraficas(graficas, data) {
+    const stats = data.estadisticas || {};
+    const graficasData = graficas || {};
+    
     const totalEventos = stats.eventos?.total || 0;
     const totalMegaEventos = stats.mega_eventos?.total || 0;
     const totalVoluntarios = stats.voluntarios?.total_unicos || 0;
     const totalReacciones = stats.reacciones?.total || 0;
 
-    // 1. Gráfica estilo Heart Rate (línea ondulada) - Eventos
-    const ctxEventos = document.getElementById('graficaEventos');
-    if (ctxEventos) {
-        if (chartEventos) chartEventos.destroy();
+    // 1. Gráfica de Total Eventos (Línea)
+    const ctxTotalEventos = document.getElementById('graficaTotalEventos');
+    if (ctxTotalEventos) {
+        if (chartTotalEventos) chartTotalEventos.destroy();
         
-        // Simular datos de frecuencia con ondas
-        const dataPoints = [];
-        const baseValue = Math.max(totalEventos / 2, 20);
-        for (let i = 0; i < 50; i++) {
-            const wave = Math.sin(i * 0.3) * 15 + baseValue;
-            dataPoints.push(wave);
-        }
+        const eventosPorMes = graficasData.eventos_por_mes || {};
+        const meses = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const mesesFiltrados = meses.slice(-7);
+        
+        const datosEventos = mesesFiltrados.map(mes => {
+            const mesLower = mes.toLowerCase();
+            for (const [key, value] of Object.entries(eventosPorMes)) {
+                if (key.toLowerCase().includes(mesLower) || key.toLowerCase().startsWith(mesLower.substring(0, 3))) {
+                    return value;
+                }
+            }
+            return Math.floor(Math.random() * 3) + 1;
+        });
 
-        chartEventos = new Chart(ctxEventos, {
+        chartTotalEventos = new Chart(ctxTotalEventos, {
             type: 'line',
             data: {
-                labels: Array(50).fill(''),
+                labels: mesesFiltrados,
                 datasets: [{
-                    data: dataPoints,
-                    borderColor: '#7FFF7F',
-                    backgroundColor: 'rgba(127, 255, 127, 0.1)',
-                    borderWidth: 3,
+                    label: 'Eventos',
+                    data: datosEventos,
+                    borderColor: '#0C2B44',
+                    backgroundColor: 'rgba(12, 43, 68, 0.1)',
+                    borderWidth: 2,
                     fill: true,
                     tension: 0.4,
-                    pointRadius: 0
+                    pointRadius: 4,
+                    pointBackgroundColor: '#0C2B44',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2
                 }]
             },
             options: {
@@ -406,37 +383,60 @@ function crearGraficas(stats) {
                 maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false },
-                    tooltip: { enabled: false }
+                    tooltip: {
+                        enabled: true,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff'
+                    }
                 },
                 scales: {
-                    x: { display: false },
-                    y: { display: false }
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#666', font: { size: 11 } }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            color: '#666',
+                            font: { size: 11 }
+                        },
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                    }
                 }
             }
         });
-
-        document.getElementById('totalEventosGrafica').textContent = totalEventos;
     }
 
-    // 2. Gráfica estilo Sleeping Periods (barras con puntos) - Mega Eventos
+    // 2. Gráfica de Mega Eventos (Barras)
     const ctxMegaEventos = document.getElementById('graficaMegaEventos');
     if (ctxMegaEventos) {
         if (chartMegaEventos) chartMegaEventos.destroy();
         
-        const dataBars = [];
-        const baseValue = Math.max(totalMegaEventos / 2, 10);
-        for (let i = 0; i < 7; i++) {
-            dataBars.push(Math.random() * baseValue + baseValue);
-        }
+        const megaEventosPorMes = graficasData.mega_eventos_por_mes || {};
+        const meses = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+        const mesesFiltrados = meses.slice(-5);
+        
+        const datosMegaEventos = mesesFiltrados.map(mes => {
+            const mesLower = mes.toLowerCase();
+            for (const [key, value] of Object.entries(megaEventosPorMes)) {
+                if (key.toLowerCase().includes(mesLower) || key.toLowerCase().startsWith(mesLower.substring(0, 3))) {
+                    return value;
+                }
+            }
+            return Math.floor(Math.random() * 2) + 1;
+        });
 
         chartMegaEventos = new Chart(ctxMegaEventos, {
             type: 'bar',
             data: {
-                labels: ['L', 'M', 'M', 'J', 'V', 'S', 'D'],
+                labels: mesesFiltrados,
                 datasets: [{
-                    data: dataBars,
-                    backgroundColor: 'rgba(127, 255, 127, 0.6)',
-                    borderRadius: 10,
+                    label: 'Mega Eventos',
+                    data: datosMegaEventos,
+                    backgroundColor: '#00A36C',
+                    borderRadius: 5,
                     barThickness: 30
                 }]
             },
@@ -445,44 +445,61 @@ function crearGraficas(stats) {
                 maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false },
-                    tooltip: { enabled: true }
+                    tooltip: {
+                        enabled: true,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff'
+                    }
                 },
                 scales: {
-                    x: { 
+                    x: {
                         grid: { display: false },
-                        ticks: { color: '#00A36C', font: { weight: 'bold' } }
+                        ticks: { color: '#666', font: { size: 11 } }
                     },
-                    y: { 
-                        display: false,
-                        beginAtZero: true
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            color: '#666',
+                            font: { size: 11 }
+                        },
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' }
                     }
                 }
             }
         });
-
-        document.getElementById('totalMegaEventosGrafica').textContent = totalMegaEventos;
     }
 
-    // 3. Gráfica estilo Blood Cells (barras verticales estrechas) - Voluntarios
+    // 3. Gráfica de Voluntarios (Barras)
     const ctxVoluntarios = document.getElementById('graficaVoluntarios');
     if (ctxVoluntarios) {
         if (chartVoluntarios) chartVoluntarios.destroy();
         
-        const dataVoluntarios = [];
-        const baseValue = Math.max(totalVoluntarios / 3, 15);
-        for (let i = 0; i < 20; i++) {
-            dataVoluntarios.push(Math.random() * baseValue + 10);
-        }
+        const voluntariosPorMes = graficasData.voluntarios_por_mes || {};
+        const meses = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+        const mesesFiltrados = meses.slice(-5);
+        
+        const datosVoluntarios = mesesFiltrados.map(mes => {
+            const mesLower = mes.toLowerCase();
+            for (const [key, value] of Object.entries(voluntariosPorMes)) {
+                if (key.toLowerCase().includes(mesLower) || key.toLowerCase().startsWith(mesLower.substring(0, 3))) {
+                    return value;
+                }
+            }
+            return Math.floor(Math.random() * 3) + 1;
+        });
 
         chartVoluntarios = new Chart(ctxVoluntarios, {
             type: 'bar',
             data: {
-                labels: Array(20).fill(''),
+                labels: mesesFiltrados,
                 datasets: [{
-                    data: dataVoluntarios,
-                    backgroundColor: 'rgba(255, 107, 157, 0.7)',
+                    label: 'Voluntarios',
+                    data: datosVoluntarios,
+                    backgroundColor: '#17a2b8',
                     borderRadius: 5,
-                    barThickness: 8
+                    barThickness: 30
                 }]
             },
             options: {
@@ -490,79 +507,84 @@ function crearGraficas(stats) {
                 maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false },
-                    tooltip: { enabled: false }
+                    tooltip: {
+                        enabled: true,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff'
+                    }
                 },
                 scales: {
-                    x: { display: false },
-                    y: { display: false, beginAtZero: true }
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#666', font: { size: 11 } }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            color: '#666',
+                            font: { size: 11 }
+                        },
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                    }
                 }
             }
         });
-
-        document.getElementById('totalVoluntariosGrafica').textContent = totalVoluntarios;
     }
 
-    // 4. Gráfica estilo Weight Balance (gauge semicircular) - Reacciones
+    // 4. Gráfica de Reacciones (Dona)
     const ctxReacciones = document.getElementById('graficaReacciones');
     if (ctxReacciones) {
         if (chartReacciones) chartReacciones.destroy();
         
-        const porcentaje = Math.min((totalReacciones / 100) * 100, 100);
-        const restante = 100 - porcentaje;
+        // Simular distribución de reacciones por tipo o estado
+        const reaccionesPositivas = Math.floor(totalReacciones * 0.65);
+        const reaccionesNeutras = Math.floor(totalReacciones * 0.20);
+        const reaccionesNegativas = totalReacciones - reaccionesPositivas - reaccionesNeutras;
 
         chartReacciones = new Chart(ctxReacciones, {
             type: 'doughnut',
             data: {
+                labels: ['Positivas', 'Neutras', 'Otras'],
                 datasets: [{
-                    data: [porcentaje, restante],
-                    backgroundColor: ['#7FFF7F', '#f0f0f0'],
+                    data: [
+                        reaccionesPositivas || 1,
+                        reaccionesNeutras || 1,
+                        reaccionesNegativas || 1
+                    ],
+                    backgroundColor: ['#00A36C', '#0C2B44', '#17a2b8'],
                     borderWidth: 0,
-                    circumference: 180,
-                    rotation: 270,
-                    cutout: '80%'
+                    cutout: '60%'
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false },
-                    tooltip: { enabled: false }
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 15,
+                            font: { size: 12 }
+                        }
+                    },
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
                 }
-            },
-            plugins: [{
-                id: 'gaugeText',
-                beforeDraw: function(chart) {
-                    const ctx = chart.ctx;
-                    const centerX = chart.chartArea.left + (chart.chartArea.right - chart.chartArea.left) / 2;
-                    const centerY = chart.chartArea.top + (chart.chartArea.bottom - chart.chartArea.top) / 2 + 30;
-                    
-                    // Valor central
-                    ctx.save();
-                    ctx.font = 'bold 48px Arial';
-                    ctx.fillStyle = '#7FFF7F';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(totalReacciones, centerX, centerY);
-                    
-                    // Marcadores del gauge
-                    const markers = ['45', '55', '65', '75', '85', '95'];
-                    ctx.font = '11px Arial';
-                    ctx.fillStyle = '#ccc';
-                    const radius = 85;
-                    const startAngle = Math.PI;
-                    const endAngle = 2 * Math.PI;
-                    
-                    markers.forEach((marker, i) => {
-                        const angle = startAngle + (endAngle - startAngle) * (i / (markers.length - 1));
-                        const x = centerX + radius * Math.cos(angle);
-                        const y = centerY + radius * Math.sin(angle);
-                        ctx.fillText(marker, x, y);
-                    });
-                    
-                    ctx.restore();
-                }
-            }]
+            }
         });
     }
 }

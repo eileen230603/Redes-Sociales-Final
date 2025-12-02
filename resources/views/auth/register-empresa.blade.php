@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNI2 • Registro Empresa</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <title>UNI2 • Registro Empresa</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -477,73 +477,73 @@
                             <i class="far fa-envelope"></i> Correo electrónico
                         </label>
                         <input type="email" id="correo_electronico" name="correo_electronico" placeholder="empresa@ejemplo.com" required>
-                    </div>
+      </div>
 
                     <div class="form-group full-width">
                         <label for="contrasena">
                             <i class="far fa-lock"></i> Contraseña
                         </label>
                         <input type="password" id="contrasena" name="contrasena" placeholder="••••••••" minlength="6" required>
-                    </div>
+      </div>
 
                     <div class="form-group">
                         <label for="nombre_empresa">
                             <i class="far fa-building"></i> Nombre de la Empresa
                         </label>
                         <input type="text" id="nombre_empresa" name="nombre_empresa" placeholder="Nombre comercial" required>
-                    </div>
+      </div>
 
                     <div class="form-group">
                         <label for="razon_social">
                             <i class="far fa-file-alt"></i> Razón Social
                         </label>
                         <input type="text" id="razon_social" name="razon_social" placeholder="Razón social legal">
-                    </div>
+      </div>
 
                     <div class="form-group">
                         <label for="NIT">
                             <i class="far fa-id-card"></i> NIT
                         </label>
                         <input type="text" id="NIT" name="NIT" placeholder="Número de identificación tributaria" required>
-                    </div>
+      </div>
 
                     <div class="form-group">
                         <label for="telefono">
                             <i class="far fa-phone"></i> Teléfono
                         </label>
                         <input type="text" id="telefono" name="telefono" placeholder="Teléfono de contacto">
-                    </div>
+      </div>
 
                     <div class="form-group full-width">
                         <label for="direccion">
                             <i class="far fa-map-marker-alt"></i> Dirección
                         </label>
                         <input type="text" id="direccion" name="direccion" placeholder="Dirección de la empresa">
-                    </div>
+      </div>
 
                     <div class="form-group">
                         <label for="sitio_web">
                             <i class="far fa-globe"></i> Sitio Web
                         </label>
                         <input type="text" id="sitio_web" name="sitio_web" placeholder="https://tu-empresa.com">
-                    </div>
+      </div>
 
                     <div class="form-group">
                         <label for="descripcion">
                             <i class="far fa-align-left"></i> Descripción
                         </label>
                         <textarea id="descripcion" name="descripcion" rows="3" placeholder="Describe tu empresa y su compromiso social..."></textarea>
-                    </div>
-                </div>
+      </div>
+      </div>
 
                 <div id="msg"></div>
 
                 <div class="submit-container">
                     <button type="submit" class="register-btn">
                         <i class="fas fa-building"></i> Registrar Empresa
-                    </button>
-                </div>
-            </form>
+        </button>
+      </div>
+    </form>
 
             <div class="login-link">
                 ¿Ya tienes cuenta? <a href="/login">Inicia sesión</a>

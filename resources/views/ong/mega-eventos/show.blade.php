@@ -12,37 +12,47 @@
     </div>
 
     <div id="megaEventoContent" style="display: none;">
-        <!-- Header con imagen -->
-        <div class="card border-0 mb-4" style="border-radius: 12px; border: 1px solid #F5F5F5; box-shadow: 0 2px 8px rgba(12, 43, 68, 0.08); overflow: hidden;">
-            <div id="headerImage" class="card-img-top" style="height: 300px; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); display: flex; align-items: center; justify-content: center;">
-                <i class="far fa-calendar-check fa-4x text-white" style="opacity: 0.9;"></i>
-            </div>
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                        <h2 class="mb-3" id="titulo" style="font-size: 2rem; font-weight: 700; color: #0C2B44; line-height: 1.3;">-</h2>
-                        <p id="descripcionHeader" class="mb-3" style="font-size: 1.1rem; color: #333333; line-height: 1.6; font-weight: 400;">-</p>
-                        <div class="mb-3">
-                            <span id="estadoBadge" class="badge mr-2 mb-2" style="font-size: 0.85rem; padding: 0.5em 0.8em; border-radius: 20px;">-</span>
-                            <span id="publicoBadge" class="badge mr-2 mb-2" style="font-size: 0.85rem; padding: 0.5em 0.8em; border-radius: 20px;">-</span>
-                            <span id="categoriaBadge" class="badge mb-2" style="font-size: 0.85rem; padding: 0.5em 0.8em; border-radius: 20px;">-</span>
-                        </div>
-                    </div>
-                    <div class="ml-3">
-                        <a href="{{ route('ong.mega-eventos.index') }}" class="btn btn-sm mr-2" style="background: #F5F5F5; color: #0C2B44; border: none; border-radius: 8px; padding: 0.5rem 1rem;">
-                            <i class="far fa-arrow-left mr-1"></i> Volver
-                        </a>
-                        <a href="#" id="editLink" class="btn btn-sm" style="background: #00A36C; color: white; border: none; border-radius: 8px; padding: 0.5rem 1rem;">
-                            <i class="far fa-edit mr-1"></i> Editar
-                        </a>
+        <!-- Banner Superior con Imagen Principal (igual que eventos) -->
+        <div id="eventBanner" class="position-relative" style="height: 400px; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); overflow: hidden;">
+            <div id="bannerImage" class="w-100 h-100" style="background-size: cover; background-position: center; opacity: 0.3;"></div>
+            <div class="position-absolute" style="top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to bottom, rgba(12, 43, 68, 0.3) 0%, rgba(0, 163, 108, 0.6) 100%);"></div>
+            <div class="position-absolute" style="bottom: 0; left: 0; right: 0; padding: 2rem; color: white;">
+                <div class="container">
+                    <h1 id="titulo" class="mb-2" style="font-size: 2.5rem; font-weight: 700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">-</h1>
+                    <div class="d-flex flex-wrap align-items-center gap-3">
+                        <span id="categoriaBadge" class="badge badge-light" style="font-size: 0.9rem; padding: 0.5em 1em;">-</span>
+                        <span id="estadoBadge" class="badge" style="font-size: 0.9rem; padding: 0.5em 1em;">-</span>
+                        <span id="publicoBadge" class="badge" style="font-size: 0.9rem; padding: 0.5em 1em;">-</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="row">
-            <!-- Información Principal -->
-            <div class="col-md-8">
+        <div class="container mt-4">
+            <!-- Botones de Acción -->
+            <div class="d-flex justify-content-end mb-4 flex-wrap" style="gap: 0.5rem;">
+                <a href="{{ route('ong.mega-eventos.index') }}" class="btn" style="background: #F5F5F5; color: #0C2B44; border: none; border-radius: 8px;">
+                    <i class="far fa-arrow-left mr-2"></i> Volver
+                </a>
+                <button class="btn" id="btnReaccionar" style="background: #dc3545; color: white; border: none; border-radius: 50px;">
+                    <i class="far fa-heart mr-2" id="iconoCorazon"></i>
+                    <span id="textoReaccion">Me gusta</span>
+                    <span id="contadorReacciones" style="margin-left: 0.5rem; font-weight: 600;">0</span>
+                </button>
+                <button class="btn" id="btnCompartir" style="background: #0C2B44; color: white; border: none; border-radius: 50px;">
+                    <i class="far fa-share-square mr-2"></i> Compartir <span id="contadorCompartidos" style="margin-left: 0.5rem; font-weight: 600;">0</span>
+                </button>
+                <a href="#" id="seguimientoLink" class="btn" style="background: #0C2B44; color: white; border: none; border-radius: 8px;">
+                    <i class="far fa-chart-line mr-2"></i> Seguimiento
+                </a>
+                <a href="#" id="editLink" class="btn" style="background: #00A36C; color: white; border: none; border-radius: 8px;">
+                    <i class="far fa-edit mr-2"></i> Editar Mega Evento
+                </a>
+            </div>
+
+            <div class="row">
+                <!-- Columna Principal -->
+                <div class="col-lg-8">
                 <div class="card border-0 mb-4" style="border-radius: 12px; border: 1px solid #F5F5F5; box-shadow: 0 2px 8px rgba(12, 43, 68, 0.08);">
                     <div class="card-body p-4">
                         <h5 class="mb-4" style="font-size: 1.1rem; font-weight: 700; color: #0C2B44;">
@@ -135,6 +145,31 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Reacciones (Favoritos) -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; border: 1px solid #F5F5F5;">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="mb-0" style="color: #0C2B44; font-weight: 700;">
+                                <i class="far fa-heart mr-2" style="color: #dc3545;"></i> Reacciones y Favoritos
+                            </h4>
+                            <button class="btn btn-sm btn-actualizar-reacciones" onclick="cargarReaccionesMegaEvento()" style="background: #F5F5F5; color: #0C2B44; border: none; border-radius: 8px; transition: transform 0.5s ease;">
+                                <i class="far fa-sync mr-1"></i> Actualizar
+                            </button>
+                        </div>
+                        <p class="mb-3" style="font-size: 0.9rem; color: #333333;">
+                            Usuarios que han marcado este mega evento como favorito con un corazón.
+                        </p>
+                        <div id="reaccionesContainer">
+                            <div class="text-center py-3">
+                                <div class="spinner-border" role="status" style="color: #00A36C;">
+                                    <span class="sr-only">Cargando...</span>
+                                </div>
+                                <p class="mt-2" style="color: #333333;">Cargando reacciones...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Información Adicional -->
@@ -187,6 +222,49 @@
                             </small>
                             <div id="activo" class="mb-0">-</div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Compartir -->
+<div id="modalCompartir" class="modal fade" tabindex="-1" role="dialog" style="display: none;">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 400px;">
+        <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 8px 32px rgba(0,0,0,0.2);">
+            <div class="modal-header" style="border-bottom: 1px solid #F5F5F5; padding: 1.5rem;">
+                <h5 class="modal-title" style="color: #0C2B44; font-weight: 700; font-size: 1.25rem;">Compartir</h5>
+                <button type="button" class="close" onclick="cerrarModalCompartir()" style="border: none; background: none; font-size: 1.5rem; color: #6c757d; cursor: pointer;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 2rem;">
+                <div class="row text-center">
+                    <!-- Copiar enlace -->
+                    <div class="col-6 mb-4">
+                        <button onclick="copiarEnlaceMegaEvento()" class="btn btn-link p-0" style="text-decoration: none; border: none; background: none; width: 100%;">
+                            <div style="width: 80px; height: 80px; background: #F5F5F5; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#E9ECEF'; this.style.transform='scale(1.1)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#F5F5F5'; this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+                                <i class="fas fa-link" style="font-size: 2rem; color: #0C2B44;"></i>
+                            </div>
+                            <span style="color: #333; font-size: 0.9rem; font-weight: 600;">Copiar enlace</span>
+                        </button>
+                    </div>
+                    <!-- QR Code -->
+                    <div class="col-6 mb-4">
+                        <button onclick="mostrarQRMegaEvento()" class="btn btn-link p-0" style="text-decoration: none; border: none; background: none; width: 100%;">
+                            <div style="width: 80px; height: 80px; background: #0C2B44; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(12,43,68,0.3);" onmouseover="this.style.background='#00A36C'; this.style.transform='scale(1.1)'; this.style.boxShadow='0 4px 12px rgba(0,163,108,0.4)'" onmouseout="this.style.background='#0C2B44'; this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(12,43,68,0.3)'">
+                                <i class="fas fa-qrcode" style="font-size: 2rem; color: white;"></i>
+                            </div>
+                            <span style="color: #333; font-size: 0.9rem; font-weight: 600;">Código QR</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- Contenedor para el QR -->
+                <div id="qrContainer" style="display: none; margin-top: 1.5rem;">
+                    <div class="text-center">
+                        <div id="qrcode" style="display: inline-block; padding: 1rem; background: white; border-radius: 12px; margin-bottom: 1rem;"></div>
+                        <p style="color: #333; font-size: 0.9rem; margin: 0;">Escanea este código para acceder al mega evento</p>
                     </div>
                 </div>
             </div>
@@ -299,7 +377,6 @@ function buildImageUrl(imgUrl) {
 }
 
 let megaEventoId = null;
-let map = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('token');
@@ -317,8 +394,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Obtener ID de la URL
-    const pathParts = window.location.pathname.split('/');
-    megaEventoId = pathParts[pathParts.length - 2]; // /ong/mega-eventos/{id}/detalle
+    // La URL es: /ong/mega-eventos/{id}/detalle
+    const pathParts = window.location.pathname.split('/').filter(p => p !== '');
+    console.log('Path parts:', pathParts);
+    
+    // Buscar el índice de 'mega-eventos' y tomar el siguiente elemento como ID
+    const megaEventosIndex = pathParts.indexOf('mega-eventos');
+    if (megaEventosIndex !== -1 && pathParts[megaEventosIndex + 1]) {
+        megaEventoId = pathParts[megaEventosIndex + 1];
+    } else {
+        // Fallback: intentar obtener el penúltimo elemento
+        megaEventoId = pathParts[pathParts.length - 2];
+    }
+
+    console.log('Mega Evento ID extraído:', megaEventoId);
+
+    if (!megaEventoId || isNaN(megaEventoId)) {
+        const loadingMessage = document.getElementById('loadingMessage');
+        loadingMessage.innerHTML = `
+            <div class="alert alert-danger" style="background: #f8d7da; border: 1px solid #dc3545; color: #721c24; border-radius: 8px; padding: 1rem;">
+                <i class="far fa-exclamation-triangle mr-2"></i>
+                Error: ID de mega evento inválido en la URL. URL: ${window.location.pathname}
+            </div>
+        `;
+        return;
+    }
 
     await loadMegaEvento();
 });
@@ -328,7 +428,15 @@ async function loadMegaEvento() {
     const loadingMessage = document.getElementById('loadingMessage');
     const content = document.getElementById('megaEventoContent');
 
+    if (!loadingMessage || !content) {
+        console.error('Elementos del DOM no encontrados');
+        return;
+    }
+
     try {
+        console.log('Cargando mega evento ID:', megaEventoId);
+        console.log('API URL:', `${API_BASE_URL}/api/mega-eventos/${megaEventoId}`);
+        
         const res = await fetch(`${API_BASE_URL}/api/mega-eventos/${megaEventoId}`, {
             method: 'GET',
             headers: {
@@ -338,7 +446,9 @@ async function loadMegaEvento() {
             }
         });
 
+        console.log('Response status:', res.status);
         const data = await res.json();
+        console.log('Response data:', data);
 
         if (!res.ok || !data.success) {
             loadingMessage.innerHTML = `
@@ -350,218 +460,262 @@ async function loadMegaEvento() {
             return;
         }
 
+        if (!data.mega_evento) {
+            loadingMessage.innerHTML = `
+                <div class="alert alert-warning" style="background: #fff3cd; border: 1px solid #ffc107; color: #856404; border-radius: 8px; padding: 1rem;">
+                    <i class="far fa-exclamation-triangle mr-2"></i>
+                    No se encontró información del mega evento
+                </div>
+            `;
+            return;
+        }
+
         const mega = data.mega_evento;
-        displayMegaEvento(mega);
-        loadingMessage.style.display = 'none';
-        content.style.display = 'block';
+        console.log('Mega evento recibido:', mega);
+        
+        try {
+            displayMegaEvento(mega);
+            loadingMessage.style.display = 'none';
+            content.style.display = 'block';
+            
+            // Configurar botón de compartir
+            configurarBotonesCompartir(megaEventoId, mega);
+            // Cargar contador de compartidos
+            cargarContadorCompartidosMegaEvento(megaEventoId);
+            // Cargar reacciones
+            verificarReaccionMegaEvento();
+            cargarReaccionesMegaEvento();
+            // Iniciar actualización en tiempo real
+            iniciarActualizacionTiempoRealMegaEvento();
+            console.log('Mega evento mostrado correctamente');
+        } catch (displayError) {
+            console.error('Error al mostrar el mega evento:', displayError);
+            loadingMessage.innerHTML = `
+                <div class="alert alert-danger" style="background: #f8d7da; border: 1px solid #dc3545; color: #721c24; border-radius: 8px; padding: 1rem;">
+                    <i class="far fa-exclamation-triangle mr-2"></i>
+                    Error al mostrar el mega evento: ${displayError.message}
+                </div>
+            `;
+        }
 
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error en loadMegaEvento:', error);
         loadingMessage.innerHTML = `
             <div class="alert alert-danger" style="background: #f8d7da; border: 1px solid #dc3545; color: #721c24; border-radius: 8px; padding: 1rem;">
                 <i class="far fa-exclamation-triangle mr-2"></i>
-                Error de conexión al cargar el mega evento.
+                Error de conexión al cargar el mega evento: ${error.message}
             </div>
         `;
     }
 }
 
 function displayMegaEvento(mega) {
-    // Título
-    document.getElementById('titulo').textContent = mega.titulo || '-';
-
-    // Descripción en header y en sección
-    const descripcion = mega.descripcion || 'Sin descripción disponible.';
-    document.getElementById('descripcionHeader').textContent = descripcion;
-    document.getElementById('descripcion').textContent = descripcion;
-
-    // Fechas
-    if (mega.fecha_inicio) {
-        const fechaInicio = new Date(mega.fecha_inicio);
-        document.getElementById('fecha_inicio').textContent = fechaInicio.toLocaleString('es-ES', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    } else {
-        document.getElementById('fecha_inicio').textContent = '-';
-    }
-
-    if (mega.fecha_fin) {
-        const fechaFin = new Date(mega.fecha_fin);
-        document.getElementById('fecha_fin').textContent = fechaFin.toLocaleString('es-ES', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    } else {
-        document.getElementById('fecha_fin').textContent = '-';
-    }
-
-    // Ubicación - Mostrar de forma más visible y organizada con dirección, ciudad y departamento
-    const ubicacionContainer = document.getElementById('ubicacionContainer');
-    const ubicacion = mega.ubicacion || 'No especificada';
+    console.log('Iniciando displayMegaEvento con:', mega);
     
-    function parsearUbicacion(ubicacionStr) {
-        if (!ubicacionStr || ubicacionStr === 'No especificada' || ubicacionStr.trim() === '') {
-            return null;
+    try {
+        // Helper para construir URL de imagen
+        function buildImageUrl(imgUrl) {
+            if (!imgUrl || imgUrl.trim() === '') return null;
+            if (imgUrl.startsWith('http://') || imgUrl.startsWith('https://')) return imgUrl;
+            if (imgUrl.startsWith('/storage/')) return `${window.location.origin}${imgUrl}`;
+            if (imgUrl.startsWith('storage/')) return `${window.location.origin}/${imgUrl}`;
+            return `${window.location.origin}/storage/${imgUrl}`;
         }
-        
-        // Intentar parsear formato: "Dirección, Ciudad, Departamento" o variaciones
-        const partes = ubicacionStr.split(',').map(p => p.trim()).filter(p => p);
-        
-        if (partes.length >= 3) {
-            // Formato: Dirección, Ciudad, Departamento
-            // Las últimas dos partes son ciudad y departamento, el resto es dirección
-            return {
-                direccion: partes.slice(0, -2).join(', '),
-                ciudad: partes[partes.length - 2],
-                departamento: partes[partes.length - 1]
-            };
-        } else if (partes.length === 2) {
-            // Formato: Dirección, Ciudad o Ciudad, Departamento
-            const segundaParte = partes[1].toLowerCase();
-            const esDepartamento = segundaParte.includes('departamento') || 
-                                   segundaParte.includes('depto') ||
-                                   segundaParte.includes('dep.') ||
-                                   segundaParte.length < 15;
-            
-            if (esDepartamento) {
-                return {
-                    direccion: partes[0],
-                    ciudad: null,
-                    departamento: partes[1]
-                };
-            } else {
-                return {
-                    direccion: partes[0],
-                    ciudad: partes[1],
-                    departamento: null
-                };
+
+        // Banner con imagen principal
+        const banner = document.getElementById('eventBanner');
+        const bannerImage = document.getElementById('bannerImage');
+        if (bannerImage && mega.imagenes && Array.isArray(mega.imagenes) && mega.imagenes.length > 0) {
+            const primeraImagen = buildImageUrl(mega.imagenes[0]);
+            if (primeraImagen) {
+                bannerImage.style.backgroundImage = `url(${primeraImagen})`;
             }
-        } else if (partes.length === 1) {
-            return {
-                direccion: partes[0],
-                ciudad: null,
-                departamento: null
-            };
+        }
+
+        // Título
+        const tituloEl = document.getElementById('titulo');
+        if (tituloEl) {
+            tituloEl.textContent = mega.titulo || 'Sin título';
+        }
+
+    // Categoría badge (en el banner)
+    const categoriaBadgeEl = document.getElementById('categoriaBadge');
+    if (categoriaBadgeEl) {
+        if (mega.categoria) {
+            categoriaBadgeEl.innerHTML = '<span class="badge badge-success" style="background: #00A36C !important; color: white !important;">' + mega.categoria.charAt(0).toUpperCase() + mega.categoria.slice(1) + '</span>';
+        } else {
+            categoriaBadgeEl.style.display = 'none';
+        }
+    }
+
+        // Estado badge (en el banner)
+        const estadoBadges = {
+            'planificacion': { class: 'badge-secondary', text: 'Planificación' },
+            'activo': { class: 'badge-success', text: 'Activo' },
+            'en_curso': { class: 'badge-info', text: 'En Curso' },
+            'finalizado': { class: 'badge-primary', text: 'Finalizado' },
+            'cancelado': { class: 'badge-danger', text: 'Cancelado' }
+        };
+        const estadoInfo = estadoBadges[mega.estado] || { class: 'badge-secondary', text: mega.estado || 'N/A' };
+        const estadoBadgeEl = document.getElementById('estadoBadge');
+        if (estadoBadgeEl) {
+            estadoBadgeEl.className = `badge ${estadoInfo.class}`;
+            estadoBadgeEl.textContent = estadoInfo.text;
+        }
+
+        // Público/Privado badge (en el banner)
+        const publicoBadgeEl = document.getElementById('publicoBadge');
+        if (publicoBadgeEl) {
+            if (mega.es_publico) {
+                publicoBadgeEl.className = 'badge badge-info';
+                publicoBadgeEl.textContent = 'Público';
+            } else {
+                publicoBadgeEl.className = 'badge badge-secondary';
+                publicoBadgeEl.textContent = 'Privado';
+            }
+        }
+
+        // Descripción
+        const descripcionEl = document.getElementById('descripcion');
+        if (descripcionEl) {
+            const descripcion = mega.descripcion || 'Sin descripción disponible.';
+            descripcionEl.textContent = descripcion;
+        }
+
+        // Fechas
+        const fechaInicioEl = document.getElementById('fecha_inicio');
+        if (fechaInicioEl) {
+            if (mega.fecha_inicio) {
+                const fechaInicio = new Date(mega.fecha_inicio);
+                fechaInicioEl.textContent = fechaInicio.toLocaleString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } else {
+                fechaInicioEl.textContent = '-';
+            }
+        }
+
+        const fechaFinEl = document.getElementById('fecha_fin');
+        if (fechaFinEl) {
+            if (mega.fecha_fin) {
+                const fechaFin = new Date(mega.fecha_fin);
+                fechaFinEl.textContent = fechaFin.toLocaleString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } else {
+                fechaFinEl.textContent = '-';
+            }
+        }
+
+        // Ubicación - Mostrar de forma simple y directa
+        const ubicacionContainer = document.getElementById('ubicacionContainer');
+        if (!ubicacionContainer) {
+            console.error('No se encontró el elemento ubicacionContainer');
+            throw new Error('Elemento ubicacionContainer no encontrado');
         }
         
-        return null;
-    }
-    
-    const ubicacionParsed = parsearUbicacion(ubicacion);
-    
-    if (ubicacionParsed) {
-        let html = '';
+        const ubicacion = mega.ubicacion || 'No especificada';
         
-        if (ubicacionParsed.direccion) {
-            html += `
-                <div class="mb-2">
-                    <strong style="color: #0C2B44; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">
-                        <i class="far fa-road mr-1" style="color: #00A36C;"></i> Dirección:
-                    </strong>
-                    <p class="mb-0 mt-1" style="font-size: 1.05rem; color: #333333; font-weight: 500;">${ubicacionParsed.direccion}</p>
-                </div>
+        // Mostrar la ubicación de forma simple y clara
+        if (ubicacion && ubicacion !== 'No especificada' && ubicacion.trim() !== '') {
+            ubicacionContainer.innerHTML = `
+                <p class="mb-0" style="font-size: 1.05rem; font-weight: 500; color: #333333; line-height: 1.7;">
+                    <i class="far fa-map-marker-alt mr-2" style="color: #00A36C;"></i>${ubicacion}
+                </p>
+            `;
+        } else {
+            ubicacionContainer.innerHTML = `
+                <p class="mb-0" style="font-size: 1rem; color: #333333; font-weight: 500;">
+                    <i class="far fa-exclamation-circle mr-2" style="color: #00A36C;"></i>Ubicación no especificada
+                </p>
             `;
         }
-        
-        if (ubicacionParsed.ciudad) {
-            html += `
-                <div class="mb-2">
-                    <strong style="color: #0C2B44; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">
-                        <i class="far fa-city mr-1" style="color: #00A36C;"></i> Ciudad:
-                    </strong>
-                    <p class="mb-0 mt-1" style="font-size: 1.05rem; color: #333333; font-weight: 500;">${ubicacionParsed.ciudad}</p>
-                </div>
-            `;
+
+        // Capacidad
+        const capacidadEl = document.getElementById('capacidad_maxima');
+        if (capacidadEl) {
+            capacidadEl.textContent = mega.capacidad_maxima 
+                ? `${mega.capacidad_maxima} personas` 
+                : 'Sin límite';
         }
-        
-        if (ubicacionParsed.departamento) {
-            html += `
-                <div>
-                    <strong style="color: #0C2B44; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">
-                        <i class="far fa-map-marked-alt mr-1" style="color: #00A36C;"></i> Departamento:
-                    </strong>
-                    <p class="mb-0 mt-1" style="font-size: 1.05rem; color: #333333; font-weight: 500;">${ubicacionParsed.departamento}</p>
-                </div>
-            `;
+
+        // ONG Organizadora
+        const ongEl = document.getElementById('ong_organizadora');
+        if (ongEl) {
+            if (mega.ong_principal) {
+                ongEl.textContent = mega.ong_principal.nombre_ong || '-';
+            } else {
+                ongEl.textContent = '-';
+            }
         }
-        
-        ubicacionContainer.innerHTML = html || `
-            <p class="mb-0" style="font-size: 1.05rem; font-weight: 500; color: #333333; line-height: 1.7;">
-                <i class="far fa-map-marker-alt mr-2" style="color: #00A36C;"></i>${ubicacion}
-            </p>
-        `;
-    } else {
-        ubicacionContainer.innerHTML = `
-            <p class="mb-0" style="font-size: 1rem; color: #333333; font-weight: 500;">
-                <i class="far fa-exclamation-circle mr-2" style="color: #00A36C;"></i>Ubicación no especificada
-            </p>
-        `;
-    }
 
-    // Capacidad
-    document.getElementById('capacidad_maxima').textContent = mega.capacidad_maxima 
-        ? `${mega.capacidad_maxima} personas` 
-        : 'Sin límite';
+        // Fechas del sistema
+        const fechaCreacionEl = document.getElementById('fecha_creacion');
+        if (fechaCreacionEl) {
+            if (mega.fecha_creacion) {
+                const fechaCreacion = new Date(mega.fecha_creacion);
+                fechaCreacionEl.textContent = fechaCreacion.toLocaleString('es-ES');
+            } else {
+                fechaCreacionEl.textContent = '-';
+            }
+        }
 
-    // ONG Organizadora
-    if (mega.ong_principal) {
-        document.getElementById('ong_organizadora').textContent = mega.ong_principal.nombre_ong || '-';
-    } else {
-        document.getElementById('ong_organizadora').textContent = '-';
-    }
+        const fechaActualizacionEl = document.getElementById('fecha_actualizacion');
+        if (fechaActualizacionEl) {
+            if (mega.fecha_actualizacion) {
+                const fechaActualizacion = new Date(mega.fecha_actualizacion);
+                fechaActualizacionEl.textContent = fechaActualizacion.toLocaleString('es-ES');
+            } else {
+                fechaActualizacionEl.textContent = '-';
+            }
+        }
 
-    // Fechas del sistema
-    if (mega.fecha_creacion) {
-        const fechaCreacion = new Date(mega.fecha_creacion);
-        document.getElementById('fecha_creacion').textContent = fechaCreacion.toLocaleString('es-ES');
-    } else {
-        document.getElementById('fecha_creacion').textContent = '-';
-    }
-
-    if (mega.fecha_actualizacion) {
-        const fechaActualizacion = new Date(mega.fecha_actualizacion);
-        document.getElementById('fecha_actualizacion').textContent = fechaActualizacion.toLocaleString('es-ES');
-    } else {
-        document.getElementById('fecha_actualizacion').textContent = '-';
-    }
-
-    // Estados con nueva paleta de colores
-    const estadoBadges = {
+    // Estados en el sidebar (usando innerHTML para badges con estilos)
+    const estadoBadgesHTML = {
         'planificacion': '<span class="badge badge-secondary" style="background: #333333 !important; color: white !important;">Planificación</span>',
         'activo': '<span class="badge badge-success" style="background: #00A36C !important; color: white !important;">Activo</span>',
         'en_curso': '<span class="badge badge-info" style="background: #0C2B44 !important; color: white !important;">En Curso</span>',
         'finalizado': '<span class="badge badge-primary" style="background: #0C2B44 !important; color: white !important;">Finalizado</span>',
         'cancelado': '<span class="badge badge-danger" style="background: #dc3545 !important; color: white !important;">Cancelado</span>'
     };
-    document.getElementById('estadoBadge').innerHTML = estadoBadges[mega.estado] || '<span class="badge badge-secondary" style="background: #333333 !important; color: white !important;">' + (mega.estado || 'N/A') + '</span>';
-    document.getElementById('estado').innerHTML = estadoBadges[mega.estado] || '<span class="badge badge-secondary" style="background: #333333 !important; color: white !important;">' + (mega.estado || 'N/A') + '</span>';
+    
+    // Solo establecer el estado en el sidebar si el elemento existe
+    const estadoElement = document.getElementById('estado');
+    if (estadoElement) {
+        estadoElement.innerHTML = estadoBadgesHTML[mega.estado] || '<span class="badge badge-secondary" style="background: #333333 !important; color: white !important;">' + (mega.estado || 'N/A') + '</span>';
+    }
 
-    document.getElementById('publicoBadge').innerHTML = mega.es_publico 
-        ? '<span class="badge badge-info" style="background: #0C2B44 !important; color: white !important;">Público</span>' 
-        : '<span class="badge badge-secondary" style="background: #333333 !important; color: white !important;">Privado</span>';
-    document.getElementById('es_publico').innerHTML = mega.es_publico 
-        ? '<span class="badge badge-info" style="background: #0C2B44 !important; color: white !important;">Público</span>' 
-        : '<span class="badge badge-secondary" style="background: #333333 !important; color: white !important;">Privado</span>';
+    const esPublicoElement = document.getElementById('es_publico');
+    if (esPublicoElement) {
+        esPublicoElement.innerHTML = mega.es_publico 
+            ? '<span class="badge badge-info" style="background: #0C2B44 !important; color: white !important;">Público</span>' 
+            : '<span class="badge badge-secondary" style="background: #333333 !important; color: white !important;">Privado</span>';
+    }
 
-    document.getElementById('categoriaBadge').innerHTML = mega.categoria 
-        ? '<span class="badge badge-success" style="background: #00A36C !important; color: white !important;">' + mega.categoria.charAt(0).toUpperCase() + mega.categoria.slice(1) + '</span>' 
-        : '';
+    const activoElement = document.getElementById('activo');
+    if (activoElement) {
+        activoElement.innerHTML = mega.activo 
+            ? '<span class="badge badge-success" style="background: #00A36C !important; color: white !important;">Activo</span>' 
+            : '<span class="badge badge-danger" style="background: #dc3545 !important; color: white !important;">Inactivo</span>';
+    }
 
-    document.getElementById('activo').innerHTML = mega.activo 
-        ? '<span class="badge badge-success" style="background: #00A36C !important; color: white !important;">Activo</span>' 
-        : '<span class="badge badge-danger" style="background: #dc3545 !important; color: white !important;">Inactivo</span>';
-
-    // Imágenes (el modelo ya devuelve URLs completas)
-    const imagenes = Array.isArray(mega.imagenes) ? mega.imagenes.filter(img => img && img.trim() !== '') : [];
-    const imagenesContainer = document.getElementById('imagenesContainer');
-    const imagenesCount = document.getElementById('imagenesCount');
+        // Imágenes (el modelo ya devuelve URLs completas)
+        const imagenes = Array.isArray(mega.imagenes) ? mega.imagenes.filter(img => img && img.trim() !== '') : [];
+        const imagenesContainer = document.getElementById('imagenesContainer');
+        const imagenesCount = document.getElementById('imagenesCount');
+        
+        if (!imagenesContainer || !imagenesCount) {
+            console.error('No se encontraron los elementos de imágenes');
+            throw new Error('Elementos de imágenes no encontrados');
+        }
     
     // Actualizar contador
     imagenesCount.textContent = imagenes.length;
@@ -583,8 +737,8 @@ function displayMegaEvento(mega) {
         imagenes.forEach((imgUrl, index) => {
             if (!imgUrl || imgUrl.trim() === '') return;
             
-            // El modelo ya devuelve URLs completas, usar directamente
-            const fullUrl = imgUrl;
+            // Construir URL correcta usando buildImageUrl
+            const fullUrl = buildImageUrl(imgUrl);
 
             // Crear elementos con diseño minimalista mejorado
             const colDiv = document.createElement('div');
@@ -661,82 +815,40 @@ function displayMegaEvento(mega) {
         });
     }
 
-    // Imagen principal en header con mejor manejo
-    if (imagenes.length > 0 && imagenes[0]) {
-        const headerImage = document.getElementById('headerImage');
-        const imgUrl = imagenes[0];
-        // El modelo ya devuelve URLs completas
-        const fullUrl = imgUrl;
-        
-        if (fullUrl) {
-            const testImg = new Image();
-            testImg.onload = function() {
-                headerImage.style.backgroundImage = `url(${fullUrl})`;
-                headerImage.style.backgroundSize = 'cover';
-                headerImage.style.backgroundPosition = 'center';
-                headerImage.style.backgroundRepeat = 'no-repeat';
-                headerImage.innerHTML = '';
-            };
-            testImg.onerror = function() {
-                // Si falla, usar placeholder con nueva paleta
-                headerImage.style.background = 'linear-gradient(135deg, #0C2B44 0%, #00A36C 100%)';
-                headerImage.innerHTML = '<i class="far fa-calendar-check fa-4x text-white" style="opacity: 0.9;"></i>';
-            };
-            testImg.src = fullUrl;
+        // Link de editar
+        const editLinkEl = document.getElementById('editLink');
+        if (editLinkEl) {
+            editLinkEl.href = `/ong/mega-eventos/${megaEventoId}/editar`;
         }
-    }
+        
+        const seguimientoLinkEl = document.getElementById('seguimientoLink');
+        if (seguimientoLinkEl) {
+            seguimientoLinkEl.href = `/ong/mega-eventos/${megaEventoId}/seguimiento`;
+        }
 
-    // Link de editar
-    document.getElementById('editLink').href = `/ong/mega-eventos/${megaEventoId}/editar`;
-
-    // Mostrar mapa si hay coordenadas
-    const mapContainer = document.getElementById('map');
-    if (mega.lat && mega.lng) {
-        const lat = parseFloat(mega.lat);
-        const lng = parseFloat(mega.lng);
+        // Mapa (si hay coordenadas) - Igual que en eventos normales
+        if (mega.lat && mega.lng) {
+            const mapContainer = document.getElementById('map');
+            if (mapContainer) {
+                mapContainer.style.display = 'block';
+                const map = L.map('map').setView([mega.lat, mega.lng], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+                L.marker([mega.lat, mega.lng]).addTo(map).bindPopup(mega.ubicacion || 'Ubicación del mega evento');
+            }
+        }
         
-        // Inicializar mapa con estilo minimalista
-        map = L.map("map", {
-            zoomControl: true,
-            scrollWheelZoom: true
-        }).setView([lat, lng], 13);
+        // Guardar información del mega evento para compartir
+        if (window.megaEventoParaCompartir) {
+            window.megaEventoParaCompartir.titulo = mega.titulo || 'Mega Evento';
+            window.megaEventoParaCompartir.descripcion = mega.descripcion || '';
+        }
         
-        // Usar tiles más limpios
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution: '&copy; OpenStreetMap contributors',
-            maxZoom: 19
-        }).addTo(map);
-        
-        // Marcador con estilo minimalista
-        const marker = L.marker([lat, lng], {
-            icon: L.icon({
-                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowSize: [41, 41]
-            })
-        }).addTo(map);
-        
-        marker.bindPopup(`
-            <div style="font-size: 0.9rem;">
-                <strong style="color: #2c3e50;">${mega.titulo}</strong><br>
-                <span style="color: #6c757d;">${mega.ubicacion || 'Ubicación del mega evento'}</span>
-            </div>
-        `).openPopup();
-        
-        mapContainer.style.borderRadius = '8px';
-        mapContainer.style.overflow = 'hidden';
-    } else {
-        mapContainer.innerHTML = `
-            <div class="d-flex align-items-center justify-content-center h-100" style="background: #F5F5F5; border-radius: 12px;">
-                <div class="text-center">
-                    <i class="far fa-map-marker-alt fa-3x mb-3" style="color: #00A36C;"></i>
-                    <p class="mb-0" style="font-size: 1rem; color: #333333; font-weight: 500;">No hay coordenadas disponibles</p>
-                </div>
-            </div>
-        `;
+        console.log('displayMegaEvento completado exitosamente');
+    } catch (error) {
+        console.error('Error en displayMegaEvento:', error);
+        throw error; // Re-lanzar el error para que loadMegaEvento lo capture
     }
 }
 
@@ -755,6 +867,488 @@ function abrirImagen(url, index) {
         }
     });
 }
+
+// Configurar botones de compartir
+function configurarBotonesCompartir(megaEventoId, mega) {
+    const btnCompartir = document.getElementById('btnCompartir');
+    
+    if (btnCompartir) {
+        btnCompartir.onclick = () => {
+            mostrarModalCompartirMegaEvento();
+        };
+    }
+    
+    // Guardar información del mega evento para compartir
+    window.megaEventoParaCompartir = {
+        mega_evento_id: megaEventoId,
+        titulo: mega.titulo || 'Mega Evento',
+        descripcion: mega.descripcion || '',
+        url: typeof getPublicUrl !== 'undefined' 
+            ? getPublicUrl(`/mega-evento/${megaEventoId}/qr`)
+            : `http://192.168.0.6:8000/mega-evento/${megaEventoId}/qr`
+    };
+}
+
+// Mostrar modal de compartir
+function mostrarModalCompartirMegaEvento() {
+    const modal = document.getElementById('modalCompartir');
+    if (modal) {
+        if (typeof $ !== 'undefined') {
+            $(modal).modal('show');
+        } else {
+            modal.style.display = 'block';
+            modal.classList.add('show');
+            document.body.classList.add('modal-open');
+            const backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop fade show';
+            backdrop.id = 'modalBackdropCompartir';
+            backdrop.onclick = () => cerrarModalCompartir();
+            document.body.appendChild(backdrop);
+        }
+    }
+}
+
+// Cerrar modal de compartir
+function cerrarModalCompartir() {
+    const modal = document.getElementById('modalCompartir');
+    if (modal) {
+        if (typeof $ !== 'undefined') {
+            $(modal).modal('hide');
+        } else {
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+            document.body.classList.remove('modal-open');
+            const backdrop = document.getElementById('modalBackdropCompartir');
+            if (backdrop) {
+                backdrop.remove();
+            }
+        }
+    }
+    // Ocultar QR
+    const qrContainer = document.getElementById('qrContainer');
+    if (qrContainer) {
+        qrContainer.style.display = 'none';
+    }
+}
+
+// Registrar compartido
+async function registrarCompartidoMegaEvento(megaEventoId, metodo) {
+    try {
+        const token = localStorage.getItem('token');
+        // Usar la ruta pública que acepta tanto usuarios autenticados como no autenticados
+        const url = `${API_BASE_URL}/api/mega-eventos/${megaEventoId}/compartir-publico`;
+        
+        const headers = {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        };
+        
+        // Si hay token, incluirlo (para usuarios autenticados: ONG, externos, empresas)
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        await fetch(url, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({ metodo: metodo })
+        });
+        
+        // Actualizar contador de compartidos
+        await cargarContadorCompartidosMegaEvento(megaEventoId);
+    } catch (error) {
+        console.warn('Error registrando compartido:', error);
+    }
+}
+
+// Cargar contador de compartidos
+async function cargarContadorCompartidosMegaEvento(megaEventoId) {
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/mega-eventos/${megaEventoId}/compartidos/total`);
+        const data = await res.json();
+        
+        if (data.success) {
+            const contadorCompartidos = document.getElementById('contadorCompartidos');
+            if (contadorCompartidos) {
+                contadorCompartidos.textContent = data.total_compartidos || 0;
+            }
+        }
+    } catch (error) {
+        console.warn('Error cargando contador de compartidos:', error);
+    }
+}
+
+// Copiar enlace
+async function copiarEnlaceMegaEvento() {
+    const megaEvento = window.megaEventoParaCompartir;
+    if (!megaEvento) return;
+
+    // Registrar compartido en backend
+    await registrarCompartidoMegaEvento(megaEvento.mega_evento_id, 'link');
+
+    const url = megaEvento.url;
+    
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Enlace copiado!',
+                    text: 'El enlace se ha copiado al portapapeles',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } else {
+                alert('Enlace copiado al portapapeles');
+            }
+            cerrarModalCompartir();
+        }).catch(err => {
+            console.error('Error al copiar:', err);
+            fallbackCopiarEnlaceMegaEvento(url);
+        });
+    } else {
+        fallbackCopiarEnlaceMegaEvento(url);
+    }
+}
+
+function fallbackCopiarEnlaceMegaEvento(url) {
+    const textarea = document.createElement('textarea');
+    textarea.value = url;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+        document.execCommand('copy');
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Enlace copiado!',
+                text: 'El enlace se ha copiado al portapapeles',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        } else {
+            alert('Enlace copiado al portapapeles');
+        }
+        cerrarModalCompartir();
+    } catch (err) {
+        console.error('Error al copiar:', err);
+        alert('Error al copiar el enlace. Por favor, cópialo manualmente: ' + url);
+    }
+    document.body.removeChild(textarea);
+}
+
+// Mostrar QR Code
+async function mostrarQRMegaEvento() {
+    const megaEvento = window.megaEventoParaCompartir;
+    if (!megaEvento) return;
+
+    // Registrar compartido en backend
+    await registrarCompartidoMegaEvento(megaEvento.mega_evento_id, 'qr');
+
+    const qrContainer = document.getElementById('qrContainer');
+    const qrcodeDiv = document.getElementById('qrcode');
+    
+    if (!qrContainer || !qrcodeDiv) return;
+
+    const qrUrl = megaEvento.url;
+    
+    // Limpiar contenido anterior
+    qrcodeDiv.innerHTML = '';
+    
+    // Mostrar contenedor primero
+    qrContainer.style.display = 'block';
+    
+    // Agregar indicador de carga
+    qrcodeDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin fa-2x" style="color: #0C2B44;"></i><p class="mt-2" style="color: #333;">Generando QR...</p></div>';
+    
+    // Intentar cargar QRCode si no está disponible
+    if (typeof QRCode === 'undefined') {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js';
+        script.onload = function() {
+            generarQRCodeMegaEvento(qrUrl, qrcodeDiv);
+        };
+        script.onerror = function() {
+            generarQRConAPIMegaEvento(qrUrl, qrcodeDiv);
+        };
+        document.head.appendChild(script);
+    } else {
+        generarQRCodeMegaEvento(qrUrl, qrcodeDiv);
+    }
+}
+
+// Función auxiliar para generar QR con la librería
+function generarQRCodeMegaEvento(qrUrl, qrcodeDiv) {
+    try {
+        QRCode.toCanvas(qrcodeDiv, qrUrl, {
+            width: 250,
+            margin: 2,
+            color: {
+                dark: '#0C2B44',
+                light: '#FFFFFF'
+            },
+            errorCorrectionLevel: 'M'
+        }, function (error) {
+            if (error) {
+                console.error('Error generando QR:', error);
+                generarQRConAPIMegaEvento(qrUrl, qrcodeDiv);
+            } else {
+                const canvas = qrcodeDiv.querySelector('canvas');
+                if (canvas) {
+                    canvas.style.display = 'block';
+                    canvas.style.margin = '0 auto';
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error en generarQRCode:', error);
+        generarQRConAPIMegaEvento(qrUrl, qrcodeDiv);
+    }
+}
+
+// Función alternativa usando API de QR
+function generarQRConAPIMegaEvento(qrUrl, qrcodeDiv) {
+    try {
+        const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrUrl)}&bgcolor=FFFFFF&color=0C2B44`;
+        const img = document.createElement('img');
+        img.src = apiUrl;
+        img.alt = 'QR Code';
+        img.style.cssText = 'display: block; margin: 0 auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);';
+        img.onerror = function() {
+            qrcodeDiv.innerHTML = `
+                <div class="text-center p-3">
+                    <p class="text-danger mb-2" style="font-size: 0.9rem;">Error cargando generador de QR.</p>
+                    <p class="text-muted mb-2" style="font-size: 0.85rem;">Por favor, usa el enlace directo:</p>
+                    <a href="${qrUrl}" target="_blank" class="btn btn-sm" style="background: #0C2B44; color: white;">Abrir enlace</a>
+                </div>
+            `;
+        };
+        qrcodeDiv.innerHTML = '';
+        qrcodeDiv.appendChild(img);
+    } catch (error) {
+        console.error('Error generando QR con API:', error);
+        qrcodeDiv.innerHTML = `
+            <div class="text-center p-3">
+                <p class="text-danger mb-2" style="font-size: 0.9rem;">Error cargando generador de QR.</p>
+                <p class="text-muted mb-2" style="font-size: 0.85rem;">Por favor, usa el enlace directo:</p>
+                <a href="${qrUrl}" target="_blank" class="btn btn-sm" style="background: #0C2B44; color: white;">Abrir enlace</a>
+            </div>
+        `;
+    }
+}
+
+// Funciones para reacciones de mega eventos
+async function verificarReaccionMegaEvento() {
+    const token = localStorage.getItem('token');
+    const btnReaccionar = document.getElementById('btnReaccionar');
+    const iconoCorazon = document.getElementById('iconoCorazon');
+    const textoReaccion = document.getElementById('textoReaccion');
+    const contadorReacciones = document.getElementById('contadorReacciones');
+
+    if (!btnReaccionar) return;
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/mega-eventos/reacciones/verificar/${megaEventoId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            }
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            if (data.reaccionado) {
+                iconoCorazon.className = 'fas fa-heart mr-2';
+                btnReaccionar.classList.remove('btn-outline-danger');
+                btnReaccionar.classList.add('btn-danger');
+                textoReaccion.textContent = 'Te gusta';
+            } else {
+                iconoCorazon.className = 'far fa-heart mr-2';
+                btnReaccionar.classList.remove('btn-danger');
+                btnReaccionar.classList.add('btn-outline-danger');
+                textoReaccion.textContent = 'Me gusta';
+            }
+            contadorReacciones.textContent = data.total_reacciones || 0;
+        }
+
+        // Agregar evento click al botón
+        btnReaccionar.onclick = async () => {
+            await toggleReaccionMegaEvento();
+        };
+    } catch (error) {
+        console.warn('Error verificando reacción:', error);
+    }
+}
+
+async function toggleReaccionMegaEvento() {
+    const token = localStorage.getItem('token');
+    const btnReaccionar = document.getElementById('btnReaccionar');
+    const iconoCorazon = document.getElementById('iconoCorazon');
+    const textoReaccion = document.getElementById('textoReaccion');
+    const contadorReacciones = document.getElementById('contadorReacciones');
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/mega-eventos/reacciones/toggle`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ mega_evento_id: megaEventoId })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            if (data.reaccionado) {
+                iconoCorazon.className = 'fas fa-heart mr-2';
+                btnReaccionar.classList.remove('btn-outline-danger');
+                btnReaccionar.classList.add('btn-danger');
+                textoReaccion.textContent = 'Te gusta';
+            } else {
+                iconoCorazon.className = 'far fa-heart mr-2';
+                btnReaccionar.classList.remove('btn-danger');
+                btnReaccionar.classList.add('btn-outline-danger');
+                textoReaccion.textContent = 'Me gusta';
+            }
+            contadorReacciones.textContent = data.total_reacciones || 0;
+            // Recargar lista de reacciones
+            cargarReaccionesMegaEvento();
+        }
+    } catch (error) {
+        console.error('Error en toggle reacción:', error);
+    }
+}
+
+// Cargar lista de usuarios que reaccionaron
+async function cargarReaccionesMegaEvento() {
+    const container = document.getElementById('reaccionesContainer');
+    if (!container) return;
+
+    const token = localStorage.getItem('token');
+
+    try {
+        container.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border" role="status" style="color: #00A36C; width: 3rem; height: 3rem;">
+                    <span class="sr-only">Cargando...</span>
+                </div>
+                <p class="mt-3" style="color: #333333; font-weight: 500;">Cargando reacciones...</p>
+            </div>
+        `;
+
+        const res = await fetch(`${API_BASE_URL}/api/mega-eventos/reacciones/${megaEventoId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            }
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+            container.innerHTML = `
+                <div class="alert" style="background: #fff3cd; border: 1px solid #ffc107; color: #856404; border-radius: 8px; padding: 1rem;">
+                    <i class="far fa-exclamation-triangle mr-2"></i>
+                    ${data.error || 'Error al cargar reacciones'}
+                </div>
+            `;
+            return;
+        }
+
+        if (!data.reacciones || data.reacciones.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="far fa-heart fa-3x mb-3" style="color: #dc3545; opacity: 0.3;"></i>
+                    <p class="mb-0" style="color: #333333; font-size: 1rem;">Aún no hay reacciones en este mega evento</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '<div class="row">';
+        data.reacciones.forEach((reaccion, index) => {
+            const fechaReaccion = new Date(reaccion.fecha_reaccion).toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            const fotoPerfil = reaccion.foto_perfil || null;
+            const inicialNombre = reaccion.nombre ? reaccion.nombre.charAt(0).toUpperCase() : '?';
+            const tipoBadge = reaccion.tipo === 'registrado' 
+                ? '<span class="badge badge-success" style="background: #00A36C !important; font-size: 0.7rem; padding: 0.25em 0.5em;">Registrado</span>'
+                : '<span class="badge badge-warning" style="background: #ffc107 !important; font-size: 0.7rem; padding: 0.25em 0.5em;">No registrado</span>';
+
+            html += `
+                <div class="col-md-6 col-lg-4 mb-3 reaccion-card" style="animation-delay: ${index * 0.1}s;">
+                    <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; border: 1px solid #F5F5F5; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(12, 43, 68, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center mb-3">
+                                ${fotoPerfil ? `
+                                    <img src="${fotoPerfil}" alt="${reaccion.nombre}" class="rounded-circle mr-3" style="width: 50px; height: 50px; object-fit: cover; border: 3px solid #00A36C; animation: fadeInUp 0.5s ease-out;">
+                                ` : `
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 50px; height: 50px; font-weight: 600; font-size: 1.2rem; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; animation: fadeInUp 0.5s ease-out;">
+                                        ${inicialNombre}
+                                    </div>
+                                `}
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center mb-1">
+                                        <h6 class="mb-0" style="color: #0C2B44; font-weight: 700; font-size: 1rem;">${reaccion.nombre || 'N/A'}</h6>
+                                        ${tipoBadge}
+                                    </div>
+                                    <small style="color: #333333; font-size: 0.85rem;">
+                                        <i class="far fa-envelope mr-1" style="color: #00A36C;"></i> ${reaccion.correo || 'N/A'}
+                                    </small>
+                                </div>
+                                <div style="background: rgba(220, 53, 69, 0.1); width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;">
+                                    <i class="far fa-heart" style="font-size: 1.3rem; color: #dc3545; transition: all 0.3s ease;"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3 pt-3" style="border-top: 1px solid #F5F5F5;">
+                                <small style="color: #333333; font-size: 0.8rem;">
+                                    <i class="far fa-clock mr-1" style="color: #00A36C;"></i> 
+                                    ${fechaReaccion}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    } catch (error) {
+        console.error('Error cargando reacciones:', error);
+        container.innerHTML = `
+            <div class="alert alert-danger" style="background: #f8d7da; border: 1px solid #dc3545; color: #721c24; border-radius: 8px; padding: 1rem;">
+                <i class="far fa-exclamation-triangle mr-2"></i>
+                Error de conexión al cargar reacciones
+            </div>
+        `;
+    }
+}
+
+// Actualizar contadores en tiempo real
+let intervaloContadoresMegaEvento = null;
+function iniciarActualizacionTiempoRealMegaEvento() {
+    // Actualizar cada 5 segundos
+    intervaloContadoresMegaEvento = setInterval(() => {
+        verificarReaccionMegaEvento();
+        cargarContadorCompartidosMegaEvento(megaEventoId);
+    }, 5000);
+}
+
+// Limpiar intervalo al salir de la página
+window.addEventListener('beforeunload', function() {
+    if (intervaloContadoresMegaEvento) {
+        clearInterval(intervaloContadoresMegaEvento);
+    }
+});
 </script>
 <style>
 .swal-image-popup {
@@ -764,6 +1358,63 @@ function abrirImagen(url, index) {
     max-width: 100%;
     max-height: 80vh;
     object-fit: contain;
+}
+
+/* Animaciones para reacciones */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.reaccion-card {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+.reaccion-card .fa-heart {
+    animation: heartBeat 0.6s ease-in-out;
+}
+
+.reaccion-card:hover .fa-heart {
+    animation: pulse 1s ease-in-out infinite;
+    color: #dc3545 !important;
+}
+
+@keyframes heartBeat {
+    0%, 100% {
+        transform: scale(1);
+    }
+    25% {
+        transform: scale(1.2);
+    }
+    50% {
+        transform: scale(1);
+    }
+    75% {
+        transform: scale(1.1);
+    }
+}
+
+/* Animación para el contador de reacciones */
+#contadorReacciones {
+    transition: all 0.3s ease;
+}
+
+#contadorReacciones.animate {
+    animation: pulse 0.5s ease-in-out;
+    color: #dc3545;
+    font-weight: 700;
+}
+
+/* Animación para el botón de actualizar reacciones */
+.btn-actualizar-reacciones:active {
+    transform: rotate(360deg);
+    transition: transform 0.5s ease;
 }
 </style>
 @endpush

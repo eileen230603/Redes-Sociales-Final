@@ -64,9 +64,9 @@ async function cargarEstadisticas() {
         const resStats = await fetch(`${API_BASE_URL}/api/participaciones/mis-eventos`, {
             headers: { "Authorization": `Bearer ${token}`, "Accept": "application/json" },
             cache: "no-cache"
-        });
+    });
 
-        const dataStats = await resStats.json();
+    const dataStats = await resStats.json();
         if (!resStats.ok || !dataStats.success) throw new Error(dataStats.error || 'Error al obtener estadísticas');
 
         const eventos = dataStats.eventos ?? [];
@@ -113,9 +113,9 @@ function crearGraficas(totalInscritos, totalAsistidos) {
 
         chartEventosInscritos = new Chart(ctxEventosInscritos, {
             type: 'line',
-            data: {
+        data: {
                 labels: Array(50).fill(''),
-                datasets: [{
+            datasets: [{
                     data: dataPoints,
                     borderColor: '#7FFF7F',
                     backgroundColor: 'rgba(127, 255, 127, 0.1)',
@@ -136,8 +136,8 @@ function crearGraficas(totalInscritos, totalAsistidos) {
                     x: { display: false },
                     y: { display: false }
                 }
-            }
-        });
+        }
+    });
 
         document.getElementById('totalEventosInscritosGrafica').textContent = totalInscritos;
     }
@@ -232,7 +232,7 @@ async function cargarEventos() {
                 </div>
             </div>`;
         });
-        
+
         // Agregar efecto hover a las tarjetas
         const cards = cont.querySelectorAll('.card');
         cards.forEach(card => {

@@ -139,22 +139,41 @@ class EventoReaccionController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function($reaccion) {
-                    $user = $reaccion->externo;
-                    $externo = IntegranteExterno::where('user_id', $user->id_usuario)->first();
+                    // Si es usuario registrado
+                    if ($reaccion->externo_id) {
+                        $user = $reaccion->externo;
+                        if (!$user) {
+                            return null;
+                        }
+                        $externo = IntegranteExterno::where('user_id', $user->id_usuario)->first();
 
-                    return [
-                        'id' => $reaccion->id,
-                        'externo_id' => $reaccion->externo_id,
-                        'nombre' => $externo ? trim($externo->nombres . ' ' . ($externo->apellidos ?? '')) : $user->nombre_usuario,
-                        'correo' => $externo ? $externo->email : $user->correo_electronico,
-                        'fecha_reaccion' => $reaccion->created_at,
-                        'foto_perfil' => $externo ? ($externo->foto_perfil_url ?? null) : ($user->foto_perfil_url ?? null)
-                    ];
-                });
+                        return [
+                            'id' => $reaccion->id,
+                            'externo_id' => $reaccion->externo_id,
+                            'tipo' => 'registrado',
+                            'nombre' => $externo ? trim($externo->nombres . ' ' . ($externo->apellidos ?? '')) : $user->nombre_usuario,
+                            'correo' => $externo ? $externo->email : $user->correo_electronico,
+                            'fecha_reaccion' => $reaccion->created_at,
+                            'foto_perfil' => $externo ? ($externo->foto_perfil_url ?? null) : ($user->foto_perfil_url ?? null)
+                        ];
+                    } else {
+                        // Usuario no registrado
+                        return [
+                            'id' => $reaccion->id,
+                            'externo_id' => null,
+                            'tipo' => 'no_registrado',
+                            'nombre' => trim(($reaccion->nombres ?? '') . ' ' . ($reaccion->apellidos ?? '')),
+                            'correo' => $reaccion->email,
+                            'fecha_reaccion' => $reaccion->created_at,
+                            'foto_perfil' => null
+                        ];
+                    }
+                })
+                ->filter(); // Eliminar nulls
 
             return response()->json([
                 'success' => true,
-                'reacciones' => $reacciones,
+                'reacciones' => $reacciones->values(),
                 'total' => $reacciones->count()
             ]);
 
@@ -162,6 +181,91 @@ class EventoReaccionController extends Controller
             return response()->json([
                 'success' => false,
                 'error' => 'Error al obtener reacciones: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Reaccionar como usuario no registrado (público)
+     */
+    public function reaccionarPublico(Request $request, $eventoId)
+    {
+        try {
+            $evento = Evento::find($eventoId);
+            if (!$evento) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Evento no encontrado'
+                ], 404);
+            }
+
+            $nombres = $request->input('nombres');
+            $apellidos = $request->input('apellidos');
+            $email = $request->input('email');
+
+            if (!$nombres || !$apellidos) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Nombre y apellido son requeridos'
+                ], 400);
+            }
+
+            // Verificar si ya existe la reacción (por email o nombre completo)
+            $reaccionExistente = EventoReaccion::where('evento_id', $eventoId)
+                ->whereNull('externo_id')
+                ->where(function($query) use ($email, $nombres, $apellidos) {
+                    if ($email) {
+                        $query->where('email', $email);
+                    } else {
+                        $query->where('nombres', $nombres)
+                              ->where('apellidos', $apellidos);
+                    }
+                })
+                ->first();
+
+            if ($reaccionExistente) {
+                // Quitar reacción
+                $reaccionExistente->delete();
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Reacción eliminada',
+                    'reaccionado' => false,
+                    'total_reacciones' => EventoReaccion::where('evento_id', $eventoId)->count()
+                ]);
+            } else {
+                // Crear reacción
+                $reaccion = EventoReaccion::create([
+                    'evento_id' => $eventoId,
+                    'externo_id' => null,
+                    'nombres' => $nombres,
+                    'apellidos' => $apellidos,
+                    'email' => $email,
+                ]);
+
+                // Contar TODAS las reacciones (registradas y no registradas)
+                $totalReacciones = EventoReaccion::where('evento_id', $eventoId)->count();
+
+                \Log::info('Reacción pública creada:', [
+                    'evento_id' => $eventoId,
+                    'reaccion_id' => $reaccion->id,
+                    'nombres' => $nombres,
+                    'apellidos' => $apellidos,
+                    'total_reacciones' => $totalReacciones
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Reacción agregada',
+                    'reaccionado' => true,
+                    'total_reacciones' => $totalReacciones
+                ]);
+            }
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al procesar reacción: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -193,6 +297,56 @@ class EventoReaccionController extends Controller
         } catch (\Throwable $e) {
             // Log error pero no fallar la reacción
             \Log::error('Error creando notificación de reacción: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Obtener total de reacciones de un evento (público, sin autenticación)
+     */
+    public function totalReacciones($eventoId)
+    {
+        try {
+            $evento = Evento::find($eventoId);
+            if (!$evento) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Evento no encontrado'
+                ], 404);
+            }
+
+            // Contar TODAS las reacciones (registradas y no registradas)
+            $totalReacciones = EventoReaccion::where('evento_id', $eventoId)->count();
+            
+            // Debug: contar por tipo
+            $registradas = EventoReaccion::where('evento_id', $eventoId)
+                ->whereNotNull('externo_id')
+                ->count();
+            $noRegistradas = EventoReaccion::where('evento_id', $eventoId)
+                ->whereNull('externo_id')
+                ->count();
+
+            \Log::info('Total reacciones consultado:', [
+                'evento_id' => $eventoId,
+                'total' => $totalReacciones,
+                'registradas' => $registradas,
+                'no_registradas' => $noRegistradas
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'total_reacciones' => $totalReacciones
+            ]);
+
+        } catch (\Throwable $e) {
+            \Log::error('Error en totalReacciones:', [
+                'evento_id' => $eventoId,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al obtener total de reacciones: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

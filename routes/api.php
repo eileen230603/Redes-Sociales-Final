@@ -5,8 +5,12 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\EventoParticipacionController;
 use App\Http\Controllers\Api\EventoReaccionController;
+use App\Http\Controllers\Api\MegaEventoReaccionController;
+use App\Http\Controllers\Api\EventoCompartidoController;
+use App\Http\Controllers\Api\MegaEventoCompartidoController;
 use App\Http\Controllers\Api\NotificacionController;
 use App\Http\Controllers\Api\DashboardOngController;
+use App\Http\Controllers\Api\DashboardExternoController;
 use App\Http\Controllers\Api\VoluntarioController;
 use App\Http\Controllers\Api\ConfiguracionController;
 use App\Http\Controllers\Api\ParametrizacionController;
@@ -38,22 +42,28 @@ Route::middleware('auth:sanctum')->group(function () {
         // ONG
         Route::get('/ong/{ongId}',       [EventController::class, 'indexByOng']);
         Route::get('/ong/{ongId}/dashboard', [EventController::class, 'dashboardPorEstado']);
-        Route::post('/',                 [EventController::class, 'store']);
-        Route::put('/{id}',              [EventController::class, 'update']);
-        Route::delete('/{id}',           [EventController::class, 'destroy']);
-
-        // TODOS LOS PUBLICADOS
-        Route::get('/',                  [EventController::class, 'indexAll']);
-
-        // DETALLE
-        Route::get('/detalle/{id}',      [EventController::class, 'show']);
-
-        // EMPRESAS E INVITADOS
+        
+        // EMPRESAS E INVITADOS (rutas específicas antes de las genéricas)
         Route::get('/empresas/disponibles', [EventController::class, 'empresasDisponibles']);
         Route::get('/invitados',         [EventController::class, 'invitadosDisponibles']);
+
+        // TODOS LOS PUBLICADOS (debe estar antes de rutas con parámetros)
+        Route::get('/',                  [EventController::class, 'indexAll']);
+
+        // DETALLE (ruta específica)
+        Route::get('/detalle/{id}',      [EventController::class, 'show']);
+
+        // DASHBOARD DEL EVENTO (ruta específica con restricción numérica)
+        Route::get('/{id}/dashboard', [EventController::class, 'dashboard'])->where('id', '[0-9]+');
+        Route::get('/{id}/dashboard/pdf', [EventController::class, 'dashboardPdf'])->where('id', '[0-9]+');
         
         // PATROCINADORES
-        Route::post('/{id}/patrocinar', [EventController::class, 'agregarPatrocinador']);
+        Route::post('/{id}/patrocinar', [EventController::class, 'agregarPatrocinador'])->where('id', '[0-9]+');
+        
+        // CRUD (al final, con restricción numérica)
+        Route::post('/',                 [EventController::class, 'store']);
+        Route::put('/{id}',              [EventController::class, 'update'])->where('id', '[0-9]+');
+        Route::delete('/{id}',           [EventController::class, 'destroy'])->where('id', '[0-9]+');
     });
 
     // ----------- EMPRESAS PARTICIPANTES (COLABORADORAS) -----------
@@ -83,11 +93,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/participaciones/evento/{eventoId}', [EventoParticipacionController::class, 'participantesEvento']);
     Route::put('/participaciones/{participacionId}/aprobar', [EventoParticipacionController::class, 'aprobar']);
     Route::put('/participaciones/{participacionId}/rechazar', [EventoParticipacionController::class, 'rechazar']);
+    Route::put('/participaciones-no-registradas/{participacionId}/aprobar', [EventoParticipacionController::class, 'aprobarNoRegistrado']);
+    Route::put('/participaciones-no-registradas/{participacionId}/rechazar', [EventoParticipacionController::class, 'rechazarNoRegistrado']);
 
     // ----------- REACCIONES (Favoritos) -----------
     Route::post('/reacciones/toggle', [EventoReaccionController::class, 'toggle']);
     Route::get('/reacciones/verificar/{eventoId}', [EventoReaccionController::class, 'verificar']);
     Route::get('/reacciones/evento/{eventoId}', [EventoReaccionController::class, 'usuariosQueReaccionaron']);
+
+    // ----------- COMPARTIDOS -----------
+    Route::post('/eventos/{eventoId}/compartir', [EventoCompartidoController::class, 'compartir']);
 
     // ----------- NOTIFICACIONES (ONG) -----------
     Route::prefix('notificaciones')->group(function () {
@@ -114,6 +129,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/reacciones/lista', [DashboardOngController::class, 'listaReacciones']);
     });
 
+    // ----------- DASHBOARD EXTERNO -----------
+    Route::prefix('dashboard-externo')->group(function () {
+        Route::get('/estadisticas-generales', [DashboardExternoController::class, 'estadisticasGenerales']);
+        Route::get('/datos-detallados', [DashboardExternoController::class, 'datosDetallados']);
+        Route::get('/eventos-disponibles', [DashboardExternoController::class, 'eventosDisponibles']);
+        Route::get('/descargar-pdf-completo', [DashboardExternoController::class, 'descargarPdfCompleto']);
+    });
+
     // ----------- VOLUNTARIOS -----------
     Route::get('/voluntarios/ong/{ongId}', [VoluntarioController::class, 'indexByOng']);
 
@@ -128,13 +151,27 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('mega-eventos')->group(function () {
         Route::get('/', [MegaEventoController::class, 'index']);
         Route::get('/publicos', [MegaEventoController::class, 'publicos']);
+        Route::get('/mis-participaciones', [MegaEventoController::class, 'misParticipaciones']);
         Route::post('/', [MegaEventoController::class, 'store']);
         Route::get('/{id}', [MegaEventoController::class, 'show']);
+        // Compartidos
+        Route::post('/{megaEventoId}/compartir', [MegaEventoCompartidoController::class, 'compartir']);
+        Route::get('/{megaEventoId}/compartidos/total', [MegaEventoCompartidoController::class, 'totalCompartidos']);
+        // Reacciones (usuarios registrados)
+        Route::post('/reacciones/toggle', [MegaEventoReaccionController::class, 'toggle']);
+        Route::get('/reacciones/verificar/{megaEventoId}', [MegaEventoReaccionController::class, 'verificar']);
+        Route::get('/reacciones/{megaEventoId}', [MegaEventoReaccionController::class, 'usuariosQueReaccionaron']);
         Route::put('/{id}', [MegaEventoController::class, 'update']);
         Route::delete('/{id}', [MegaEventoController::class, 'destroy']);
         Route::delete('/{id}/imagen', [MegaEventoController::class, 'deleteImage']);
         Route::post('/{id}/participar', [MegaEventoController::class, 'participar']);
         Route::get('/{id}/verificar-participacion', [MegaEventoController::class, 'verificarParticipacion']);
+        // Rutas de seguimiento
+        Route::get('/{id}/seguimiento', [MegaEventoController::class, 'seguimiento']);
+        Route::get('/{id}/participantes', [MegaEventoController::class, 'participantes']);
+        Route::get('/{id}/historial', [MegaEventoController::class, 'historial']);
+        Route::get('/{id}/exportar-excel', [MegaEventoController::class, 'exportarExcel']);
+        Route::get('/seguimiento/general', [MegaEventoController::class, 'seguimientoGeneral']);
     });
 
     // ----------- CONFIGURACIÓN / PARÁMETROS -----------
@@ -201,3 +238,27 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/tipos-usuario/{id}', [ParametrizacionController::class, 'eliminarTipoUsuario']);
     });
 });
+
+// ----------- REACCIONES PÚBLICAS (SIN AUTENTICACIÓN) -----------
+Route::get('/reacciones/evento/{eventoId}/total', [EventoReaccionController::class, 'totalReacciones']);
+Route::post('/reacciones/evento/{eventoId}/reaccionar-publico', [EventoReaccionController::class, 'reaccionarPublico']);
+
+// ----------- REACCIONES PÚBLICAS MEGA EVENTOS (SIN AUTENTICACIÓN) -----------
+Route::get('/reacciones/mega-evento/{megaEventoId}/total', [MegaEventoReaccionController::class, 'totalReacciones']);
+Route::post('/reacciones/mega-evento/{megaEventoId}/reaccionar-publico', [MegaEventoReaccionController::class, 'reaccionarPublico']);
+
+// ----------- COMPARTIDOS PÚBLICOS (SIN AUTENTICACIÓN) -----------
+Route::post('/eventos/{eventoId}/compartir-publico', [EventoCompartidoController::class, 'compartir']);
+Route::get('/eventos/{eventoId}/compartidos/total', [EventoCompartidoController::class, 'totalCompartidos']);
+
+// ----------- COMPARTIDOS PÚBLICOS MEGA EVENTOS (SIN AUTENTICACIÓN) -----------
+Route::post('/mega-eventos/{megaEventoId}/compartir-publico', [MegaEventoCompartidoController::class, 'compartir']);
+Route::get('/mega-eventos/{megaEventoId}/compartidos/total', [MegaEventoCompartidoController::class, 'totalCompartidos']);
+
+// ----------- PARTICIPACIÓN PÚBLICA (SIN AUTENTICACIÓN) -----------
+Route::post('/eventos/{eventoId}/participar-publico', [EventoParticipacionController::class, 'participarPublico']);
+Route::post('/eventos/{eventoId}/verificar-participacion-publica', [EventoParticipacionController::class, 'verificarParticipacionPublica']);
+
+// ----------- PARTICIPACIÓN PÚBLICA MEGA EVENTOS (SIN AUTENTICACIÓN) -----------
+Route::post('/mega-eventos/{megaEventoId}/participar-publico', [MegaEventoController::class, 'participarPublico']);
+Route::post('/mega-eventos/{megaEventoId}/verificar-participacion-publica', [MegaEventoController::class, 'verificarParticipacionPublica']);

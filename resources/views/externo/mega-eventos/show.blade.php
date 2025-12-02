@@ -35,6 +35,15 @@
                 <a href="#" id="btnVolver" class="btn btn-outline-secondary">
                     <i class="fas fa-arrow-left mr-2"></i> Volver
                 </a>
+                <button class="btn btn-outline-danger" id="btnReaccionar" style="border-radius: 50px;">
+                    <i class="far fa-heart mr-2" id="iconoCorazon"></i>
+                    <span id="textoReaccion">Me gusta</span>
+                    <span class="badge badge-light ml-2" id="contadorReacciones">0</span>
+                </button>
+                <button class="btn btn-outline-primary" id="btnCompartir" style="border-radius: 50px;">
+                    <i class="far fa-share-square mr-2"></i> Compartir
+                    <span class="badge badge-light ml-2" id="contadorCompartidos">0</span>
+                </button>
                 <button class="btn btn-primary" id="btnParticipar">
                     <i class="fas fa-user-plus mr-2"></i> <span id="btnParticiparTexto">Participar en el mega evento</span>
                 </button>
@@ -169,6 +178,49 @@
         </div>
     </div>
 </div>
+
+<!-- Modal de Compartir -->
+<div id="modalCompartir" class="modal fade" tabindex="-1" role="dialog" style="display: none;">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 400px;">
+        <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 8px 32px rgba(0,0,0,0.2);">
+            <div class="modal-header" style="border-bottom: 1px solid #F5F5F5; padding: 1.5rem;">
+                <h5 class="modal-title" style="color: #2c3e50; font-weight: 700; font-size: 1.25rem;">Compartir</h5>
+                <button type="button" class="close" onclick="cerrarModalCompartir()" style="border: none; background: none; font-size: 1.5rem; color: #6c757d; cursor: pointer;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 2rem;">
+                <div class="row text-center">
+                    <!-- Copiar enlace -->
+                    <div class="col-6 mb-4">
+                        <button onclick="copiarEnlaceMegaEvento()" class="btn btn-link p-0" style="text-decoration: none; border: none; background: none; width: 100%;">
+                            <div style="width: 80px; height: 80px; background: #F5F5F5; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#E9ECEF'; this.style.transform='scale(1.1)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#F5F5F5'; this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+                                <i class="fas fa-link" style="font-size: 2rem; color: #2c3e50;"></i>
+                            </div>
+                            <span style="color: #333; font-size: 0.9rem; font-weight: 600;">Copiar enlace</span>
+                        </button>
+                    </div>
+                    <!-- QR Code -->
+                    <div class="col-6 mb-4">
+                        <button onclick="mostrarQRMegaEvento()" class="btn btn-link p-0" style="text-decoration: none; border: none; background: none; width: 100%;">
+                            <div style="width: 80px; height: 80px; background: #667eea; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(102,126,234,0.3);" onmouseover="this.style.background='#764ba2'; this.style.transform='scale(1.1)'; this.style.boxShadow='0 4px 12px rgba(118,75,162,0.4)'" onmouseout="this.style.background='#667eea'; this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(102,126,234,0.3)'">
+                                <i class="fas fa-qrcode" style="font-size: 2rem; color: white;"></i>
+                            </div>
+                            <span style="color: #333; font-size: 0.9rem; font-weight: 600;">Código QR</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- Contenedor para el QR -->
+                <div id="qrContainer" style="display: none; margin-top: 1.5rem;">
+                    <div class="text-center">
+                        <div id="qrcode" style="display: inline-block; padding: 1rem; background: white; border-radius: 12px; margin-bottom: 1rem;"></div>
+                        <p style="color: #333; font-size: 0.9rem; margin: 0;">Escanea este código para acceder al mega evento</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('css')
@@ -243,7 +295,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         btnParticiparTexto.textContent = 'Participar en el mega evento';
     }
     
-    await Promise.all([loadMegaEvento(), verificarParticipacion()]);
+    await Promise.all([loadMegaEvento(), verificarParticipacion(), cargarContadorCompartidos()]);
+    
+    // Configurar botón de compartir
+    const btnCompartir = document.getElementById('btnCompartir');
+    if (btnCompartir) {
+        btnCompartir.addEventListener('click', mostrarModalCompartir);
+    }
 });
 
 async function verificarParticipacion() {
@@ -296,6 +354,11 @@ async function loadMegaEvento() {
 
         const mega = data.mega_evento;
         displayMegaEvento(mega);
+        
+        // Cargar estado de reacción y contador
+        await verificarReaccionMegaEvento();
+        await cargarContadorReaccionesMegaEvento();
+        
         loadingMessage.style.display = 'none';
         content.style.display = 'block';
 
@@ -311,6 +374,9 @@ async function loadMegaEvento() {
 }
 
 function displayMegaEvento(mega) {
+    // Guardar información del mega evento para compartir
+    setMegaEventoParaCompartir(mega);
+    
     document.getElementById('titulo').textContent = mega.titulo || '-';
     document.getElementById('descripcion').textContent = mega.descripcion || 'Sin descripción disponible.';
 
@@ -659,6 +725,530 @@ document.getElementById('btnParticipar').addEventListener('click', async functio
         });
     }
 });
+
+// Funciones para reacciones de mega eventos
+async function verificarReaccionMegaEvento() {
+    const token = localStorage.getItem('token');
+    const btnReaccionar = document.getElementById('btnReaccionar');
+    const iconoCorazon = document.getElementById('iconoCorazon');
+    const textoReaccion = document.getElementById('textoReaccion');
+    const contadorReacciones = document.getElementById('contadorReacciones');
+
+    if (!btnReaccionar) return;
+
+    try {
+        if (token) {
+            // Usuario registrado - verificar reacción
+            const res = await fetch(`${API_BASE_URL}/api/mega-eventos/reacciones/verificar/${megaEventoId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                }
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                if (data.reaccionado) {
+                    iconoCorazon.className = 'fas fa-heart mr-2';
+                    btnReaccionar.classList.remove('btn-outline-danger');
+                    btnReaccionar.classList.add('btn-danger');
+                    textoReaccion.textContent = 'Te gusta';
+                } else {
+                    iconoCorazon.className = 'far fa-heart mr-2';
+                    btnReaccionar.classList.remove('btn-danger');
+                    btnReaccionar.classList.add('btn-outline-danger');
+                    textoReaccion.textContent = 'Me gusta';
+                }
+                contadorReacciones.textContent = data.total_reacciones || 0;
+            }
+
+            // Agregar evento click al botón
+            btnReaccionar.onclick = async () => {
+                await toggleReaccionMegaEvento();
+            };
+        } else {
+            // Usuario no registrado - solo cargar contador
+            await cargarContadorReaccionesMegaEvento();
+            
+            // Agregar evento click para mostrar modal de reacción pública
+            btnReaccionar.onclick = async () => {
+                await mostrarModalReaccionPublica();
+            };
+        }
+    } catch (error) {
+        console.warn('Error verificando reacción:', error);
+        // Si hay error, intentar cargar solo el contador
+        await cargarContadorReaccionesMegaEvento();
+    }
+}
+
+async function cargarContadorReaccionesMegaEvento() {
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/reacciones/mega-evento/${megaEventoId}/total`, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            const contador = document.getElementById('contadorReacciones');
+            if (contador) {
+                contador.textContent = data.total_reacciones || 0;
+            }
+        }
+    } catch (error) {
+        console.warn('Error cargando contador de reacciones:', error);
+    }
+}
+
+async function toggleReaccionMegaEvento() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        await mostrarModalReaccionPublica();
+        return;
+    }
+
+    const btnReaccionar = document.getElementById('btnReaccionar');
+    const iconoCorazon = document.getElementById('iconoCorazon');
+    const textoReaccion = document.getElementById('textoReaccion');
+    const contadorReacciones = document.getElementById('contadorReacciones');
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/mega-eventos/reacciones/toggle`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ mega_evento_id: megaEventoId })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            if (data.reaccionado) {
+                iconoCorazon.className = 'fas fa-heart mr-2';
+                btnReaccionar.classList.remove('btn-outline-danger');
+                btnReaccionar.classList.add('btn-danger');
+                textoReaccion.textContent = 'Te gusta';
+                
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Me gusta agregado!',
+                        text: 'Has marcado este mega evento como favorito',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                }
+            } else {
+                iconoCorazon.className = 'far fa-heart mr-2';
+                btnReaccionar.classList.remove('btn-danger');
+                btnReaccionar.classList.add('btn-outline-danger');
+                textoReaccion.textContent = 'Me gusta';
+            }
+            contadorReacciones.textContent = data.total_reacciones || 0;
+        } else {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.error || 'Error al procesar la reacción'
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Error en toggle reacción:', error);
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de conexión',
+                text: 'No se pudo procesar la reacción'
+            });
+        }
+    }
+}
+
+async function mostrarModalReaccionPublica() {
+    const { value: formValues } = await Swal.fire({
+        title: 'Reaccionar al Mega Evento',
+        html: `
+            <div class="text-left">
+                <p class="mb-3">Para reaccionar, por favor ingresa tu información:</p>
+                <input id="swal-nombres" class="swal2-input" placeholder="Nombres" required>
+                <input id="swal-apellidos" class="swal2-input" placeholder="Apellidos" required>
+                <input id="swal-email" class="swal2-input" type="email" placeholder="Email (opcional)">
+            </div>
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Reaccionar',
+        cancelButtonText: 'Cancelar',
+        preConfirm: () => {
+            return {
+                nombres: document.getElementById('swal-nombres').value,
+                apellidos: document.getElementById('swal-apellidos').value,
+                email: document.getElementById('swal-email').value
+            };
+        },
+        customClass: {
+            popup: 'swal2-popup-custom'
+        }
+    });
+
+    if (formValues && formValues.nombres && formValues.apellidos) {
+        await reaccionarPublicoMegaEvento(formValues.nombres, formValues.apellidos, formValues.email);
+    }
+}
+
+async function reaccionarPublicoMegaEvento(nombres, apellidos, email) {
+    const btnReaccionar = document.getElementById('btnReaccionar');
+    const iconoCorazon = document.getElementById('iconoCorazon');
+    const textoReaccion = document.getElementById('textoReaccion');
+    const contadorReacciones = document.getElementById('contadorReacciones');
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/reacciones/mega-evento/${megaEventoId}/reaccionar-publico`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                nombres: nombres,
+                apellidos: apellidos,
+                email: email || null
+            })
+        });
+
+        const data = await res.json();
+        
+        if (data.success) {
+            if (data.reaccionado) {
+                iconoCorazon.className = 'fas fa-heart mr-2';
+                btnReaccionar.classList.remove('btn-outline-danger');
+                btnReaccionar.classList.add('btn-danger');
+                textoReaccion.textContent = 'Te gusta';
+            } else {
+                iconoCorazon.className = 'far fa-heart mr-2';
+                btnReaccionar.classList.remove('btn-danger');
+                btnReaccionar.classList.add('btn-outline-danger');
+                textoReaccion.textContent = 'Me gusta';
+            }
+            contadorReacciones.textContent = data.total_reacciones || 0;
+            
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: data.reaccionado ? '¡Me gusta agregado!' : 'Me gusta eliminado',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }
+        } else {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.error || 'Error al procesar la reacción'
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de conexión',
+                text: 'No se pudo procesar la reacción'
+            });
+        }
+    }
+}
+
+// Funciones para compartir mega eventos
+let megaEventoParaCompartir = null;
+
+// Guardar información del mega evento para compartir
+function setMegaEventoParaCompartir(megaEvento) {
+    megaEventoParaCompartir = {
+        ...megaEvento,
+        url: typeof getPublicUrl !== 'undefined' 
+            ? getPublicUrl(`/mega-evento/${megaEvento.mega_evento_id}/qr`)
+            : `http://192.168.0.6:8000/mega-evento/${megaEvento.mega_evento_id}/qr`
+    };
+    console.log('Mega evento para compartir configurado:', megaEventoParaCompartir);
+}
+
+// Mostrar modal de compartir
+function mostrarModalCompartir() {
+    const modal = document.getElementById('modalCompartir');
+    if (modal) {
+        if (typeof $ !== 'undefined') {
+            $(modal).modal('show');
+        } else {
+            modal.style.display = 'block';
+            modal.classList.add('show');
+            document.body.classList.add('modal-open');
+            const backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop fade show';
+            backdrop.id = 'modalBackdropCompartir';
+            backdrop.onclick = () => cerrarModalCompartir();
+            document.body.appendChild(backdrop);
+        }
+    }
+}
+
+// Cerrar modal de compartir
+function cerrarModalCompartir() {
+    const modal = document.getElementById('modalCompartir');
+    if (modal) {
+        if (typeof $ !== 'undefined') {
+            $(modal).modal('hide');
+        } else {
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+            document.body.classList.remove('modal-open');
+            const backdrop = document.getElementById('modalBackdropCompartir');
+            if (backdrop) {
+                backdrop.remove();
+            }
+        }
+    }
+    // Ocultar QR
+    const qrContainer = document.getElementById('qrContainer');
+    if (qrContainer) {
+        qrContainer.style.display = 'none';
+    }
+}
+
+// Registrar compartido
+async function registrarCompartidoMegaEvento(megaEventoId, metodo) {
+    const token = localStorage.getItem('token');
+    try {
+        const headers = {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        };
+        
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        // Usar la ruta pública que acepta tanto usuarios autenticados como no autenticados
+        await fetch(`${API_BASE_URL}/api/mega-eventos/${megaEventoId}/compartir-publico`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({ metodo: metodo })
+        });
+        
+        // Actualizar contador de compartidos
+        await cargarContadorCompartidos();
+    } catch (error) {
+        console.warn('Error registrando compartido:', error);
+    }
+}
+
+// Cargar contador de compartidos
+async function cargarContadorCompartidos() {
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/mega-eventos/${megaEventoId}/compartidos/total`);
+        const data = await res.json();
+        
+        if (data.success) {
+            const contador = document.getElementById('contadorCompartidos');
+            if (contador) {
+                contador.textContent = data.total_compartidos || 0;
+            }
+        }
+    } catch (error) {
+        console.warn('Error cargando contador de compartidos:', error);
+    }
+}
+
+// Copiar enlace
+async function copiarEnlaceMegaEvento() {
+    // URL pública para compartir (debe ser accesible desde cualquier dispositivo)
+    const url = typeof getPublicUrl !== 'undefined' 
+        ? getPublicUrl(`/mega-evento/${megaEventoId}/qr`)
+        : `http://192.168.0.6:8000/mega-evento/${megaEventoId}/qr`;
+
+    // Registrar compartido en backend
+    await registrarCompartidoMegaEvento(megaEventoId, 'link');
+    
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Enlace copiado!',
+                    text: 'El enlace se ha copiado al portapapeles',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } else {
+                alert('Enlace copiado al portapapeles');
+            }
+            cerrarModalCompartir();
+        }).catch(err => {
+            console.error('Error al copiar:', err);
+            fallbackCopiarEnlaceMegaEvento(url);
+        });
+    } else {
+        fallbackCopiarEnlaceMegaEvento(url);
+    }
+}
+
+function fallbackCopiarEnlaceMegaEvento(url) {
+    const textarea = document.createElement('textarea');
+    textarea.value = url;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+        document.execCommand('copy');
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Enlace copiado!',
+                text: 'El enlace se ha copiado al portapapeles',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        } else {
+            alert('Enlace copiado al portapapeles');
+        }
+        cerrarModalCompartir();
+    } catch (err) {
+        console.error('Error al copiar:', err);
+        alert('Error al copiar el enlace. Por favor, cópialo manualmente: ' + url);
+    }
+    document.body.removeChild(textarea);
+}
+
+// Mostrar QR Code
+async function mostrarQRMegaEvento() {
+    // URL pública para compartir (debe ser accesible desde cualquier dispositivo)
+    const qrUrl = typeof getPublicUrl !== 'undefined' 
+        ? getPublicUrl(`/mega-evento/${megaEventoId}/qr`)
+        : `http://192.168.0.6:8000/mega-evento/${megaEventoId}/qr`;
+
+    // Registrar compartido en backend
+    await registrarCompartidoMegaEvento(megaEventoId, 'qr');
+
+    const qrContainer = document.getElementById('qrContainer');
+    const qrcodeDiv = document.getElementById('qrcode');
+    
+    if (!qrContainer || !qrcodeDiv) return;
+    
+    // Limpiar contenido anterior
+    qrcodeDiv.innerHTML = '';
+    
+    // Mostrar contenedor primero
+    qrContainer.style.display = 'block';
+    
+    // Agregar indicador de carga
+    qrcodeDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin fa-2x" style="color: #667eea;"></i><p class="mt-2" style="color: #333;">Generando QR...</p></div>';
+    
+    // Intentar cargar QRCode si no está disponible
+    if (typeof QRCode === 'undefined') {
+        // Verificar si ya se está cargando
+        if (document.querySelector('script[src*="qrcode"]')) {
+            // Esperar a que se cargue
+            const checkQRCode = setInterval(() => {
+                if (typeof QRCode !== 'undefined') {
+                    clearInterval(checkQRCode);
+                    generarQRCodeMegaEvento(qrUrl, qrcodeDiv);
+                }
+            }, 100);
+            // Timeout después de 5 segundos
+            setTimeout(() => {
+                clearInterval(checkQRCode);
+                if (typeof QRCode === 'undefined') {
+                    generarQRConAPIMegaEvento(qrUrl, qrcodeDiv);
+                }
+            }, 5000);
+        } else {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js';
+            script.onload = function() {
+                if (typeof QRCode !== 'undefined') {
+                    generarQRCodeMegaEvento(qrUrl, qrcodeDiv);
+                } else {
+                    generarQRConAPIMegaEvento(qrUrl, qrcodeDiv);
+                }
+            };
+            script.onerror = function() {
+                generarQRConAPIMegaEvento(qrUrl, qrcodeDiv);
+            };
+            document.head.appendChild(script);
+        }
+    } else {
+        generarQRCodeMegaEvento(qrUrl, qrcodeDiv);
+    }
+}
+
+// Función auxiliar para generar QR con la librería
+function generarQRCodeMegaEvento(qrUrl, qrcodeDiv) {
+    try {
+        QRCode.toCanvas(qrcodeDiv, qrUrl, {
+            width: 250,
+            margin: 2,
+            color: {
+                dark: '#667eea',
+                light: '#FFFFFF'
+            },
+            errorCorrectionLevel: 'M'
+        }, function (error) {
+            if (error) {
+                console.error('Error generando QR:', error);
+                generarQRConAPIMegaEvento(qrUrl, qrcodeDiv);
+            } else {
+                const canvas = qrcodeDiv.querySelector('canvas');
+                if (canvas) {
+                    canvas.style.display = 'block';
+                    canvas.style.margin = '0 auto';
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error en generarQRCode:', error);
+        generarQRConAPIMegaEvento(qrUrl, qrcodeDiv);
+    }
+}
+
+// Función alternativa usando API de QR
+function generarQRConAPIMegaEvento(qrUrl, qrcodeDiv) {
+    try {
+        const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrUrl)}&bgcolor=FFFFFF&color=667eea`;
+        const img = document.createElement('img');
+        img.src = apiUrl;
+        img.alt = 'QR Code';
+        img.style.cssText = 'display: block; margin: 0 auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);';
+        img.onerror = function() {
+            qrcodeDiv.innerHTML = `
+                <div class="text-center p-3">
+                    <p class="text-danger mb-2" style="font-size: 0.9rem;">Error cargando generador de QR.</p>
+                    <p class="text-muted mb-2" style="font-size: 0.85rem;">Por favor, usa el enlace directo:</p>
+                    <a href="${qrUrl}" target="_blank" class="btn btn-sm btn-primary">Abrir enlace</a>
+                </div>
+            `;
+        };
+        qrcodeDiv.innerHTML = '';
+        qrcodeDiv.appendChild(img);
+    } catch (error) {
+        console.error('Error generando QR con API:', error);
+        qrcodeDiv.innerHTML = `
+            <div class="text-center p-3">
+                <p class="text-danger mb-2" style="font-size: 0.9rem;">Error cargando generador de QR.</p>
+                <p class="text-muted mb-2" style="font-size: 0.85rem;">Por favor, usa el enlace directo:</p>
+                <a href="${qrUrl}" target="_blank" class="btn btn-sm btn-primary">Abrir enlace</a>
+            </div>
+        `;
+    }
+}
 </script>
 @endsection
 

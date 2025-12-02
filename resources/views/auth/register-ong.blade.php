@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNI2 • Registro ONG</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <title>UNI2 • Registro ONG</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         * {
             margin: 0;
@@ -666,8 +666,8 @@
                         <span>UNI2</span>
                         <span>Conectando comunidades</span>
                     </div>
-                </div>
-                
+      </div>
+
                 <div class="welcome-message">
                     <h2 class="welcome-title">¡Únete!</h2>
                     <p class="welcome-subtitle">Registra tu Organización</p>
@@ -679,16 +679,16 @@
                         <img src="{{ asset('assets/img/UNI2 - copia.png') }}" alt="UNI2 Logo">
                     </div>
                 </div>
-            </div>
-            
+      </div>
+
             <div class="footer-text">
                 © 2025 UNI2<br>
                 Conectando comunidades, transformando vidas.
             </div>
-        </div>
+      </div>
 
         <div class="right-panel">
-            <div>
+      <div>
                 <h1>Registro ONG</h1>
                 <p class="subtitle">Completa los datos de tu organización</p>
                 
@@ -720,28 +720,28 @@
                                 <i class="far fa-building"></i> Nombre de la ONG
                             </label>
                             <input type="text" id="nombre_ong" name="nombre_ong" placeholder="Nombre de tu organización" required>
-                        </div>
+      </div>
 
                         <div class="form-group">
                             <label for="NIT">
                                 <i class="far fa-id-card"></i> NIT
                             </label>
                             <input type="text" id="NIT" name="NIT" placeholder="Número de identificación tributaria">
-                        </div>
+      </div>
 
                         <div class="form-group">
                             <label for="telefono">
                                 <i class="far fa-phone"></i> Teléfono
                             </label>
                             <input type="text" id="telefono" name="telefono" placeholder="Tu teléfono">
-                        </div>
+      </div>
 
                         <div class="form-group">
                             <label for="sitio_web">
                                 <i class="far fa-globe"></i> Sitio web
                             </label>
                             <input type="text" id="sitio_web" name="sitio_web" placeholder="https://tu-sitio.com">
-                        </div>
+      </div>
 
                         <div class="form-group full-width">
                             <label for="direccion">
@@ -749,7 +749,7 @@
                             </label>
                             <input type="text" id="direccion" name="direccion" placeholder="Selecciona una ubicación en el mapa">
                             <div id="map"></div>
-                        </div>
+      </div>
 
                         <div class="form-group full-width">
                             <label for="descripcion">
@@ -757,14 +757,14 @@
                             </label>
                             <textarea id="descripcion" name="descripcion" rows="3" placeholder="Describe tu organización y su misión..."></textarea>
                         </div>
-                    </div>
+      </div>
 
                     <div id="msg"></div>
 
                     <button type="submit" class="register-btn">
                         <i class="fas fa-hand-holding-heart"></i> Registrar ONG
-                    </button>
-                </form>
+        </button>
+    </form>
 
                 <div class="login-link">
                     ¿Ya tienes cuenta? <a href="/login">Inicia sesión</a>

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNI2 • Registro Usuario Externo</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <title>UNI2 • Registro Usuario Externo</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -672,8 +672,8 @@
                         <span>UNI2</span>
                         <span>Conectando comunidades</span>
                     </div>
-                </div>
-                
+      </div>
+
                 <div class="welcome-message">
                     <h2 class="welcome-title">¡Únete!</h2>
                     <p class="welcome-subtitle">Crea tu cuenta como Usuario Individual</p>
@@ -685,16 +685,16 @@
                         <img src="{{ asset('assets/img/UNI2 - copia.png') }}" alt="UNI2 Logo">
                     </div>
                 </div>
-            </div>
-            
+      </div>
+
             <div class="footer-text">
                 © 2025 UNI2<br>
                 Conectando comunidades, transformando vidas.
             </div>
-        </div>
+      </div>
 
         <div class="right-panel">
-            <div>
+      <div>
                 <h1>Registro</h1>
                 <p class="subtitle">Completa tus datos para crear tu cuenta</p>
                 
@@ -726,42 +726,42 @@
                                 <i class="far fa-id-card"></i> Nombres
                             </label>
                             <input type="text" id="nombres" name="nombres" placeholder="Tus nombres" required>
-                        </div>
+      </div>
 
                         <div class="form-group">
                             <label for="apellidos">
                                 <i class="far fa-id-card"></i> Apellidos
                             </label>
                             <input type="text" id="apellidos" name="apellidos" placeholder="Tus apellidos" required>
-                        </div>
+      </div>
 
                         <div class="form-group">
                             <label for="documento_identidad">
                                 <i class="far fa-id-badge"></i> Documento de identidad
                             </label>
                             <input type="text" id="documento_identidad" name="documento_identidad" placeholder="Número de documento" required>
-                        </div>
+      </div>
 
                         <div class="form-group">
                             <label for="telefono">
                                 <i class="far fa-phone"></i> Teléfono
                             </label>
                             <input type="text" id="telefono" name="telefono" placeholder="Tu teléfono">
-                        </div>
+      </div>
 
                         <div class="form-group full-width">
                             <label for="direccion">
                                 <i class="far fa-map-marker-alt"></i> Dirección
                             </label>
                             <input type="text" id="direccion" name="direccion" placeholder="Tu dirección">
-                        </div>
+      </div>
 
                         <div class="form-group">
                             <label for="fecha_nacimiento">
                                 <i class="far fa-calendar"></i> Fecha de nacimiento
                             </label>
                             <input type="date" id="fecha_nacimiento" name="fecha_nacimiento">
-                        </div>
+      </div>
 
                         <div class="form-group full-width">
                             <label for="descripcion">
@@ -769,14 +769,14 @@
                             </label>
                             <textarea id="descripcion" name="descripcion" rows="3" placeholder="Cuéntanos sobre ti..."></textarea>
                         </div>
-                    </div>
+      </div>
 
                     <div id="msg"></div>
 
                     <button type="submit" class="register-btn">
                         <i class="fas fa-user-plus"></i> Registrar Usuario
-                    </button>
-                </form>
+        </button>
+    </form>
 
                 <div class="login-link">
                     ¿Ya tienes cuenta? <a href="/login">Inicia sesión</a>

@@ -6,11 +6,149 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="text-primary">
-            <i class=></i> 
+            <i class="fas fa-star mr-2"></i> Mega Eventos
         </h2>
+        <div>
+            <button id="btnSeguimientoGeneral" class="btn btn-info btn-lg mr-2">
+                <i class="fas fa-chart-line mr-2"></i> Seguimiento General
+            </button>
         <a href="{{ route('ong.mega-eventos.create') }}" class="btn btn-success btn-lg">
             <i class="fas fa-plus mr-2"></i> Nuevo Mega Evento
         </a>
+        </div>
+    </div>
+
+    <!-- Panel de Estadísticas Agregadas -->
+    <div id="panelEstadisticasAgregadas" class="card mb-4 shadow-sm" style="border: none; border-radius: 12px; display: none;">
+        <div class="card-header bg-white" style="border-bottom: 1px solid #f0f0f0; padding: 1.25rem;">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0" style="font-weight: 700; color: #0C2B44;">
+                    <i class="far fa-chart-bar mr-2" style="color: #00A36C;"></i>Estadísticas Agregadas de Todos los Mega Eventos
+                </h5>
+                <button class="btn btn-sm btn-outline-secondary" onclick="ocultarEstadisticasAgregadas()">
+                    <i class="far fa-times mr-1"></i> Cerrar
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-4">
+            <!-- Métricas Principales -->
+            <div class="row mb-4">
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card bg-gradient-primary" style="border: none; border-radius: 12px;">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-white text-uppercase mb-3" style="font-size: 0.8rem; opacity: .95; font-weight: 600;">Total Mega Eventos</h6>
+                                    <h2 class="text-white mb-0" id="totalMegaEventos" style="font-size: 3rem; font-weight: 700;">0</h2>
+                                </div>
+                                <i class="far fa-star fa-3x text-white" style="opacity: .2;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card bg-gradient-success" style="border: none; border-radius: 12px;">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-white text-uppercase mb-3" style="font-size: 0.8rem; opacity: .95; font-weight: 600;">Total Participantes</h6>
+                                    <h2 class="text-white mb-0" id="totalParticipantesAgregado" style="font-size: 3rem; font-weight: 700;">0</h2>
+                                </div>
+                                <i class="far fa-users fa-3x text-white" style="opacity: .2;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card" style="border: none; border-radius: 12px; background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%);">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-white text-uppercase mb-3" style="font-size: 0.8rem; opacity: .95; font-weight: 600;">Total Reacciones</h6>
+                                    <h2 class="text-white mb-0" id="totalReaccionesAgregado" style="font-size: 3rem; font-weight: 700;">0</h2>
+                                </div>
+                                <i class="far fa-heart fa-3x text-white" style="opacity: .2;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card" style="border: none; border-radius: 12px; background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-white text-uppercase mb-3" style="font-size: 0.8rem; opacity: .95; font-weight: 600;">Total Compartidos</h6>
+                                    <h2 class="text-white mb-0" id="totalCompartidosAgregado" style="font-size: 3rem; font-weight: 700;">0</h2>
+                                </div>
+                                <i class="far fa-share-alt fa-3x text-white" style="opacity: .2;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Métricas Secundarias -->
+            <div class="row mb-4">
+                <div class="col-lg-4 col-md-6 mb-3">
+                    <div class="card shadow-sm" style="border: none; border-radius: 12px; border-left: 4px solid #00A36C;">
+                        <div class="card-body p-4">
+                            <h6 class="text-muted text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600;">Mega Eventos Activos</h6>
+                            <h3 class="mb-0" id="megaEventosActivos" style="font-size: 2rem; font-weight: 700; color: #00A36C;">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 mb-3">
+                    <div class="card shadow-sm" style="border: none; border-radius: 12px; border-left: 4px solid #6c757d;">
+                        <div class="card-body p-4">
+                            <h6 class="text-muted text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600;">Mega Eventos Finalizados</h6>
+                            <h3 class="mb-0" id="megaEventosFinalizados" style="font-size: 2rem; font-weight: 700; color: #6c757d;">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 mb-3">
+                    <div class="card shadow-sm" style="border: none; border-radius: 12px; border-left: 4px solid #17a2b8;">
+                        <div class="card-body p-4">
+                            <h6 class="text-muted text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600;">Promedio Participantes/Evento</h6>
+                            <h3 class="mb-0" id="promedioParticipantes" style="font-size: 2rem; font-weight: 700; color: #17a2b8;">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Detalle por Mega Evento -->
+            <div class="card shadow-sm" style="border: none; border-radius: 12px;">
+                <div class="card-header bg-white" style="border-bottom: 1px solid #f0f0f0; padding: 1.25rem;">
+                    <h6 class="mb-0" style="font-weight: 600; color: #0C2B44;">
+                        <i class="far fa-list mr-2" style="color: #00A36C;"></i>Detalle por Mega Evento
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead style="background: #F5F5F5;">
+                                <tr>
+                                    <th style="padding: 1rem; font-weight: 600; color: #0C2B44;">Mega Evento</th>
+                                    <th style="padding: 1rem; font-weight: 600; color: #0C2B44;">Estado</th>
+                                    <th style="padding: 1rem; font-weight: 600; color: #0C2B44;">Participantes</th>
+                                    <th style="padding: 1rem; font-weight: 600; color: #0C2B44;">Reacciones</th>
+                                    <th style="padding: 1rem; font-weight: 600; color: #0C2B44;">Compartidos</th>
+                                    <th style="padding: 1rem; font-weight: 600; color: #0C2B44;">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaMegaEventosDetalle">
+                                <tr>
+                                    <td colspan="6" class="text-center py-3">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="sr-only">Cargando...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Filtros y Búsqueda -->
@@ -278,15 +416,19 @@ async function cargarMegaEventos() {
             btnGroup.innerHTML = `
                 <div class="btn-group w-100" role="group">
                     <a href="/ong/mega-eventos/${mega.mega_evento_id}/detalle" 
-                       class="btn btn-sm btn-light border" style="font-size: 0.8rem;">
+                       class="btn btn-sm btn-light border" style="font-size: 0.8rem;" title="Ver detalles">
                         <i class="fas fa-eye"></i>
                     </a>
+                    <a href="/ong/mega-eventos/${mega.mega_evento_id}/seguimiento" 
+                       class="btn btn-sm btn-light border" style="font-size: 0.8rem; background: #0C2B44; color: white; border-color: #0C2B44 !important;" title="Seguimiento">
+                        <i class="fas fa-chart-line"></i>
+                    </a>
                     <a href="/ong/mega-eventos/${mega.mega_evento_id}/editar" 
-                       class="btn btn-sm btn-light border" style="font-size: 0.8rem;">
+                       class="btn btn-sm btn-light border" style="font-size: 0.8rem;" title="Editar">
                         <i class="fas fa-edit"></i>
                     </a>
                     <button onclick="eliminarMegaEvento(${mega.mega_evento_id})" 
-                            class="btn btn-sm btn-light border text-danger" style="font-size: 0.8rem;">
+                            class="btn btn-sm btn-light border text-danger" style="font-size: 0.8rem;" title="Eliminar">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>

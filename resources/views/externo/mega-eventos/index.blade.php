@@ -221,6 +221,11 @@ async function cargarMegaEventos() {
             participacionesMap[mega.mega_evento_id] = participacionesData[index]?.participando || false;
         });
 
+        // Filtrar mega eventos en los que ya está participando
+        data.mega_eventos = data.mega_eventos.filter(mega => {
+            return !participacionesMap[mega.mega_evento_id];
+        });
+
         function buildImageUrl(imgUrl) {
             if (!imgUrl || imgUrl.trim() === '') return null;
             if (imgUrl.startsWith('http://') || imgUrl.startsWith('https://')) return imgUrl;

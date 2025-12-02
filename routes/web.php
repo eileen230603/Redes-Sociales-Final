@@ -33,6 +33,12 @@ Route::view('/home-ong', 'home-ong')->name('home.ong');
 Route::view('/home-empresa', 'home-empresa')->name('home.empresa');
 Route::view('/home-externo', 'home-externo')->name('home.externo');
 
+// ---------------- ACCESO PÚBLICO A EVENTOS (QR) ----------------
+Route::get('/evento/{id}/qr', [App\Http\Controllers\EventoPublicoController::class, 'show'])->name('evento.publico.qr');
+
+// ---------------- ACCESO PÚBLICO A MEGA EVENTOS (QR) ----------------
+Route::get('/mega-evento/{id}/qr', [App\Http\Controllers\MegaEventoPublicoController::class, 'show'])->name('mega-evento.publico.qr');
+
 // ---------------- EXTERNO: EVENTOS ----------------
 Route::prefix('externo/eventos')->group(function () {
     Route::view('/', 'externo.eventos.index')->name('externo.eventos.index');
@@ -41,6 +47,9 @@ Route::prefix('externo/eventos')->group(function () {
 
 // ---------------- EXTERNO: MIS PARTICIPACIONES ----------------
 Route::view('/externo/mis-participaciones', 'externo.mis-participaciones')->name('externo.mis-participaciones');
+
+// ---------------- EXTERNO: REPORTES ----------------
+Route::view('/externo/reportes', 'externo.reportes.index')->name('externo.reportes.index');
 
 // ---------------- EXTERNO: MEGA EVENTOS ----------------
 Route::prefix('externo/mega-eventos')->name('externo.mega-eventos.')->group(function () {
@@ -57,9 +66,11 @@ Route::prefix('voluntario/mega-eventos')->name('voluntario.mega-eventos.')->grou
 // ---------------- ONG: EVENTOS ----------------
 Route::prefix('ong/eventos')->name('ong.eventos.')->group(function () {
     Route::view('/', 'ong.eventos.index')->name('index');
+    Route::view('/historial', 'ong.eventos.historial')->name('historial');
     Route::view('/crear', 'ong.eventos.create')->name('create');
     Route::view('/{id}/editar', 'ong.eventos.edit')->name('edit');
     Route::view('/{id}/detalle', 'ong.eventos.show')->name('show');
+    Route::view('/{id}/dashboard', 'ong.eventos.dashboard-evento')->name('dashboard-evento');
 });
 
 // ---------------- ONG: VOLUNTARIOS ----------------
@@ -93,6 +104,7 @@ Route::prefix('ong/mega-eventos')->name('ong.mega-eventos.')->group(function () 
     Route::view('/crear', 'ong.mega-eventos.create')->name('create');
     Route::view('/{id}/editar', 'ong.mega-eventos.edit')->name('edit');
     Route::view('/{id}/detalle', 'ong.mega-eventos.show')->name('show');
+    Route::view('/{id}/seguimiento', 'ong.mega-eventos.seguimiento')->name('seguimiento');
 });
 
 // ---------------- EMPRESA: MEGA EVENTOS ----------------

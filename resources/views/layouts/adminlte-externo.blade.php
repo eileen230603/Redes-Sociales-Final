@@ -4,6 +4,44 @@
 
 @section('title', 'UNI2 • Panel del Integrante Externo')
 
+@push('js')
+    {{-- Lucide icons para panel Externo --}}
+    <script type="module">
+        import { createIcons, icons } from "https://unpkg.com/lucide@latest/dist/esm/lucide.js";
+
+        const faToLucide = {
+            'fa-home': 'home',
+            'fa-calendar-alt': 'calendar-range',
+            'fa-calendar-check': 'calendar-check',
+            'fa-star': 'star',
+            'fa-chart-bar': 'bar-chart-3',
+            'fa-user-circle': 'user-round',
+            'fa-globe': 'globe-2',
+            'fa-sign-out-alt': 'log-out',
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                document.querySelectorAll('i[class*=\"fa-\"]').forEach(el => {
+                    const classes = el.className.split(/\\s+/);
+                    const faClass = classes.find(c => c.startsWith('fa-'));
+                    if (!faClass) return;
+
+                    const lucideName = faToLucide[faClass];
+                    if (!lucideName || !icons[lucideName]) return;
+
+                    el.setAttribute('data-lucide', lucideName);
+                    el.className = classes.filter(c => !c.startsWith('fa')).join(' ').trim();
+                });
+
+                createIcons({ icons });
+            } catch (e) {
+                console.warn('Lucide externo no pudo inicializarse:', e);
+            }
+        });
+    </script>
+@endpush
+
 @php
     // Configuración específica para usuarios externos
     config(['adminlte.layout_topnav' => null]);
@@ -80,15 +118,89 @@
 
 {{-- NAVBAR SUPERIOR --}}
 @push('adminlte_topnav')
-    <li class="nav-item d-none d-sm-inline-block">
-        <a href="/home-publica" class="nav-link">
-            <i class="fas fa-globe-americas mr-1"></i> Ir a página pública
+    {{-- Avatar y nombre del usuario externo - PRIMERO para que aparezca a la derecha --}}
+    <li class="nav-item d-flex align-items-center ml-auto" style="order: 999; margin-left: auto !important; margin-right: 0 !important;">
+        <div class="d-flex align-items-center pl-3 pr-3"
+             style="background: #ffffff; border-radius: 999px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 4px 16px; margin-right: 0 !important; min-width: 220px;">
+            @php
+                $user = Auth::user();
+                $integranteExterno = optional($user)->integranteExterno;
+                
+                // Nombre: nombres + apellidos del integrante externo > nombre_usuario > name > 'Usuario'
+                $nombreUsuario = 'Usuario';
+                if ($integranteExterno) {
+                    $nombres = trim($integranteExterno->nombres ?? '');
+                    $apellidos = trim($integranteExterno->apellidos ?? '');
+                    $nombreUsuario = trim("{$nombres} {$apellidos}") ?: ($user->nombre_usuario ?? ($user->name ?? 'Usuario'));
+                } else {
+                    $nombreUsuario = $user->nombre_usuario ?? ($user->name ?? 'Usuario');
+                }
+                
+                $inicial = mb_substr(trim($nombreUsuario), 0, 1, 'UTF-8');
+                
+                // Prioridad de avatar: foto del integrante externo > foto del usuario > null
+                $foto = null;
+                if ($integranteExterno) {
+                    try {
+                        $foto = $integranteExterno->foto_perfil_url ?? null;
+                    } catch (\Exception $e) {
+                        // Si falla, intentar con el usuario
+                    }
+                }
+                if (!$foto && $user) {
+                    try {
+                        $foto = $user->foto_perfil_url ?? null;
+                    } catch (\Exception $e) {
+                        $foto = null;
+                    }
+                }
+            @endphp
+            
+            {{-- Avatar redondo --}}
+            <div class="mr-3" id="avatarContainerExterno"
+                 style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: #e9f5ff; flex-shrink: 0; position: relative; display: flex; align-items: center; justify-content: center;">
+                <img id="headerAvatarExterno"
+                     src="{{ $foto ?? '' }}"
+                     alt="Foto perfil"
+                     style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%; display: {{ $foto ? 'block' : 'none' }}; margin: 0; padding: 0;">
+                <span id="headerAvatarInicialExterno"
+                      style="font-size: 1rem; display: {{ $foto ? 'none' : 'flex' }}; align-items: center; justify-content: center; width: 40px; height: 40px; margin: 0; padding: 0; border-radius: 50%;">{{ $inicial }}</span>
+            </div>
+            
+            {{-- Nombre + etiqueta --}}
+            <div class="d-flex flex-column mr-3" style="max-width: 200px; min-width: 120px; flex-grow: 1;">
+                <span id="headerNombreExterno"
+                      style="font-size: 0.9rem; color: #2c3e50; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">
+                    {{ $nombreUsuario }}
+                </span>
+                @if($integranteExterno)
+                    <small style="font-size: 0.75rem; color: #8c9aa8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">
+                        Integrante Externo
+                    </small>
+                @endif
+            </div>
+            
+            {{-- Dropdown de opciones --}}
+            <div class="dropdown" style="flex-shrink: 0;">
+                <a class="text-muted" href="#" role="button" id="dropdownPerfilExterno"
+                   data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                   style="font-size: 0.75rem; text-decoration: none; padding: 0.25rem;">
+                    <i class="fas fa-chevron-down"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownPerfilExterno">
+                    <a class="dropdown-item" href="/perfil/externo">
+                        <i class="far fa-user mr-2"></i> Mi perfil
+                    </a>
+                    <a class="dropdown-item" href="/home-publica">
+                        <i class="far fa-globe mr-2"></i> Ir a página pública
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item text-danger" href="#" onclick="cerrarSesion(event)">
+                        <i class="far fa-sign-out-alt mr-2"></i> Cerrar sesión
         </a>
-    </li>
-    <li class="nav-item d-none d-sm-inline-block">
-        <a href="#" class="nav-link text-danger logout-link" onclick="event.preventDefault(); event.stopPropagation(); cerrarSesion(event); return false;">
-            <i class="far fa-sign-out-alt mr-1"></i> Cerrar sesión
-        </a>
+                </div>
+            </div>
+        </div>
     </li>
 @endpush
 
@@ -272,6 +384,112 @@
     .badge-success {
         background-color: #00A36C !important;
     }
+    
+    /* Estilos para el bloque de avatar y nombre del usuario externo */
+    .main-header .navbar-nav .nav-item.ml-auto {
+        margin-left: auto !important;
+        margin-right: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    
+    /* Asegurar que el bloque esté completamente a la derecha */
+    #bloqueUsuarioExterno {
+        margin-left: auto !important;
+        margin-right: 0 !important;
+    }
+    
+    #bloqueUsuarioExterno > div {
+        margin-right: 0 !important;
+    }
+    
+    .main-header .navbar-nav .nav-item .dropdown-toggle,
+    .main-header .navbar-nav .nav-item #dropdownPerfilExterno {
+        border: none;
+        background: transparent;
+        padding: 0.25rem 0.5rem;
+        color: #6c757d;
+    }
+    
+    .main-header .navbar-nav .nav-item .dropdown-toggle:hover,
+    .main-header .navbar-nav .nav-item #dropdownPerfilExterno:hover {
+        color: var(--brand-primario) !important;
+    }
+    
+    /* Ocultar el pseudo-elemento ::after de Bootstrap que agrega una flecha automática */
+    .main-header .navbar-nav .nav-item #dropdownPerfilExterno::after {
+        display: none !important;
+        content: none !important;
+    }
+    
+    .main-header .navbar-nav .nav-item .dropdown-toggle::after {
+        display: none !important;
+        content: none !important;
+    }
+    
+    /* Asegurar que el bloque de usuario sea visible */
+    #headerAvatarExterno,
+    #headerAvatarInicialExterno,
+    #headerNombreExterno {
+        display: block !important;
+    }
+    
+    /* Asegurar visibilidad del contenedor del usuario */
+    .main-header .navbar-nav .nav-item.ml-auto > div {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* Estilos específicos para el avatar circular perfecto */
+    #avatarContainerExterno {
+        border-radius: 50% !important;
+        overflow: hidden !important;
+        width: 40px !important;
+        height: 40px !important;
+        min-width: 40px !important;
+        min-height: 40px !important;
+        max-width: 40px !important;
+        max-height: 40px !important;
+        position: relative !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    /* Imagen del avatar - círculo perfecto */
+    #headerAvatarExterno {
+        width: 40px !important;
+        height: 40px !important;
+        min-width: 40px !important;
+        min-height: 40px !important;
+        max-width: 40px !important;
+        max-height: 40px !important;
+        object-fit: cover !important;
+        border-radius: 50% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
+    }
+    
+    /* Inicial dentro del círculo - círculo perfecto */
+    #headerAvatarInicialExterno {
+        width: 40px !important;
+        height: 40px !important;
+        min-width: 40px !important;
+        min-height: 40px !important;
+        max-width: 40px !important;
+        max-height: 40px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: 50% !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+    }
 </style>
 @endpush
 
@@ -279,8 +497,138 @@
 <script src="{{ asset('vendor/adminlte/dist/js/adminlte.min.js') }}"></script>
 <script src="{{ asset('assets/js/config.js') }}"></script>
 <script>
+// Función para crear e insertar el bloque de avatar y nombre en el navbar
+function crearBloqueUsuarioExterno() {
+    // Buscar el navbar de diferentes formas
+    let navbar = document.querySelector('.main-header .navbar-nav');
+    if (!navbar) {
+        navbar = document.querySelector('.navbar-nav');
+    }
+    if (!navbar) {
+        navbar = document.querySelector('.main-header nav ul');
+    }
+    if (!navbar) {
+        navbar = document.querySelector('nav.navbar ul');
+    }
+    
+    if (!navbar) {
+        console.warn('⚠️ Navbar no encontrado, reintentando...');
+        setTimeout(crearBloqueUsuarioExterno, 300);
+        return;
+    }
+
+    // Verificar si ya existe
+    if (document.getElementById('bloqueUsuarioExterno')) {
+        console.log('✅ Bloque de usuario externo ya existe');
+        return;
+    }
+    
+    console.log('🔍 Creando bloque de usuario externo...');
+
+    // Crear el elemento
+    const li = document.createElement('li');
+    li.className = 'nav-item d-flex align-items-center ml-auto';
+    li.id = 'bloqueUsuarioExterno';
+    li.style.cssText = 'order: 999; display: flex !important; align-items: center !important; margin-left: auto !important; margin-right: 0 !important;';
+
+    @php
+        $user = Auth::user();
+        $integranteExterno = optional($user)->integranteExterno;
+        
+        $nombreUsuario = 'Usuario';
+        if ($integranteExterno) {
+            $nombres = trim($integranteExterno->nombres ?? '');
+            $apellidos = trim($integranteExterno->apellidos ?? '');
+            $nombreUsuario = trim("{$nombres} {$apellidos}") ?: ($user->nombre_usuario ?? ($user->name ?? 'Usuario'));
+        } else {
+            $nombreUsuario = $user->nombre_usuario ?? ($user->name ?? 'Usuario');
+        }
+        
+        $inicial = mb_substr(trim($nombreUsuario), 0, 1, 'UTF-8');
+        
+        $foto = null;
+        if ($integranteExterno) {
+            try {
+                $foto = $integranteExterno->foto_perfil_url ?? null;
+            } catch (\Exception $e) {}
+        }
+        if (!$foto && $user) {
+            try {
+                $foto = $user->foto_perfil_url ?? null;
+            } catch (\Exception $e) {
+                $foto = null;
+            }
+        }
+    @endphp
+
+    li.innerHTML = `
+        <div class="d-flex align-items-center pl-3 pr-3"
+             style="background: #ffffff; border-radius: 999px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 4px 16px; margin-right: 0 !important; min-width: 220px;">
+            <div class="mr-3" id="avatarContainerExterno"
+                 style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: #e9f5ff; flex-shrink: 0; position: relative; display: flex; align-items: center; justify-content: center;">
+                <img id="headerAvatarExterno"
+                     src="{{ $foto ?? '' }}"
+                     alt="Foto perfil"
+                     style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%; display: {{ $foto ? 'block' : 'none' }}; margin: 0; padding: 0;">
+                <span id="headerAvatarInicialExterno"
+                      style="font-size: 1rem; display: {{ $foto ? 'none' : 'flex' }}; align-items: center; justify-content: center; width: 40px; height: 40px; margin: 0; padding: 0; border-radius: 50%;">{{ $inicial }}</span>
+            </div>
+            <div class="d-flex flex-column mr-3" style="max-width: 200px; min-width: 120px; flex-grow: 1;">
+                <span id="headerNombreExterno"
+                      style="font-size: 0.9rem; color: #2c3e50; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">
+                    {{ $nombreUsuario }}
+                </span>
+                @if($integranteExterno)
+                    <small style="font-size: 0.75rem; color: #8c9aa8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">
+                        Integrante Externo
+                    </small>
+                @endif
+            </div>
+            <div class="dropdown" style="flex-shrink: 0;">
+                <a class="text-muted" href="#" role="button" id="dropdownPerfilExterno"
+                   data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                   style="font-size: 0.75rem; text-decoration: none; padding: 0.25rem;">
+                    <i class="fas fa-chevron-down"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownPerfilExterno">
+                    <a class="dropdown-item" href="/perfil/externo">
+                        <i class="far fa-user mr-2"></i> Mi perfil
+                    </a>
+                    <a class="dropdown-item" href="/home-publica">
+                        <i class="far fa-globe mr-2"></i> Ir a página pública
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item text-danger" href="#" onclick="cerrarSesion(event)">
+                        <i class="far fa-sign-out-alt mr-2"></i> Cerrar sesión
+                    </a>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Insertar al final del navbar
+    navbar.appendChild(li);
+    console.log('✅ Bloque de usuario externo creado e insertado en:', navbar);
+    
+    // Inicializar el dropdown de Bootstrap si está disponible
+    if (typeof $ !== 'undefined' && $.fn.dropdown) {
+        $('#dropdownPerfilExterno').dropdown();
+    }
+    
+    // Llamar a actualizarHeaderExterno para cargar datos desde la API
+    setTimeout(actualizarHeaderExterno, 500);
+}
+
 // Cargar nombre del usuario al iniciar
 document.addEventListener('DOMContentLoaded', function() {
+    // Crear el bloque de usuario
+    crearBloqueUsuarioExterno();
+    
+    // También intentar después de múltiples delays para asegurar que se cree
+    setTimeout(crearBloqueUsuarioExterno, 500);
+    setTimeout(crearBloqueUsuarioExterno, 1000);
+    setTimeout(crearBloqueUsuarioExterno, 2000);
+    setTimeout(crearBloqueUsuarioExterno, 3000);
     // Cargar nombre del usuario
     const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
     const nombreUsuario = localStorage.getItem('nombre_usuario') || usuario.nombre || 'Usuario';
@@ -310,12 +658,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const text = link.textContent.trim().toLowerCase();
             if (text.includes('cerrar sesión') || text.includes('cerrar sesion')) {
                 link.removeAttribute('onclick');
-                link.addEventListener('click', function(e) {
+            link.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    cerrarSesion(e);
+                cerrarSesion(e);
                     return false;
-                });
+            });
             }
         });
         
@@ -458,5 +806,160 @@ async function cerrarSesion(event) {
 
 // Asegurar que la función esté disponible globalmente
 window.cerrarSesion = cerrarSesion;
+
+// ================================
+// Actualizar header con nombre/avatar desde la API de perfil
+// ================================
+async function actualizarHeaderExterno() {
+    try {
+        const nombreSpan = document.getElementById('headerNombreExterno');
+        const avatarImg = document.getElementById('headerAvatarExterno');
+        const inicialSpan = document.getElementById('headerAvatarInicialExterno');
+
+        if (!nombreSpan) return;
+
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        let API_BASE_URL = window.location.origin;
+        if (typeof window !== 'undefined' && window.API_BASE_URL) {
+            API_BASE_URL = window.API_BASE_URL;
+        }
+
+        const res = await fetch(`${API_BASE_URL}/api/perfil`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            },
+            cache: 'no-store'
+        });
+
+        const data = await res.json();
+        if (!data || data.success === false) {
+            console.warn('⚠️ No se pudo obtener datos del perfil');
+            return;
+        }
+
+        // Obtener nombre: prioridad integrante_externo (nombres + apellidos) > nombre_usuario
+        let nombre = null;
+        if (data.data && data.data.integrante_externo) {
+            const nombres = data.data.integrante_externo.nombres || '';
+            const apellidos = data.data.integrante_externo.apellidos || '';
+            nombre = `${nombres} ${apellidos}`.trim();
+        }
+        if (!nombre && data.data && data.data.nombre_usuario) {
+            nombre = data.data.nombre_usuario;
+        }
+
+        // Obtener foto: prioridad integrante_externo > usuario
+        const foto = (data.data && data.data.integrante_externo && data.data.integrante_externo.foto_perfil) 
+            || (data.data && data.data.foto_perfil) 
+            || null;
+
+        // Actualizar nombre
+        if (nombre && nombreSpan) {
+            nombreSpan.textContent = nombre;
+        }
+
+        // Actualizar avatar - asegurar círculo perfecto
+        if (avatarImg && inicialSpan) {
+            // Aplicar estilos para círculo perfecto
+            const avatarContainer = document.getElementById('avatarContainerExterno');
+            if (avatarContainer) {
+                avatarContainer.style.cssText = 'width: 40px !important; height: 40px !important; border-radius: 50% !important; overflow: hidden !important; background: #e9f5ff; flex-shrink: 0; position: relative; display: flex; align-items: center; justify-content: center; margin-right: 0.75rem;';
+            }
+            
+            // Estilos para la imagen - círculo perfecto
+            avatarImg.style.cssText = 'width: 40px !important; height: 40px !important; border-radius: 50% !important; object-fit: cover !important; margin: 0 !important; padding: 0 !important; display: block;';
+            
+            // Estilos para la inicial - círculo perfecto
+            inicialSpan.style.cssText = 'width: 40px !important; height: 40px !important; border-radius: 50% !important; margin: 0 !important; padding: 0 !important; display: flex; align-items: center; justify-content: center; font-size: 1rem; position: absolute; top: 0; left: 0;';
+            
+            if (foto && foto.trim() !== '') {
+                // Hay foto: mostrar imagen, ocultar inicial
+                avatarImg.src = foto;
+                avatarImg.onerror = function() {
+                    // Si la imagen falla al cargar, mostrar inicial
+                    avatarImg.style.display = 'none';
+                    inicialSpan.style.display = 'flex';
+                    if (nombre) {
+                        inicialSpan.textContent = nombre.charAt(0).toUpperCase();
+                    }
+                };
+                avatarImg.onload = function() {
+                    // Imagen cargada correctamente
+                    avatarImg.style.display = 'block';
+                    inicialSpan.style.display = 'none';
+                };
+                avatarImg.style.display = 'block';
+                inicialSpan.style.display = 'none';
+            } else {
+                // No hay foto: mostrar inicial, ocultar imagen
+                avatarImg.style.display = 'none';
+                inicialSpan.style.display = 'flex';
+                if (nombre) {
+                    inicialSpan.textContent = nombre.charAt(0).toUpperCase();
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('⚠️ Error actualizando header Externo:', e);
+    }
+}
+
+// Inicializar cuando el DOM esté listo
+function inicializarHeaderExterno() {
+    // Esperar a que el navbar esté renderizado
+    const navbar = document.querySelector('.main-header .navbar-nav');
+    if (navbar) {
+        actualizarHeaderExterno();
+    } else {
+        // Reintentar si el navbar aún no está listo
+        setTimeout(inicializarHeaderExterno, 200);
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(inicializarHeaderExterno, 300);
+        setTimeout(actualizarHeaderExterno, 1000);
+    });
+} else {
+    setTimeout(inicializarHeaderExterno, 300);
+    setTimeout(actualizarHeaderExterno, 1000);
+}
+
+// También actualizar cuando la página recupera el foco
+window.addEventListener('focus', () => {
+    setTimeout(actualizarHeaderExterno, 500);
+});
+
+// Observer para detectar cuando el navbar se agregue al DOM
+const observer = new MutationObserver((mutations) => {
+    const navbar = document.querySelector('.main-header .navbar-nav') || 
+                   document.querySelector('.navbar-nav') ||
+                   document.querySelector('.main-header nav ul') ||
+                   document.querySelector('nav.navbar ul');
+    
+    if (navbar && !document.getElementById('bloqueUsuarioExterno')) {
+        console.log('🔍 Navbar detectado por observer, creando bloque...');
+        crearBloqueUsuarioExterno();
+    }
+});
+
+// Observar cambios en el DOM
+if (document.body) {
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+}
+
+// También intentar crear el bloque cuando la ventana se carga completamente
+window.addEventListener('load', () => {
+    setTimeout(crearBloqueUsuarioExterno, 1000);
+    setTimeout(crearBloqueUsuarioExterno, 2000);
+});
 </script>
 @endpush

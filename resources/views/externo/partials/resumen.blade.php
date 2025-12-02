@@ -19,10 +19,10 @@
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-white text-uppercase mb-3" style="font-size: 0.8rem; opacity: .95; font-weight: 600; letter-spacing: 0.5px;">Eventos Asistidos</h6>
+                        <h6 class="text-white text-uppercase mb-3" style="font-size: 0.8rem; opacity: .95; font-weight: 600; letter-spacing: 0.5px;">Mega Eventos</h6>
                         <h2 class="text-white mb-0" id="eventosAsistidos" style="font-size: 3rem; font-weight: 700; line-height: 1;">0</h2>
                     </div>
-                    <i class="far fa-handshake fa-3x text-white" style="opacity: .2;"></i>
+                    <i class="far fa-star fa-3x text-white" style="opacity: .2;"></i>
                 </div>
             </div>
         </div>
@@ -33,10 +33,10 @@
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-white text-uppercase mb-3" style="font-size: 0.8rem; opacity: .95; font-weight: 600; letter-spacing: 0.5px;">Puntos Acumulados</h6>
-                        <h2 class="text-white mb-0" id="puntosAcumulados" style="font-size: 3rem; font-weight: 700; line-height: 1;">0</h2>
+                        <h6 class="text-white text-uppercase mb-3" style="font-size: 0.8rem; opacity: .95; font-weight: 600; letter-spacing: 0.5px;">Reacciones</h6>
+                        <h2 class="text-white mb-0" id="totalReacciones" style="font-size: 3rem; font-weight: 700; line-height: 1;">0</h2>
                     </div>
-                    <i class="far fa-star fa-3x text-white" style="opacity: .2;"></i>
+                    <i class="far fa-heart fa-3x text-white" style="opacity: .2;"></i>
                 </div>
             </div>
         </div>

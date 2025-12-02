@@ -202,6 +202,16 @@ return [
                     'url'  => '/ong/eventos-dashboard',
                     'icon' => 'far fa-chart-bar',
                 ],
+                [
+                    'text' => 'Historial de eventos',
+                    'url'  => '/ong/eventos/historial',
+                    'icon' => 'far fa-history',
+                ],
+                [
+                    'text' => 'Crear evento',
+                    'url'  => '/ong/eventos/crear',
+                    'icon' => 'far fa-calendar-plus',
+                ],
             ],
             'icon' => 'far fa-calendar',
         ],

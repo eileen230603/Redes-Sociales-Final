@@ -93,6 +93,7 @@ async function cargarEventos() {
     try {
         // Construir URL con parámetros de filtro
         const params = new URLSearchParams();
+        params.append('excluir_finalizados', 'true'); // Excluir eventos finalizados por defecto
         if (filtrosActuales.tipo_evento !== 'todos') {
             params.append('tipo_evento', filtrosActuales.tipo_evento);
         }
@@ -134,9 +135,17 @@ async function cargarEventos() {
         }
 
         if (!data.eventos || data.eventos.length === 0) {
+            let mensajeFiltro = '';
+            if (filtrosActuales.estado !== 'todos' || filtrosActuales.tipo_evento !== 'todos' || filtrosActuales.buscar.trim() !== '') {
+                mensajeFiltro = '<p class="text-muted mb-2">No se encontraron eventos con los filtros aplicados.</p>';
+                mensajeFiltro += '<p class="text-muted mb-2"><small>Intenta cambiar los filtros o la búsqueda.</small></p>';
+            } else {
+                mensajeFiltro = '<p class="text-muted mb-2">No hay eventos registrados para esta ONG.</p>';
+            }
+            
             cont.innerHTML = `
                 <div class="alert alert-info">
-                    <p class='text-muted mb-2'>No hay eventos registrados para esta ONG.</p>
+                    ${mensajeFiltro}
                     <small class='text-muted'>ONG ID usado: ${data.ong_id || ongId} | Total encontrados: ${data.count || 0}</small>
                 </div>
             `;
@@ -182,7 +191,7 @@ async function cargarEventos() {
 
             const imagenPrincipal = imagenes.length > 0 ? buildImageUrl(imagenes[0]) : null;
             
-            // Formatear fecha
+            // Formatear fecha de inicio para mostrar en el card
             const fechaInicio = ev.fecha_inicio ? new Date(ev.fecha_inicio).toLocaleDateString('es-ES', {
                 year: 'numeric',
                 month: '2-digit',
@@ -190,6 +199,21 @@ async function cargarEventos() {
                 hour: '2-digit',
                 minute: '2-digit'
             }) : 'Fecha no especificada';
+
+            // Formatear fecha de finalización para el overlay (día y mes)
+            let fechaOverlay = '';
+            if (ev.fecha_fin) {
+                const fechaFin = new Date(ev.fecha_fin);
+                const dia = fechaFin.getDate();
+                const meses = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+                const mes = meses[fechaFin.getMonth()];
+                fechaOverlay = `
+                    <div class="position-absolute" style="top: 12px; left: 12px; background: white; border-radius: 8px; padding: 0.5rem 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #0C2B44; line-height: 1;">${dia}</div>
+                        <div style="font-size: 0.75rem; font-weight: 600; color: #00A36C; line-height: 1; margin-top: 2px;">${mes}</div>
+                    </div>
+                `;
+            }
 
             // Estado badge - usar estado_dinamico si está disponible (se actualizará en el HTML)
             const estadoParaBadge = ev.estado_dinamico || ev.estado;
@@ -212,21 +236,27 @@ async function cargarEventos() {
             cardDiv.innerHTML = `
                 <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden; transition: transform 0.3s, box-shadow 0.3s; border: 1px solid #F5F5F5;">
                     ${imagenPrincipal 
-                        ? `<div class="position-relative" style="height: 200px; overflow: hidden; background: #F5F5F5;">
-                            <img src="${imagenPrincipal}" alt="${ev.titulo}" class="w-100 h-100" style="object-fit: cover;" 
-                                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'200\\'%3E%3Crect fill=\\'%23F5F5F5\\' width=\\'400\\' height=\\'200\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\' fill=\\'%23adb5bd\\' font-family=\\'Arial\\' font-size=\\'14\\'%3EImagen no disponible%3C/text%3E%3C/svg%3E'; this.style.objectFit='contain'; this.style.padding='20px';">
-                            <div class="position-absolute" style="top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: flex-start;">
-                                <span class="badge" style="background: rgba(12, 43, 68, 0.9); color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;">Evento</span>
-                                ${estadoBadgeActualizado}
+                        ? `<a href="/ong/eventos/${ev.id}/detalle" style="text-decoration: none; display: block;">
+                            <div class="position-relative" style="height: 200px; overflow: hidden; background: #F5F5F5; cursor: pointer;">
+                                <img src="${imagenPrincipal}" alt="${ev.titulo}" class="w-100 h-100" style="object-fit: cover; transition: transform 0.3s;" 
+                                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'200\\'%3E%3Crect fill=\\'%23F5F5F5\\' width=\\'400\\' height=\\'200\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\' fill=\\'%23adb5bd\\' font-family=\\'Arial\\' font-size=\\'14\\'%3EImagen no disponible%3C/text%3E%3C/svg%3E'; this.style.objectFit='contain'; this.style.padding='20px';"
+                                     onmouseover="this.style.transform='scale(1.05)'"
+                                     onmouseout="this.style.transform='scale(1)'">
+                                ${fechaOverlay}
+                                <div class="position-absolute" style="top: 12px; right: 12px; pointer-events: none; z-index: 10;">
+                                    ${estadoBadgeActualizado}
+                                </div>
                             </div>
-                           </div>`
-                        : `<div class="position-relative" style="height: 200px; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); display: flex; align-items: center; justify-content: center;">
-                            <i class="far fa-calendar fa-4x text-white" style="opacity: 0.3;"></i>
-                            <div class="position-absolute" style="top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: flex-start;">
-                                <span class="badge" style="background: rgba(255, 255, 255, 0.2); color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500; backdrop-filter: blur(10px);">Evento</span>
-                                ${estadoBadgeActualizado}
+                           </a>`
+                        : `<a href="/ong/eventos/${ev.id}/detalle" style="text-decoration: none; display: block;">
+                            <div class="position-relative" style="height: 200px; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                <i class="far fa-calendar fa-4x text-white" style="opacity: 0.3;"></i>
+                                ${fechaOverlay}
+                                <div class="position-absolute" style="top: 12px; right: 12px; pointer-events: none; z-index: 10;">
+                                    ${estadoBadgeActualizado}
+                                </div>
                             </div>
-                           </div>`
+                           </a>`
                     }
                     <div class="card-body p-4">
                         <h5 class="mb-3" style="font-size: 1.15rem; font-weight: 700; color: #0C2B44; line-height: 1.4;">${ev.titulo || 'Sin título'}</h5>

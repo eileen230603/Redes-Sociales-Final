@@ -11,9 +11,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
         const res = await fetch(`${API_BASE_URL}/api/participaciones/mis-eventos`, {
             headers: { "Authorization": `Bearer ${token}`, "Accept": "application/json" }
-        });
+    });
 
-        const data = await res.json();
+    const data = await res.json();
         if (!res.ok || !data.success) throw new Error(data.error || 'No se pudo obtener el historial');
 
         const eventos = data.eventos ?? [];
@@ -22,14 +22,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        cont.innerHTML = "";
+    cont.innerHTML = "";
         eventos.forEach(registro => {
             const evento = registro.evento || {};
             const fecha = evento.fecha_inicio
                 ? new Date(evento.fecha_inicio).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })
                 : 'Sin fecha registrada';
 
-            cont.innerHTML += `
+        cont.innerHTML += `
                 <div class="card mb-3 shadow-sm" style="border-radius: 12px; border: 1px solid #F5F5F5;">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-2">
@@ -39,9 +39,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                         <p class="mb-2" style="color: #555;">${evento.descripcion || 'Sin descripción disponible'}</p>
                         <p class="mb-0" style="color: #777; font-size: 0.9rem;"><strong>Fecha:</strong> ${fecha}</p>
                     </div>
-                </div>
-            `;
-        });
+            </div>
+        `;
+    });
 
     } catch (error) {
         console.error("Error al cargar el historial de eventos:", error);

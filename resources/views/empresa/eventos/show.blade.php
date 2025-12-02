@@ -23,6 +23,63 @@
         </div>
     </div>
 
+    <!-- Modal de Imagen de Galería -->
+    <div id="modalImagenGaleria" class="modal fade" tabindex="-1" role="dialog" style="display: none;">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 8px 32px rgba(0,0,0,0.3); background: transparent;">
+                <div class="modal-body p-0" style="position: relative;">
+                    <button type="button" class="close" onclick="cerrarModalImagen()" aria-label="Close" style="position: absolute; top: 10px; right: 10px; z-index: 1050; border: none; background: rgba(255,255,255,0.9); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #333; opacity: 0.8; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.opacity='1'; this.style.background='rgba(255,255,255,1)'" onmouseout="this.style.opacity='0.8'; this.style.background='rgba(255,255,255,0.9)'">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <img id="imagenModalGaleria" src="" alt="Imagen de galería" style="width: 100%; height: auto; border-radius: 16px; max-height: 80vh; object-fit: contain;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Compartir -->
+    <div id="modalCompartir" class="modal fade" tabindex="-1" role="dialog" style="display: none;">
+        <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 400px;">
+            <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 8px 32px rgba(0,0,0,0.2);">
+                <div class="modal-header" style="border-bottom: 1px solid #F5F5F5; padding: 1.5rem;">
+                    <h5 class="modal-title" style="color: #2c3e50; font-weight: 700; font-size: 1.25rem;">Compartir</h5>
+                    <button type="button" class="close" onclick="cerrarModalCompartir()" aria-label="Close" style="border: none; background: none; font-size: 1.5rem; color: #333; opacity: 0.5; cursor: pointer;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="padding: 2rem;">
+                    <div class="row text-center">
+                        <!-- Copiar enlace -->
+                        <div class="col-6 mb-4">
+                            <button onclick="copiarEnlace()" class="btn btn-link p-0" style="text-decoration: none; border: none; background: none; width: 100%;">
+                                <div style="width: 80px; height: 80px; background: #F5F5F5; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#E9ECEF'; this.style.transform='scale(1.1)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#F5F5F5'; this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+                                    <i class="fas fa-link" style="font-size: 2rem; color: #2c3e50;"></i>
+                                </div>
+                                <span style="color: #333; font-size: 0.9rem; font-weight: 600;">Copiar enlace</span>
+                            </button>
+                        </div>
+                        <!-- QR Code -->
+                        <div class="col-6 mb-4">
+                            <button onclick="mostrarQR()" class="btn btn-link p-0" style="text-decoration: none; border: none; background: none; width: 100%;">
+                                <div style="width: 80px; height: 80px; background: #667eea; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(102,126,234,0.3);" onmouseover="this.style.background='#764ba2'; this.style.transform='scale(1.1)'; this.style.boxShadow='0 4px 12px rgba(118,75,162,0.4)'" onmouseout="this.style.background='#667eea'; this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(102,126,234,0.3)'">
+                                    <i class="fas fa-qrcode" style="font-size: 2rem; color: white;"></i>
+                                </div>
+                                <span style="color: #333; font-size: 0.9rem; font-weight: 600;">Código QR</span>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Contenedor para el QR -->
+                    <div id="qrContainer" style="display: none; margin-top: 1.5rem;">
+                        <div class="text-center">
+                            <div id="qrcode" style="display: inline-block; padding: 1rem; background: white; border-radius: 12px; margin-bottom: 1rem;"></div>
+                            <p style="color: #333; font-size: 0.9rem; margin: 0;">Escanea este código para acceder al evento</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="container mt-4">
         <!-- Botones de Acción (Empresa) -->
         <div class="d-flex justify-content-end mb-4 gap-2 flex-wrap">
@@ -33,6 +90,10 @@
                 <i class="fas fa-heart text-danger mr-2"></i>
                 <span id="contadorReaccionesEmpresa">0</span> reacciones
             </div>
+            <button class="btn btn-outline-primary" id="btnCompartir" style="border-radius: 50px;">
+                <i class="far fa-share-square mr-2"></i> Compartir
+                <span class="badge badge-light ml-2" id="contadorCompartidosEmpresa">0</span>
+            </button>
         </div>
 
         <div class="row">
@@ -100,6 +161,17 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="col-md-6 mb-3" id="creadorContainer">
+                                <div class="d-flex align-items-start">
+                                    <i class="fas fa-user-circle text-primary mr-3 mt-1" style="font-size: 1.2rem;"></i>
+                                    <div>
+                                        <h6 class="mb-1" style="color: #495057; font-weight: 600;">Creado por</h6>
+                                        <div id="creadorInfo" class="d-flex align-items-center" style="gap: 0.5rem;">
+                                            <span id="creadorNombre" class="mb-0 text-muted"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -132,7 +204,23 @@
                         <h4 class="mb-4" style="color: #2c3e50; font-weight: 600;">
                             <i class="fas fa-images mr-2 text-primary"></i> Galería de Imágenes
                         </h4>
-                        <div id="imagenes" class="row"></div>
+                        <div id="imagenes">
+                            <!-- Carrusel de Bootstrap -->
+                            <div id="carouselImagenes" class="carousel slide" data-ride="carousel" data-interval="3000" style="display: none;">
+                                <div class="carousel-inner" id="carouselInner"></div>
+                                <a class="carousel-control-prev" href="#carouselImagenes" role="button" data-slide="prev" style="width: 5%;">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true" style="background-color: rgba(0,0,0,0.5); border-radius: 50%; width: 40px; height: 40px;"></span>
+                                    <span class="sr-only">Anterior</span>
+                                </a>
+                                <a class="carousel-control-next" href="#carouselImagenes" role="button" data-slide="next" style="width: 5%;">
+                                    <span class="carousel-control-next-icon" aria-hidden="true" style="background-color: rgba(0,0,0,0.5); border-radius: 50%; width: 40px; height: 40px;"></span>
+                                    <span class="sr-only">Siguiente</span>
+                                </a>
+                                <!-- Indicadores -->
+                                <ol class="carousel-indicators" id="carouselIndicators"></ol>
+                            </div>
+                            <p id="sinImagenes" class="text-muted text-center" style="display: none;">No hay imágenes disponibles</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -252,12 +340,92 @@
         height: 200px;
         object-fit: cover;
     }
+
+    /* Estilos para el modal de compartir */
+    .modal-backdrop {
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal.show {
+        display: block !important;
+    }
 </style>
 @endsection
 
 @section('js')
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" onload="console.log('QRCode loaded')" onerror="console.error('Failed to load QRCode')"></script>
+<script>
+    // Esperar a que QRCode esté disponible
+    window.addEventListener('load', function() {
+        if (typeof QRCode === 'undefined') {
+            console.warn('QRCode not loaded, retrying...');
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js';
+            script.onload = function() {
+                console.log('QRCode loaded on retry');
+            };
+            document.head.appendChild(script);
+        }
+    });
+</script>
+<script>
+    // Definir PUBLIC_BASE_URL desde variable de entorno
+    window.PUBLIC_BASE_URL = "{{ env('PUBLIC_APP_URL', 'http://192.168.0.6:8000') }}";
+    console.log("🌐 PUBLIC_BASE_URL desde .env:", window.PUBLIC_BASE_URL);
+</script>
 <script src="{{ asset('assets/js/config.js') }}"></script>
 <script src="{{ asset('assets/js/empresa/show-event.js') }}"></script>
+<script>
+    // Función para mostrar imagen en modal
+    function mostrarImagenGaleria(url) {
+        const modal = document.getElementById('modalImagenGaleria');
+        const img = document.getElementById('imagenModalGaleria');
+        if (modal && img) {
+            img.src = url;
+            if (typeof $ !== 'undefined') {
+                $(modal).modal('show');
+            } else {
+                modal.style.display = 'block';
+                modal.classList.add('show');
+                document.body.classList.add('modal-open');
+                const backdrop = document.createElement('div');
+                backdrop.className = 'modal-backdrop fade show';
+                backdrop.id = 'modalBackdropImagen';
+                document.body.appendChild(backdrop);
+            }
+        }
+    }
+
+    // Función para cerrar modal de imagen
+    function cerrarModalImagen() {
+        const modal = document.getElementById('modalImagenGaleria');
+        if (modal) {
+            if (typeof $ !== 'undefined') {
+                $(modal).modal('hide');
+            } else {
+                modal.style.display = 'none';
+                modal.classList.remove('show');
+                document.body.classList.remove('modal-open');
+                const backdrop = document.getElementById('modalBackdropImagen');
+                if (backdrop) {
+                    backdrop.remove();
+                }
+            }
+        }
+    }
+
+    // Cerrar modal al hacer clic fuera de la imagen
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('modalImagenGaleria');
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal || e.target.classList.contains('modal-dialog')) {
+                    cerrarModalImagen();
+                }
+            });
+        }
+    });
+</script>
 @endsection
 

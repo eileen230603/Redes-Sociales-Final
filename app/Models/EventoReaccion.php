@@ -14,6 +14,9 @@ class EventoReaccion extends Model
     protected $fillable = [
         'evento_id',
         'externo_id',
+        'nombres',
+        'apellidos',
+        'email',
     ];
 
     public $timestamps = true;

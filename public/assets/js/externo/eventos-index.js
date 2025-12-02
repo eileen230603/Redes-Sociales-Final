@@ -119,6 +119,11 @@ async function cargarEventosExterno() {
             return `${window.location.origin}/storage/${imgUrl}`;
         }
 
+        // Filtrar eventos en los que ya está participando
+        data.eventos = data.eventos.filter(e => {
+            return !eventosInscritos.has(e.id);
+        });
+
         data.eventos.forEach(e => {
             const fechaInicio = e.fecha_inicio ? new Date(e.fecha_inicio).toLocaleDateString('es-ES', {
                 year: 'numeric',
@@ -128,8 +133,8 @@ async function cargarEventosExterno() {
                 minute: '2-digit'
             }) : 'Fecha no especificada';
 
-            // Verificar si el usuario está inscrito en este evento
-            const estaInscrito = eventosInscritos.has(e.id);
+            // Ya no está inscrito porque lo filtramos arriba
+            const estaInscrito = false;
             const estadoParticipacion = estadosParticipaciones[e.id] || 'aprobada';
 
             // Procesar imágenes
@@ -148,6 +153,21 @@ async function cargarEventosExterno() {
             }
 
             const imagenPrincipal = imagenes.length > 0 ? buildImageUrl(imagenes[0]) : null;
+
+            // Formatear fecha de finalización para el overlay (día y mes)
+            let fechaOverlay = '';
+            if (e.fecha_fin) {
+                const fechaFin = new Date(e.fecha_fin);
+                const dia = fechaFin.getDate();
+                const meses = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+                const mes = meses[fechaFin.getMonth()];
+                fechaOverlay = `
+                    <div class="position-absolute" style="top: 12px; left: 12px; background: white; border-radius: 8px; padding: 0.5rem 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #0C2B44; line-height: 1;">${dia}</div>
+                        <div style="font-size: 0.75rem; font-weight: 600; color: #00A36C; line-height: 1; margin-top: 2px;">${mes}</div>
+                    </div>
+                `;
+            }
 
             // Estado badge del evento
             const estadoBadges = {
@@ -183,26 +203,29 @@ async function cargarEventosExterno() {
             cardDiv.innerHTML = `
                 <div class="card border-0 shadow-sm h-100 ${cardClassInscrito}" style="border-radius: 12px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; ${cardStyleInscrito}">
                     ${imagenPrincipal 
-                        ? `<div class="position-relative" style="height: 200px; overflow: hidden; background: #f8f9fa;">
-                            <img src="${imagenPrincipal}" alt="${e.titulo}" class="w-100 h-100" style="object-fit: cover;" 
-                                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'200\\'%3E%3Crect fill=\\'%23f8f9fa\\' width=\\'400\\' height=\\'200\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\' fill=\\'%23adb5bd\\' font-family=\\'Arial\\' font-size=\\'14\\'%3EImagen no disponible%3C/text%3E%3C/svg%3E'; this.style.objectFit='contain'; this.style.padding='20px';">
-                            <div class="position-absolute" style="top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: flex-start;">
-                                <div>
-                                    <span class="badge" style="background: rgba(74, 144, 226, 0.9); color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;">Evento</span>
-                                    ${estaInscrito ? '<span class="badge badge-success ml-2" style="font-size: 0.7rem; padding: 0.3em 0.6em; border-radius: 15px;"><i class="fas fa-check-circle mr-1"></i>Inscrito</span>' : ''}
-                                </div>
+                        ? `<a href="/externo/eventos/${e.id}/detalle" style="text-decoration: none; display: block;">
+                            <div class="position-relative" style="height: 200px; overflow: hidden; background: #f8f9fa; cursor: pointer;">
+                                <img src="${imagenPrincipal}" alt="${e.titulo}" class="w-100 h-100" style="object-fit: cover; transition: transform 0.3s;" 
+                                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'200\\'%3E%3Crect fill=\\'%23f8f9fa\\' width=\\'400\\' height=\\'200\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\' fill=\\%23adb5bd\\' font-family=\\'Arial\\' font-size=\\'14\\'%3EImagen no disponible%3C/text%3E%3C/svg%3E'; this.style.objectFit='contain'; this.style.padding='20px';">
+                            ${fechaOverlay}
+                            <div class="position-absolute" style="top: 12px; right: 12px; z-index: 10;">
                                 ${estadoBadge}
                             </div>
-                           </div>`
-                        : `<div class="position-relative" style="height: 200px; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); display: flex; align-items: center; justify-content: center;">
+                            ${estaInscrito ? `<div class="position-absolute" style="top: 50px; left: 12px; z-index: 10;">
+                                <span class="badge badge-success" style="font-size: 0.7rem; padding: 0.3em 0.6em; border-radius: 15px;"><i class="fas fa-check-circle mr-1"></i>Inscrito</span>
+                                </div>` : ''}
+                                </div>
+                           </a>`
+                        : `<a href="/externo/eventos/${e.id}/detalle" style="text-decoration: none; display: block;">
+                            <div class="position-relative" style="height: 200px; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); display: flex; align-items: center; justify-content: center; cursor: pointer;">
                             <i class="far fa-calendar fa-4x text-white" style="opacity: 0.7;"></i>
-                            <div class="position-absolute" style="top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: flex-start;">
-                                <div>
-                                    <span class="badge" style="background: rgba(74, 144, 226, 0.9); color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;">Evento</span>
-                                    ${estaInscrito ? '<span class="badge badge-success ml-2" style="font-size: 0.7rem; padding: 0.3em 0.6em; border-radius: 15px;"><i class="fas fa-check-circle mr-1"></i>Inscrito</span>' : ''}
-                                </div>
+                            ${fechaOverlay}
+                            <div class="position-absolute" style="top: 12px; right: 12px; z-index: 10; pointer-events: none;">
                                 ${estadoBadge}
                             </div>
+                            ${estaInscrito ? `<div class="position-absolute" style="top: 50px; left: 12px; z-index: 10; pointer-events: none;">
+                                <span class="badge badge-success" style="font-size: 0.7rem; padding: 0.3em 0.6em; border-radius: 15px;"><i class="fas fa-check-circle mr-1"></i>Inscrito</span>
+                            </div>` : ''}
                            </div>`
                     }
                     <div class="card-body p-4">

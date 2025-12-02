@@ -12,10 +12,13 @@ use App\Models\Evento;
 use App\Models\EventoParticipacion;
 use App\Models\EventoEmpresaParticipacion;
 use App\Models\EventoReaccion;
+use App\Models\EventoCompartido;
+use App\Models\EventoParticipanteNoRegistrado;
 use App\Models\Notificacion;
 use App\Models\User;
 use App\Models\Empresa;
 use App\Models\IntegranteExterno;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class EventController extends Controller
 {
@@ -355,9 +358,10 @@ class EventController extends Controller
             // Obtener todos los eventos de la ONG autenticada
             $query = Evento::where('ong_id', $ongIdAutenticada);
             
-            // Filtro por tipo de evento
+            // Filtro por tipo de evento (case-insensitive)
             if ($request->has('tipo_evento') && $request->tipo_evento !== '' && $request->tipo_evento !== 'todos') {
-                $query->where('tipo_evento', $request->tipo_evento);
+                $tipoEventoFiltro = strtolower(trim($request->tipo_evento));
+                $query->whereRaw('LOWER(tipo_evento) = ?', [$tipoEventoFiltro]);
             }
             
             // Búsqueda por título o descripción
@@ -374,20 +378,34 @@ class EventController extends Controller
             
             // Filtrar por estado dinámico si se especifica
             $estadoFiltro = $request->get('estado', 'todos');
+            
+            // Por defecto, excluir eventos finalizados de la lista principal (a menos que se solicite explícitamente)
+            $excluirFinalizados = $request->get('excluir_finalizados', true);
+            
+            if ($excluirFinalizados && ($estadoFiltro === 'todos' || $estadoFiltro === '')) {
+                $todosEventos = $todosEventos->filter(function($e) {
+                    return $e->estado_dinamico !== 'finalizado';
+                })->values();
+            }
+            
             if ($estadoFiltro !== 'todos' && $estadoFiltro !== '') {
                 $todosEventos = $todosEventos->filter(function($e) use ($estadoFiltro) {
                     $estadoDinamico = $e->estado_dinamico;
                     
-                    if ($estadoFiltro === 'finalizados') {
+                    // Mapear valores del frontend a estados dinámicos
+                    if ($estadoFiltro === 'finalizado' || $estadoFiltro === 'finalizados') {
                         return $estadoDinamico === 'finalizado';
-                    } elseif ($estadoFiltro === 'activos') {
+                    } elseif ($estadoFiltro === 'activos' || $estadoFiltro === 'activo') {
                         return $estadoDinamico === 'activo';
-                    } elseif ($estadoFiltro === 'proximos') {
+                    } elseif ($estadoFiltro === 'proximos' || $estadoFiltro === 'proximo') {
                         return $estadoDinamico === 'proximo';
                     } elseif ($estadoFiltro === 'en_curso') {
                         return $estadoDinamico === 'activo';
+                    } elseif ($estadoFiltro === 'publicado') {
+                        // Para publicado, puede ser activo, próximo o finalizado según fechas
+                        return in_array($estadoDinamico, ['activo', 'proximo', 'finalizado']) || $e->estado === 'publicado';
                     } else {
-                        // Para borrador, cancelado, etc., usar el estado guardado
+                        // Para borrador, cancelado, etc., usar el estado guardado directamente
                         return $e->estado === $estadoFiltro;
                     }
                 })->values();
@@ -437,9 +455,10 @@ class EventController extends Controller
             
             $query = Evento::where('estado', 'publicado');
             
-            // Filtro por tipo de evento
+            // Filtro por tipo de evento (case-insensitive)
             if ($request->has('tipo_evento') && $request->tipo_evento !== '' && $request->tipo_evento !== 'todos') {
-                $query->where('tipo_evento', $request->tipo_evento);
+                $tipoEventoFiltro = strtolower(trim($request->tipo_evento));
+                $query->whereRaw('LOWER(tipo_evento) = ?', [$tipoEventoFiltro]);
             }
             
             // Búsqueda por título o descripción
@@ -490,7 +509,7 @@ class EventController extends Controller
     public function show($id)
     {
         try {
-            $evento = Evento::find($id);
+            $evento = Evento::with('ong')->find($id);
 
             if (!$evento) {
                 return response()->json([
@@ -505,6 +524,18 @@ class EventController extends Controller
             
             // Agregar empresas colaboradoras desde la tabla de participaciones
             $evento->empresas_colaboradoras = $this->enriquecerEmpresasColaboradoras($evento->id);
+            
+            // Agregar información del creador (ONG)
+            if ($evento->ong) {
+                $evento->creador = [
+                    'tipo' => 'ONG',
+                    'nombre' => $evento->ong->nombre_ong ?? 'ONG',
+                    'foto_perfil' => $evento->ong->foto_perfil_url ?? null,
+                    'id' => $evento->ong->user_id ?? null
+                ];
+            } else {
+                $evento->creador = null;
+            }
             
             // El accessor del modelo ya genera URLs completas
             $evento->makeVisible(['imagenes', 'fecha_finalizacion']);
@@ -825,10 +856,39 @@ class EventController extends Controller
                 $data['auspiciadores'] = $this->safeArray($data['auspiciadores']);
             }
 
+            // Verificar si se está finalizando el evento (para crear notificación)
+            $estadoAnterior = $evento->estado;
+            $seEstaFinalizando = isset($data['estado']) && 
+                                 $data['estado'] === 'finalizado' && 
+                                 $estadoAnterior !== 'finalizado';
+            
             // TRANSACCIÓN: Actualizar evento + sincronizar patrocinadores
-            DB::transaction(function () use ($evento, $data, $request) {
+            DB::transaction(function () use ($evento, $data, $request, $seEstaFinalizando) {
                 // 1. Actualizar evento
             $evento->update($data);
+                
+                // 2. Si se está finalizando el evento, crear notificación para la ONG
+                if ($seEstaFinalizando && $evento->ong_id) {
+                    try {
+                        // Si no tiene fecha_finalizacion, establecerla ahora
+                        if (!$evento->fecha_finalizacion) {
+                            $evento->fecha_finalizacion = now();
+                            $evento->save();
+                        }
+                        
+                        Notificacion::create([
+                            'ong_id' => $evento->ong_id,
+                            'evento_id' => $evento->id,
+                            'externo_id' => null,
+                            'tipo' => 'evento_finalizado',
+                            'titulo' => 'Evento Finalizado',
+                            'mensaje' => "Tu evento '{$evento->titulo}' ha sido finalizado. El evento ya no está disponible para nuevas participaciones o interacciones.",
+                            'leida' => false
+                        ]);
+                    } catch (\Throwable $e) {
+                        \Log::error("Error al crear notificación de evento finalizado: " . $e->getMessage());
+                    }
+                }
                 
                 // 2. Sincronizar patrocinadores en la tabla evento_empresas_participantes
                 if (isset($data['patrocinadores']) && is_array($data['patrocinadores'])) {
@@ -1181,6 +1241,566 @@ class EventController extends Controller
                 "error" => $e->getMessage(),
                 "line" => $e->getLine(),
                 "file" => $e->getFile()
+            ], 500);
+        }
+    }
+
+    // ======================================================
+    //  DASHBOARD DEL EVENTO
+    // ======================================================
+    public function dashboard($id)
+    {
+        try {
+            // Validar que el usuario esté autenticado
+            if (!auth()->check()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'No autenticado'
+                ], 401);
+            }
+
+            $evento = Evento::find($id);
+            
+            if (!$evento) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Evento no encontrado'
+                ], 404);
+            }
+
+            // Verificar que el usuario es el dueño del evento
+            $ongId = auth()->user()->id_usuario;
+            if ($evento->ong_id != $ongId) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'No tienes permiso para ver este dashboard'
+                ], 403);
+            }
+
+            // Estadísticas básicas
+            $totalReacciones = EventoReaccion::where('evento_id', $id)->count();
+            $totalCompartidos = EventoCompartido::where('evento_id', $id)->count();
+            
+            // Contar participantes registrados
+            $participantesRegistrados = EventoParticipacion::where('evento_id', $id)->count();
+            
+            // Contar participantes no registrados
+            $participantesNoRegistradosCount = EventoParticipanteNoRegistrado::where('evento_id', $id)->count();
+            
+            // Total de participantes (registrados + no registrados)
+            $totalParticipantes = $participantesRegistrados + $participantesNoRegistradosCount;
+            
+            // Contar voluntarios únicos (solo registrados con externo_id)
+            $totalVoluntarios = EventoParticipacion::where('evento_id', $id)
+                ->whereNotNull('externo_id')
+                ->distinct()
+                ->count('externo_id');
+            
+            // Participantes aprobados (registrados + no registrados)
+            $participantesAprobadosRegistrados = EventoParticipacion::where('evento_id', $id)
+                ->where('estado', 'aprobada')
+                ->count();
+            $participantesAprobadosNoRegistrados = EventoParticipanteNoRegistrado::where('evento_id', $id)
+                ->where('estado', 'aprobada')
+                ->count();
+            $participantesAprobados = $participantesAprobadosRegistrados + $participantesAprobadosNoRegistrados;
+            
+            // Participantes pendientes (registrados + no registrados)
+            $participantesPendientesRegistrados = EventoParticipacion::where('evento_id', $id)
+                ->where('estado', 'pendiente')
+                ->count();
+            $participantesPendientesNoRegistrados = EventoParticipanteNoRegistrado::where('evento_id', $id)
+                ->where('estado', 'pendiente')
+                ->count();
+            $participantesPendientes = $participantesPendientesRegistrados + $participantesPendientesNoRegistrados;
+
+            // Gráficas: Reacciones por día
+            $reaccionesPorDia = [];
+            try {
+                $reaccionesData = EventoReaccion::where('evento_id', $id)
+                    ->selectRaw('DATE(created_at) as fecha, COUNT(*) as total')
+                    ->groupBy(DB::raw('DATE(created_at)'))
+                    ->orderBy('fecha')
+                    ->get();
+                
+                foreach ($reaccionesData as $item) {
+                    $reaccionesPorDia[$item->fecha] = (int)$item->total;
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error en reacciones por día: ' . $e->getMessage());
+            }
+
+            // Gráficas: Compartidos por día
+            $compartidosPorDia = [];
+            try {
+                $compartidosData = EventoCompartido::where('evento_id', $id)
+                    ->selectRaw('DATE(created_at) as fecha, COUNT(*) as total')
+                    ->groupBy(DB::raw('DATE(created_at)'))
+                    ->orderBy('fecha')
+                    ->get();
+                
+                foreach ($compartidosData as $item) {
+                    $compartidosPorDia[$item->fecha] = (int)$item->total;
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error en compartidos por día: ' . $e->getMessage());
+            }
+
+            // Gráficas: Participantes por estado
+            $participantesPorEstado = [];
+            try {
+                // Participantes registrados por estado
+                $participantesData = EventoParticipacion::where('evento_id', $id)
+                    ->selectRaw('estado, COUNT(*) as total')
+                    ->groupBy('estado')
+                    ->get();
+                
+                foreach ($participantesData as $item) {
+                    $estado = $item->estado ?? 'pendiente';
+                    if (!isset($participantesPorEstado[$estado])) {
+                        $participantesPorEstado[$estado] = 0;
+                    }
+                    $participantesPorEstado[$estado] += (int)$item->total;
+                }
+                
+                // Participantes no registrados por estado
+                $participantesNoRegistradosData = EventoParticipanteNoRegistrado::where('evento_id', $id)
+                    ->selectRaw('estado, COUNT(*) as total')
+                    ->groupBy('estado')
+                    ->get();
+                
+                foreach ($participantesNoRegistradosData as $item) {
+                    $estado = $item->estado ?? 'pendiente';
+                    if (!isset($participantesPorEstado[$estado])) {
+                        $participantesPorEstado[$estado] = 0;
+                    }
+                    $participantesPorEstado[$estado] += (int)$item->total;
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error en participantes por estado: ' . $e->getMessage());
+            }
+
+            // Gráficas: Inscripciones por día
+            $inscripcionesPorDia = [];
+            try {
+                // Inscripciones de participantes registrados
+                $inscripcionesData = EventoParticipacion::where('evento_id', $id)
+                    ->selectRaw('DATE(created_at) as fecha, COUNT(*) as total')
+                    ->groupBy(DB::raw('DATE(created_at)'))
+                    ->orderBy('fecha')
+                    ->get();
+                
+                foreach ($inscripcionesData as $item) {
+                    $fecha = $item->fecha;
+                    if (!isset($inscripcionesPorDia[$fecha])) {
+                        $inscripcionesPorDia[$fecha] = 0;
+                    }
+                    $inscripcionesPorDia[$fecha] += (int)$item->total;
+                }
+                
+                // Inscripciones de participantes no registrados
+                $inscripcionesNoRegistradosData = EventoParticipanteNoRegistrado::where('evento_id', $id)
+                    ->selectRaw('DATE(created_at) as fecha, COUNT(*) as total')
+                    ->groupBy(DB::raw('DATE(created_at)'))
+                    ->orderBy('fecha')
+                    ->get();
+                
+                foreach ($inscripcionesNoRegistradosData as $item) {
+                    $fecha = $item->fecha;
+                    if (!isset($inscripcionesPorDia[$fecha])) {
+                        $inscripcionesPorDia[$fecha] = 0;
+                    }
+                    $inscripcionesPorDia[$fecha] += (int)$item->total;
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error en inscripciones por día: ' . $e->getMessage());
+            }
+
+            // Gráficas: Actividad por semana (combinando todas las actividades)
+            $actividadSemanal = [];
+            try {
+                // Obtener todas las fechas de actividad
+                $fechasReacciones = EventoReaccion::where('evento_id', $id)
+                    ->selectRaw('DATE(created_at) as fecha')
+                    ->get()
+                    ->pluck('fecha')
+                    ->toArray();
+                
+                $fechasCompartidos = EventoCompartido::where('evento_id', $id)
+                    ->selectRaw('DATE(created_at) as fecha')
+                    ->get()
+                    ->pluck('fecha')
+                    ->toArray();
+                
+                $fechasParticipaciones = EventoParticipacion::where('evento_id', $id)
+                    ->selectRaw('DATE(created_at) as fecha')
+                    ->get()
+                    ->pluck('fecha')
+                    ->toArray();
+                
+                // Combinar todas las fechas
+                $todasFechas = array_merge($fechasReacciones, $fechasCompartidos, $fechasParticipaciones);
+                
+                // Agrupar por semana
+                $actividadPorSemana = [];
+                foreach ($todasFechas as $fecha) {
+                    $semana = date('Y-W', strtotime($fecha));
+                    if (!isset($actividadPorSemana[$semana])) {
+                        $actividadPorSemana[$semana] = 0;
+                    }
+                    $actividadPorSemana[$semana]++;
+                }
+                
+                // Convertir a formato de fecha
+                foreach ($actividadPorSemana as $semana => $total) {
+                    $fechaSemana = date('Y-m-d', strtotime(substr($semana, 0, 4) . 'W' . substr($semana, 5, 2) . '1'));
+                    $actividadSemanal[$fechaSemana] = $total;
+                }
+                
+                ksort($actividadSemanal);
+            } catch (\Exception $e) {
+                \Log::error('Error en actividad semanal: ' . $e->getMessage());
+            }
+
+            return response()->json([
+                'success' => true,
+                'evento' => [
+                    'id' => $evento->id,
+                    'titulo' => $evento->titulo
+                ],
+                'estadisticas' => [
+                    'reacciones' => $totalReacciones,
+                    'compartidos' => $totalCompartidos,
+                    'voluntarios' => $totalVoluntarios,
+                    'participantes' => $totalParticipantes,
+                    'participantes_aprobados' => $participantesAprobados,
+                    'participantes_pendientes' => $participantesPendientes
+                ],
+                'graficas' => [
+                    'reacciones_por_dia' => $reaccionesPorDia,
+                    'compartidos_por_dia' => $compartidosPorDia,
+                    'participantes_por_estado' => $participantesPorEstado,
+                    'inscripciones_por_dia' => $inscripcionesPorDia,
+                    'actividad_semanal' => $actividadSemanal
+                ]
+            ]);
+
+        } catch (\Throwable $e) {
+            \Log::error('Error en dashboard del evento:', [
+                'evento_id' => $id,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al obtener dashboard: ' . $e->getMessage(),
+                'details' => config('app.debug') ? [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ] : null
+            ], 500);
+        }
+    }
+
+    // ======================================================
+    //  GENERAR PDF DEL DASHBOARD DEL EVENTO
+    // ======================================================
+    public function dashboardPdf($id)
+    {
+        try {
+            // Verificar que el usuario esté autenticado
+            if (!auth()->check()) {
+                abort(401, 'No autenticado');
+            }
+
+            $evento = Evento::find($id);
+            
+            if (!$evento) {
+                abort(404, 'Evento no encontrado');
+            }
+
+            // Verificar que el usuario es el dueño del evento
+            $ongId = auth()->user()->id_usuario;
+            if ($evento->ong_id != $ongId) {
+                abort(403, 'No tienes permiso para ver este dashboard');
+            }
+
+            // Obtener todas las estadísticas (reutilizar lógica del método dashboard)
+            $totalReacciones = EventoReaccion::where('evento_id', $id)->count();
+            $totalCompartidos = EventoCompartido::where('evento_id', $id)->count();
+            
+            // Contar participantes registrados
+            $participantesRegistrados = EventoParticipacion::where('evento_id', $id)->count();
+            
+            // Contar participantes no registrados
+            $participantesNoRegistradosCount = EventoParticipanteNoRegistrado::where('evento_id', $id)->count();
+            
+            // Total de participantes (registrados + no registrados)
+            $totalParticipantes = $participantesRegistrados + $participantesNoRegistradosCount;
+            
+            // Contar voluntarios únicos (solo registrados con externo_id)
+            $totalVoluntarios = EventoParticipacion::where('evento_id', $id)
+                ->whereNotNull('externo_id')
+                ->distinct()
+                ->count('externo_id');
+            
+            // Participantes aprobados (registrados + no registrados)
+            $participantesAprobadosRegistrados = EventoParticipacion::where('evento_id', $id)
+                ->where('estado', 'aprobada')
+                ->count();
+            $participantesAprobadosNoRegistrados = EventoParticipanteNoRegistrado::where('evento_id', $id)
+                ->where('estado', 'aprobada')
+                ->count();
+            $participantesAprobados = $participantesAprobadosRegistrados + $participantesAprobadosNoRegistrados;
+            
+            // Participantes pendientes (registrados + no registrados)
+            $participantesPendientesRegistrados = EventoParticipacion::where('evento_id', $id)
+                ->where('estado', 'pendiente')
+                ->count();
+            $participantesPendientesNoRegistrados = EventoParticipanteNoRegistrado::where('evento_id', $id)
+                ->where('estado', 'pendiente')
+                ->count();
+            $participantesPendientes = $participantesPendientesRegistrados + $participantesPendientesNoRegistrados;
+
+            // Obtener datos para gráficas
+            $reaccionesPorDia = [];
+            $compartidosPorDia = [];
+            $participantesPorEstado = [];
+            $inscripcionesPorDia = [];
+
+            try {
+                $reaccionesData = EventoReaccion::where('evento_id', $id)
+                    ->selectRaw('DATE(created_at) as fecha, COUNT(*) as total')
+                    ->groupBy(DB::raw('DATE(created_at)'))
+                    ->orderBy('fecha')
+                    ->get();
+                foreach ($reaccionesData as $item) {
+                    $reaccionesPorDia[$item->fecha] = (int)$item->total;
+                }
+            } catch (\Exception $e) {}
+
+            try {
+                $compartidosData = EventoCompartido::where('evento_id', $id)
+                    ->selectRaw('DATE(created_at) as fecha, COUNT(*) as total')
+                    ->groupBy(DB::raw('DATE(created_at)'))
+                    ->orderBy('fecha')
+                    ->get();
+                foreach ($compartidosData as $item) {
+                    $compartidosPorDia[$item->fecha] = (int)$item->total;
+                }
+            } catch (\Exception $e) {}
+
+            try {
+                // Participantes registrados por estado
+                $participantesData = EventoParticipacion::where('evento_id', $id)
+                    ->selectRaw('estado, COUNT(*) as total')
+                    ->groupBy('estado')
+                    ->get();
+                foreach ($participantesData as $item) {
+                    $estado = $item->estado ?? 'pendiente';
+                    if (!isset($participantesPorEstado[$estado])) {
+                        $participantesPorEstado[$estado] = 0;
+                    }
+                    $participantesPorEstado[$estado] += (int)$item->total;
+                }
+                
+                // Participantes no registrados por estado
+                $participantesNoRegistradosData = EventoParticipanteNoRegistrado::where('evento_id', $id)
+                    ->selectRaw('estado, COUNT(*) as total')
+                    ->groupBy('estado')
+                    ->get();
+                foreach ($participantesNoRegistradosData as $item) {
+                    $estado = $item->estado ?? 'pendiente';
+                    if (!isset($participantesPorEstado[$estado])) {
+                        $participantesPorEstado[$estado] = 0;
+                    }
+                    $participantesPorEstado[$estado] += (int)$item->total;
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error obteniendo participantes por estado: ' . $e->getMessage());
+            }
+
+            try {
+                // Inscripciones de participantes registrados
+                $inscripcionesData = EventoParticipacion::where('evento_id', $id)
+                    ->selectRaw('DATE(created_at) as fecha, COUNT(*) as total')
+                    ->groupBy(DB::raw('DATE(created_at)'))
+                    ->orderBy('fecha')
+                    ->get();
+                foreach ($inscripcionesData as $item) {
+                    $fecha = $item->fecha;
+                    if (!isset($inscripcionesPorDia[$fecha])) {
+                        $inscripcionesPorDia[$fecha] = 0;
+                    }
+                    $inscripcionesPorDia[$fecha] += (int)$item->total;
+                }
+                
+                // Inscripciones de participantes no registrados
+                $inscripcionesNoRegistradosData = EventoParticipanteNoRegistrado::where('evento_id', $id)
+                    ->selectRaw('DATE(created_at) as fecha, COUNT(*) as total')
+                    ->groupBy(DB::raw('DATE(created_at)'))
+                    ->orderBy('fecha')
+                    ->get();
+                foreach ($inscripcionesNoRegistradosData as $item) {
+                    $fecha = $item->fecha;
+                    if (!isset($inscripcionesPorDia[$fecha])) {
+                        $inscripcionesPorDia[$fecha] = 0;
+                    }
+                    $inscripcionesPorDia[$fecha] += (int)$item->total;
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error obteniendo inscripciones por día: ' . $e->getMessage());
+            }
+
+            // Verificar que dompdf esté disponible
+            if (!class_exists('Barryvdh\DomPDF\Facade\Pdf')) {
+                abort(500, 'La librería de PDF no está instalada');
+            }
+
+            // Obtener nombres de quienes reaccionaron
+            $reaccionesConNombres = [];
+            try {
+                $reacciones = EventoReaccion::where('evento_id', $id)
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+                
+                foreach ($reacciones as $reaccion) {
+                    if ($reaccion->externo_id) {
+                        // Usuario registrado
+                        $user = User::find($reaccion->externo_id);
+                        if ($user) {
+                            $externo = IntegranteExterno::where('user_id', $user->id_usuario)->first();
+                            $nombre = $externo 
+                                ? trim($externo->nombres . ' ' . ($externo->apellidos ?? ''))
+                                : ($user->nombre_usuario ?? 'Usuario');
+                            $email = $externo ? $externo->email : ($user->correo_electronico ?? '');
+                        } else {
+                            $nombre = 'Usuario no encontrado';
+                            $email = '';
+                        }
+                    } else {
+                        // Usuario no registrado
+                        $nombre = trim(($reaccion->nombres ?? '') . ' ' . ($reaccion->apellidos ?? ''));
+                        $email = $reaccion->email ?? '';
+                    }
+                    
+                    if (!empty($nombre)) {
+                        $reaccionesConNombres[] = [
+                            'nombre' => $nombre,
+                            'email' => $email,
+                            'fecha' => $reaccion->created_at->format('d/m/Y H:i')
+                        ];
+                    }
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error obteniendo reacciones con nombres: ' . $e->getMessage());
+            }
+
+            // Obtener nombres de participantes
+            $participantesConNombres = [];
+            try {
+                // Participantes registrados
+                $participaciones = EventoParticipacion::where('evento_id', $id)
+                    ->with('externo')
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+                
+                foreach ($participaciones as $participacion) {
+                    if ($participacion->externo_id) {
+                        // Usuario registrado
+                        $user = $participacion->externo;
+                        if ($user) {
+                            $externo = IntegranteExterno::where('user_id', $user->id_usuario)->first();
+                            $nombre = $externo 
+                                ? trim($externo->nombres . ' ' . ($externo->apellidos ?? ''))
+                                : ($user->nombre_usuario ?? 'Usuario');
+                            $email = $externo ? $externo->email : ($user->correo_electronico ?? '');
+                        } else {
+                            $nombre = 'Usuario no encontrado';
+                            $email = '';
+                        }
+                    } else {
+                        continue; // Saltar si no tiene externo_id
+                    }
+                    
+                    if (!empty($nombre)) {
+                        $participantesConNombres[] = [
+                            'nombre' => $nombre,
+                            'email' => $email,
+                            'estado' => $participacion->estado ?? 'pendiente',
+                            'fecha_inscripcion' => $participacion->created_at->format('d/m/Y H:i'),
+                            'asistio' => $participacion->asistio ?? false
+                        ];
+                    }
+                }
+
+                // Participantes no registrados
+                $participantesNoRegistrados = EventoParticipanteNoRegistrado::where('evento_id', $id)
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+                
+                foreach ($participantesNoRegistrados as $participante) {
+                    $nombre = trim(($participante->nombres ?? '') . ' ' . ($participante->apellidos ?? ''));
+                    if (!empty($nombre)) {
+                        $participantesConNombres[] = [
+                            'nombre' => $nombre,
+                            'email' => $participante->email ?? '',
+                            'estado' => $participante->estado ?? 'pendiente',
+                            'fecha_inscripcion' => $participante->created_at->format('d/m/Y H:i'),
+                            'asistio' => $participante->asistio ?? false
+                        ];
+                    }
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error obteniendo participantes con nombres: ' . $e->getMessage());
+            }
+
+            // Ruta de la imagen hoja.png
+            $hojaPath = public_path('assets/img/hoja.png');
+            $hojaExists = file_exists($hojaPath);
+
+            // Generar PDF usando el facade
+            $pdf = Pdf::loadView('ong.eventos.dashboard-pdf', [
+                'evento' => $evento,
+                'estadisticas' => [
+                    'reacciones' => $totalReacciones,
+                    'compartidos' => $totalCompartidos,
+                    'voluntarios' => $totalVoluntarios,
+                    'participantes' => $totalParticipantes,
+                    'participantes_aprobados' => $participantesAprobados,
+                    'participantes_pendientes' => $participantesPendientes
+                ],
+                'graficas' => [
+                    'reacciones_por_dia' => $reaccionesPorDia,
+                    'compartidos_por_dia' => $compartidosPorDia,
+                    'participantes_por_estado' => $participantesPorEstado,
+                    'inscripciones_por_dia' => $inscripcionesPorDia
+                ],
+                'reacciones_con_nombres' => $reaccionesConNombres,
+                'participantes_con_nombres' => $participantesConNombres,
+                'hoja_path' => $hojaPath,
+                'hoja_exists' => $hojaExists,
+                'fecha_generacion' => now()->format('d/m/Y H:i:s')
+            ])->setPaper('a4', 'portrait')
+              ->setOption('enable-local-file-access', true)
+              ->setOption('isRemoteEnabled', true);
+
+            return $pdf->download('dashboard-evento-' . $evento->id . '-' . now()->format('Y-m-d') . '.pdf');
+
+        } catch (\Throwable $e) {
+            \Log::error('Error generando PDF del dashboard:', [
+                'evento_id' => $id,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al generar PDF: ' . $e->getMessage()
             ], 500);
         }
     }

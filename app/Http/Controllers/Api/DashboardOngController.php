@@ -276,11 +276,52 @@ class DashboardOngController extends Controller
                 ->get()
                 ->pluck('total', 'estado');
 
+            // Eventos por mes (últimos 12 meses)
+            $eventosPorMes = Evento::where('ong_id', $ongId)
+                ->where('fecha_inicio', '>=', now()->subMonths(12))
+                ->get()
+                ->groupBy(function($evento) {
+                    return $evento->fecha_inicio->format('M');
+                })
+                ->map(function($group) {
+                    return $group->count();
+                });
+
+            // Voluntarios por mes (últimos 5 meses)
+            $voluntariosPorMes = EventoParticipacion::whereIn('evento_id', $eventosIds)
+                ->where('created_at', '>=', now()->subMonths(5))
+                ->get()
+                ->groupBy(function($participacion) {
+                    return $participacion->created_at->format('M');
+                })
+                ->map(function($group) {
+                    return $group->pluck('externo_id')->unique()->count();
+                });
+
+            // Mega eventos por mes (últimos 5 meses)
+            $megaEventosPorMes = MegaEvento::where('ong_organizadora_principal', $ongId)
+                ->where('fecha_inicio', '>=', now()->subMonths(5))
+                ->get()
+                ->groupBy(function($megaEvento) {
+                    return $megaEvento->fecha_inicio->format('M');
+                })
+                ->map(function($group) {
+                    return $group->count();
+                });
+
+            // Obtener información del usuario
+            $user = $request->user();
+            
             return response()->json([
                 'success' => true,
                 'ong' => [
-                    'nombre' => $ong ? $ong->nombre_ong : 'ONG',
+                    'nombre' => $ong ? $ong->nombre_ong : ($user->nombre_usuario ?? 'ONG'),
                     'descripcion' => $ong ? $ong->descripcion : null,
+                    'foto_perfil' => $ong ? ($ong->foto_perfil_url ?? null) : ($user->foto_perfil_url ?? null),
+                ],
+                'usuario' => [
+                    'nombre_usuario' => $user->nombre_usuario ?? null,
+                    'foto_perfil' => $user->foto_perfil_url ?? null,
                 ],
                 'estadisticas' => [
                     'eventos' => [
@@ -306,6 +347,11 @@ class DashboardOngController extends Controller
                 'distribuciones' => [
                     'eventos_por_tipo' => $eventosPorTipo,
                     'participantes_por_estado' => $participantesPorEstado,
+                ],
+                'graficas' => [
+                    'eventos_por_mes' => $eventosPorMes,
+                    'voluntarios_por_mes' => $voluntariosPorMes,
+                    'mega_eventos_por_mes' => $megaEventosPorMes,
                 ]
             ]);
 
