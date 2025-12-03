@@ -4,45 +4,51 @@
 
 @section('content_body')
 <div class="container-fluid">
-    <div class="card shadow-sm" style="border-radius: 12px; border: 1px solid #F5F5F5;">
-        <div class="card-header" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: #FFFFFF; border-radius: 12px 12px 0 0;">
+    <!-- Header -->
+    <div class="card mb-4">
+        <div class="card-header bg-white">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
                 <div>
-                    <h3 class="card-title mb-1" style="font-weight: 700; font-size: 1.4rem;">
-                        <i class="far fa-calendar-plus mr-2"></i> Crear nuevo mega evento
+                    <h3 class="card-title mb-1 text-dark">
+                        <i class="fas fa-calendar-plus mr-2 text-primary"></i> Crear nuevo mega evento
                     </h3>
-                    <p class="mb-0" style="font-size: 0.9rem; opacity: 0.9;">
+                    <p class="mb-0 text-muted">
                         Define la información principal, ubicación, visibilidad e imágenes para tu mega evento.
                     </p>
                 </div>
                 <div class="mt-3 mt-md-0">
-                    <a href="{{ route('ong.mega-eventos.index') }}" class="btn btn-sm" style="background: rgba(255,255,255,0.15); color: #FFFFFF; border-radius: 999px; border: none; padding: 0.5rem 1.25rem;">
-                        <i class="far fa-arrow-left mr-1"></i> Volver a mega eventos
+                    <a href="{{ route('ong.mega-eventos.index') }}" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-arrow-left mr-1"></i> Volver
                     </a>
                 </div>
             </div>
         </div>
-        <div class="card-body p-4">
-            <form id="createMegaEventoForm" enctype="multipart/form-data">
-                <!-- Información Básica -->
-                <div class="mb-4 pb-3" style="border-bottom: 1px solid #F5F5F5;">
-                    <h4 class="mb-1" style="color: #0C2B44; font-weight: 700;">
-                        <i class="far fa-info-circle mr-2" style="color: #00A36C;"></i> Información básica
-                    </h4>
-                    <p class="mb-0 text-muted" style="font-size: 0.9rem;">Completa los datos generales del mega evento.</p>
-                </div>
+    </div>
 
+    <form id="createMegaEventoForm" enctype="multipart/form-data">
+        <!-- Información Básica -->
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0 text-dark">
+                    <i class="fas fa-info-circle mr-2 text-info"></i> Información básica
+                </h5>
+            </div>
+            <div class="card-body">
                 <div class="row">
                     <div class="col-md-8">
                         <div class="form-group">
-                            <label for="titulo">Título del mega evento *</label>
+                            <label for="titulo" class="font-weight-bold text-dark">
+                                <i class="fas fa-heading mr-2 text-primary"></i>Título del mega evento <span class="text-danger">*</span>
+                            </label>
                             <input type="text" id="titulo" name="titulo" class="form-control" required 
                                    maxlength="200" placeholder="Ej: Festival de Verano 2025">
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label for="categoria">Categoría</label>
+                            <label for="categoria" class="font-weight-bold text-dark">
+                                <i class="fas fa-tags mr-2 text-success"></i>Categoría
+                            </label>
                             <select id="categoria" name="categoria" class="form-control">
                                 <option value="social">Social</option>
                                 <option value="cultural">Cultural</option>
@@ -57,48 +63,64 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="descripcion">Descripción</label>
+                    <label for="descripcion" class="font-weight-bold text-dark">
+                        <i class="fas fa-align-left mr-2 text-info"></i>Descripción
+                    </label>
                     <textarea id="descripcion" name="descripcion" rows="4" class="form-control" 
                               placeholder="Describe el mega evento..."></textarea>
                 </div>
+            </div>
+        </div>
 
-                <!-- Fechas -->
-                <div class="mb-4 border-bottom pb-3 mt-4" style="border-bottom: 1px solid #F5F5F5;">
-                    <h4 class="mb-1" style="color: #0C2B44; font-weight: 700;">
-                        <i class="far fa-calendar-alt mr-2" style="color: #00A36C;"></i> Fechas del evento
-                    </h4>
-                </div>
+        <!-- Fechas -->
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0 text-dark">
+                    <i class="fas fa-calendar-alt mr-2 text-warning"></i> Fechas del evento
+                </h5>
+            </div>
+            <div class="card-body">
 
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="fecha_inicio">Fecha y Hora de Inicio *</label>
+                            <label for="fecha_inicio" class="font-weight-bold text-dark">
+                                <i class="fas fa-play-circle mr-2 text-success"></i>Fecha y Hora de Inicio <span class="text-danger">*</span>
+                            </label>
                             <input type="datetime-local" id="fecha_inicio" name="fecha_inicio" 
                                    class="form-control" required>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="fecha_fin">Fecha y Hora de Fin *</label>
+                            <label for="fecha_fin" class="font-weight-bold text-dark">
+                                <i class="fas fa-stop-circle mr-2 text-danger"></i>Fecha y Hora de Fin <span class="text-danger">*</span>
+                            </label>
                             <input type="datetime-local" id="fecha_fin" name="fecha_fin" 
                                    class="form-control" required>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- Ubicación y Capacidad -->
-                <div class="mb-4 border-bottom pb-3 mt-4" style="border-bottom: 1px solid #F5F5F5;">
-                    <h4 class="mb-1" style="color: #0C2B44; font-weight: 700;">
-                        <i class="far fa-map mr-2" style="color: #00A36C;"></i> Ubicación y capacidad
-                    </h4>
-                </div>
+        <!-- Ubicación y Capacidad -->
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0 text-dark">
+                    <i class="fas fa-map-marker-alt mr-2 text-danger"></i> Ubicación y capacidad
+                </h5>
+            </div>
+            <div class="card-body">
 
                 <!-- Mapa -->
                 <div class="form-group mb-3">
-                    <label>Seleccionar ubicación en el mapa</label>
+                    <label class="font-weight-bold text-dark">
+                        <i class="fas fa-map mr-2 text-primary"></i>Seleccionar ubicación en el mapa
+                    </label>
                     <div id="map" class="rounded mb-3" style="height: 300px; border: 1px solid #ced4da;"></div>
                     <div class="form-group">
-                        <label for="locacion">Dirección seleccionada *</label>
+                        <label for="locacion" class="font-weight-bold text-dark">Dirección seleccionada <span class="text-danger">*</span></label>
                         <input id="locacion" readonly class="form-control bg-light">
                         <small id="ciudadInfo" class="text-muted"></small>
                     </div>
@@ -109,7 +131,9 @@
                 <div class="row">
                     <div class="col-md-8">
                         <div class="form-group">
-                            <label for="ubicacion">Ubicación (texto)</label>
+                            <label for="ubicacion" class="font-weight-bold text-dark">
+                                <i class="fas fa-location-dot mr-2 text-info"></i>Ubicación (texto)
+                            </label>
                             <input type="text" id="ubicacion" name="ubicacion" class="form-control" 
                                    maxlength="500" placeholder="Ej: Parque Central, La Paz">
                             <small class="form-text text-muted">Puedes escribir manualmente o seleccionar en el mapa</small>
@@ -117,24 +141,32 @@
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label for="capacidad_maxima">Capacidad máxima</label>
+                            <label for="capacidad_maxima" class="font-weight-bold text-dark">
+                                <i class="fas fa-users mr-2 text-success"></i>Capacidad máxima
+                            </label>
                             <input type="number" id="capacidad_maxima" name="capacidad_maxima" 
                                    class="form-control" min="1" placeholder="Ej: 1000">
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- Configuración -->
-                <div class="mb-4 border-bottom pb-3 mt-4" style="border-bottom: 1px solid #F5F5F5;">
-                    <h4 class="mb-1" style="color: #0C2B44; font-weight: 700;">
-                        <i class="far fa-cogs mr-2" style="color: #00A36C;"></i> Configuración
-                    </h4>
-                </div>
+        <!-- Configuración -->
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0 text-dark">
+                    <i class="fas fa-cogs mr-2 text-secondary"></i> Configuración
+                </h5>
+            </div>
+            <div class="card-body">
 
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label for="estado">Estado</label>
+                            <label for="estado" class="font-weight-bold text-dark">
+                                <i class="fas fa-info-circle mr-2 text-info"></i>Estado
+                            </label>
                             <select id="estado" name="estado" class="form-control">
                                 <option value="planificacion">Planificación</option>
                                 <option value="activo">Activo</option>
@@ -146,7 +178,9 @@
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label for="es_publico">Visibilidad</label>
+                            <label for="es_publico" class="font-weight-bold text-dark">
+                                <i class="fas fa-eye mr-2 text-primary"></i>Visibilidad
+                            </label>
                             <select id="es_publico" name="es_publico" class="form-control">
                                 <option value="1">Público</option>
                                 <option value="0">Privado</option>
@@ -155,7 +189,9 @@
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label for="activo">Estado de Actividad</label>
+                            <label for="activo" class="font-weight-bold text-dark">
+                                <i class="fas fa-power-off mr-2 text-success"></i>Estado de Actividad
+                            </label>
                             <select id="activo" name="activo" class="form-control">
                                 <option value="1">Activo</option>
                                 <option value="0">Inactivo</option>
@@ -163,22 +199,31 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- Imágenes -->
-                <div class="mb-4 border-bottom pb-3 mt-4" style="border-bottom: 1px solid #F5F5F5;">
-                    <h4 class="mb-1" style="color: #0C2B44; font-weight: 700;">
-                        <i class="far fa-images mr-2" style="color: #00A36C;"></i> Imágenes promocionales
-                    </h4>
-                </div>
+        <!-- Imágenes -->
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0 text-dark">
+                    <i class="fas fa-images mr-2 text-warning"></i> Imágenes promocionales
+                </h5>
+            </div>
+            <div class="card-body">
 
                 <!-- Subir archivos -->
                 <div class="form-group">
-                    <label for="imagenes">Subir imágenes desde archivo</label>
-                    <input type="file" id="imagenes" name="imagenes[]" multiple 
-                           accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" 
-                           class="form-control-file">
+                    <label for="imagenes" class="font-weight-bold text-dark">
+                        <i class="fas fa-upload mr-2 text-primary"></i>Subir imágenes desde archivo
+                    </label>
+                    <div class="custom-file">
+                        <input type="file" id="imagenes" name="imagenes[]" multiple 
+                               accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" 
+                               class="custom-file-input">
+                        <label class="custom-file-label" for="imagenes">Seleccionar archivos...</label>
+                    </div>
                     <small class="form-text text-muted">
-                        Puedes seleccionar múltiples imágenes. Formatos permitidos: JPG, PNG, GIF, WEBP (máx. 5MB cada una)
+                        <i class="fas fa-info-circle mr-1"></i>Puedes seleccionar múltiples imágenes. Formatos permitidos: JPG, PNG, GIF, WEBP (máx. 5MB cada una)
                     </small>
                 </div>
 
@@ -186,45 +231,69 @@
 
                 <!-- Agregar por URL -->
                 <div class="form-group mt-4">
-                    <label for="imagen_url">Agregar imagen por URL (opcional)</label>
+                    <label for="imagen_url" class="font-weight-bold text-dark">
+                        <i class="fas fa-link mr-2 text-info"></i>Agregar imagen por URL (opcional)
+                    </label>
                     <div class="input-group">
                         <input type="url" id="imagen_url" name="imagen_url" 
                                class="form-control" 
                                placeholder="https://ejemplo.com/imagen.jpg">
                         <div class="input-group-append">
                             <button type="button" class="btn btn-primary" id="btnAgregarUrl">
-                                <i class="fas fa-plus"></i> Agregar
+                                <i class="fas fa-plus mr-1"></i> Agregar
                             </button>
                         </div>
                     </div>
                     <small class="form-text text-muted">
-                        Ingresa la URL completa de una imagen en internet
+                        <i class="fas fa-info-circle mr-1"></i>Ingresa la URL completa de una imagen en internet
                     </small>
                 </div>
 
                 <div id="urlImagesContainer" class="row mb-3"></div>
+            </div>
+        </div>
 
-                <!-- Mensaje de resultado -->
-                <div id="formMessage" class="alert" style="display: none;"></div>
+        <!-- Mensaje de resultado -->
+        <div id="formMessage" class="alert" style="display: none;"></div>
 
-                <!-- Botones -->
-                <div class="d-flex justify-content-end mt-4 pt-3" style="border-top: 1px solid #F5F5F5;">
-                    <a href="{{ route('ong.mega-eventos.index') }}" class="btn btn-outline-secondary mr-2" style="border-radius: 8px;">
-                        <i class="far fa-times mr-1"></i> Cancelar
+        <!-- Botones -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-end">
+                    <a href="{{ route('ong.mega-eventos.index') }}" class="btn btn-secondary mr-2">
+                        <i class="fas fa-times mr-1"></i> Cancelar
                     </a>
-                    <button type="submit" class="btn btn-success btn-lg" style="border-radius: 8px; min-width: 190px; font-weight: 600; background-color: #00A36C; border-color: #00A36C;">
-                        <i class="far fa-check-circle mr-1"></i> Crear mega evento
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="fas fa-check-circle mr-1"></i> Crear mega evento
                     </button>
                 </div>
-            </form>
+            </div>
         </div>
-    </div>
+    </form>
 </div>
 @endsection
 
 @push('css')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
+    .card {
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12) !important;
+    }
+
+    .card-header {
+        border-bottom: none;
+    }
+
+    .form-group label {
+        margin-bottom: 0.5rem;
+    }
+
     #previewContainer img {
         width: 150px;
         height: 150px;
@@ -255,6 +324,9 @@
         border: none;
         cursor: pointer;
         font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     #urlImagesContainer .image-preview-wrapper,
     #urlImagesContainerEdit .image-preview-wrapper {
@@ -266,6 +338,10 @@
         height: 150px;
         object-fit: cover;
         border-radius: 6px;
+    }
+
+    .custom-file-label::after {
+        content: "Buscar";
     }
 </style>
 @endpush
@@ -359,6 +435,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const files = Array.from(e.target.files);
         selectedFiles = [...selectedFiles, ...files];
         updatePreview();
+        
+        // Actualizar label del custom-file-input
+        const label = this.nextElementSibling;
+        if (files.length > 0) {
+            label.textContent = files.length === 1 ? files[0].name : `${files.length} archivos seleccionados`;
+        } else {
+            label.textContent = 'Seleccionar archivos...';
+        }
     });
 
     // Agregar imagen por URL
@@ -506,7 +590,7 @@ function updateUrlImagesPreview() {
         removeBtn.className = 'remove-image btn btn-danger btn-sm';
         removeBtn.style.cssText = 'position: absolute; top: 5px; right: 5px; width: 30px; height: 30px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center;';
         removeBtn.title = 'Eliminar imagen';
-        removeBtn.innerHTML = '<i class="far fa-times"></i>';
+        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
         removeBtn.onclick = () => removeUrlImage(index);
         
         wrapper.appendChild(img);

@@ -4,53 +4,121 @@
 
 @section('content_body')
 <div class="container-fluid">
-    <div class="card" style="border-radius: 12px; border: 1px solid #F5F5F5;">
-        <div class="card-header" style="background: #F5F5F5; border-bottom: 1px solid #F5F5F5; border-radius: 12px 12px 0 0;">
-            <div class="d-flex justify-content-between align-items-center">
-                <h3 class="card-title mb-0" style="color: #0C2B44; font-weight: 700;">
-                    <i class="far fa-users mr-2" style="color: #00A36C;"></i> Lista de Participantes en Eventos
-            </h3>
-                <span class="badge badge-lg" id="totalVoluntarios" style="background: #0C2B44; color: white; padding: 0.5em 1em; border-radius: 20px; font-weight: 500;">0 participantes</span>
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
+            <div class="small-box bg-primary" style="border-radius: 16px;">
+                <div class="inner">
+                    <h3 id="statTotalVoluntarios" class="text-white">0</h3>
+                    <p class="text-white">Total Participantes</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-users"></i>
+                </div>
             </div>
         </div>
+        <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
+            <div class="small-box bg-success" style="border-radius: 16px;">
+                <div class="inner">
+                    <h3 id="statVoluntarios" class="text-white">0</h3>
+                    <p class="text-white">Voluntarios</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-user-check"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
+            <div class="small-box bg-info" style="border-radius: 16px;">
+                <div class="inner">
+                    <h3 id="statExternos" class="text-white">0</h3>
+                    <p class="text-white">Externos</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-user"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
+            <div class="small-box bg-warning" style="border-radius: 16px;">
+                <div class="inner">
+                    <h3 id="statNoRegistrados" class="text-white">0</h3>
+                    <p class="text-white">No Registrados</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-user-clock"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y Búsqueda -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary">
+            <h5 class="card-title mb-0 text-white">
+                <i class="fas fa-filter mr-2"></i>Filtros y Búsqueda
+            </h5>
+        </div>
         <div class="card-body">
-            <!-- Filtros y Búsqueda -->
-            <div class="row mb-3" style="padding: 1rem 0;">
-                <div class="col-md-6 mb-3 mb-md-0">
-                    <label for="buscarVoluntario" class="form-label" style="color: #0C2B44; font-weight: 600; margin-bottom: 0.75rem;">
-                        <i class="far fa-search mr-2" style="color: #00A36C;"></i> Buscar
+            <div class="row">
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <label for="buscarVoluntario" class="font-weight-bold text-dark">
+                        <i class="fas fa-search mr-2 text-info"></i> Buscar
                     </label>
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <span class="input-group-text" style="background: #F5F5F5; border-color: #dee2e6; border-radius: 8px 0 0 8px;">
-                                <i class="far fa-search" style="color: #00A36C;"></i>
+                            <span class="input-group-text bg-light">
+                                <i class="fas fa-search text-primary"></i>
                             </span>
                         </div>
-                        <input type="text" id="buscarVoluntario" class="form-control" placeholder="Buscar por nombre, email, evento..." style="border-radius: 0 8px 8px 0; padding: 0.75rem;">
+                        <input type="text" id="buscarVoluntario" class="form-control" placeholder="Nombre, email, evento...">
                     </div>
                 </div>
-                <div class="col-md-4 mb-3 mb-md-0">
-                    <label for="filtroEstado" class="form-label" style="color: #0C2B44; font-weight: 600; margin-bottom: 0.75rem;">
-                        <i class="far fa-sliders-h mr-2" style="color: #00A36C;"></i> Estado
+                <div class="col-md-3 mb-3 mb-md-0">
+                    <label for="filtroTipoUsuario" class="font-weight-bold text-dark">
+                        <i class="fas fa-user-tag mr-2 text-success"></i> Tipo de Usuario
                     </label>
-                    <select id="filtroEstado" class="form-control" style="border-radius: 8px; padding: 0.75rem;">
-                        <option value="">Todos los estados</option>
-                        <option value="aprobada">Aprobada</option>
+                    <select id="filtroTipoUsuario" class="form-control">
+                        <option value="">Todos</option>
+                        <option value="Voluntario">Voluntario</option>
+                        <option value="Externo">Externo</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3 mb-md-0">
+                    <label for="filtroEvento" class="font-weight-bold text-dark">
+                        <i class="fas fa-calendar mr-2 text-warning"></i> Evento
+                    </label>
+                    <select id="filtroEvento" class="form-control">
+                        <option value="">Todos los eventos</option>
                     </select>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
-                    <button type="button" class="btn btn-block" onclick="filtrarVoluntarios()" style="background: #F5F5F5; color: #0C2B44; border: none; border-radius: 8px; padding: 0.75rem; font-weight: 500;">
-                        <i class="far fa-sync mr-2"></i> Actualizar
+                    <button type="button" class="btn btn-secondary btn-block" onclick="filtrarVoluntarios()">
+                        <i class="fas fa-sync mr-1"></i> Actualizar
                     </button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Participantes -->
+    <div class="card">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0 text-dark">
+                    <i class="fas fa-users mr-2 text-primary"></i> Lista de Participantes
+                </h5>
+                <span class="badge badge-primary badge-lg" id="totalVoluntarios">0 participantes</span>
+            </div>
+        </div>
+        <div class="card-body">
 
             <div id="voluntariosContainer">
                 <div class="text-center py-5">
-                    <div class="spinner-border" role="status" style="color: #00A36C; width: 3rem; height: 3rem;">
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
                         <span class="sr-only">Cargando...</span>
                     </div>
-                    <p class="mt-3" style="color: #333333; font-weight: 500;">Cargando participantes...</p>
+                    <p class="mt-3 text-muted font-weight-bold">Cargando participantes...</p>
                 </div>
             </div>
         </div>
@@ -237,6 +305,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     let voluntarios = [];
+    let eventosUnicos = [];
+
+    // Función para actualizar estadísticas
+    function actualizarEstadisticas(vols) {
+        const total = vols.length;
+        const voluntarios = vols.filter(v => v.tipo_usuario === 'Voluntario').length; // Los no registrados
+        const externos = vols.filter(v => v.tipo_usuario === 'Externo').length; // Los registrados
+        
+        const statTotal = document.getElementById('statTotalVoluntarios');
+        const statVoluntarios = document.getElementById('statVoluntarios');
+        const statExternos = document.getElementById('statExternos');
+        const statNoRegistrados = document.getElementById('statNoRegistrados');
+        
+        if (statTotal) statTotal.textContent = total;
+        if (statVoluntarios) statVoluntarios.textContent = voluntarios;
+        if (statExternos) statExternos.textContent = externos;
+        if (statNoRegistrados) statNoRegistrados.textContent = voluntarios; // Los voluntarios son los no registrados
+    }
 
     // Cargar voluntarios
     async function cargarVoluntarios() {
@@ -257,18 +343,39 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             voluntarios = data.voluntarios || [];
+            
+            // Extraer eventos únicos para el filtro
+            eventosUnicos = [...new Set(voluntarios.map(v => ({ id: v.evento_id, titulo: v.evento_titulo })))];
+            eventosUnicos = eventosUnicos.filter(e => e.id && e.titulo);
+            
+            // Actualizar select de eventos
+            const selectEvento = document.getElementById('filtroEvento');
+            if (selectEvento) {
+                const opcionesActuales = selectEvento.querySelectorAll('option:not(:first-child)');
+                opcionesActuales.forEach(opt => opt.remove());
+                
+                eventosUnicos.forEach(evento => {
+                    const option = document.createElement('option');
+                    option.value = evento.id;
+                    option.textContent = evento.titulo;
+                    selectEvento.appendChild(option);
+                });
+            }
+            
+            // Actualizar estadísticas
+            actualizarEstadisticas(voluntarios);
 
             if (voluntarios.length === 0) {
                 container.innerHTML = `
                     <div class="col-12">
-                        <div class="text-center py-5" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border-radius: 12px; padding: 3rem 2rem;">
-                            <div style="background: rgba(255, 255, 255, 0.15); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; backdrop-filter: blur(10px);">
-                                <i class="far fa-users fa-3x text-white"></i>
+                        <div class="text-center py-5 bg-light rounded">
+                            <div class="bg-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                <i class="fas fa-users fa-3x text-white"></i>
                             </div>
-                            <h5 style="color: white; font-weight: 600; margin-bottom: 0.5rem;">No hay voluntarios aún</h5>
-                            <p style="color: rgba(255, 255, 255, 0.9); margin-bottom: 1.5rem;">Los voluntarios aparecerán aquí cuando se inscriban a tus eventos.</p>
-                            <a href="/ong/eventos/crear" class="btn mt-2" style="background: white; color: #0C2B44; border: none; border-radius: 8px; padding: 0.75rem 1.5rem; font-weight: 600;">
-                                <i class="far fa-calendar-plus mr-2"></i> Crear primer evento
+                            <h5 class="font-weight-bold text-dark mb-2">No hay participantes aún</h5>
+                            <p class="text-muted mb-3">Los participantes aparecerán aquí cuando se inscriban a tus eventos.</p>
+                            <a href="/ong/eventos/crear" class="btn btn-success">
+                                <i class="fas fa-calendar-plus mr-2"></i> Crear primer evento
                             </a>
                         </div>
                     </div>
@@ -283,8 +390,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error('Error cargando voluntarios:', error);
             container.innerHTML = `
                 <div class="col-12">
-                    <div class="alert" style="background: #f8d7da; border: 1px solid #dc3545; color: #721c24; border-radius: 8px; padding: 1rem;">
-                        <i class="far fa-exclamation-circle mr-2"></i> Error al cargar voluntarios: ${error.message}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle mr-2"></i> Error al cargar voluntarios: ${error.message}
                     </div>
                 </div>
             `;
@@ -294,12 +401,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     function mostrarVoluntarios(vols) {
         if (vols.length === 0) {
             container.innerHTML = `
-                <div class="text-center py-5" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border-radius: 12px; padding: 3rem 2rem;">
-                    <div style="background: rgba(255, 255, 255, 0.15); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; backdrop-filter: blur(10px);">
-                        <i class="far fa-users fa-3x text-white"></i>
+                <div class="text-center py-5 bg-light rounded">
+                    <div class="bg-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-users fa-3x text-white"></i>
                     </div>
-                    <h5 style="color: white; font-weight: 600; margin-bottom: 0.5rem;">No hay participantes registrados</h5>
-                    <p style="color: rgba(255, 255, 255, 0.9); margin: 0;">Los participantes aparecerán aquí cuando se inscriban a tus eventos.</p>
+                    <h5 class="font-weight-bold text-dark mb-2">No hay participantes registrados</h5>
+                    <p class="text-muted mb-0">Los participantes aparecerán aquí cuando se inscriban a tus eventos.</p>
                 </div>
             `;
             document.getElementById('totalVoluntarios').textContent = '0 participantes';
@@ -308,33 +415,40 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         document.getElementById('totalVoluntarios').textContent = `${vols.length} participante${vols.length !== 1 ? 's' : ''}`;
 
-        // Función para obtener color del badge según estado (solo aprobadas ahora)
+        // Función para obtener color del badge según estado
         const getEstadoBadge = (estado) => {
             const estados = {
-                'aprobada': { class: 'success', icon: 'far fa-check-circle', text: 'Aprobada' }
+                'aprobada': { class: 'success', icon: 'fas fa-check-circle', text: 'Aprobada' }
             };
             return estados[estado] || estados['aprobada'];
         };
 
         // Función para obtener color del badge según tipo de usuario
         const getTipoUsuarioBadge = (tipo) => {
-            return tipo === 'Voluntario' 
-                ? { class: 'primary', icon: 'far fa-user-check', text: 'Voluntario', style: 'background: #0C2B44; color: white;' }
-                : { class: 'info', icon: 'far fa-user', text: 'Externo', style: 'background: #00A36C; color: white;' };
+            if (tipo === 'Voluntario') {
+                return { class: 'success', icon: 'fas fa-user-check', text: 'Voluntario' };
+            } else {
+                return { class: 'info', icon: 'fas fa-user', text: 'Externo' };
+            }
         };
 
+        // Actualizar estadísticas con los filtrados
+        actualizarEstadisticas(vols);
+        
         container.innerHTML = `
             <div class="table-responsive">
-                <table class="table table-hover table-head-fixed text-nowrap">
+                <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th style="width: 70px; text-align: center;">Avatar</th>
+                            <th style="width: 70px; text-align: center;">
+                                <i class="fas fa-user-circle"></i>
+                            </th>
                             <th>Participante</th>
-                            <th style="width: 120px;">Tipo de Usuario</th>
+                            <th style="width: 120px;">Tipo</th>
                             <th>Evento</th>
+                            <th style="width: 100px;">Asistencia</th>
                             <th style="width: 130px;">Estado</th>
                             <th style="width: 160px;">Fecha Inscripción</th>
-                            <th style="width: 120px; text-align: center;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -343,6 +457,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                             const fotoPerfil = vol.foto_perfil || null;
                             const estadoInfo = getEstadoBadge(vol.estado || 'aprobada');
                             const tipoInfo = getTipoUsuarioBadge(vol.tipo_usuario || 'Externo');
+                            const puntos = parseInt(vol.puntos) || 0;
+                            const asistio = vol.asistio !== undefined ? vol.asistio : true; // Por defecto Sí
                             
                             return `
                             <tr>
@@ -358,39 +474,39 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 <td>
                                     <div class="participant-name">${vol.nombre || 'Usuario'}</div>
                                     <div class="participant-info">
-                                        <i class="far fa-envelope"></i> ${vol.email || 'Sin email'}
+                                        <i class="fas fa-envelope text-info"></i> ${vol.email || 'Sin email'}
                                     </div>
                                     ${vol.telefono && vol.telefono !== 'No disponible' ? `
                                         <div class="participant-info">
-                                            <i class="far fa-phone"></i> ${vol.telefono}
+                                            <i class="fas fa-phone text-success"></i> ${vol.telefono}
                                         </div>
                                     ` : ''}
                                 </td>
                                 <td>
-                                    <span class="badge" style="${tipoInfo.style || 'background: #0C2B44; color: white;'}">
-                                        <i class="${tipoInfo.icon}"></i> ${tipoInfo.text}
+                                    <span class="badge badge-${tipoInfo.class}">
+                                        <i class="${tipoInfo.icon} mr-1"></i> ${tipoInfo.text}
                                     </span>
                                 </td>
                                 <td>
                                     <a href="/ong/eventos/${vol.evento_id}/detalle" class="evento-link">
-                                        <i class="far fa-calendar mr-1" style="color: #00A36C;"></i>${vol.evento_titulo || 'N/A'}
+                                        <i class="fas fa-calendar mr-1 text-warning"></i>${vol.evento_titulo || 'N/A'}
                                     </a>
                                 </td>
                                 <td>
-                                    <span class="badge" style="background: #00A36C; color: white;">
-                                        <i class="far fa-check-circle mr-1"></i>${estadoInfo.text}
+                                    <span class="badge badge-success">
+                                        <i class="fas fa-check-circle mr-1"></i>Sí
                                     </span>
                                 </td>
                                 <td>
-                                    <small style="color: #333333;">
-                                        <i class="far fa-calendar-check mr-1" style="color: #00A36C;"></i>
+                                    <span class="badge badge-${estadoInfo.class}">
+                                        <i class="${estadoInfo.icon} mr-1"></i>${estadoInfo.text}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar-check mr-1 text-primary"></i>
                                         ${vol.fecha_inscripcion_formateada || (vol.fecha_inscripcion ? new Date(vol.fecha_inscripcion).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A')}
                                     </small>
-                                </td>
-                                <td style="text-align: center;">
-                                    <span class="badge" style="background: #00A36C; color: white;">
-                                        <i class="far fa-check-circle"></i> Aprobada automáticamente
-                                    </span>
                                 </td>
                             </tr>
                             `;
@@ -404,7 +520,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Búsqueda y filtrado
     window.filtrarVoluntarios = function() {
         const termino = document.getElementById('buscarVoluntario').value.toLowerCase();
-        const estadoFiltro = document.getElementById('filtroEstado').value;
+        const tipoFiltro = document.getElementById('filtroTipoUsuario').value;
+        const eventoFiltro = document.getElementById('filtroEvento').value;
         
         let filtrados = voluntarios.filter(vol => {
             const coincideBusqueda = 
@@ -414,16 +531,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 (vol.estado_label || '').toLowerCase().includes(termino) ||
                 (vol.tipo_usuario || '').toLowerCase().includes(termino);
             
-            const coincideEstado = !estadoFiltro || (vol.estado || 'aprobada') === estadoFiltro;
+            const coincideTipo = !tipoFiltro || (vol.tipo_usuario || 'Externo') === tipoFiltro;
+            const coincideEvento = !eventoFiltro || vol.evento_id == eventoFiltro;
             
-            return coincideBusqueda && coincideEstado;
+            return coincideBusqueda && coincideTipo && coincideEvento;
         });
         
         mostrarVoluntarios(filtrados);
     };
 
     document.getElementById('buscarVoluntario').addEventListener('input', window.filtrarVoluntarios);
-    document.getElementById('filtroEstado').addEventListener('change', window.filtrarVoluntarios);
+    document.getElementById('filtroTipoUsuario').addEventListener('change', window.filtrarVoluntarios);
+    document.getElementById('filtroEvento').addEventListener('change', window.filtrarVoluntarios);
 
     // Funciones para aprobar/rechazar participaciones
     window.aprobarParticipacion = async function(participacionId) {
@@ -553,4 +672,5 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 </script>
 @endpush
+
 

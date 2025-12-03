@@ -384,6 +384,12 @@ class MegaEventoController extends Controller
             $data = $request->all();
             $data['fecha_actualizacion'] = now();
 
+            // Detectar si se está finalizando el mega evento (para notificación)
+            $estadoAnterior = $megaEvento->estado;
+            $seEstaFinalizando = isset($data['estado'])
+                && $data['estado'] === 'finalizado'
+                && $estadoAnterior !== 'finalizado';
+
             // Procesar imágenes: obtener las existentes primero
             $imagenesActuales = $this->safeArray($megaEvento->getRawOriginal('imagenes') ?? []);
             
@@ -438,8 +444,8 @@ class MegaEventoController extends Controller
                 'imagenes_json_input' => $request->input('imagenes_json')
             ]);
             
-            // TRANSACCIÓN: Procesar imágenes + actualizar mega evento
-            DB::transaction(function () use ($megaEvento, $data, $imagenesActuales, $nuevasImagenes) {
+            // TRANSACCIÓN: Procesar imágenes + actualizar mega evento + notificación si se finaliza
+            DB::transaction(function () use ($megaEvento, $data, $imagenesActuales, $nuevasImagenes, $seEstaFinalizando) {
                 // 1. Combinar imágenes existentes con nuevas
             $imagenesActuales = array_merge($imagenesActuales, $nuevasImagenes);
             
@@ -456,6 +462,23 @@ class MegaEventoController extends Controller
 
                 // 4. Actualizar mega evento
             $megaEvento->update($data);
+
+                // 5. Si se está finalizando el mega evento, crear notificación para la ONG
+            if ($seEstaFinalizando && $megaEvento->ong_organizadora_principal) {
+                try {
+                    Notificacion::create([
+                        'ong_id' => $megaEvento->ong_organizadora_principal,
+                        'evento_id' => null, // Para mega eventos no usamos evento_id
+                        'externo_id' => null,
+                        'tipo' => 'mega_evento_finalizado',
+                        'titulo' => 'Mega evento finalizado',
+                        'mensaje' => "Tu mega evento '{$megaEvento->titulo}' ha sido marcado como finalizado. Ya no está disponible para nuevas participaciones o interacciones.",
+                        'leida' => false,
+                    ]);
+                } catch (\Throwable $e) {
+                    \Log::error('Error al crear notificación de mega evento finalizado: ' . $e->getMessage());
+                }
+            }
             });
             
             // Forzar refresh para obtener las imágenes procesadas

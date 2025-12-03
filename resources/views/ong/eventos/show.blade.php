@@ -11,7 +11,7 @@
         <div class="position-absolute" style="bottom: 0; left: 0; right: 0; padding: 2rem; color: white;">
             <div class="container">
                 <h1 id="titulo" class="mb-2" style="font-size: 2.5rem; font-weight: 700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"></h1>
-                <div class="d-flex flex-wrap align-items-center gap-3">
+                <div class="d-flex flex-wrap align-items-center" style="gap: 0.5rem;">
                     <span id="tipoEventoBadge" class="badge badge-light" style="font-size: 0.9rem; padding: 0.5em 1em;"></span>
                     <span id="estadoBadge" class="badge" style="font-size: 0.9rem; padding: 0.5em 1em;"></span>
                 </div>
@@ -37,38 +37,38 @@
     <div id="modalCompartir" class="modal fade" tabindex="-1" role="dialog" style="display: none;">
         <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 400px;">
             <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 8px 32px rgba(0,0,0,0.2);">
-                <div class="modal-header" style="border-bottom: 1px solid #F5F5F5; padding: 1.5rem;">
-                    <h5 class="modal-title" style="color: #0C2B44; font-weight: 700; font-size: 1.25rem;">Compartir</h5>
-                    <button type="button" class="close" onclick="cerrarModalCompartir()" aria-label="Close" style="border: none; background: none; font-size: 1.5rem; color: #333; opacity: 0.5; cursor: pointer;">
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-bold">Compartir</h5>
+                    <button type="button" class="close" onclick="cerrarModalCompartir()" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body" style="padding: 2rem;">
+                <div class="modal-body">
                     <div class="row text-center">
                         <!-- Copiar enlace -->
                         <div class="col-6 mb-4">
                             <button onclick="copiarEnlace()" class="btn btn-link p-0" style="text-decoration: none; border: none; background: none; width: 100%;">
-                                <div style="width: 80px; height: 80px; background: #F5F5F5; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#E9ECEF'; this.style.transform='scale(1.1)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#F5F5F5'; this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
-                                    <i class="fas fa-link" style="font-size: 2rem; color: #0C2B44;"></i>
+                                <div class="bg-light rounded-lg d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.1)'; this.style.background='#E9ECEF';" onmouseout="this.style.transform='scale(1)'; this.style.background='#F5F5F5';">
+                                    <i class="fas fa-link fa-2x text-primary"></i>
                                 </div>
-                                <span style="color: #333; font-size: 0.9rem; font-weight: 600;">Copiar enlace</span>
+                                <span class="font-weight-bold text-dark">Copiar enlace</span>
                             </button>
                         </div>
                         <!-- QR Code -->
                         <div class="col-6 mb-4">
                             <button onclick="mostrarQR()" class="btn btn-link p-0" style="text-decoration: none; border: none; background: none; width: 100%;">
-                                <div style="width: 80px; height: 80px; background: #0C2B44; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(12,43,68,0.3);" onmouseover="this.style.background='#00A36C'; this.style.transform='scale(1.1)'; this.style.boxShadow='0 4px 12px rgba(0,163,108,0.4)'" onmouseout="this.style.background='#0C2B44'; this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(12,43,68,0.3)'">
-                                    <i class="fas fa-qrcode" style="font-size: 2rem; color: white;"></i>
+                                <div class="bg-primary rounded-lg d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.1)'; this.style.background='#0056b3';" onmouseout="this.style.transform='scale(1)'; this.style.background='#007bff';">
+                                    <i class="fas fa-qrcode fa-2x text-white"></i>
                                 </div>
-                                <span style="color: #333; font-size: 0.9rem; font-weight: 600;">Código QR</span>
+                                <span class="font-weight-bold text-dark">Código QR</span>
                             </button>
                         </div>
                     </div>
                     <!-- Contenedor para el QR -->
                     <div id="qrContainer" style="display: none; margin-top: 1.5rem;">
                         <div class="text-center">
-                            <div id="qrcode" style="display: inline-block; padding: 1rem; background: white; border-radius: 12px; margin-bottom: 1rem;"></div>
-                            <p style="color: #333; font-size: 0.9rem; margin: 0;">Escanea este código para acceder al evento</p>
+                            <div id="qrcode" class="d-inline-block p-3 bg-white rounded mb-3"></div>
+                            <p class="text-muted mb-0">Escanea este código para acceder al evento</p>
                         </div>
                     </div>
                 </div>
@@ -78,15 +78,15 @@
 
     <div class="container mt-4">
         <!-- Mensaje de Evento Finalizado -->
-        <div id="mensajeEventoFinalizado" class="alert alert-info mb-4" style="display: none; border-radius: 12px; border: none; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; padding: 1.5rem;">
+        <div id="mensajeEventoFinalizado" class="alert alert-secondary mb-4" style="display: none;">
             <div class="d-flex align-items-center">
-                <i class="far fa-info-circle mr-3" style="font-size: 2rem;"></i>
+                <i class="fas fa-info-circle mr-3 fa-2x"></i>
                 <div>
-                    <h5 class="mb-1" style="font-weight: 700; font-size: 1.1rem;">Este evento fue finalizado</h5>
-                    <p class="mb-0" style="font-size: 0.95rem; opacity: 0.95;">
-                        Fecha de finalización: <span id="fechaFinalizacionMensaje" style="font-weight: 600;"></span>
+                    <h5 class="mb-1 font-weight-bold">Este evento fue finalizado</h5>
+                    <p class="mb-0">
+                        Fecha de finalización: <span id="fechaFinalizacionMensaje" class="font-weight-bold"></span>
                     </p>
-                    <p class="mb-0 mt-2" style="font-size: 0.9rem; opacity: 0.9;">
+                    <p class="mb-0 mt-2 text-muted">
                         Ya no es posible participar, reaccionar o compartir este evento. Solo puedes ver los detalles.
                     </p>
                 </div>
@@ -95,21 +95,21 @@
 
         <!-- Botones de Acción (ONG) -->
         <div class="d-flex justify-content-end mb-4 flex-wrap" style="gap: 0.5rem;">
-            <a href="/ong/eventos" class="btn" style="background: #F5F5F5; color: #0C2B44; border: none; border-radius: 8px;">
-                <i class="far fa-arrow-left mr-2"></i> Volver
+            <a href="/ong/eventos" class="btn btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i> Volver
             </a>
-            <a id="btnDashboard" href="#" class="btn" style="background: #00A36C; color: white; border: none; border-radius: 8px; font-weight: 600; display: none;">
-                <i class="far fa-chart-bar mr-2"></i> Dashboard del Evento
+            <a id="btnDashboard" href="#" class="btn btn-success" style="display: none;">
+                <i class="fas fa-chart-bar mr-2"></i> Dashboard del Evento
             </a>
-            <div class="btn" id="btnReacciones" style="background: #F5F5F5; color: #dc3545; border: none; border-radius: 50px; cursor: default; transition: all 0.3s ease;">
-                <i class="far fa-heart mr-2" style="transition: all 0.3s ease;"></i>
-                <span id="contadorReaccionesOng" style="transition: all 0.3s ease;">0</span> reacciones
+            <div class="btn btn-outline-danger" id="btnReacciones" style="cursor: default;">
+                <i class="fas fa-heart mr-2"></i>
+                <span id="contadorReaccionesOng">0</span> reacciones
             </div>
-            <button class="btn" id="btnCompartir" style="background: #0C2B44; color: white; border: none; border-radius: 50px;">
-                <i class="far fa-share-square mr-2"></i> Compartir <span id="contadorCompartidos" style="margin-left: 0.5rem; font-weight: 600;">0</span>
+            <button class="btn btn-primary" id="btnCompartir">
+                <i class="fas fa-share-alt mr-2"></i> Compartir <span id="contadorCompartidos" class="badge badge-light ml-2">0</span>
             </button>
-            <a id="btnEditar" href="#" class="btn" style="background: #0C2B44; color: white; border: none; border-radius: 8px;">
-                <i class="far fa-edit mr-2"></i> Editar Evento
+            <a id="btnEditar" href="#" class="btn btn-primary">
+                <i class="fas fa-edit mr-2"></i> Editar Evento
             </a>
         </div>
 
@@ -117,74 +117,78 @@
             <!-- Columna Principal -->
             <div class="col-lg-8">
                 <!-- Descripción -->
-                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; border: 1px solid #F5F5F5;">
-                    <div class="card-body p-4">
-                        <h4 class="mb-3" style="color: #0C2B44; font-weight: 700;">
-                            <i class="far fa-align-left mr-2" style="color: #00A36C;"></i> Descripción
-                        </h4>
-                        <p id="descripcion" class="mb-0" style="color: #333333; line-height: 1.8; font-size: 1rem;"></p>
+                <div class="card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="card-title mb-0 text-dark">
+                            <i class="fas fa-align-left mr-2 text-primary"></i> Descripción
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p id="descripcion" class="mb-0 text-muted" style="line-height: 1.8;"></p>
                     </div>
                 </div>
 
                 <!-- Información del Evento -->
-                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; border: 1px solid #F5F5F5;">
-                    <div class="card-body p-4">
-                        <h4 class="mb-4" style="color: #0C2B44; font-weight: 700;">
-                            <i class="far fa-info-circle mr-2" style="color: #00A36C;"></i> Información del Evento
-                        </h4>
+                <div class="card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="card-title mb-0 text-dark">
+                            <i class="fas fa-info-circle mr-2 text-info"></i> Información del Evento
+                        </h5>
+                    </div>
+                    <div class="card-body">
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <div class="d-flex align-items-start">
-                                    <i class="far fa-calendar mr-3 mt-1" style="font-size: 1.2rem; color: #00A36C;"></i>
+                                    <i class="fas fa-calendar mr-3 mt-1 text-info"></i>
                                     <div>
-                                        <h6 class="mb-1" style="color: #0C2B44; font-weight: 600;">Fecha de Inicio</h6>
-                                        <p id="fecha_inicio" class="mb-0" style="color: #333333;"></p>
+                                        <h6 class="mb-1 font-weight-bold text-dark">Fecha de Inicio</h6>
+                                        <p id="fecha_inicio" class="mb-0 text-muted"></p>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <div class="d-flex align-items-start">
-                                    <i class="far fa-calendar-check mr-3 mt-1" style="font-size: 1.2rem; color: #00A36C;"></i>
+                                    <i class="fas fa-calendar-check mr-3 mt-1 text-success"></i>
                                     <div>
-                                        <h6 class="mb-1" style="color: #0C2B44; font-weight: 600;">Fecha de Fin</h6>
-                                        <p id="fecha_fin" class="mb-0" style="color: #333333;"></p>
+                                        <h6 class="mb-1 font-weight-bold text-dark">Fecha de Fin</h6>
+                                        <p id="fecha_fin" class="mb-0 text-muted"></p>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <div class="d-flex align-items-start">
-                                    <i class="far fa-clock mr-3 mt-1" style="font-size: 1.2rem; color: #00A36C;"></i>
+                                    <i class="fas fa-clock mr-3 mt-1 text-warning"></i>
                                     <div>
-                                        <h6 class="mb-1" style="color: #0C2B44; font-weight: 600;">Límite de Inscripción</h6>
-                                        <p id="fecha_limite_inscripcion" class="mb-0" style="color: #333333;"></p>
+                                        <h6 class="mb-1 font-weight-bold text-dark">Límite de Inscripción</h6>
+                                        <p id="fecha_limite_inscripcion" class="mb-0 text-muted"></p>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <div class="d-flex align-items-start">
-                                    <i class="far fa-users mr-3 mt-1" style="font-size: 1.2rem; color: #00A36C;"></i>
+                                    <i class="fas fa-users mr-3 mt-1 text-primary"></i>
                                     <div>
-                                        <h6 class="mb-1" style="color: #0C2B44; font-weight: 600;">Capacidad Máxima</h6>
-                                        <p id="capacidad_maxima" class="mb-0" style="color: #333333;"></p>
+                                        <h6 class="mb-1 font-weight-bold text-dark">Capacidad Máxima</h6>
+                                        <p id="capacidad_maxima" class="mb-0 text-muted"></p>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-6 mb-3" id="fechaFinalizacionContainer" style="display: none;">
                                 <div class="d-flex align-items-start">
-                                    <i class="far fa-flag-checkered mr-3 mt-1" style="font-size: 1.2rem; color: #00A36C;"></i>
+                                    <i class="fas fa-flag-checkered mr-3 mt-1 text-secondary"></i>
                                     <div>
-                                        <h6 class="mb-1" style="color: #0C2B44; font-weight: 600;">Fecha de Finalización</h6>
-                                        <p id="fecha_finalizacion" class="mb-0" style="color: #333333;"></p>
+                                        <h6 class="mb-1 font-weight-bold text-dark">Fecha de Finalización</h6>
+                                        <p id="fecha_finalizacion" class="mb-0 text-muted"></p>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-6 mb-3" id="creadorContainer">
                                 <div class="d-flex align-items-start">
-                                    <i class="far fa-user-circle mr-3 mt-1" style="font-size: 1.2rem; color: #00A36C;"></i>
+                                    <i class="fas fa-user-circle mr-3 mt-1 text-info"></i>
                                     <div>
-                                        <h6 class="mb-1" style="color: #0C2B44; font-weight: 600;">Creado por</h6>
-                                        <div id="creadorInfo" class="d-flex align-items-center" style="gap: 0.5rem;">
-                                            <span id="creadorNombre" class="mb-0" style="color: #333333;"></span>
+                                        <h6 class="mb-1 font-weight-bold text-dark">Creado por</h6>
+                                        <div id="creadorInfo" class="d-flex align-items-center">
+                                            <span id="creadorNombre" class="mb-0 text-muted"></span>
                                         </div>
                                     </div>
                                 </div>
@@ -194,33 +198,37 @@
                 </div>
 
                 <!-- Ubicación -->
-                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; border: 1px solid #F5F5F5;">
-                    <div class="card-body p-4">
-                        <h4 class="mb-3" style="color: #0C2B44; font-weight: 700;">
-                            <i class="far fa-map-marker-alt mr-2" style="color: #00A36C;"></i> Ubicación
-                        </h4>
+                <div class="card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="card-title mb-0 text-dark">
+                            <i class="fas fa-map-marker-alt mr-2 text-danger"></i> Ubicación
+                        </h5>
+                    </div>
+                    <div class="card-body">
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <h6 class="mb-1" style="color: #0C2B44; font-weight: 600;">Ciudad</h6>
-                                <p id="ciudad" class="mb-0" style="color: #333333;"></p>
+                                <h6 class="mb-1 font-weight-bold text-dark">Ciudad</h6>
+                                <p id="ciudad" class="mb-0 text-muted"></p>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <h6 class="mb-1" style="color: #0C2B44; font-weight: 600;">Dirección</h6>
-                                <p id="direccion" class="mb-0" style="color: #333333;"></p>
+                                <h6 class="mb-1 font-weight-bold text-dark">Dirección</h6>
+                                <p id="direccion" class="mb-0 text-muted"></p>
                             </div>
                         </div>
-                        <div id="mapContainer" class="mt-3" style="height: 300px; border-radius: 8px; overflow: hidden; display: none;">
+                        <div id="mapContainer" class="mt-3 rounded" style="height: 300px; overflow: hidden; display: none;">
                             <!-- Mapa se cargará aquí -->
                         </div>
                     </div>
                 </div>
 
                 <!-- Galería de Imágenes -->
-                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; border: 1px solid #F5F5F5;">
-                    <div class="card-body p-4">
-                        <h4 class="mb-4" style="color: #0C2B44; font-weight: 700;">
-                            <i class="far fa-images mr-2" style="color: #00A36C;"></i> Galería de Imágenes
-                        </h4>
+                <div class="card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="card-title mb-0 text-dark">
+                            <i class="fas fa-images mr-2 text-warning"></i> Galería de Imágenes
+                        </h5>
+                    </div>
+                    <div class="card-body">
                         <div id="imagenes">
                             <!-- Carrusel de Bootstrap -->
                             <div id="carouselImagenes" class="carousel slide" data-ride="carousel" data-interval="3000" style="display: none;">
@@ -242,50 +250,50 @@
                 </div>
 
                 <!-- Reacciones (Favoritos) -->
-                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; border: 1px solid #F5F5F5;">
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h4 class="mb-0" style="color: #0C2B44; font-weight: 700;">
-                                <i class="far fa-heart mr-2" style="color: #dc3545;"></i> Reacciones y Favoritos
-                            </h4>
-                            <button class="btn btn-sm btn-actualizar-reacciones" onclick="cargarReacciones()" style="background: #F5F5F5; color: #0C2B44; border: none; border-radius: 8px; transition: transform 0.5s ease;">
-                                <i class="far fa-sync mr-1"></i> Actualizar
-                            </button>
-                        </div>
-                        <p class="mb-3" style="font-size: 0.9rem; color: #333333;">
+                <div class="card mb-4">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0 text-dark">
+                            <i class="fas fa-heart mr-2 text-danger"></i> Reacciones y Favoritos
+                        </h5>
+                        <button class="btn btn-sm btn-secondary btn-actualizar-reacciones" onclick="cargarReacciones()">
+                            <i class="fas fa-sync mr-1"></i> Actualizar
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3 text-muted">
                             Usuarios que han marcado este evento como favorito con un corazón.
                         </p>
                         <div id="reaccionesContainer">
                             <div class="text-center py-3">
-                                <div class="spinner-border" role="status" style="color: #00A36C;">
+                                <div class="spinner-border text-primary" role="status">
                                     <span class="sr-only">Cargando...</span>
                                 </div>
-                                <p class="mt-2" style="color: #333333;">Cargando reacciones...</p>
+                                <p class="mt-2 text-muted">Cargando reacciones...</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Voluntarios y Participantes Inscritos -->
-                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; border: 1px solid #F5F5F5;">
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h4 class="mb-0" style="color: #0C2B44; font-weight: 700;">
-                                <i class="far fa-users mr-2" style="color: #00A36C;"></i> Voluntarios y Participantes Inscritos
-                            </h4>
-                            <button class="btn btn-sm" onclick="cargarParticipantes()" style="background: #F5F5F5; color: #0C2B44; border: none; border-radius: 8px;">
-                                <i class="far fa-sync mr-1"></i> Actualizar
-                            </button>
-                        </div>
-                        <p class="mb-3" style="font-size: 0.9rem; color: #333333;">
+                <div class="card mb-4">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0 text-dark">
+                            <i class="fas fa-users mr-2 text-success"></i> Voluntarios y Participantes Inscritos
+                        </h5>
+                        <button class="btn btn-sm btn-secondary" onclick="cargarParticipantes()">
+                            <i class="fas fa-sync mr-1"></i> Actualizar
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3 text-muted">
                             Gestiona las solicitudes de participación y aprueba o rechaza a los voluntarios que desean participar en este evento.
                         </p>
                         <div id="participantesContainer">
                             <div class="text-center py-3">
-                                <div class="spinner-border" role="status" style="color: #00A36C;">
+                                <div class="spinner-border text-primary" role="status">
                                     <span class="sr-only">Cargando...</span>
                                 </div>
-                                <p class="mt-2" style="color: #333333;">Cargando participantes...</p>
+                                <p class="mt-2 text-muted">Cargando participantes...</p>
                             </div>
                         </div>
                     </div>
@@ -295,47 +303,53 @@
             <!-- Sidebar -->
             <div class="col-lg-4">
                 <!-- Información Rápida -->
-                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; border: 1px solid #F5F5F5;">
-                    <div class="card-body p-4">
-                        <h5 class="mb-3" style="color: #0C2B44; font-weight: 700;">
-                            <i class="far fa-info-circle mr-2" style="color: #00A36C;"></i> Información Rápida
+                <div class="card mb-4">
+                    <div class="card-header bg-primary">
+                        <h5 class="card-title mb-0 text-white">
+                            <i class="fas fa-info-circle mr-2"></i> Información Rápida
                         </h5>
-                        <div class="mb-3 pb-3 border-bottom" style="border-color: #F5F5F5 !important;">
-                            <small class="d-block mb-1" style="color: #333333; font-weight: 600;">Estado</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3 pb-3 border-bottom">
+                            <small class="d-block mb-1 font-weight-bold text-dark">Estado</small>
                             <span id="estadoSidebar" class="badge"></span>
                         </div>
-                        <div class="mb-3 pb-3 border-bottom" style="border-color: #F5F5F5 !important;">
-                            <small class="d-block mb-1" style="color: #333333; font-weight: 600;">Tipo de Evento</small>
-                            <span id="tipoEventoSidebar" class="font-weight-bold" style="color: #0C2B44;"></span>
+                        <div class="mb-3 pb-3 border-bottom">
+                            <small class="d-block mb-1 font-weight-bold text-dark">Tipo de Evento</small>
+                            <span id="tipoEventoSidebar" class="font-weight-bold text-dark"></span>
                         </div>
-                        <div class="mb-3 pb-3 border-bottom" style="border-color: #F5F5F5 !important;">
-                            <small class="d-block mb-1" style="color: #333333; font-weight: 600;">Capacidad</small>
-                            <span id="capacidadSidebar" class="font-weight-bold" style="color: #0C2B44;"></span>
+                        <div class="mb-3 pb-3 border-bottom">
+                            <small class="d-block mb-1 font-weight-bold text-dark">Capacidad</small>
+                            <span id="capacidadSidebar" class="font-weight-bold text-dark"></span>
                         </div>
                         <div id="inscripcionAbiertaContainer" class="mb-3">
-                            <small class="d-block mb-1" style="color: #333333; font-weight: 600;">Inscripción</small>
+                            <small class="d-block mb-1 font-weight-bold text-dark">Inscripción</small>
                             <span id="inscripcionAbierta" class="badge"></span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Patrocinadores -->
-                <div id="patrocinadoresCard" class="card border-0 shadow-sm mb-4" style="border-radius: 12px; border: 1px solid #F5F5F5; display: none;">
-                    <div class="card-body p-4">
-                        <h5 class="mb-3" style="color: #0C2B44; font-weight: 700;">
-                            <i class="far fa-handshake mr-2" style="color: #00A36C;"></i> Patrocinadores
+                <div id="patrocinadoresCard" class="card mb-4" style="display: none;">
+                    <div class="card-header bg-success">
+                        <h5 class="card-title mb-0 text-white">
+                            <i class="fas fa-handshake mr-2"></i> Patrocinadores
                         </h5>
-                        <div id="patrocinadores" class="d-flex flex-wrap gap-2"></div>
+                    </div>
+                    <div class="card-body">
+                        <div id="patrocinadores" class="d-flex flex-wrap" style="gap: 0.5rem;"></div>
                     </div>
                 </div>
 
                 <!-- Invitados -->
-                <div id="invitadosCard" class="card border-0 shadow-sm mb-4" style="border-radius: 12px; border: 1px solid #F5F5F5; display: none;">
-                    <div class="card-body p-4">
-                        <h5 class="mb-3" style="color: #0C2B44; font-weight: 700;">
-                            <i class="far fa-user-friends mr-2" style="color: #00A36C;"></i> Invitados Especiales
+                <div id="invitadosCard" class="card mb-4" style="display: none;">
+                    <div class="card-header bg-info">
+                        <h5 class="card-title mb-0 text-white">
+                            <i class="fas fa-user-friends mr-2"></i> Invitados Especiales
                         </h5>
-                        <div id="invitados" class="d-flex flex-wrap gap-2"></div>
+                    </div>
+                    <div class="card-body">
+                        <div id="invitados" class="d-flex flex-wrap" style="gap: 0.5rem;"></div>
                     </div>
                 </div>
             </div>
@@ -347,27 +361,17 @@
 @section('css')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-    body {
-        background-color: #F5F5F5;
-    }
-    
     .card {
         transition: transform 0.2s, box-shadow 0.2s;
     }
     
     .card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(12, 43, 68, 0.15) !important;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
     }
     
     #eventBanner {
-        box-shadow: 0 4px 6px rgba(12, 43, 68, 0.2);
-    }
-    
-    .badge {
-        font-weight: 500;
-        padding: 0.5em 0.8em;
-        border-radius: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
     
     /* Estilos para galería de imágenes */
@@ -509,7 +513,7 @@
 </script>
 <script>
     // Definir PUBLIC_BASE_URL desde variable de entorno
-    window.PUBLIC_BASE_URL = "{{ env('PUBLIC_APP_URL', 'http://192.168.0.6:8000') }}";
+    window.PUBLIC_BASE_URL = "{{ env('PUBLIC_APP_URL', 'http://10.114.190.52:8000') }}";
     console.log("🌐 PUBLIC_BASE_URL desde .env:", window.PUBLIC_BASE_URL);
 </script>
 <script src="{{ asset('assets/js/config.js') }}"></script>

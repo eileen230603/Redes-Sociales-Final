@@ -231,26 +231,34 @@
         </div>
         
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div class="text-center animate-fade-in-up">
-                <div class="inline-block mb-6">
-                    <span class="px-4 py-2 bg-white/20 backdrop-blur-md rounded-full text-white text-sm font-semibold">
-                        <i class="fas fa-rocket mr-2"></i> Plataforma de Impacto Social
-                    </span>
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <!-- Imagen izquierda -->
+                <div class="animate-fade-in-left flex justify-center md:justify-start">
+                    <img src="{{ asset('assets/img/iniii.png') }}" alt="UNI2 Logo" class="w-full max-w-md h-auto animate-float drop-shadow-2xl">
                 </div>
-                <h1 class="text-5xl md:text-7xl font-extrabold text-white mb-6 leading-tight">
-                    Conectando Comunidades,<br>
-                    <span class="text-brand-acento drop-shadow-lg">Transformando Vidas</span>
-                </h1>
-                <p class="text-xl md:text-2xl text-white/95 mb-12 max-w-3xl mx-auto leading-relaxed font-light">
-                    La plataforma que une ONGs, empresas y voluntarios para crear eventos que generan <strong>impacto real</strong> y <strong>medible</strong> en nuestras comunidades.
-                </p>
-                <div class="flex flex-col sm:flex-row gap-5 justify-center items-center mb-16">
-                    <a href="{{ route('login') }}" class="group px-10 py-5 bg-white text-brand-primario rounded-2xl font-bold text-lg hover:shadow-2xl transition-all transform hover:scale-105 animate-pulse-glow">
-                        <i class="fas fa-sign-in-alt mr-2 group-hover:translate-x-1 transition-transform"></i> Iniciar Sesión
-                    </a>
-                    <a href="{{ route('login') }}" class="px-10 py-5 bg-brand-acento text-white rounded-2xl font-bold text-lg hover:shadow-2xl transition-all transform hover:scale-105">
-                        <i class="fas fa-user-plus mr-2"></i> Crear Cuenta Gratis
-                    </a>
+                
+                <!-- Contenido derecho -->
+                <div class="animate-fade-in-right text-center md:text-left">
+                    <div class="inline-block mb-6">
+                        <span class="px-4 py-2 bg-white/20 backdrop-blur-md rounded-full text-white text-sm font-semibold">
+                            <i class="fas fa-rocket mr-2"></i> Plataforma de Impacto Social
+                        </span>
+                    </div>
+                    <h1 class="text-5xl md:text-7xl font-extrabold text-white mb-6 leading-tight">
+                        Conectando Comunidades,<br>
+                        <span class="text-brand-acento drop-shadow-lg">Transformando Vidas</span>
+                    </h1>
+                    <p class="text-xl md:text-2xl text-white/95 mb-12 leading-relaxed font-light">
+                        La plataforma que une ONGs, empresas y voluntarios para crear eventos que generan <strong>impacto real</strong> y <strong>medible</strong> en nuestras comunidades.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-5 justify-center md:justify-start items-center mb-16">
+                        <a href="{{ route('login') }}" class="group px-10 py-5 bg-white text-brand-primario rounded-2xl font-bold text-lg hover:shadow-2xl transition-all transform hover:scale-105 animate-pulse-glow">
+                            <i class="fas fa-sign-in-alt mr-2 group-hover:translate-x-1 transition-transform"></i> Iniciar Sesión
+                        </a>
+                        <a href="{{ route('login') }}" class="px-10 py-5 bg-brand-acento text-white rounded-2xl font-bold text-lg hover:shadow-2xl transition-all transform hover:scale-105">
+                            <i class="fas fa-user-plus mr-2"></i> Crear Cuenta Gratis
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

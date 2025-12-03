@@ -5,21 +5,32 @@
 @section('content_body')
 <div class="container-fluid">
 
-    <div class="d-flex justify-content-end align-items-center mb-3">
+    <!-- Botón normal (visible al inicio) -->
+    <div class="d-flex justify-content-end align-items-center mb-3" id="btnNuevoEventoNormal">
         <a href="{{ route('ong.eventos.create') }}" class="btn btn-success">
-            <i class="far fa-plus-circle mr-2"></i> Nuevo evento
+            <i class="fas fa-plus-circle mr-2"></i> Nuevo evento
         </a>
     </div>
 
+    <!-- Botón FAB circular (oculto inicialmente) -->
+    <a href="{{ route('ong.eventos.create') }}" id="btnNuevoEventoFAB" class="fab-button" style="display: none;">
+        <i class="fas fa-plus"></i>
+    </a>
+
     <!-- Filtros y Búsqueda -->
-    <div class="card mb-4 shadow-sm" style="border-radius: 12px; border: none; margin-top: -1rem;">
-        <div class="card-body" style="padding: 2rem 1.5rem;">
+    <div class="card mb-4">
+        <div class="card-header bg-primary">
+            <h5 class="card-title mb-0 text-white">
+                <i class="fas fa-filter mr-2"></i>Filtros y Búsqueda
+            </h5>
+        </div>
+        <div class="card-body">
             <div class="row">
                 <div class="col-md-4 mb-3 mb-md-0">
-                    <label for="filtroTipo" class="form-label" style="color: #0C2B44; font-weight: 600; margin-bottom: 0.75rem;">
-                        <i class="far fa-sliders-h mr-2" style="color: #00A36C;"></i>Tipo de Evento
+                    <label for="filtroTipo" class="font-weight-bold text-dark">
+                        <i class="fas fa-sliders-h mr-2 text-info"></i>Tipo de Evento
                     </label>
-                    <select id="filtroTipo" class="form-control" style="border-radius: 8px; padding: 0.75rem;">
+                    <select id="filtroTipo" class="form-control">
                         <option value="todos">Todos los tipos</option>
                         <option value="cultural">Cultural</option>
                         <option value="deportivo">Deportivo</option>
@@ -30,10 +41,10 @@
                     </select>
                 </div>
                 <div class="col-md-4 mb-3 mb-md-0">
-                    <label for="filtroEstado" class="form-label" style="color: #0C2B44; font-weight: 600; margin-bottom: 0.75rem;">
-                        <i class="far fa-info-circle mr-2" style="color: #00A36C;"></i>Estado
+                    <label for="filtroEstado" class="font-weight-bold text-dark">
+                        <i class="fas fa-info-circle mr-2 text-success"></i>Estado
                     </label>
-                    <select id="filtroEstado" class="form-control" style="border-radius: 8px; padding: 0.75rem;">
+                    <select id="filtroEstado" class="form-control">
                         <option value="todos">Todos los estados</option>
                         <option value="borrador">Borrador</option>
                         <option value="publicado">Publicado</option>
@@ -42,14 +53,14 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label for="buscador" class="form-label" style="color: #0C2B44; font-weight: 600; margin-bottom: 0.75rem;">
-                        <i class="far fa-search mr-2" style="color: #00A36C;"></i>Buscar
+                    <label for="buscador" class="font-weight-bold text-dark">
+                        <i class="fas fa-search mr-2 text-warning"></i>Buscar
                     </label>
                     <div class="input-group">
-                        <input type="text" id="buscador" class="form-control" placeholder="Buscar por título..." style="border-radius: 8px 0 0 8px; padding: 0.75rem;">
+                        <input type="text" id="buscador" class="form-control" placeholder="Buscar por título...">
                         <div class="input-group-append">
-                            <button class="btn btn-outline-secondary" type="button" id="btnLimpiar" style="border-radius: 0 8px 8px 0; padding: 0.75rem 1rem;">
-                                <i class="far fa-times-circle"></i>
+                            <button class="btn btn-outline-secondary" type="button" id="btnLimpiar">
+                                <i class="fas fa-times-circle"></i>
                             </button>
                         </div>
                     </div>
@@ -65,6 +76,82 @@
 </div>
 
 @stop
+
+@push('css')
+<style>
+    /* Botón FAB (Floating Action Button) */
+    .fab-button {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(12, 43, 68, 0.3);
+        z-index: 1000;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        border: none;
+    }
+
+    .fab-button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(12, 43, 68, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    .fab-button i {
+        font-size: 24px;
+    }
+
+    .fab-button.show {
+        animation: fabSlideIn 0.3s ease forwards;
+    }
+
+    .fab-button.hide {
+        animation: fabSlideOut 0.3s ease forwards;
+    }
+
+    @keyframes fabSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    @keyframes fabSlideOut {
+        from {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        to {
+            opacity: 0;
+            transform: translateY(20px) scale(0.8);
+        }
+    }
+
+    /* Transición suave para el botón normal */
+    #btnNuevoEventoNormal {
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    #btnNuevoEventoNormal.hide {
+        opacity: 0;
+        transform: translateY(-10px);
+        pointer-events: none;
+    }
+</style>
+@endpush
 
 @section('js')
 {{-- Script global para icono de notificaciones --}}
@@ -234,7 +321,7 @@ async function cargarEventos() {
             const estadoBadgeActualizado = estadoBadgesActualizado[estadoParaBadge] || '<span class="badge" style="background: #6c757d; color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;">' + (estadoParaBadge || 'N/A') + '</span>';
             
             cardDiv.innerHTML = `
-                <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden; transition: transform 0.3s, box-shadow 0.3s; border: 1px solid #F5F5F5;">
+                <div class="card h-100" style="border-radius: 12px; overflow: hidden; transition: transform 0.3s, box-shadow 0.3s;">
                     ${imagenPrincipal 
                         ? `<a href="/ong/eventos/${ev.id}/detalle" style="text-decoration: none; display: block;">
                             <div class="position-relative" style="height: 200px; overflow: hidden; background: #F5F5F5; cursor: pointer;">
@@ -250,7 +337,7 @@ async function cargarEventos() {
                            </a>`
                         : `<a href="/ong/eventos/${ev.id}/detalle" style="text-decoration: none; display: block;">
                             <div class="position-relative" style="height: 200px; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                                <i class="far fa-calendar fa-4x text-white" style="opacity: 0.3;"></i>
+                                <i class="fas fa-calendar fa-4x text-white" style="opacity: 0.3;"></i>
                                 ${fechaOverlay}
                                 <div class="position-absolute" style="top: 12px; right: 12px; pointer-events: none; z-index: 10;">
                                     ${estadoBadgeActualizado}
@@ -263,24 +350,24 @@ async function cargarEventos() {
                         <p class="mb-3" style="font-size: 0.9rem; line-height: 1.6; color: #333333; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                             ${ev.descripcion || 'Sin descripción'}
                         </p>
-                        <div class="mb-3 d-flex align-items-center" style="color: #333333; font-size: 0.85rem; font-weight: 500;">
-                            <i class="far fa-calendar mr-2" style="color: #00A36C;"></i>
+                        <div class="mb-3 d-flex align-items-center text-muted" style="font-size: 0.85rem;">
+                            <i class="fas fa-calendar mr-2 text-info"></i>
                             <span>${fechaInicio}</span>
                         </div>
-                        <div class="d-flex align-items-center justify-content-between mt-4 pt-3" style="border-top: 1px solid #F5F5F5;">
-                            <div class="d-flex align-items-center" style="color: #333333; font-size: 0.85rem; font-weight: 500;">
-                                <i class="far fa-heart mr-1" style="color: #dc3545;"></i>
+                        <div class="d-flex align-items-center justify-content-between mt-4 pt-3 border-top">
+                            <div class="d-flex align-items-center text-muted" style="font-size: 0.85rem;">
+                                <i class="fas fa-heart mr-1 text-danger"></i>
                                 <span id="reacciones-${ev.id}">-</span>
                             </div>
                             <div class="d-flex" style="gap: 0.5rem;">
-                                <a href="/ong/eventos/${ev.id}/detalle" class="btn btn-sm" style="background: #F5F5F5; color: #0C2B44; border: none; border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500; transition: all 0.3s; font-size: 0.85rem;">
-                                    <i class="far fa-eye mr-1"></i>Detalle
+                                <a href="/ong/eventos/${ev.id}/detalle" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye mr-1"></i>Detalle
                                 </a>
-                                <a href="/ong/eventos/${ev.id}/editar" class="btn btn-sm" style="background: #0C2B44; color: white; border: none; border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500; transition: all 0.3s; font-size: 0.85rem;">
-                                    <i class="far fa-edit mr-1"></i>Editar
+                                <a href="/ong/eventos/${ev.id}/editar" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit mr-1"></i>Editar
                                 </a>
-                                <button onclick="eliminar(${ev.id})" class="btn btn-sm" style="background: #dc3545; color: white; border: none; border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500; transition: all 0.3s; cursor: pointer; font-size: 0.85rem;">
-                                    <i class="far fa-trash-alt mr-1"></i>Eliminar
+                                <button onclick="eliminar(${ev.id})" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash-alt mr-1"></i>Eliminar
                                 </button>
                             </div>
                         </div>
@@ -288,17 +375,15 @@ async function cargarEventos() {
                 </div>
             `;
             
-            // Agregar efecto hover con nueva paleta
+            // Agregar efecto hover
             const card = cardDiv.querySelector('.card');
             card.onmouseenter = function() {
-                this.style.transform = 'translateY(-6px)';
-                this.style.boxShadow = '0 12px 24px rgba(12, 43, 68, 0.15)';
-                this.style.borderColor = '#00A36C';
+                this.style.transform = 'translateY(-4px)';
+                this.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.1)';
             };
             card.onmouseleave = function() {
                 this.style.transform = 'translateY(0)';
-                this.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.08)';
-                this.style.borderColor = '#F5F5F5';
+                this.style.boxShadow = '';
             };
             
             cont.appendChild(cardDiv);
@@ -376,6 +461,45 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
         cargarEventos();
     });
+
+    // Control del botón FAB al hacer scroll
+    const btnNormal = document.getElementById('btnNuevoEventoNormal');
+    const btnFAB = document.getElementById('btnNuevoEventoFAB');
+    const scrollThreshold = 100; // Píxeles de scroll antes de mostrar FAB
+
+    function handleScroll() {
+        const scrollY = window.scrollY || window.pageYOffset;
+
+        if (scrollY > scrollThreshold) {
+            // Mostrar FAB y ocultar botón normal
+            if (!btnFAB.classList.contains('show')) {
+                btnFAB.style.display = 'flex';
+                btnFAB.classList.remove('hide');
+                btnFAB.classList.add('show');
+            }
+            if (!btnNormal.classList.contains('hide')) {
+                btnNormal.classList.add('hide');
+            }
+        } else {
+            // Ocultar FAB y mostrar botón normal
+            if (btnFAB.classList.contains('show')) {
+                btnFAB.classList.remove('show');
+                btnFAB.classList.add('hide');
+                setTimeout(() => {
+                    if (btnFAB.classList.contains('hide')) {
+                        btnFAB.style.display = 'none';
+                    }
+                }, 300);
+            }
+            if (btnNormal.classList.contains('hide')) {
+                btnNormal.classList.remove('hide');
+            }
+        }
+    }
+
+    // Escuchar eventos de scroll
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Verificar estado inicial
 });
 
 async function eliminar(id) {

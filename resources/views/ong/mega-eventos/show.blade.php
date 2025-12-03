@@ -31,110 +31,104 @@
         <div class="container mt-4">
             <!-- Botones de Acción -->
             <div class="d-flex justify-content-end mb-4 flex-wrap" style="gap: 0.5rem;">
-                <a href="{{ route('ong.mega-eventos.index') }}" class="btn" style="background: #F5F5F5; color: #0C2B44; border: none; border-radius: 8px;">
-                    <i class="far fa-arrow-left mr-2"></i> Volver
+                <a href="{{ route('ong.mega-eventos.index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left mr-2"></i> Volver
                 </a>
-                <button class="btn" id="btnReaccionar" style="background: #dc3545; color: white; border: none; border-radius: 50px;">
-                    <i class="far fa-heart mr-2" id="iconoCorazon"></i>
+                <button class="btn btn-outline-danger" id="btnReaccionar">
+                    <i class="fas fa-heart mr-2" id="iconoCorazon"></i>
                     <span id="textoReaccion">Me gusta</span>
-                    <span id="contadorReacciones" style="margin-left: 0.5rem; font-weight: 600;">0</span>
+                    <span id="contadorReacciones" class="badge badge-light ml-2">0</span>
                 </button>
-                <button class="btn" id="btnCompartir" style="background: #0C2B44; color: white; border: none; border-radius: 50px;">
-                    <i class="far fa-share-square mr-2"></i> Compartir <span id="contadorCompartidos" style="margin-left: 0.5rem; font-weight: 600;">0</span>
+                <button class="btn btn-primary" id="btnCompartir">
+                    <i class="fas fa-share-alt mr-2"></i> Compartir <span id="contadorCompartidos" class="badge badge-light ml-2">0</span>
                 </button>
-                <a href="#" id="seguimientoLink" class="btn" style="background: #0C2B44; color: white; border: none; border-radius: 8px;">
-                    <i class="far fa-chart-line mr-2"></i> Seguimiento
+                <a href="#" id="seguimientoLink" class="btn btn-info">
+                    <i class="fas fa-chart-line mr-2"></i> Seguimiento
                 </a>
-                <a href="#" id="editLink" class="btn" style="background: #00A36C; color: white; border: none; border-radius: 8px;">
-                    <i class="far fa-edit mr-2"></i> Editar Mega Evento
+                <a href="#" id="editLink" class="btn btn-success">
+                    <i class="fas fa-edit mr-2"></i> Editar Mega Evento
                 </a>
             </div>
 
             <div class="row">
                 <!-- Columna Principal -->
                 <div class="col-lg-8">
-                <div class="card border-0 mb-4" style="border-radius: 12px; border: 1px solid #F5F5F5; box-shadow: 0 2px 8px rgba(12, 43, 68, 0.08);">
-                    <div class="card-body p-4">
-                        <h5 class="mb-4" style="font-size: 1.1rem; font-weight: 700; color: #0C2B44;">
-                            <i class="far fa-info-circle mr-2" style="color: #00A36C;"></i> Información del Mega Evento
+                <div class="card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="card-title mb-0 text-dark">
+                            <i class="fas fa-info-circle mr-2 text-info"></i> Información del Mega Evento
                         </h5>
+                    </div>
+                    <div class="card-body">
                         <div class="mb-4">
-                            <small class="d-block mb-2" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; color: #0C2B44;">Descripción</small>
-                            <p id="descripcion" class="mb-0" style="line-height: 1.8; color: #333333; font-size: 1rem;">-</p>
+                            <label class="font-weight-bold text-dark mb-2">
+                                <i class="fas fa-align-left mr-2 text-primary"></i>Descripción
+                            </label>
+                            <p id="descripcion" class="mb-0 text-muted" style="line-height: 1.8;">-</p>
                         </div>
 
                         <div class="row">
-                            <div class="col-md-6 mb-4">
+                            <div class="col-md-6 mb-3">
                                 <div class="d-flex align-items-start">
-                                    <div class="mr-3" style="width: 50px; height: 50px; background: rgba(12, 43, 68, 0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-                                        <i class="far fa-calendar-alt" style="color: #0C2B44; font-size: 1.25rem;"></i>
-                                    </div>
+                                    <i class="fas fa-calendar mr-3 mt-1 text-info"></i>
                                     <div>
-                                        <small class="d-block mb-1" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; color: #0C2B44;">Fecha de Inicio</small>
-                                        <p id="fecha_inicio" class="mb-0" style="font-size: 1rem; font-weight: 500; color: #333333;">-</p>
+                                        <h6 class="mb-1 font-weight-bold text-dark">Fecha de Inicio</h6>
+                                        <p id="fecha_inicio" class="mb-0 text-muted">-</p>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6 mb-4">
+                            <div class="col-md-6 mb-3">
                                 <div class="d-flex align-items-start">
-                                    <div class="mr-3" style="width: 50px; height: 50px; background: rgba(0, 163, 108, 0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-                                        <i class="far fa-calendar-check" style="color: #00A36C; font-size: 1.25rem;"></i>
-                                    </div>
+                                    <i class="fas fa-calendar-check mr-3 mt-1 text-success"></i>
                                     <div>
-                                        <small class="d-block mb-1" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; color: #0C2B44;">Fecha de Fin</small>
-                                        <p id="fecha_fin" class="mb-0" style="font-size: 1rem; font-weight: 500; color: #333333;">-</p>
+                                        <h6 class="mb-1 font-weight-bold text-dark">Fecha de Fin</h6>
+                                        <p id="fecha_fin" class="mb-0 text-muted">-</p>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-12 mb-4">
-                                <div class="card border-0" style="background: #F5F5F5; border-radius: 12px; padding: 1.5rem; border: 1px solid rgba(12, 43, 68, 0.1);">
-                                    <div class="d-flex align-items-start">
-                                        <div class="mr-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                                            <i class="far fa-map" style="color: #00A36C; font-size: 1.6rem;"></i>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <small class="d-block mb-2" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; color: #0C2B44;">Ubicación del Evento</small>
-                                            <div id="ubicacionContainer">
-                                                <p id="ubicacion" class="mb-0" style="font-size: 1.05rem; font-weight: 500; color: #333333; line-height: 1.7;">-</p>
+                            <div class="col-md-12 mb-3">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-start">
+                                            <i class="fas fa-map-marker-alt mr-3 mt-1 text-danger fa-2x"></i>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-2 font-weight-bold text-dark">Ubicación del Evento</h6>
+                                                <div id="ubicacionContainer">
+                                                    <p id="ubicacion" class="mb-0 text-muted">-</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6 mb-4">
+                            <div class="col-md-6 mb-3">
                                 <div class="d-flex align-items-start">
-                                    <div class="mr-3" style="width: 50px; height: 50px; background: rgba(0, 163, 108, 0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-                                        <i class="far fa-user" style="color: #00A36C; font-size: 1.4rem;"></i>
-                                    </div>
+                                    <i class="fas fa-users mr-3 mt-1 text-success"></i>
                                     <div>
-                                        <small class="d-block mb-1" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; color: #0C2B44;">
-                                            <i class="far fa-user mr-1" style="color: #00A36C;"></i> Capacidad Máxima
-                                        </small>
-                                        <p id="capacidad_maxima" class="mb-0" style="font-size: 1rem; font-weight: 500; color: #333333;">-</p>
+                                        <h6 class="mb-1 font-weight-bold text-dark">Capacidad Máxima</h6>
+                                        <p id="capacidad_maxima" class="mb-0 text-muted">-</p>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-12 mb-3">
-                                <div class="mb-3">
-                                    <small class="d-block mb-2" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; color: #0C2B44;">
-                                        <i class="far fa-map mr-1" style="color: #00A36C;"></i> Mapa de Ubicación
-                                    </small>
-                                </div>
-                                <div id="map" style="height: 350px; border-radius: 12px; border: 1px solid #F5F5F5; overflow: hidden; box-shadow: 0 2px 8px rgba(12, 43, 68, 0.08);"></div>
+                                <label class="font-weight-bold text-dark mb-2">
+                                    <i class="fas fa-map mr-2 text-danger"></i>Mapa de Ubicación
+                                </label>
+                                <div id="map" class="rounded" style="height: 350px; border: 1px solid #ced4da; overflow: hidden;"></div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Imágenes -->
-                <div class="card border-0 mb-4" style="border-radius: 12px; border: 1px solid #F5F5F5; box-shadow: 0 2px 8px rgba(12, 43, 68, 0.08);">
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0" style="font-size: 1.1rem; font-weight: 700; color: #0C2B44;">
-                                <i class="far fa-images mr-2" style="color: #00A36C;"></i> Imágenes Promocionales
-                            </h5>
-                            <span id="imagenesCount" class="badge" style="font-size: 0.85rem; background: #0C2B44; color: white; padding: 0.5em 0.8em; border-radius: 20px;">0</span>
-                        </div>
+                <div class="card mb-4">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0 text-dark">
+                            <i class="fas fa-images mr-2 text-warning"></i> Imágenes Promocionales
+                        </h5>
+                        <span id="imagenesCount" class="badge badge-primary">0</span>
+                    </div>
+                    <div class="card-body">
                         <div id="imagenesContainer" class="row">
                             <div class="col-12 text-center py-3">
                                 <div class="spinner-border text-primary" role="status" style="width: 2rem; height: 2rem;">
@@ -147,25 +141,25 @@
                 </div>
 
                 <!-- Reacciones (Favoritos) -->
-                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; border: 1px solid #F5F5F5;">
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h4 class="mb-0" style="color: #0C2B44; font-weight: 700;">
-                                <i class="far fa-heart mr-2" style="color: #dc3545;"></i> Reacciones y Favoritos
-                            </h4>
-                            <button class="btn btn-sm btn-actualizar-reacciones" onclick="cargarReaccionesMegaEvento()" style="background: #F5F5F5; color: #0C2B44; border: none; border-radius: 8px; transition: transform 0.5s ease;">
-                                <i class="far fa-sync mr-1"></i> Actualizar
-                            </button>
-                        </div>
-                        <p class="mb-3" style="font-size: 0.9rem; color: #333333;">
+                <div class="card mb-4">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0 text-dark">
+                            <i class="fas fa-heart mr-2 text-danger"></i> Reacciones y Favoritos
+                        </h5>
+                        <button class="btn btn-sm btn-secondary btn-actualizar-reacciones" onclick="cargarReaccionesMegaEvento()">
+                            <i class="fas fa-sync mr-1"></i> Actualizar
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3 text-muted">
                             Usuarios que han marcado este mega evento como favorito con un corazón.
                         </p>
                         <div id="reaccionesContainer">
                             <div class="text-center py-3">
-                                <div class="spinner-border" role="status" style="color: #00A36C;">
+                                <div class="spinner-border text-primary" role="status">
                                     <span class="sr-only">Cargando...</span>
                                 </div>
-                                <p class="mt-2" style="color: #333333;">Cargando reacciones...</p>
+                                <p class="mt-2 text-muted">Cargando reacciones...</p>
                             </div>
                         </div>
                     </div>
@@ -174,51 +168,57 @@
 
             <!-- Información Adicional -->
             <div class="col-md-4">
-                <div class="card border-0 mb-4" style="border-radius: 12px; border: 1px solid #F5F5F5; box-shadow: 0 2px 8px rgba(12, 43, 68, 0.08);">
-                    <div class="card-body p-4">
-                        <h6 class="mb-3" style="font-size: 0.9rem; font-weight: 700; color: #0C2B44; text-transform: uppercase; letter-spacing: 0.5px;">
-                            <i class="far fa-building mr-2" style="color: #00A36C;"></i> ONG Organizadora
+                <div class="card mb-4">
+                    <div class="card-header bg-success">
+                        <h6 class="card-title mb-0 text-white">
+                            <i class="fas fa-building mr-2"></i> ONG Organizadora
                         </h6>
-                        <p id="ong_organizadora" class="mb-0" style="font-size: 1rem; font-weight: 500; color: #333333;">-</p>
+                    </div>
+                    <div class="card-body">
+                        <p id="ong_organizadora" class="mb-0 text-muted">-</p>
                     </div>
                 </div>
 
-                <div class="card border-0 mb-4" style="border-radius: 12px; border: 1px solid #F5F5F5; box-shadow: 0 2px 8px rgba(12, 43, 68, 0.08);">
-                    <div class="card-body p-4">
-                        <h6 class="mb-3" style="font-size: 0.9rem; font-weight: 700; color: #0C2B44; text-transform: uppercase; letter-spacing: 0.5px;">
-                            <i class="far fa-calendar mr-2" style="color: #00A36C;"></i> Fechas del Sistema
+                <div class="card mb-4">
+                    <div class="card-header bg-info">
+                        <h6 class="card-title mb-0 text-white">
+                            <i class="fas fa-calendar mr-2"></i> Fechas del Sistema
                         </h6>
-                        <div class="mb-3 pb-3 border-bottom" style="border-color: #F5F5F5 !important;">
-                            <small class="d-block mb-1" style="font-size: 0.75rem; font-weight: 600; color: #0C2B44;">Fecha de Creación</small>
-                            <p id="fecha_creacion" class="mb-0" style="font-size: 0.9rem; color: #333333;">-</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3 pb-3 border-bottom">
+                            <small class="d-block mb-1 font-weight-bold text-dark">Fecha de Creación</small>
+                            <p id="fecha_creacion" class="mb-0 text-muted">-</p>
                         </div>
                         <div>
-                            <small class="d-block mb-1" style="font-size: 0.75rem; font-weight: 600; color: #0C2B44;">Última Actualización</small>
-                            <p id="fecha_actualizacion" class="mb-0" style="font-size: 0.9rem; color: #333333;">-</p>
+                            <small class="d-block mb-1 font-weight-bold text-dark">Última Actualización</small>
+                            <p id="fecha_actualizacion" class="mb-0 text-muted">-</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="card border-0" style="border-radius: 12px; border: 1px solid #F5F5F5; box-shadow: 0 2px 8px rgba(12, 43, 68, 0.08);">
-                    <div class="card-body p-4">
-                        <h6 class="mb-3" style="font-size: 0.9rem; font-weight: 700; color: #0C2B44; text-transform: uppercase; letter-spacing: 0.5px;">
-                            <i class="far fa-cog mr-2" style="color: #00A36C;"></i> Estado
+                <div class="card mb-4">
+                    <div class="card-header bg-primary">
+                        <h6 class="card-title mb-0 text-white">
+                            <i class="fas fa-cog mr-2"></i> Estado
                         </h6>
-                        <div class="mb-3 pb-3 border-bottom" style="border-color: #F5F5F5 !important;">
-                            <small class="d-block mb-1" style="font-size: 0.75rem; font-weight: 600; color: #0C2B44;">
-                                <i class="far fa-flag mr-1" style="color: #00A36C;"></i> Estado del Evento
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3 pb-3 border-bottom">
+                            <small class="d-block mb-1 font-weight-bold text-dark">
+                                <i class="fas fa-flag mr-1 text-info"></i> Estado del Evento
                             </small>
                             <div id="estado" class="mb-0">-</div>
                         </div>
-                        <div class="mb-3 pb-3 border-bottom" style="border-color: #F5F5F5 !important;">
-                            <small class="d-block mb-1" style="font-size: 0.75rem; font-weight: 600; color: #0C2B44;">
-                                <i class="far fa-eye mr-1" style="color: #00A36C;"></i> Visibilidad
+                        <div class="mb-3 pb-3 border-bottom">
+                            <small class="d-block mb-1 font-weight-bold text-dark">
+                                <i class="fas fa-eye mr-1 text-primary"></i> Visibilidad
                             </small>
                             <div id="es_publico" class="mb-0">-</div>
                         </div>
                         <div>
-                            <small class="d-block mb-1" style="font-size: 0.75rem; font-weight: 600; color: #0C2B44;">
-                                <i class="far fa-toggle-on mr-1" style="color: #00A36C;"></i> Activo
+                            <small class="d-block mb-1 font-weight-bold text-dark">
+                                <i class="fas fa-power-off mr-1 text-success"></i> Activo
                             </small>
                             <div id="activo" class="mb-0">-</div>
                         </div>
@@ -233,38 +233,38 @@
 <div id="modalCompartir" class="modal fade" tabindex="-1" role="dialog" style="display: none;">
     <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 400px;">
         <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 8px 32px rgba(0,0,0,0.2);">
-            <div class="modal-header" style="border-bottom: 1px solid #F5F5F5; padding: 1.5rem;">
-                <h5 class="modal-title" style="color: #0C2B44; font-weight: 700; font-size: 1.25rem;">Compartir</h5>
-                <button type="button" class="close" onclick="cerrarModalCompartir()" style="border: none; background: none; font-size: 1.5rem; color: #6c757d; cursor: pointer;">
+            <div class="modal-header">
+                <h5 class="modal-title font-weight-bold">Compartir</h5>
+                <button type="button" class="close" onclick="cerrarModalCompartir()">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body" style="padding: 2rem;">
+            <div class="modal-body">
                 <div class="row text-center">
                     <!-- Copiar enlace -->
                     <div class="col-6 mb-4">
                         <button onclick="copiarEnlaceMegaEvento()" class="btn btn-link p-0" style="text-decoration: none; border: none; background: none; width: 100%;">
-                            <div style="width: 80px; height: 80px; background: #F5F5F5; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.background='#E9ECEF'; this.style.transform='scale(1.1)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.background='#F5F5F5'; this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
-                                <i class="fas fa-link" style="font-size: 2rem; color: #0C2B44;"></i>
+                            <div class="bg-light rounded-lg d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.1)'; this.style.background='#E9ECEF';" onmouseout="this.style.transform='scale(1)'; this.style.background='#F5F5F5';">
+                                <i class="fas fa-link fa-2x text-primary"></i>
                             </div>
-                            <span style="color: #333; font-size: 0.9rem; font-weight: 600;">Copiar enlace</span>
+                            <span class="font-weight-bold text-dark">Copiar enlace</span>
                         </button>
                     </div>
                     <!-- QR Code -->
                     <div class="col-6 mb-4">
                         <button onclick="mostrarQRMegaEvento()" class="btn btn-link p-0" style="text-decoration: none; border: none; background: none; width: 100%;">
-                            <div style="width: 80px; height: 80px; background: #0C2B44; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(12,43,68,0.3);" onmouseover="this.style.background='#00A36C'; this.style.transform='scale(1.1)'; this.style.boxShadow='0 4px 12px rgba(0,163,108,0.4)'" onmouseout="this.style.background='#0C2B44'; this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(12,43,68,0.3)'">
-                                <i class="fas fa-qrcode" style="font-size: 2rem; color: white;"></i>
+                            <div class="bg-primary rounded-lg d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.1)'; this.style.background='#0056b3';" onmouseout="this.style.transform='scale(1)'; this.style.background='#007bff';">
+                                <i class="fas fa-qrcode fa-2x text-white"></i>
                             </div>
-                            <span style="color: #333; font-size: 0.9rem; font-weight: 600;">Código QR</span>
+                            <span class="font-weight-bold text-dark">Código QR</span>
                         </button>
                     </div>
                 </div>
                 <!-- Contenedor para el QR -->
                 <div id="qrContainer" style="display: none; margin-top: 1.5rem;">
                     <div class="text-center">
-                        <div id="qrcode" style="display: inline-block; padding: 1rem; background: white; border-radius: 12px; margin-bottom: 1rem;"></div>
-                        <p style="color: #333; font-size: 0.9rem; margin: 0;">Escanea este código para acceder al mega evento</p>
+                        <div id="qrcode" class="d-inline-block p-3 bg-white rounded mb-3"></div>
+                        <p class="text-muted mb-0">Escanea este código para acceder al mega evento</p>
                     </div>
                 </div>
             </div>
@@ -413,7 +413,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const loadingMessage = document.getElementById('loadingMessage');
         loadingMessage.innerHTML = `
             <div class="alert alert-danger" style="background: #f8d7da; border: 1px solid #dc3545; color: #721c24; border-radius: 8px; padding: 1rem;">
-                <i class="far fa-exclamation-triangle mr-2"></i>
+                <i class="fas fa-exclamation-triangle mr-2"></i>
                 Error: ID de mega evento inválido en la URL. URL: ${window.location.pathname}
             </div>
         `;
@@ -453,7 +453,7 @@ async function loadMegaEvento() {
         if (!res.ok || !data.success) {
             loadingMessage.innerHTML = `
                 <div class="alert alert-danger" style="background: #f8d7da; border: 1px solid #dc3545; color: #721c24; border-radius: 8px; padding: 1rem;">
-                    <i class="far fa-exclamation-triangle mr-2"></i>
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
                     Error: ${data.error || 'Error al cargar el mega evento'}
                 </div>
             `;
@@ -463,7 +463,7 @@ async function loadMegaEvento() {
         if (!data.mega_evento) {
             loadingMessage.innerHTML = `
                 <div class="alert alert-warning" style="background: #fff3cd; border: 1px solid #ffc107; color: #856404; border-radius: 8px; padding: 1rem;">
-                    <i class="far fa-exclamation-triangle mr-2"></i>
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
                     No se encontró información del mega evento
                 </div>
             `;
@@ -492,7 +492,7 @@ async function loadMegaEvento() {
             console.error('Error al mostrar el mega evento:', displayError);
             loadingMessage.innerHTML = `
                 <div class="alert alert-danger" style="background: #f8d7da; border: 1px solid #dc3545; color: #721c24; border-radius: 8px; padding: 1rem;">
-                    <i class="far fa-exclamation-triangle mr-2"></i>
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
                     Error al mostrar el mega evento: ${displayError.message}
                 </div>
             `;
@@ -502,7 +502,7 @@ async function loadMegaEvento() {
         console.error('Error en loadMegaEvento:', error);
         loadingMessage.innerHTML = `
             <div class="alert alert-danger" style="background: #f8d7da; border: 1px solid #dc3545; color: #721c24; border-radius: 8px; padding: 1rem;">
-                <i class="far fa-exclamation-triangle mr-2"></i>
+                <i class="fas fa-exclamation-triangle mr-2"></i>
                 Error de conexión al cargar el mega evento: ${error.message}
             </div>
         `;
@@ -627,14 +627,14 @@ function displayMegaEvento(mega) {
         // Mostrar la ubicación de forma simple y clara
         if (ubicacion && ubicacion !== 'No especificada' && ubicacion.trim() !== '') {
             ubicacionContainer.innerHTML = `
-                <p class="mb-0" style="font-size: 1.05rem; font-weight: 500; color: #333333; line-height: 1.7;">
-                    <i class="far fa-map-marker-alt mr-2" style="color: #00A36C;"></i>${ubicacion}
+                <p class="mb-0 text-muted">
+                    <i class="fas fa-map-marker-alt mr-2 text-danger"></i>${ubicacion}
                 </p>
             `;
         } else {
             ubicacionContainer.innerHTML = `
-                <p class="mb-0" style="font-size: 1rem; color: #333333; font-weight: 500;">
-                    <i class="far fa-exclamation-circle mr-2" style="color: #00A36C;"></i>Ubicación no especificada
+                <p class="mb-0 text-muted">
+                    <i class="fas fa-exclamation-circle mr-2 text-warning"></i>Ubicación no especificada
                 </p>
             `;
         }
@@ -723,12 +723,12 @@ function displayMegaEvento(mega) {
     if (imagenes.length === 0) {
         imagenesContainer.innerHTML = `
             <div class="col-12">
-                <div class="text-center py-5" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border-radius: 12px; padding: 3rem 2rem;">
-                    <div style="background: rgba(255, 255, 255, 0.15); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; backdrop-filter: blur(10px);">
-                        <i class="far fa-images fa-3x text-white"></i>
+                <div class="text-center py-5 bg-light rounded">
+                    <div class="bg-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-images fa-3x text-white"></i>
                     </div>
-                    <h5 style="color: white; font-weight: 600; margin-bottom: 0.5rem;">No hay imágenes disponibles</h5>
-                    <p style="color: rgba(255, 255, 255, 0.9); margin: 0;">Las imágenes aparecerán aquí cuando se agreguen al mega evento.</p>
+                    <h5 class="font-weight-bold text-dark mb-2">No hay imágenes disponibles</h5>
+                    <p class="text-muted mb-0">Las imágenes aparecerán aquí cuando se agreguen al mega evento.</p>
                 </div>
             </div>
         `;
@@ -765,7 +765,7 @@ function displayMegaEvento(mega) {
             overlay.onmouseleave = function() { this.style.background = 'rgba(0,0,0,0)'; };
             
             const icon = document.createElement('i');
-            icon.className = 'far fa-search-plus fa-lg text-white';
+            icon.className = 'fas fa-search-plus fa-lg text-white';
             icon.style.cssText = 'opacity: 0; transition: opacity 0.3s;';
             icon.onmouseenter = function() { this.style.opacity = '1'; };
             icon.onmouseleave = function() { this.style.opacity = '0'; };
@@ -826,17 +826,49 @@ function displayMegaEvento(mega) {
             seguimientoLinkEl.href = `/ong/mega-eventos/${megaEventoId}/seguimiento`;
         }
 
-        // Mapa (si hay coordenadas) - Igual que en eventos normales
-        if (mega.lat && mega.lng) {
-            const mapContainer = document.getElementById('map');
-            if (mapContainer) {
-                mapContainer.style.display = 'block';
-                const map = L.map('map').setView([mega.lat, mega.lng], 13);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap contributors'
-                }).addTo(map);
-                L.marker([mega.lat, mega.lng]).addTo(map).bindPopup(mega.ubicacion || 'Ubicación del mega evento');
-            }
+        // Mapa - Usar geocodificación inversa si no hay coordenadas
+        const mapContainer = document.getElementById('map');
+        if (mapContainer) {
+            const inicializarMapa = async () => {
+                let lat = mega.lat;
+                let lng = mega.lng;
+                let direccionCompleta = mega.ubicacion || '';
+
+                // Si no hay coordenadas pero hay ubicación, hacer geocodificación
+                if ((!lat || !lng) && direccionCompleta && direccionCompleta.trim() !== '') {
+                    try {
+                        // Usar Nominatim (OpenStreetMap) para geocodificación
+                        const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(direccionCompleta)}&limit=1`;
+                        const geocodeRes = await fetch(geocodeUrl, {
+                            headers: {
+                                'User-Agent': 'MegaEventoApp/1.0'
+                            }
+                        });
+                        const geocodeData = await geocodeRes.json();
+                        
+                        if (geocodeData && geocodeData.length > 0) {
+                            lat = parseFloat(geocodeData[0].lat);
+                            lng = parseFloat(geocodeData[0].lon);
+                        }
+                    } catch (error) {
+                        console.warn('Error en geocodificación:', error);
+                    }
+                }
+
+                // Si tenemos coordenadas, mostrar el mapa
+                if (lat && lng) {
+                    mapContainer.style.display = 'block';
+                    const map = L.map('map').setView([lat, lng], 13);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(map);
+                    L.marker([lat, lng]).addTo(map).bindPopup(direccionCompleta || 'Ubicación del mega evento');
+                } else {
+                    mapContainer.style.display = 'none';
+                }
+            };
+
+            inicializarMapa();
         }
         
         // Guardar información del mega evento para compartir
@@ -883,9 +915,10 @@ function configurarBotonesCompartir(megaEventoId, mega) {
         mega_evento_id: megaEventoId,
         titulo: mega.titulo || 'Mega Evento',
         descripcion: mega.descripcion || '',
+        // Usar helper getPublicUrl si existe; si no, usar automáticamente el origen actual (localhost, IP local o dominio)
         url: typeof getPublicUrl !== 'undefined' 
             ? getPublicUrl(`/mega-evento/${megaEventoId}/qr`)
-            : `http://192.168.0.6:8000/mega-evento/${megaEventoId}/qr`
+            : `${window.location.origin}/mega-evento/${megaEventoId}/qr`
     };
 }
 
@@ -1165,7 +1198,7 @@ async function verificarReaccionMegaEvento() {
                 btnReaccionar.classList.add('btn-danger');
                 textoReaccion.textContent = 'Te gusta';
             } else {
-                iconoCorazon.className = 'far fa-heart mr-2';
+                iconoCorazon.className = 'fas fa-heart mr-2';
                 btnReaccionar.classList.remove('btn-danger');
                 btnReaccionar.classList.add('btn-outline-danger');
                 textoReaccion.textContent = 'Me gusta';
@@ -1208,7 +1241,7 @@ async function toggleReaccionMegaEvento() {
                 btnReaccionar.classList.add('btn-danger');
                 textoReaccion.textContent = 'Te gusta';
             } else {
-                iconoCorazon.className = 'far fa-heart mr-2';
+                iconoCorazon.className = 'fas fa-heart mr-2';
                 btnReaccionar.classList.remove('btn-danger');
                 btnReaccionar.classList.add('btn-outline-danger');
                 textoReaccion.textContent = 'Me gusta';
@@ -1251,7 +1284,7 @@ async function cargarReaccionesMegaEvento() {
         if (!res.ok || !data.success) {
             container.innerHTML = `
                 <div class="alert" style="background: #fff3cd; border: 1px solid #ffc107; color: #856404; border-radius: 8px; padding: 1rem;">
-                    <i class="far fa-exclamation-triangle mr-2"></i>
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
                     ${data.error || 'Error al cargar reacciones'}
                 </div>
             `;
@@ -1261,8 +1294,8 @@ async function cargarReaccionesMegaEvento() {
         if (!data.reacciones || data.reacciones.length === 0) {
             container.innerHTML = `
                 <div class="text-center py-5">
-                    <i class="far fa-heart fa-3x mb-3" style="color: #dc3545; opacity: 0.3;"></i>
-                    <p class="mb-0" style="color: #333333; font-size: 1rem;">Aún no hay reacciones en este mega evento</p>
+                    <i class="fas fa-heart fa-3x mb-3 text-danger" style="opacity: 0.3;"></i>
+                    <p class="mb-0 text-muted">Aún no hay reacciones en este mega evento</p>
                 </div>
             `;
             return;
@@ -1281,37 +1314,37 @@ async function cargarReaccionesMegaEvento() {
             const fotoPerfil = reaccion.foto_perfil || null;
             const inicialNombre = reaccion.nombre ? reaccion.nombre.charAt(0).toUpperCase() : '?';
             const tipoBadge = reaccion.tipo === 'registrado' 
-                ? '<span class="badge badge-success" style="background: #00A36C !important; font-size: 0.7rem; padding: 0.25em 0.5em;">Registrado</span>'
-                : '<span class="badge badge-warning" style="background: #ffc107 !important; font-size: 0.7rem; padding: 0.25em 0.5em;">No registrado</span>';
+                ? '<span class="badge badge-success">Registrado</span>'
+                : '<span class="badge badge-warning">No registrado</span>';
 
             html += `
                 <div class="col-md-6 col-lg-4 mb-3 reaccion-card" style="animation-delay: ${index * 0.1}s;">
-                    <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; border: 1px solid #F5F5F5; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(12, 43, 68, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';">
-                        <div class="card-body p-4">
+                    <div class="card h-100">
+                        <div class="card-body">
                             <div class="d-flex align-items-center mb-3">
                                 ${fotoPerfil ? `
-                                    <img src="${fotoPerfil}" alt="${reaccion.nombre}" class="rounded-circle mr-3" style="width: 50px; height: 50px; object-fit: cover; border: 3px solid #00A36C; animation: fadeInUp 0.5s ease-out;">
+                                    <img src="${fotoPerfil}" alt="${reaccion.nombre}" class="rounded-circle mr-3" style="width: 50px; height: 50px; object-fit: cover; border: 3px solid #00A36C;">
                                 ` : `
-                                    <div class="rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 50px; height: 50px; font-weight: 600; font-size: 1.2rem; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; animation: fadeInUp 0.5s ease-out;">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center mr-3 bg-primary text-white" style="width: 50px; height: 50px; font-weight: 600; font-size: 1.2rem;">
                                         ${inicialNombre}
                                     </div>
                                 `}
                                 <div class="flex-grow-1">
                                     <div class="d-flex align-items-center mb-1">
-                                        <h6 class="mb-0" style="color: #0C2B44; font-weight: 700; font-size: 1rem;">${reaccion.nombre || 'N/A'}</h6>
+                                        <h6 class="mb-0 font-weight-bold text-dark">${reaccion.nombre || 'N/A'}</h6>
                                         ${tipoBadge}
                                     </div>
-                                    <small style="color: #333333; font-size: 0.85rem;">
-                                        <i class="far fa-envelope mr-1" style="color: #00A36C;"></i> ${reaccion.correo || 'N/A'}
+                                    <small class="text-muted">
+                                        <i class="fas fa-envelope mr-1 text-info"></i> ${reaccion.correo || 'N/A'}
                                     </small>
                                 </div>
-                                <div style="background: rgba(220, 53, 69, 0.1); width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;">
-                                    <i class="far fa-heart" style="font-size: 1.3rem; color: #dc3545; transition: all 0.3s ease;"></i>
+                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                                    <i class="fas fa-heart text-danger"></i>
                                 </div>
                             </div>
-                            <div class="mt-3 pt-3" style="border-top: 1px solid #F5F5F5;">
-                                <small style="color: #333333; font-size: 0.8rem;">
-                                    <i class="far fa-clock mr-1" style="color: #00A36C;"></i> 
+                            <div class="mt-3 pt-3 border-top">
+                                <small class="text-muted">
+                                    <i class="fas fa-clock mr-1 text-secondary"></i> 
                                     ${fechaReaccion}
                                 </small>
                             </div>
@@ -1326,7 +1359,7 @@ async function cargarReaccionesMegaEvento() {
         console.error('Error cargando reacciones:', error);
         container.innerHTML = `
             <div class="alert alert-danger" style="background: #f8d7da; border: 1px solid #dc3545; color: #721c24; border-radius: 8px; padding: 1rem;">
-                <i class="far fa-exclamation-triangle mr-2"></i>
+                <i class="fas fa-exclamation-triangle mr-2"></i>
                 Error de conexión al cargar reacciones
             </div>
         `;

@@ -5,78 +5,73 @@
 @section('content_body')
 <div class="container-fluid">
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="mb-0" style="color: #0C2B44; font-weight: 700;">
-                <i class="far fa-chart-bar mr-2" style="color: #00A36C;"></i>
-                Dashboard del Evento
-            </h2>
-            <p class="text-muted mb-0" id="eventoTitulo">Cargando información del evento...</p>
-        </div>
-        <div class="d-flex gap-2">
-            <button id="btnDescargarPDF" class="btn btn-success" onclick="descargarPDF()" style="font-weight: 600;">
-                <i class="far fa-file-pdf mr-2"></i> Descargar PDF
-            </button>
-            <a href="#" id="btnVolver" class="btn btn-outline-primary">
-                <i class="far fa-arrow-left mr-2"></i> Volver al Detalle
-            </a>
+    <div class="card mb-4">
+        <div class="card-header bg-primary">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="card-title mb-0 text-white">
+                        <i class="fas fa-chart-bar mr-2"></i> Dashboard del Evento
+                    </h3>
+                    <p class="mb-0 text-white-50 mt-1" id="eventoTitulo">Cargando información del evento...</p>
+                </div>
+                <div class="d-flex" style="gap: 0.5rem;">
+                    <button id="btnDescargarPDF" class="btn btn-success" onclick="descargarPDF()">
+                        <i class="fas fa-file-pdf mr-2"></i> Descargar PDF
+                    </button>
+                    <a href="#" id="btnVolver" class="btn btn-light">
+                        <i class="fas fa-arrow-left mr-2"></i> Volver
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Tarjetas de Estadísticas -->
     <div class="row mb-4">
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card bg-gradient-primary shadow-sm" style="border: none; border-radius: 12px;">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-white text-uppercase mb-2" style="font-size: 0.8rem; opacity: 0.9; font-weight: 600;">Reacciones</h6>
-                            <h2 class="text-white mb-0" id="totalReacciones" style="font-size: 2.5rem; font-weight: 700;">0</h2>
-                        </div>
-                        <i class="far fa-heart fa-3x text-white" style="opacity: 0.2;"></i>
-                    </div>
+            <div class="small-box bg-danger" style="border-radius: 16px;">
+                <div class="inner">
+                    <h3 id="totalReacciones" class="text-white">0</h3>
+                    <p class="text-white">Reacciones</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-heart"></i>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card bg-gradient-success shadow-sm" style="border: none; border-radius: 12px;">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-white text-uppercase mb-2" style="font-size: 0.8rem; opacity: 0.9; font-weight: 600;">Compartidos</h6>
-                            <h2 class="text-white mb-0" id="totalCompartidos" style="font-size: 2.5rem; font-weight: 700;">0</h2>
-                        </div>
-                        <i class="far fa-share-alt fa-3x text-white" style="opacity: 0.2;"></i>
-                    </div>
+            <div class="small-box bg-success" style="border-radius: 16px;">
+                <div class="inner">
+                    <h3 id="totalCompartidos" class="text-white">0</h3>
+                    <p class="text-white">Compartidos</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-share-alt"></i>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card bg-gradient-info shadow-sm" style="border: none; border-radius: 12px;">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-white text-uppercase mb-2" style="font-size: 0.8rem; opacity: 0.9; font-weight: 600;">Voluntarios</h6>
-                            <h2 class="text-white mb-0" id="totalVoluntarios" style="font-size: 2.5rem; font-weight: 700;">0</h2>
-                        </div>
-                        <i class="far fa-users fa-3x text-white" style="opacity: 0.2;"></i>
-                    </div>
+            <div class="small-box bg-info" style="border-radius: 16px;">
+                <div class="inner">
+                    <h3 id="totalVoluntarios" class="text-white">0</h3>
+                    <p class="text-white">Voluntarios</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-users"></i>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card bg-gradient-warning shadow-sm" style="border: none; border-radius: 12px;">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-white text-uppercase mb-2" style="font-size: 0.8rem; opacity: 0.9; font-weight: 600;">Participantes</h6>
-                            <h2 class="text-white mb-0" id="totalParticipantes" style="font-size: 2.5rem; font-weight: 700;">0</h2>
-                        </div>
-                        <i class="far fa-user-check fa-3x text-white" style="opacity: 0.2;"></i>
-                    </div>
+            <div class="small-box bg-warning" style="border-radius: 16px;">
+                <div class="inner">
+                    <h3 id="totalParticipantes" class="text-white">0</h3>
+                    <p class="text-white">Participantes</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-user-check"></i>
                 </div>
             </div>
         </div>
@@ -86,13 +81,13 @@
     <div class="row mb-4">
         <!-- Gráfica de Reacciones por Día -->
         <div class="col-lg-6 mb-4">
-            <div class="card shadow-sm" style="border-radius: 12px; border: none;">
-                <div class="card-header" style="background: white; border-bottom: 1px solid #F5F5F5; border-radius: 12px 12px 0 0;">
-                    <h5 class="mb-0" style="color: #0C2B44; font-weight: 700;">
-                        <i class="far fa-heart mr-2" style="color: #dc3545;"></i> Reacciones por Día
+            <div class="card">
+                <div class="card-header bg-danger">
+                    <h5 class="card-title mb-0 text-white">
+                        <i class="fas fa-heart mr-2"></i> Reacciones por Día
                     </h5>
                 </div>
-                <div class="card-body" style="padding: 1.5rem;">
+                <div class="card-body">
                     <div style="height: 300px; position: relative;">
                         <canvas id="graficaReacciones"></canvas>
                     </div>
@@ -102,13 +97,13 @@
 
         <!-- Gráfica de Participantes por Estado -->
         <div class="col-lg-6 mb-4">
-            <div class="card shadow-sm" style="border-radius: 12px; border: none;">
-                <div class="card-header" style="background: white; border-bottom: 1px solid #F5F5F5; border-radius: 12px 12px 0 0;">
-                    <h5 class="mb-0" style="color: #0C2B44; font-weight: 700;">
-                        <i class="far fa-users mr-2" style="color: #00A36C;"></i> Participantes por Estado
+            <div class="card">
+                <div class="card-header bg-success">
+                    <h5 class="card-title mb-0 text-white">
+                        <i class="fas fa-users mr-2"></i> Participantes por Estado
                     </h5>
                 </div>
-                <div class="card-body" style="padding: 1.5rem;">
+                <div class="card-body">
                     <div style="height: 300px; position: relative;">
                         <canvas id="graficaParticipantes"></canvas>
                     </div>
@@ -118,13 +113,13 @@
 
         <!-- Gráfica de Compartidos por Día -->
         <div class="col-lg-6 mb-4">
-            <div class="card shadow-sm" style="border-radius: 12px; border: none;">
-                <div class="card-header" style="background: white; border-bottom: 1px solid #F5F5F5; border-radius: 12px 12px 0 0;">
-                    <h5 class="mb-0" style="color: #0C2B44; font-weight: 700;">
-                        <i class="far fa-share-alt mr-2" style="color: #00A36C;"></i> Compartidos por Día
+            <div class="card">
+                <div class="card-header bg-info">
+                    <h5 class="card-title mb-0 text-white">
+                        <i class="fas fa-share-alt mr-2"></i> Compartidos por Día
                     </h5>
                 </div>
-                <div class="card-body" style="padding: 1.5rem;">
+                <div class="card-body">
                     <div style="height: 300px; position: relative;">
                         <canvas id="graficaCompartidos"></canvas>
                     </div>
@@ -134,13 +129,13 @@
 
         <!-- Gráfica de Inscripciones por Día -->
         <div class="col-lg-6 mb-4">
-            <div class="card shadow-sm" style="border-radius: 12px; border: none;">
-                <div class="card-header" style="background: white; border-bottom: 1px solid #F5F5F5; border-radius: 12px 12px 0 0;">
-                    <h5 class="mb-0" style="color: #0C2B44; font-weight: 700;">
-                        <i class="far fa-calendar-check mr-2" style="color: #00A36C;"></i> Inscripciones por Día
+            <div class="card">
+                <div class="card-header bg-warning">
+                    <h5 class="card-title mb-0 text-white">
+                        <i class="fas fa-calendar-check mr-2"></i> Inscripciones por Día
                     </h5>
                 </div>
-                <div class="card-body" style="padding: 1.5rem;">
+                <div class="card-body">
                     <div style="height: 300px; position: relative;">
                         <canvas id="graficaInscripciones"></canvas>
                     </div>
@@ -150,13 +145,13 @@
 
         <!-- Gráfica de Comparación Reacciones vs Compartidos -->
         <div class="col-lg-6 mb-4">
-            <div class="card shadow-sm" style="border-radius: 12px; border: none;">
-                <div class="card-header" style="background: white; border-bottom: 1px solid #F5F5F5; border-radius: 12px 12px 0 0;">
-                    <h5 class="mb-0" style="color: #0C2B44; font-weight: 700;">
-                        <i class="far fa-chart-line mr-2" style="color: #00A36C;"></i> Reacciones vs Compartidos
+            <div class="card">
+                <div class="card-header bg-primary">
+                    <h5 class="card-title mb-0 text-white">
+                        <i class="fas fa-chart-line mr-2"></i> Reacciones vs Compartidos
                     </h5>
                 </div>
-                <div class="card-body" style="padding: 1.5rem;">
+                <div class="card-body">
                     <div style="height: 300px; position: relative;">
                         <canvas id="graficaComparacion"></canvas>
                     </div>
@@ -164,15 +159,15 @@
             </div>
         </div>
 
-        <!-- Gráfica de Barras Horizontales - Top Participantes -->
+        <!-- Gráfica de Actividad por Semana -->
         <div class="col-lg-6 mb-4">
-            <div class="card shadow-sm" style="border-radius: 12px; border: none;">
-                <div class="card-header" style="background: white; border-bottom: 1px solid #F5F5F5; border-radius: 12px 12px 0 0;">
-                    <h5 class="mb-0" style="color: #0C2B44; font-weight: 700;">
-                        <i class="far fa-chart-bar mr-2" style="color: #00A36C;"></i> Actividad por Semana
+            <div class="card">
+                <div class="card-header bg-secondary">
+                    <h5 class="card-title mb-0 text-white">
+                        <i class="fas fa-chart-bar mr-2"></i> Actividad por Semana
                     </h5>
                 </div>
-                <div class="card-body" style="padding: 1.5rem;">
+                <div class="card-body">
                     <div style="height: 300px; position: relative;">
                         <canvas id="graficaActividadSemanal"></canvas>
                     </div>
@@ -180,15 +175,15 @@
             </div>
         </div>
 
-        <!-- Gráfica de Área - Tendencias -->
+        <!-- Gráfica de Tendencias -->
         <div class="col-lg-6 mb-4">
-            <div class="card shadow-sm" style="border-radius: 12px; border: none;">
-                <div class="card-header" style="background: white; border-bottom: 1px solid #F5F5F5; border-radius: 12px 12px 0 0;">
-                    <h5 class="mb-0" style="color: #0C2B44; font-weight: 700;">
-                        <i class="far fa-chart-area mr-2" style="color: #00A36C;"></i> Tendencias de Participación
+            <div class="card">
+                <div class="card-header bg-success">
+                    <h5 class="card-title mb-0 text-white">
+                        <i class="fas fa-chart-area mr-2"></i> Tendencias de Participación
                     </h5>
                 </div>
-                <div class="card-body" style="padding: 1.5rem;">
+                <div class="card-body">
                     <div style="height: 300px; position: relative;">
                         <canvas id="graficaTendencias"></canvas>
                     </div>
@@ -198,13 +193,13 @@
 
         <!-- Gráfica de Radar - Métricas Generales -->
         <div class="col-lg-6 mb-4">
-            <div class="card shadow-sm" style="border-radius: 12px; border: none;">
-                <div class="card-header" style="background: white; border-bottom: 1px solid #F5F5F5; border-radius: 12px 12px 0 0;">
-                    <h5 class="mb-0" style="color: #0C2B44; font-weight: 700;">
-                        <i class="far fa-chart-pie mr-2" style="color: #00A36C;"></i> Métricas Generales
+            <div class="card">
+                <div class="card-header bg-info">
+                    <h5 class="card-title mb-0 text-white">
+                        <i class="fas fa-chart-pie mr-2"></i> Métricas Generales
                     </h5>
                 </div>
-                <div class="card-body" style="padding: 1.5rem;">
+                <div class="card-body">
                     <div style="height: 300px; position: relative;">
                         <canvas id="graficaRadar"></canvas>
                     </div>
@@ -216,19 +211,19 @@
     <!-- Tabla de Resumen -->
     <div class="row">
         <div class="col-12">
-            <div class="card shadow-sm" style="border-radius: 12px; border: none;">
-                <div class="card-header" style="background: white; border-bottom: 1px solid #F5F5F5; border-radius: 12px 12px 0 0;">
-                    <h5 class="mb-0" style="color: #0C2B44; font-weight: 700;">
-                        <i class="far fa-list-alt mr-2" style="color: #00A36C;"></i> Resumen Detallado
+            <div class="card">
+                <div class="card-header bg-primary">
+                    <h5 class="card-title mb-0 text-white">
+                        <i class="fas fa-list-alt mr-2"></i> Resumen Detallado
                     </h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-hover">
-                            <thead style="background: #F5F5F5;">
+                            <thead class="bg-light">
                                 <tr>
-                                    <th style="color: #0C2B44; font-weight: 600;">Métrica</th>
-                                    <th style="color: #0C2B44; font-weight: 600;" class="text-right">Valor</th>
+                                    <th class="font-weight-bold text-dark">Métrica</th>
+                                    <th class="text-right font-weight-bold text-dark">Valor</th>
                                 </tr>
                             </thead>
                             <tbody id="tablaResumen">
@@ -248,6 +243,56 @@
     </div>
 </div>
 @stop
+
+@push('css')
+<style>
+    .small-box {
+        border-radius: 16px !important;
+        overflow: hidden;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .small-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .small-box .icon {
+        color: rgba(255, 255, 255, 0.2);
+        font-size: 70px;
+        top: 15px;
+    }
+
+    .small-box .inner h3 {
+        font-size: 2.8rem;
+        font-weight: 700;
+    }
+
+    .small-box .inner p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+
+    .card {
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12) !important;
+    }
+
+    .card-header {
+        border-bottom: none;
+    }
+
+    canvas {
+        max-width: 100%;
+    }
+</style>
+@endpush
 
 @section('js')
 @parent
@@ -359,7 +404,8 @@ async function cargarDashboard() {
         
         // Mostrar mensaje en la página también
         document.getElementById('eventoTitulo').textContent = 'Error al cargar datos';
-        document.getElementById('eventoTitulo').style.color = '#dc3545';
+        document.getElementById('eventoTitulo').classList.remove('text-white-50');
+        document.getElementById('eventoTitulo').classList.add('text-danger');
     }
 }
 
@@ -409,7 +455,7 @@ function crearGraficas(data) {
                 labels: Object.keys(participantesData),
                 datasets: [{
                     data: Object.values(participantesData),
-                    backgroundColor: ['#00A36C', '#0C2B44', '#17a2b8', '#ffc107', '#dc3545']
+                    backgroundColor: ['#00A36C', '#0C2B44', '#17a2b8', '#ffc107', '#dc3545', '#6c757d']
                 }]
             },
             options: {
@@ -436,6 +482,7 @@ function crearGraficas(data) {
                     label: 'Compartidos',
                     data: Object.values(compartidosData),
                     backgroundColor: '#00A36C',
+                    borderColor: '#00A36C',
                     borderRadius: 5
                 }]
             },
@@ -543,8 +590,8 @@ function crearGraficas(data) {
                 datasets: [{
                     label: 'Actividad',
                     data: Object.values(actividadData),
-                    backgroundColor: 'rgba(12, 43, 68, 0.8)',
-                    borderColor: '#0C2B44',
+                    backgroundColor: 'rgba(108, 117, 125, 0.8)',
+                    borderColor: '#6c757d',
                     borderWidth: 1
                 }]
             },
@@ -581,7 +628,10 @@ function crearGraficas(data) {
                     fill: true,
                     tension: 0.5,
                     pointRadius: 5,
-                    pointBackgroundColor: '#00A36C'
+                    pointBackgroundColor: '#00A36C',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#00A36C'
                 }]
             },
             options: {
@@ -690,7 +740,7 @@ async function descargarPDF() {
         const btnPDF = document.getElementById('btnDescargarPDF');
         if (btnPDF) {
             btnPDF.disabled = true;
-            btnPDF.innerHTML = '<i class="far fa-spinner fa-spin mr-2"></i> Generando PDF...';
+            btnPDF.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generando PDF...';
         }
 
         const res = await fetch(`${API_BASE_URL}/api/eventos/${eventoId}/dashboard/pdf`, {
@@ -717,7 +767,7 @@ async function descargarPDF() {
 
         if (btnPDF) {
             btnPDF.disabled = false;
-            btnPDF.innerHTML = '<i class="far fa-file-pdf mr-2"></i> Descargar PDF';
+            btnPDF.innerHTML = '<i class="fas fa-file-pdf mr-2"></i> Descargar PDF';
         }
     } catch (error) {
         console.error('Error al descargar PDF:', error);
@@ -726,7 +776,7 @@ async function descargarPDF() {
         const btnPDF = document.getElementById('btnDescargarPDF');
         if (btnPDF) {
             btnPDF.disabled = false;
-            btnPDF.innerHTML = '<i class="far fa-file-pdf mr-2"></i> Descargar PDF';
+            btnPDF.innerHTML = '<i class="fas fa-file-pdf mr-2"></i> Descargar PDF';
         }
     }
 }

@@ -186,78 +186,95 @@ return [
         [
             'text' => 'Inicio',
             'url'  => '/home-ong',
-            'icon' => 'far fa-fw fa-home',
+            'icon' => 'fas fa-fw fa-home',
         ],
         [
             'text' => 'Eventos',
             'url'  => '/eventos',
+            'icon' => 'fas fa-fw fa-calendar-alt',
             'submenu' => [
                 [
                     'text' => 'Lista de Eventos',
                     'url'  => '/ong/eventos',
-                    'icon' => 'far fa-list',
+                    'icon' => 'fas fa-fw fa-list',
                 ],
                 [
                     'text' => 'Dashboard de Eventos',
                     'url'  => '/ong/eventos-dashboard',
-                    'icon' => 'far fa-chart-bar',
+                    'icon' => 'fas fa-fw fa-chart-bar',
                 ],
                 [
                     'text' => 'Historial de eventos',
                     'url'  => '/ong/eventos/historial',
-                    'icon' => 'far fa-history',
+                    'icon' => 'fas fa-fw fa-history',
                 ],
                 [
                     'text' => 'Crear evento',
                     'url'  => '/ong/eventos/crear',
-                    'icon' => 'far fa-calendar-plus',
+                    'icon' => 'fas fa-fw fa-calendar-plus',
                 ],
             ],
-            'icon' => 'far fa-calendar',
+        ],
+        [
+            'text' => 'Mega Eventos',
+            'url'  => '/mega-eventos',
+            'icon' => 'fas fa-fw fa-calendar-check',
+            'submenu' => [
+                [
+                    'text' => 'Lista de Mega Eventos',
+                    'url'  => '/ong/mega-eventos',
+                    'icon' => 'fas fa-fw fa-list',
+                ],
+                [
+                    'text' => 'Historial de mega eventos',
+                    'url'  => '/ong/mega-eventos/historial',
+                    'icon' => 'fas fa-fw fa-history',
+                ],
+                [
+                    'text' => 'Crear mega evento',
+                    'url'  => '/ong/mega-eventos/crear',
+                    'icon' => 'fas fa-fw fa-calendar-plus',
+                ],
+            ],
         ],
         [
             'text' => 'Voluntarios',
             'url'  => '/voluntarios',
-            'icon' => 'far fa-users',
+            'icon' => 'fas fa-fw fa-users',
         ],
         [
             'text' => 'Dashboard',
             'url'  => '/ong/dashboard',
-            'icon' => 'far fa-tachometer-alt',
-        ],
-        [
-            'text' => 'Mega Eventos',
-            'url'  => '/ong/mega-eventos',
-            'icon' => 'far fa-calendar-check',
+            'icon' => 'fas fa-fw fa-tachometer-alt',
         ],
         [
             'text' => 'Reportes',
             'url'  => '/reportes',
-            'icon' => 'far fa-chart-bar',
+            'icon' => 'fas fa-fw fa-chart-bar',
         ],
         [
             'text' => 'Mi Perfil',
             'url'  => '/perfil/ong',
-            'icon' => 'far fa-user-circle',
+            'icon' => 'fas fa-fw fa-user-circle',
         ],
         [
             'text' => 'Notificaciones',
             'url'  => '/ong/notificaciones',
-            'icon' => 'far fa-bell',
+            'icon' => 'fas fa-fw fa-bell',
         ],
         [
             'text' => 'Configuraciones',
-            'icon' => 'far fa-cogs',
+            'icon' => 'fas fa-fw fa-cogs',
             'submenu' => [
                 [
                     'text' => 'Perfil',
                     'url'  => '/perfil/ong',
-                    'icon' => 'far fa-user-circle',
+                    'icon' => 'fas fa-fw fa-user-circle',
                 ],
                 [
                     'text' => 'Parámetros',
                     'url'  => '/configuracion',
-                    'icon' => 'far fa-sliders-h',
+                    'icon' => 'fas fa-fw fa-sliders-h',
                 ],
             ],
         ],
@@ -265,12 +282,12 @@ return [
         [
             'text' => 'Ir a página pública',
             'url'  => '/home-publica',
-            'icon' => 'far fa-globe',
+            'icon' => 'fas fa-fw fa-globe',
         ],
         [
             'text' => 'Cerrar sesión',
             'url'  => '/logout',
-            'icon' => 'far fa-sign-out-alt',
+            'icon' => 'fas fa-fw fa-sign-out-alt',
             'label_color' => 'danger',
         ],
     ],

@@ -1049,7 +1049,10 @@ class EventController extends Controller
                 return $e;
             });
             
-            // Calcular estadísticas basadas en estados dinámicos (solo eventos)
+            // Obtener IDs de todos los eventos
+            $eventosIds = $todosEventos->pluck('id');
+            
+            // Calcular estadísticas basadas en estados dinámicos
             $estadisticas = [
                 'total' => $todosEventos->count(),
                 'finalizados' => $todosEventos->filter(fn($e) => $e->estado_dinamico === 'finalizado')->count(),
@@ -1060,10 +1063,166 @@ class EventController extends Controller
                 'borradores' => $todosEventos->filter(fn($e) => $e->estado_dinamico === 'borrador')->count(),
             ];
             
+            // === MÉTRICAS AGREGADAS ===
+            $totalParticipantes = EventoParticipacion::whereIn('evento_id', $eventosIds)->count() 
+                + EventoParticipanteNoRegistrado::whereIn('evento_id', $eventosIds)->count();
+            
+            $totalParticipantesAprobados = EventoParticipacion::whereIn('evento_id', $eventosIds)
+                ->where('estado', 'aprobada')
+                ->count() + EventoParticipanteNoRegistrado::whereIn('evento_id', $eventosIds)
+                ->where('estado', 'aprobada')
+                ->count();
+            
+            $totalParticipantesAsistieron = EventoParticipacion::whereIn('evento_id', $eventosIds)
+                ->where('asistio', true)
+                ->count();
+            
+            $totalVoluntariosUnicos = EventoParticipacion::whereIn('evento_id', $eventosIds)
+                ->whereNotNull('externo_id')
+                ->distinct('externo_id')
+                ->count('externo_id');
+            
+            $totalReacciones = EventoReaccion::whereIn('evento_id', $eventosIds)->count();
+            $totalCompartidos = EventoCompartido::whereIn('evento_id', $eventosIds)->count();
+            
+            // === KPIs Y MÉTRICAS DE RENDIMIENTO ===
+            $promedioParticipantes = $estadisticas['total'] > 0 
+                ? round($totalParticipantes / $estadisticas['total'], 2) 
+                : 0;
+            
+            $tasaAsistencia = $totalParticipantesAprobados > 0 
+                ? round(($totalParticipantesAsistieron / $totalParticipantesAprobados) * 100, 2) 
+                : 0;
+            
+            $engagementRate = $totalParticipantes > 0 
+                ? round((($totalReacciones + $totalCompartidos) / $totalParticipantes) * 100, 2) 
+                : 0;
+            
+            $tasaFinalizacion = $estadisticas['total'] > 0 
+                ? round(($estadisticas['finalizados'] / $estadisticas['total']) * 100, 2) 
+                : 0;
+            
+            // === EVENTOS DESTACADOS ===
+            $eventosConMetricas = $todosEventos->map(function($e) {
+                $participantes = EventoParticipacion::where('evento_id', $e->id)->count() 
+                    + EventoParticipanteNoRegistrado::where('evento_id', $e->id)->count();
+                $reacciones = EventoReaccion::where('evento_id', $e->id)->count();
+                $compartidos = EventoCompartido::where('evento_id', $e->id)->count();
+                $engagement = $reacciones + $compartidos;
+                
+                return [
+                    'id' => $e->id,
+                    'titulo' => $e->titulo,
+                    'participantes' => $participantes,
+                    'reacciones' => $reacciones,
+                    'compartidos' => $compartidos,
+                    'engagement' => $engagement,
+                    'fecha_inicio' => $e->fecha_inicio,
+                    'estado_dinamico' => $e->estado_dinamico,
+                ];
+            });
+            
+            $eventoMasParticipantes = $eventosConMetricas->sortByDesc('participantes')->first();
+            $eventoMasEngagement = $eventosConMetricas->sortByDesc('engagement')->first();
+            $proximoEventoImportante = $todosEventos->filter(fn($e) => $e->estado_dinamico === 'proximo')
+                ->sortBy('fecha_inicio')
+                ->first();
+            $eventoMasReciente = $todosEventos->sortByDesc('created_at')->first();
+            
+            // === GRÁFICOS ADICIONALES ===
+            // Eventos creados por mes
+            $eventosPorMes = $todosEventos->groupBy(function($e) {
+                return \Carbon\Carbon::parse($e->created_at)->format('Y-m');
+            })->map->count();
+            
+            // Top 5 eventos por participación
+            $top5Participacion = $eventosConMetricas->sortByDesc('participantes')->take(5)->values();
+            
+            // Top 5 eventos por engagement
+            $top5Engagement = $eventosConMetricas->sortByDesc('engagement')->take(5)->values();
+            
+            // === MÉTRICAS DE TIEMPO ===
+            $eventosConFechas = $todosEventos->filter(fn($e) => $e->fecha_inicio);
+            $diasPromedioHastaInicio = $eventosConFechas->map(function($e) {
+                return \Carbon\Carbon::parse($e->created_at)->diffInDays($e->fecha_inicio);
+            })->avg();
+            
+            $duracionPromedio = $todosEventos->filter(fn($e) => $e->fecha_inicio && $e->fecha_fin)
+                ->map(function($e) {
+                    return \Carbon\Carbon::parse($e->fecha_inicio)->diffInDays($e->fecha_fin);
+                })->avg();
+            
+            // === TABLA RESUMEN DE EVENTOS ===
+            $tablaResumen = $eventos->map(function($e) {
+                $participantes = EventoParticipacion::where('evento_id', $e->id)->count() 
+                    + EventoParticipanteNoRegistrado::where('evento_id', $e->id)->count();
+                $participantesAprobados = EventoParticipacion::where('evento_id', $e->id)
+                    ->where('estado', 'aprobada')
+                    ->count() + EventoParticipanteNoRegistrado::where('evento_id', $e->id)
+                    ->where('estado', 'aprobada')
+                    ->count();
+                $asistieron = EventoParticipacion::where('evento_id', $e->id)
+                    ->where('asistio', true)
+                    ->count();
+                $reacciones = EventoReaccion::where('evento_id', $e->id)->count();
+                $compartidos = EventoCompartido::where('evento_id', $e->id)->count();
+                
+                $tasaAsistenciaEvento = $participantesAprobados > 0 
+                    ? round(($asistieron / $participantesAprobados) * 100, 2) 
+                    : 0;
+                
+                return [
+                    'id' => $e->id,
+                    'titulo' => $e->titulo,
+                    'estado' => $e->estado_dinamico,
+                    'participantes' => $participantes,
+                    'reacciones' => $reacciones,
+                    'compartidos' => $compartidos,
+                    'tasa_asistencia' => $tasaAsistenciaEvento,
+                    'fecha_inicio' => $e->fecha_inicio,
+                ];
+            })->values();
+            
             return response()->json([
                 'success' => true,
                 'eventos' => $eventos,
                 'estadisticas' => $estadisticas,
+                'metricas_agregadas' => [
+                    'total_participantes' => $totalParticipantes,
+                    'total_participantes_aprobados' => $totalParticipantesAprobados,
+                    'total_participantes_asistieron' => $totalParticipantesAsistieron,
+                    'total_voluntarios_unicos' => $totalVoluntariosUnicos,
+                    'total_reacciones' => $totalReacciones,
+                    'total_compartidos' => $totalCompartidos,
+                    'promedio_participantes' => $promedioParticipantes,
+                    'tasa_asistencia' => $tasaAsistencia,
+                    'engagement_rate' => $engagementRate,
+                    'tasa_finalizacion' => $tasaFinalizacion,
+                ],
+                'eventos_destacados' => [
+                    'mas_participantes' => $eventoMasParticipantes,
+                    'mas_engagement' => $eventoMasEngagement,
+                    'proximo_importante' => $proximoEventoImportante ? [
+                        'id' => $proximoEventoImportante->id,
+                        'titulo' => $proximoEventoImportante->titulo,
+                        'fecha_inicio' => $proximoEventoImportante->fecha_inicio,
+                    ] : null,
+                    'mas_reciente' => $eventoMasReciente ? [
+                        'id' => $eventoMasReciente->id,
+                        'titulo' => $eventoMasReciente->titulo,
+                        'fecha_creacion' => $eventoMasReciente->created_at,
+                    ] : null,
+                ],
+                'graficos_adicionales' => [
+                    'eventos_por_mes' => $eventosPorMes,
+                    'top5_participacion' => $top5Participacion,
+                    'top5_engagement' => $top5Engagement,
+                ],
+                'metricas_tiempo' => [
+                    'dias_promedio_hasta_inicio' => round($diasPromedioHastaInicio ?? 0, 1),
+                    'duracion_promedio_dias' => round($duracionPromedio ?? 0, 1),
+                ],
+                'tabla_resumen' => $tablaResumen,
                 'filtro_estado' => $estadoFiltro,
                 'count' => $eventos->count()
             ]);

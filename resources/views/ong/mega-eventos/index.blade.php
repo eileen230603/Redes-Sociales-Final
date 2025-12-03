@@ -4,29 +4,35 @@
 
 @section('content_body')
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="text-primary">
+    <!-- Botón normal (visible al inicio) -->
+    <div class="d-flex justify-content-between align-items-center mb-4" id="btnNuevoMegaEventoNormal">
+        <h2 class="text-primary font-weight-bold">
             <i class="fas fa-star mr-2"></i> Mega Eventos
         </h2>
         <div>
             <button id="btnSeguimientoGeneral" class="btn btn-info btn-lg mr-2">
                 <i class="fas fa-chart-line mr-2"></i> Seguimiento General
             </button>
-        <a href="{{ route('ong.mega-eventos.create') }}" class="btn btn-success btn-lg">
-            <i class="fas fa-plus mr-2"></i> Nuevo Mega Evento
-        </a>
+            <a href="{{ route('ong.mega-eventos.create') }}" class="btn btn-success btn-lg">
+                <i class="fas fa-plus mr-2"></i> Nuevo Mega Evento
+            </a>
         </div>
     </div>
+
+    <!-- Botón FAB circular (oculto inicialmente) -->
+    <a href="{{ route('ong.mega-eventos.create') }}" id="btnNuevoMegaEventoFAB" class="fab-button" style="display: none;">
+        <i class="fas fa-plus"></i>
+    </a>
 
     <!-- Panel de Estadísticas Agregadas -->
     <div id="panelEstadisticasAgregadas" class="card mb-4 shadow-sm" style="border: none; border-radius: 12px; display: none;">
         <div class="card-header bg-white" style="border-bottom: 1px solid #f0f0f0; padding: 1.25rem;">
             <div class="d-flex justify-content-between align-items-center">
                 <h5 class="mb-0" style="font-weight: 700; color: #0C2B44;">
-                    <i class="far fa-chart-bar mr-2" style="color: #00A36C;"></i>Estadísticas Agregadas de Todos los Mega Eventos
+                    <i class="fas fa-chart-bar mr-2" style="color: #00A36C;"></i>Estadísticas Agregadas de Todos los Mega Eventos
                 </h5>
                 <button class="btn btn-sm btn-outline-secondary" onclick="ocultarEstadisticasAgregadas()">
-                    <i class="far fa-times mr-1"></i> Cerrar
+                    <i class="fas fa-times mr-1"></i> Cerrar
                 </button>
             </div>
         </div>
@@ -41,7 +47,7 @@
                                     <h6 class="text-white text-uppercase mb-3" style="font-size: 0.8rem; opacity: .95; font-weight: 600;">Total Mega Eventos</h6>
                                     <h2 class="text-white mb-0" id="totalMegaEventos" style="font-size: 3rem; font-weight: 700;">0</h2>
                                 </div>
-                                <i class="far fa-star fa-3x text-white" style="opacity: .2;"></i>
+                                <i class="fas fa-star fa-3x text-white" style="opacity: .2;"></i>
                             </div>
                         </div>
                     </div>
@@ -54,7 +60,7 @@
                                     <h6 class="text-white text-uppercase mb-3" style="font-size: 0.8rem; opacity: .95; font-weight: 600;">Total Participantes</h6>
                                     <h2 class="text-white mb-0" id="totalParticipantesAgregado" style="font-size: 3rem; font-weight: 700;">0</h2>
                                 </div>
-                                <i class="far fa-users fa-3x text-white" style="opacity: .2;"></i>
+                                <i class="fas fa-users fa-3x text-white" style="opacity: .2;"></i>
                             </div>
                         </div>
                     </div>
@@ -67,7 +73,7 @@
                                     <h6 class="text-white text-uppercase mb-3" style="font-size: 0.8rem; opacity: .95; font-weight: 600;">Total Reacciones</h6>
                                     <h2 class="text-white mb-0" id="totalReaccionesAgregado" style="font-size: 3rem; font-weight: 700;">0</h2>
                                 </div>
-                                <i class="far fa-heart fa-3x text-white" style="opacity: .2;"></i>
+                                <i class="fas fa-heart fa-3x text-white" style="opacity: .2;"></i>
                             </div>
                         </div>
                     </div>
@@ -80,7 +86,7 @@
                                     <h6 class="text-white text-uppercase mb-3" style="font-size: 0.8rem; opacity: .95; font-weight: 600;">Total Compartidos</h6>
                                     <h2 class="text-white mb-0" id="totalCompartidosAgregado" style="font-size: 3rem; font-weight: 700;">0</h2>
                                 </div>
-                                <i class="far fa-share-alt fa-3x text-white" style="opacity: .2;"></i>
+                                <i class="fas fa-share-alt fa-3x text-white" style="opacity: .2;"></i>
                             </div>
                         </div>
                     </div>
@@ -119,7 +125,7 @@
             <div class="card shadow-sm" style="border: none; border-radius: 12px;">
                 <div class="card-header bg-white" style="border-bottom: 1px solid #f0f0f0; padding: 1.25rem;">
                     <h6 class="mb-0" style="font-weight: 600; color: #0C2B44;">
-                        <i class="far fa-list mr-2" style="color: #00A36C;"></i>Detalle por Mega Evento
+                        <i class="fas fa-list mr-2" style="color: #00A36C;"></i>Detalle por Mega Evento
                     </h6>
                 </div>
                 <div class="card-body p-0">
@@ -152,11 +158,18 @@
     </div>
 
     <!-- Filtros y Búsqueda -->
-    <div class="card mb-4 shadow-sm">
+    <div class="card mb-4">
+        <div class="card-header bg-primary">
+            <h5 class="card-title mb-0 text-white">
+                <i class="fas fa-filter mr-2"></i>Filtros y Búsqueda
+            </h5>
+        </div>
         <div class="card-body">
             <div class="row">
                 <div class="col-md-4 mb-3 mb-md-0">
-                    <label for="filtroCategoria" class="form-label"><i class="fas fa-filter mr-2"></i>Categoría</label>
+                    <label for="filtroCategoria" class="font-weight-bold text-dark">
+                        <i class="fas fa-sliders-h mr-2 text-info"></i>Categoría
+                    </label>
                     <select id="filtroCategoria" class="form-control">
                         <option value="todos">Todas las categorías</option>
                         <option value="cultural">Cultural</option>
@@ -168,7 +181,9 @@
                     </select>
                 </div>
                 <div class="col-md-4 mb-3 mb-md-0">
-                    <label for="filtroEstado" class="form-label"><i class="fas fa-info-circle mr-2"></i>Estado</label>
+                    <label for="filtroEstado" class="font-weight-bold text-dark">
+                        <i class="fas fa-info-circle mr-2 text-success"></i>Estado
+                    </label>
                     <select id="filtroEstado" class="form-control">
                         <option value="todos">Todos los estados</option>
                         <option value="planificacion">Planificación</option>
@@ -179,12 +194,14 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label for="buscador" class="form-label"><i class="fas fa-search mr-2"></i>Buscar</label>
+                    <label for="buscador" class="font-weight-bold text-dark">
+                        <i class="fas fa-search mr-2 text-warning"></i>Buscar
+                    </label>
                     <div class="input-group">
                         <input type="text" id="buscador" class="form-control" placeholder="Buscar por título o descripción...">
                         <div class="input-group-append">
                             <button class="btn btn-outline-secondary" type="button" id="btnLimpiar">
-                                <i class="fas fa-times"></i>
+                                <i class="fas fa-times-circle"></i>
                             </button>
                         </div>
                     </div>
@@ -203,6 +220,53 @@
     </div>
 </div>
 @endsection
+
+@push('css')
+<style>
+    /* Botón FAB (Floating Action Button) */
+    .fab-button {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(12, 43, 68, 0.3);
+        z-index: 1000;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        border: none;
+    }
+
+    .fab-button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 16px rgba(12, 43, 68, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    .fab-button i {
+        font-size: 1.5rem;
+    }
+
+    .fab-button.show {
+        opacity: 1;
+        visibility: visible;
+        transform: scale(1);
+    }
+
+    .fab-button.hide {
+        opacity: 0;
+        visibility: hidden;
+        transform: scale(0.8);
+    }
+</style>
+@endpush
 
 @section('js')
 <script src="{{ asset('assets/js/config.js') }}"></script>
@@ -344,91 +408,127 @@ async function cargarMegaEventos() {
             colDiv.className = 'col-md-6 col-lg-4 mb-4';
             
             const cardDiv = document.createElement('div');
-            cardDiv.className = 'card h-100 border-0';
-            cardDiv.style.cssText = 'box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: transform 0.2s, box-shadow 0.2s;';
+            cardDiv.className = 'card h-100 shadow-sm';
+            cardDiv.style.cssText = 'border-radius: 12px; border: 1px solid #e9ecef; transition: transform 0.2s, box-shadow 0.2s; overflow: hidden;';
             cardDiv.onmouseenter = function() {
-                this.style.transform = 'translateY(-2px)';
-                this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+                this.style.transform = 'translateY(-4px)';
+                this.style.boxShadow = '0 8px 16px rgba(0,0,0,0.15)';
             };
             cardDiv.onmouseleave = function() {
                 this.style.transform = 'translateY(0)';
-                this.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+                this.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
             };
             
-            // Imagen o placeholder minimalista
+            // Imagen o placeholder - clickable para ir a detalles
             if (imagenPrincipal) {
+                const imgWrapper = document.createElement('div');
+                imgWrapper.className = 'position-relative';
+                imgWrapper.style.cssText = 'cursor: pointer; overflow: hidden;';
+                imgWrapper.onclick = () => window.location.href = `/ong/mega-eventos/${mega.mega_evento_id}/detalle`;
+                
                 const img = document.createElement('img');
                 img.src = imagenPrincipal;
                 img.className = 'card-img-top';
-                img.style.cssText = 'height: 220px; object-fit: cover; cursor: pointer; transition: opacity 0.3s;';
+                img.style.cssText = 'height: 220px; object-fit: cover; transition: transform 0.3s ease;';
                 img.alt = mega.titulo || 'Mega Evento';
-                img.onclick = () => window.open(imagenPrincipal, '_blank');
                 img.onerror = function() {
                     this.onerror = null;
                     this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="200"%3E%3Crect fill="%23f0f0f0" width="400" height="200"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999" font-family="Arial" font-size="14"%3EImagen no disponible%3C/text%3E%3C/svg%3E';
                     this.style.objectFit = 'contain';
                 };
-                cardDiv.appendChild(img);
+                
+                // Overlay hover effect
+                const overlay = document.createElement('div');
+                overlay.className = 'position-absolute w-100 h-100 d-flex align-items-center justify-content-center';
+                overlay.style.cssText = 'top: 0; left: 0; background: rgba(0,0,0,0); transition: background 0.3s; pointer-events: none;';
+                overlay.innerHTML = '<i class="fas fa-eye fa-2x text-white" style="opacity: 0; transition: opacity 0.3s;"></i>';
+                
+                imgWrapper.onmouseenter = function() {
+                    img.style.transform = 'scale(1.05)';
+                    overlay.style.background = 'rgba(0,0,0,0.3)';
+                    overlay.querySelector('i').style.opacity = '1';
+                };
+                imgWrapper.onmouseleave = function() {
+                    img.style.transform = 'scale(1)';
+                    overlay.style.background = 'rgba(0,0,0,0)';
+                    overlay.querySelector('i').style.opacity = '0';
+                };
+                
+                imgWrapper.appendChild(img);
+                imgWrapper.appendChild(overlay);
+                cardDiv.appendChild(imgWrapper);
             } else {
                 const placeholder = document.createElement('div');
-                placeholder.className = 'card-img-top d-flex align-items-center justify-content-center';
-                placeholder.style.cssText = 'height: 220px; background: #f8f9fa; border-bottom: 1px solid #e9ecef;';
+                placeholder.className = 'card-img-top d-flex align-items-center justify-content-center position-relative';
+                placeholder.style.cssText = 'height: 220px; background: #f8f9fa; border-bottom: 1px solid #e9ecef; cursor: pointer;';
+                placeholder.onclick = () => window.location.href = `/ong/mega-eventos/${mega.mega_evento_id}/detalle`;
                 placeholder.innerHTML = '<i class="fas fa-image fa-3x text-muted" style="opacity: 0.3;"></i>';
                 cardDiv.appendChild(placeholder);
             }
             
-            // Card body minimalista
+            // Card body mejorado
             const cardBody = document.createElement('div');
-            cardBody.className = 'card-body d-flex flex-column p-3';
+            cardBody.className = 'card-body d-flex flex-column p-4';
             
             const titulo = document.createElement('h5');
             titulo.className = 'card-title mb-2';
-            titulo.style.cssText = 'font-size: 1.1rem; font-weight: 600; color: #2c3e50;';
+            titulo.style.cssText = 'font-size: 1.2rem; font-weight: 700; color: #0C2B44;';
             titulo.textContent = mega.titulo || 'Sin título';
             
             const descripcion = document.createElement('p');
             descripcion.className = 'card-text flex-grow-1 mb-3';
-            descripcion.style.cssText = 'font-size: 0.875rem; color: #6c757d; line-height: 1.5;';
+            descripcion.style.cssText = 'font-size: 0.9rem; color: #6c757d; line-height: 1.6;';
             descripcion.textContent = mega.descripcion 
-                ? (mega.descripcion.length > 80 ? mega.descripcion.substring(0, 80) + '...' : mega.descripcion)
+                ? (mega.descripcion.length > 100 ? mega.descripcion.substring(0, 100) + '...' : mega.descripcion)
                 : 'Sin descripción';
             
             const infoDiv = document.createElement('div');
             infoDiv.className = 'mb-3';
-            infoDiv.style.cssText = 'font-size: 0.8rem; color: #6c757d;';
+            infoDiv.style.cssText = 'font-size: 0.85rem; color: #6c757d;';
+            
+            // Formatear fecha de finalización de forma más corta
+            const fechaFinFormateada = mega.fecha_fin ? new Date(mega.fecha_fin).toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            }) : 'No especificada';
+            
             infoDiv.innerHTML = `
-                <div class="mb-1">
-                    <i class="far fa-calendar-alt mr-1"></i> ${fechaInicio.split(',')[0]}
+                <div class="mb-2">
+                    <i class="fas fa-calendar-alt mr-2 text-info"></i> <strong>Inicio:</strong> ${fechaInicio.split(',')[0]}
+                </div>
+                <div class="mb-2">
+                    <i class="fas fa-calendar-check mr-2 text-success"></i> <strong>Fin:</strong> ${fechaFinFormateada}
                 </div>
                 ${mega.ubicacion ? `
                     <div class="mb-2">
-                        <i class="fas fa-map-marker-alt mr-1"></i> ${mega.ubicacion.length > 30 ? mega.ubicacion.substring(0, 30) + '...' : mega.ubicacion}
+                        <i class="fas fa-map-marker-alt mr-2 text-danger"></i> ${mega.ubicacion.length > 35 ? mega.ubicacion.substring(0, 35) + '...' : mega.ubicacion}
                     </div>
                 ` : ''}
-                <div>
+                <div class="d-flex flex-wrap gap-2">
                     ${estadoBadge}
-                    ${mega.es_publico ? '<span class="badge badge-info ml-1" style="font-size: 0.7rem;">Público</span>' : '<span class="badge badge-secondary ml-1" style="font-size: 0.7rem;">Privado</span>'}
+                    ${mega.es_publico ? '<span class="badge badge-info">Público</span>' : '<span class="badge badge-secondary">Privado</span>'}
                 </div>
             `;
             
             const btnGroup = document.createElement('div');
-            btnGroup.className = 'mt-auto pt-2 border-top';
+            btnGroup.className = 'mt-auto pt-3 border-top';
             btnGroup.innerHTML = `
-                <div class="btn-group w-100" role="group">
+                <div class="d-flex justify-content-between align-items-center" style="gap: 0.5rem;">
                     <a href="/ong/mega-eventos/${mega.mega_evento_id}/detalle" 
-                       class="btn btn-sm btn-light border" style="font-size: 0.8rem;" title="Ver detalles">
-                        <i class="fas fa-eye"></i>
+                       class="btn btn-sm btn-primary flex-fill" title="Ver detalles">
+                        <i class="fas fa-eye mr-1"></i> Detalles
                     </a>
                     <a href="/ong/mega-eventos/${mega.mega_evento_id}/seguimiento" 
-                       class="btn btn-sm btn-light border" style="font-size: 0.8rem; background: #0C2B44; color: white; border-color: #0C2B44 !important;" title="Seguimiento">
-                        <i class="fas fa-chart-line"></i>
+                       class="btn btn-sm btn-info flex-fill" title="Seguimiento">
+                        <i class="fas fa-chart-line mr-1"></i> Seguimiento
                     </a>
                     <a href="/ong/mega-eventos/${mega.mega_evento_id}/editar" 
-                       class="btn btn-sm btn-light border" style="font-size: 0.8rem;" title="Editar">
+                       class="btn btn-sm btn-warning" title="Editar" style="min-width: 40px;">
                         <i class="fas fa-edit"></i>
                     </a>
                     <button onclick="eliminarMegaEvento(${mega.mega_evento_id})" 
-                            class="btn btn-sm btn-light border text-danger" style="font-size: 0.8rem;" title="Eliminar">
+                            class="btn btn-sm btn-danger" title="Eliminar" style="min-width: 40px;">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -493,6 +593,39 @@ document.addEventListener('DOMContentLoaded', async () => {
             buscar: ''
         };
         cargarMegaEventos();
+    });
+
+    // Control del FAB (Floating Action Button)
+    const btnNormal = document.getElementById('btnNuevoMegaEventoNormal');
+    const btnFAB = document.getElementById('btnNuevoMegaEventoFAB');
+    let lastScrollTop = 0;
+
+    window.addEventListener('scroll', function() {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        
+        if (scrollTop > 200) {
+            // Ocultar botón normal y mostrar FAB
+            if (btnNormal) btnNormal.style.display = 'none';
+            if (btnFAB) {
+                btnFAB.style.display = 'flex';
+                btnFAB.classList.add('show');
+                btnFAB.classList.remove('hide');
+            }
+        } else {
+            // Mostrar botón normal y ocultar FAB
+            if (btnNormal) btnNormal.style.display = 'flex';
+            if (btnFAB) {
+                btnFAB.classList.add('hide');
+                btnFAB.classList.remove('show');
+                setTimeout(() => {
+                    if (btnFAB.classList.contains('hide')) {
+                        btnFAB.style.display = 'none';
+                    }
+                }, 300);
+            }
+        }
+        
+        lastScrollTop = scrollTop;
     });
 });
 

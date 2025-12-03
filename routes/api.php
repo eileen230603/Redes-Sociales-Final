@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\VoluntarioController;
 use App\Http\Controllers\Api\ConfiguracionController;
 use App\Http\Controllers\Api\ParametrizacionController;
 use App\Http\Controllers\Api\EventoEmpresaParticipacionController;
+use App\Http\Controllers\Api\EventoMetricaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MegaEventoController;
 use App\Http\Controllers\StorageController;
@@ -127,6 +128,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/participantes/lista', [DashboardOngController::class, 'listaParticipantes']);
         Route::get('/reacciones/estadisticas', [DashboardOngController::class, 'estadisticasReacciones']);
         Route::get('/reacciones/lista', [DashboardOngController::class, 'listaReacciones']);
+    });
+
+    // ----------- MÉTRICAS Y KPIs DE EVENTOS -----------
+    Route::prefix('metricas-eventos')->group(function () {
+        // Métricas de un evento específico
+        Route::get('/evento/{eventoId}', [EventoMetricaController::class, 'metricasEvento']);
+        // Métricas agregadas de la ONG
+        Route::get('/ong', [EventoMetricaController::class, 'metricasOng']);
+        // Ciclo de vida completo de un evento
+        Route::get('/evento/{eventoId}/ciclo-vida', [EventoMetricaController::class, 'cicloVidaEvento']);
+        // Generar reporte PDF completo
+        Route::get('/evento/{eventoId}/reporte-pdf', [EventoMetricaController::class, 'generarReportePdf']);
     });
 
     // ----------- DASHBOARD EXTERNO -----------

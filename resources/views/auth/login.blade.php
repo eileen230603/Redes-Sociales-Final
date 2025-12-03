@@ -806,7 +806,7 @@
 
                 <div class="illustration">
                     <div class="illustration-content">
-                        <img src="{{ asset('assets/img/UNI2 - copia.png') }}" alt="UNI2 Logo">
+                        <img src="{{ asset('assets/img/iniii.png') }}" alt="UNI2 Logo">
                     </div>
       </div>
     </div>

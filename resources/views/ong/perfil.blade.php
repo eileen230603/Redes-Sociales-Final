@@ -678,7 +678,7 @@
 <script>
 // Definir API_BASE_URL solo si no está definido
 if (typeof API_BASE_URL === 'undefined') {
-    window.API_BASE_URL = "{{ env('APP_URL', 'http://127.0.0.1:8000') }}";
+    window.API_BASE_URL = "{{ env('APP_URL', 'http://10.114.190.52:8000') }}";
     console.log("🌐 API_BASE_URL definido:", window.API_BASE_URL);
 }
 </script>

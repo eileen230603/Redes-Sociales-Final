@@ -682,7 +682,7 @@
                         Únete a miles de personas que ya están haciendo la diferencia.
                     </p>
                     <div class="illustration-content" style="margin-top: 30px;">
-                        <img src="{{ asset('assets/img/UNI2 - copia.png') }}" alt="UNI2 Logo">
+                        <img src="{{ asset('assets/img/log 2.png') }}" alt="UNI2 Logo">
                     </div>
                 </div>
       </div>

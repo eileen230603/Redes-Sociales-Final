@@ -101,6 +101,7 @@ Route::prefix('ong/eventos-dashboard')->name('ong.eventos-dashboard.')->group(fu
 // ---------------- ONG: MEGA EVENTOS ----------------
 Route::prefix('ong/mega-eventos')->name('ong.mega-eventos.')->group(function () {
     Route::view('/', 'ong.mega-eventos.index')->name('index');
+    Route::view('/historial', 'ong.mega-eventos.historial')->name('historial');
     Route::view('/crear', 'ong.mega-eventos.create')->name('create');
     Route::view('/{id}/editar', 'ong.mega-eventos.edit')->name('edit');
     Route::view('/{id}/detalle', 'ong.mega-eventos.show')->name('show');
