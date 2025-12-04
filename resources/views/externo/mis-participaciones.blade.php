@@ -336,9 +336,16 @@ async function cargarMisParticipaciones() {
                                 <span>${fechaInicio}</span>
                             </div>
                             ${evento.tipo_evento ? `<span class="badge badge-info mb-3" style="font-size: 0.75rem;">${evento.tipo_evento}</span>` : ''}
-                            <a href="/externo/eventos/${evento.id}/detalle" class="btn btn-sm btn-block mt-auto" style="background: linear-gradient(135deg, #00A36C 0%, #008a5a 100%); color: white; border: none; border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500; transition: all 0.2s;">
-                                <i class="far fa-eye mr-1"></i> Ver Detalles
-                            </a>
+                            <div class="d-flex flex-column flex-sm-row gap-2 mt-auto">
+                                <a href="/externo/eventos/${evento.id}/detalle" class="btn btn-sm btn-block mb-2 mb-sm-0" style="background: linear-gradient(135deg, #00A36C 0%, #008a5a 100%); color: white; border: none; border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500; transition: all 0.2s;">
+                                    <i class="far fa-eye mr-1"></i> Ver Detalles
+                                </a>
+                                ${participacion.ticket_codigo ? `
+                                    <button type="button" class="btn btn-sm btn-outline-success btn-block" onclick="mostrarTicketEvento('${participacion.ticket_codigo}', '${evento.titulo || 'Evento'}')" style="border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500;">
+                                        <i class="fas fa-ticket-alt mr-1"></i> Ver Ticket
+                                    </button>
+                                ` : ''}
+                            </div>
                         </div>
                     </div>
                 `;
@@ -491,6 +498,75 @@ async function cargarMisParticipaciones() {
         `;
         megaEventosContainer.innerHTML = eventosContainer.innerHTML;
     }
+}
+
+/**
+ * Mostrar ticket del evento con QR usando el código del ticket.
+ */
+function mostrarTicketEvento(ticketCodigo, tituloEvento) {
+    if (typeof Swal === 'undefined') {
+        alert(`Tu código de ticket es: ${ticketCodigo}`);
+        return;
+    }
+
+    const containerId = 'ticket-qr-container-' + Date.now();
+
+    Swal.fire({
+        title: 'Ticket de acceso',
+        html: `
+            <div style="margin-top: 0.5rem;">
+                <p style="font-size: 0.95rem; color: #4b5563; margin-bottom: 0.5rem;">
+                    Evento: <strong>${tituloEvento}</strong>
+                </p>
+                <div id="${containerId}" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                    <div class="mb-3" id="${containerId}-qr"></div>
+                    <code style="background: #f3f4f6; padding: 0.35rem 0.6rem; border-radius: 0.375rem; font-size: 0.85rem; word-break: break-all;">
+                        ${ticketCodigo}
+                    </code>
+                    <p class="mt-2 mb-0" style="font-size: 0.8rem; color: #6b7280;">Muestra este QR o el código al ingresar al evento.</p>
+                </div>
+            </div>
+        `,
+        showConfirmButton: true,
+        confirmButtonText: 'Cerrar',
+        width: 400,
+        didOpen: () => {
+            const target = document.getElementById(`${containerId}-qr`);
+            if (!target) return;
+
+            const qrText = ticketCodigo;
+
+            // Intentar usar librería QRCode si está disponible
+            const renderQr = () => {
+                try {
+                    target.innerHTML = '';
+                    new QRCode(target, {
+                        text: qrText,
+                        width: 200,
+                        height: 200,
+                        colorDark : "#0C2B44",
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.H
+                    });
+                } catch (e) {
+                    console.error('Error generando QR:', e);
+                    target.innerHTML = '<p style="color:#dc2626;font-size:0.85rem;">No se pudo generar el QR. Usa el código de texto.</p>';
+                }
+            };
+
+            if (typeof QRCode === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+                script.onload = renderQr;
+                script.onerror = () => {
+                    target.innerHTML = '<p style="color:#dc2626;font-size:0.85rem;">No se pudo cargar la librería de QR. Usa el código de texto.</p>';
+                };
+                document.head.appendChild(script);
+            } else {
+                renderQr();
+            }
+        }
+    });
 }
 </script>
 @endpush

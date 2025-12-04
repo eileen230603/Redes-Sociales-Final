@@ -541,10 +541,37 @@ class EventController extends Controller
             $evento->makeVisible(['imagenes', 'fecha_finalizacion']);
             // Agregar estado dinámico calculado
             $evento->estado_dinamico = $evento->estado_dinamico;
+            
+            // Convertir el modelo a array para poder modificar las fechas
+            $eventoArray = $evento->toArray();
+            
+            // Formatear fechas en formato PostgreSQL (YYYY-MM-DD HH:MM:SS) sin zona horaria
+            // PostgreSQL almacena fechas como 'timestamp without time zone'
+            // Laravel las interpreta según la timezone de la app (UTC por defecto)
+            // Para PostgreSQL, necesitamos obtener el valor raw de la BD sin conversión
+            // Usamos getRawOriginal() para obtener el valor tal como está en PostgreSQL
+            if ($evento->fecha_inicio) {
+                // Obtener el valor raw de PostgreSQL (sin conversión de Laravel)
+                $rawValue = $evento->getRawOriginal('fecha_inicio');
+                // Si es string, usarlo directamente; si es Carbon, formatearlo
+                $eventoArray['fecha_inicio'] = is_string($rawValue) ? $rawValue : $evento->fecha_inicio->format('Y-m-d H:i:s');
+            }
+            if ($evento->fecha_fin) {
+                $rawValue = $evento->getRawOriginal('fecha_fin');
+                $eventoArray['fecha_fin'] = is_string($rawValue) ? $rawValue : $evento->fecha_fin->format('Y-m-d H:i:s');
+            }
+            if ($evento->fecha_limite_inscripcion) {
+                $rawValue = $evento->getRawOriginal('fecha_limite_inscripcion');
+                $eventoArray['fecha_limite_inscripcion'] = is_string($rawValue) ? $rawValue : $evento->fecha_limite_inscripcion->format('Y-m-d H:i:s');
+            }
+            if ($evento->fecha_finalizacion) {
+                $rawValue = $evento->getRawOriginal('fecha_finalizacion');
+                $eventoArray['fecha_finalizacion'] = is_string($rawValue) ? $rawValue : ($evento->fecha_finalizacion ? $evento->fecha_finalizacion->format('Y-m-d H:i:s') : null);
+            }
 
             return response()->json([
                 "success" => true,
-                "evento" => $evento
+                "evento" => $eventoArray
             ]);
 
         } catch (\Throwable $e) {

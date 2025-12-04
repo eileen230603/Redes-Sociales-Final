@@ -58,8 +58,11 @@ class MegaEvento extends Model
             }
         }
 
+        // Obtener la URL base desde PUBLIC_APP_URL o APP_URL
+        $baseUrl = env('PUBLIC_APP_URL', env('APP_URL', 'http://192.168.0.6:8000'));
+        
         // Generar URLs completas para cada imagen
-        return array_map(function($imagen) {
+        return array_map(function($imagen) use ($baseUrl) {
             if (empty($imagen) || !is_string($imagen)) {
                 return null;
             }
@@ -69,18 +72,18 @@ class MegaEvento extends Model
                 return $imagen;
             }
 
-            // Si empieza con /storage/, agregar el dominio (para Laravel web)
+            // Si empieza con /storage/, agregar el dominio base
             if (strpos($imagen, '/storage/') === 0) {
-                return url($imagen);
+                return rtrim($baseUrl, '/') . $imagen;
             }
 
             // Si empieza con storage/, agregar /storage/
             if (strpos($imagen, 'storage/') === 0) {
-                return url('/storage/' . $imagen);
+                return rtrim($baseUrl, '/') . '/storage/' . $imagen;
             }
 
             // Por defecto, asumir que es relativa a storage
-            return url('/storage/' . ltrim($imagen, '/'));
+            return rtrim($baseUrl, '/') . '/storage/' . ltrim($imagen, '/');
         }, array_filter($value, function($img) {
             return !empty($img) && is_string($img);
         }));

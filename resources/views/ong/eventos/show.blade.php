@@ -274,6 +274,105 @@
                     </div>
                 </div>
 
+                <!-- Control de Asistencia -->
+                <div class="card mb-4" style="border: none; border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 163, 108, 0.15); overflow: hidden;">
+                    <div class="card-header" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border: none; padding: 1.5rem;">
+                        <h5 class="card-title mb-0 text-white d-flex align-items-center" style="font-size: 1.3rem; font-weight: 700;">
+                            <i class="fas fa-clipboard-check mr-3" style="font-size: 1.5rem;"></i> Control de Asistencia
+                        </h5>
+                    </div>
+                    <div class="card-body" style="background: #ffffff; padding: 2rem;">
+                        <!-- Estadísticas rápidas -->
+                        <div class="row mb-4">
+                            <div class="col-md-4 mb-3">
+                                <div class="text-center p-4" style="background: linear-gradient(135deg, #0C2B44 0%, #1a4a6b 100%); border-radius: 12px; box-shadow: 0 4px 12px rgba(12, 43, 68, 0.2); transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                                    <i class="fas fa-users mb-2" style="font-size: 2rem; color: #ffffff; opacity: 0.9;"></i>
+                                    <h3 class="mb-1" style="color: #ffffff; font-weight: 800; font-size: 2.5rem;" id="totalInscritos">0</h3>
+                                    <small style="color: #ffffff; font-weight: 500; font-size: 0.9rem; opacity: 0.95;">Total Inscritos</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="text-center p-4" style="background: linear-gradient(135deg, #00A36C 0%, #008a5a 100%); border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 163, 108, 0.3); transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                                    <i class="fas fa-check-circle mb-2" style="font-size: 2rem; color: #ffffff; opacity: 0.9;"></i>
+                                    <h3 class="mb-1" style="color: #ffffff; font-weight: 800; font-size: 2.5rem;" id="totalAsistieron">0</h3>
+                                    <small style="color: #ffffff; font-weight: 500; font-size: 0.9rem; opacity: 0.95;">Asistieron</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="text-center p-4" style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); border-radius: 12px; box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3); transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                                    <i class="fas fa-clock mb-2" style="font-size: 2rem; color: #ffffff; opacity: 0.9;"></i>
+                                    <h3 class="mb-1" style="color: #ffffff; font-weight: 800; font-size: 2.5rem;" id="totalPendientes">0</h3>
+                                    <small style="color: #ffffff; font-weight: 500; font-size: 0.9rem; opacity: 0.95;">Pendientes</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Formulario de registro de asistencia -->
+                        <div class="mb-4 p-4" style="background: linear-gradient(135deg, rgba(0, 163, 108, 0.05) 0%, rgba(12, 43, 68, 0.05) 100%); border-radius: 12px; border: 2px solid rgba(0, 163, 108, 0.2);">
+                            <h6 class="mb-3" style="color: #0C2B44; font-weight: 700; font-size: 1.1rem;">
+                                <i class="fas fa-qrcode mr-2" style="color: #00A36C;"></i> Registrar Asistencia
+                            </h6>
+                            <div class="input-group mb-3" style="box-shadow: 0 2px 8px rgba(0, 163, 108, 0.15); border-radius: 10px; overflow: hidden;">
+                                <input type="text" 
+                                       id="ticketCodigoInput" 
+                                       class="form-control form-control-lg" 
+                                       placeholder="Escanea o ingresa el código del ticket"
+                                       style="border: 2px solid #00A36C; border-right: none; padding: 0.75rem 1.25rem; font-size: 1rem; color: #0C2B44; font-weight: 500;"
+                                       onkeypress="if(event.key === 'Enter') registrarAsistenciaManual()">
+                                <div class="input-group-append">
+                                    <button class="btn btn-success" 
+                                            type="button" 
+                                            onclick="registrarAsistenciaManual()"
+                                            style="border: 2px solid #00A36C; background: linear-gradient(135deg, #00A36C 0%, #008a5a 100%); padding: 0.75rem 1.5rem; font-weight: 600; font-size: 1rem;">
+                                        <i class="fas fa-check-circle mr-2"></i> Registrar
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                <button class="btn btn-primary btn-sm" onclick="activarEscannerQR()" style="background: linear-gradient(135deg, #0C2B44 0%, #1a4a6b 100%); border: none; border-radius: 8px; padding: 0.6rem 1.2rem; font-weight: 600; box-shadow: 0 2px 8px rgba(12, 43, 68, 0.2);">
+                                    <i class="fas fa-camera mr-2"></i> Escanear QR
+                                </button>
+                                <button class="btn btn-info btn-sm" onclick="cargarListaAsistencia()" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); border: none; border-radius: 8px; padding: 0.6rem 1.2rem; font-weight: 600; color: white; box-shadow: 0 2px 8px rgba(23, 162, 184, 0.2);">
+                                    <i class="fas fa-sync mr-2"></i> Actualizar Lista
+                                </button>
+                                <label class="btn btn-warning btn-sm mb-0" style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); border: none; border-radius: 8px; padding: 0.6rem 1.2rem; font-weight: 600; color: white; cursor: pointer; box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2); margin: 0;">
+                                    <i class="fas fa-image mr-2"></i> Importar Imagen
+                                    <input type="file" id="importarImagenAsistencia" accept="image/*" style="display: none;" onchange="procesarImagenQR(event)">
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Contenedor del Escáner QR -->
+                        <div id="qrScannerContainer" style="display: none; margin-top: 1.5rem; padding: 1.5rem; background: linear-gradient(135deg, rgba(0, 163, 108, 0.05) 0%, rgba(12, 43, 68, 0.05) 100%); border-radius: 12px; border: 2px dashed rgba(0, 163, 108, 0.3);">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 style="color: #0C2B44; font-weight: 700; margin: 0;">
+                                    <i class="fas fa-camera mr-2" style="color: #00A36C;"></i> Escáner QR Activo
+                                </h6>
+                                <button class="btn btn-sm btn-danger" onclick="detenerEscannerQR()" style="border-radius: 8px; font-weight: 600;">
+                                    <i class="fas fa-times mr-1"></i> Cerrar
+                                </button>
+                            </div>
+                            <div style="position: relative; width: 100%; max-width: 400px; margin: 0 auto; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);">
+                                <video id="qrVideo" width="100%" style="display: block; background: #000;"></video>
+                                <canvas id="qrCanvas" style="display: none;"></canvas>
+                            </div>
+                            <p class="text-center mt-3 mb-0" style="color: #0C2B44; font-weight: 500; font-size: 0.9rem;">
+                                <i class="fas fa-info-circle mr-2" style="color: #17a2b8;"></i> Apunta la cámara hacia el código QR del participante
+                            </p>
+                        </div>
+
+                        <!-- Lista rápida de asistencia -->
+                        <div id="listaAsistenciaContainer">
+                            <div class="text-center py-4">
+                                <div class="spinner-border" role="status" style="color: #00A36C; width: 3rem; height: 3rem; border-width: 0.3rem;">
+                                    <span class="sr-only">Cargando...</span>
+                                </div>
+                                <p class="mt-3" style="color: #0C2B44; font-weight: 500; font-size: 1rem;">Cargando lista de asistencia...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Voluntarios y Participantes Inscritos -->
                 <div class="card mb-4">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center">
@@ -513,11 +612,12 @@
 </script>
 <script>
     // Definir PUBLIC_BASE_URL desde variable de entorno
-    window.PUBLIC_BASE_URL = "{{ env('PUBLIC_APP_URL', 'http://10.114.190.52:8000') }}";
+    window.PUBLIC_BASE_URL = "{{ env('PUBLIC_APP_URL', 'http://192.168.0.6:8000') }}";
     console.log("🌐 PUBLIC_BASE_URL desde .env:", window.PUBLIC_BASE_URL);
 </script>
 <script src="{{ asset('assets/js/config.js') }}"></script>
 <script src="{{ asset('assets/js/ong/show-event.js') }}"></script>
+<script src="{{ asset('assets/js/ong/asistencia-functions.js') }}"></script>
 <script>
     // Función para mostrar imagen en modal
     function mostrarImagenGaleria(url) {

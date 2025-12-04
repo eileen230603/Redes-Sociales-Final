@@ -915,10 +915,9 @@ function configurarBotonesCompartir(megaEventoId, mega) {
         mega_evento_id: megaEventoId,
         titulo: mega.titulo || 'Mega Evento',
         descripcion: mega.descripcion || '',
-        // Usar helper getPublicUrl si existe; si no, usar automáticamente el origen actual (localhost, IP local o dominio)
         url: typeof getPublicUrl !== 'undefined' 
             ? getPublicUrl(`/mega-evento/${megaEventoId}/qr`)
-            : `${window.location.origin}/mega-evento/${megaEventoId}/qr`
+            : `http://192.168.0.6:8000/mega-evento/${megaEventoId}/qr`
     };
 }
 

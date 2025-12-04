@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class EventoParticipacionController extends Controller
 {
@@ -48,7 +49,11 @@ class EventoParticipacionController extends Controller
             "externo_id" => $externoId,
             "estado" => "aprobada", // Aprobación automática
             "asistio" => false,
-            "puntos" => 0
+            "puntos" => 0,
+            // Generar código de ticket único para control de asistencia
+            "ticket_codigo" => Str::uuid()->toString(),
+            // Estado de asistencia por defecto
+            "estado_asistencia" => "no_asistido",
         ]);
 
             // 2. Crear notificación para la ONG
@@ -107,6 +112,8 @@ class EventoParticipacionController extends Controller
                     'estado' => $participacion->estado ?? 'pendiente',
                     'asistio' => $participacion->asistio ?? false,
                     'puntos' => $participacion->puntos ?? 0,
+                    'ticket_codigo' => $participacion->ticket_codigo,
+                    'checkin_at' => $participacion->checkin_at,
                     'created_at' => $participacion->created_at,
                     'evento' => $participacion->evento
                 ];
@@ -150,6 +157,7 @@ class EventoParticipacionController extends Controller
                     return [
                         'id' => $participacion->id,
                         'tipo' => 'registrado',
+                        'tipo_usuario' => 'Externo', // Los registrados son "Externos"
                         'externo_id' => $participacion->externo_id,
                         'nombre' => $externo ? trim($externo->nombres . ' ' . ($externo->apellidos ?? '')) : $user->nombre_usuario,
                         'correo' => $externo ? $externo->email : $user->correo_electronico,
@@ -158,11 +166,16 @@ class EventoParticipacionController extends Controller
                         'estado' => $participacion->estado ?? 'pendiente',
                         'asistio' => $participacion->asistio ?? false,
                         'puntos' => $participacion->puntos ?? 0,
+                        'ticket_codigo' => $participacion->ticket_codigo ?? null,
+                        'checkin_at' => $participacion->checkin_at ?? null,
+                        'modo_asistencia' => $participacion->modo_asistencia ?? null,
+                        'observaciones' => $participacion->observaciones ?? null,
+                        'estado_asistencia' => $participacion->estado_asistencia ?? 'no_asistido',
                         'foto_perfil' => $externo ? ($externo->foto_perfil_url ?? null) : ($user->foto_perfil_url ?? null)
                     ];
                 });
 
-            // Participantes no registrados
+            // Participantes no registrados - Estos son los "Voluntarios"
             $participantesNoRegistrados = EventoParticipanteNoRegistrado::where('evento_id', $eventoId)
                 ->where('estado', '!=', 'rechazada')
                 ->get()
@@ -170,12 +183,18 @@ class EventoParticipacionController extends Controller
                     return [
                         'id' => $participacion->id,
                         'tipo' => 'no_registrado',
+                        'tipo_usuario' => 'Voluntario', // Los no registrados son "Voluntarios"
                         'nombre' => trim($participacion->nombres . ' ' . $participacion->apellidos),
                         'correo' => $participacion->email ?? 'No disponible',
                         'telefono' => $participacion->telefono ?? 'No disponible',
                         'fecha_inscripcion' => $participacion->created_at,
                         'estado' => $participacion->estado ?? 'pendiente',
                         'asistio' => $participacion->asistio ?? false,
+                        'ticket_codigo' => null, // Los no registrados no tienen ticket
+                        'checkin_at' => null,
+                        'modo_asistencia' => null,
+                        'observaciones' => null,
+                        'estado_asistencia' => $participacion->asistio ? 'asistido' : 'no_asistido',
                         'foto_perfil' => null
                     ];
                 });
@@ -193,6 +212,273 @@ class EventoParticipacionController extends Controller
             return response()->json([
                 "success" => false,
                 "error" => "Error al obtener participantes: " . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Registrar asistencia usando el ticket del participante.
+     */
+    public function registrarAsistencia(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'evento_id' => 'required|integer',
+            'ticket_codigo' => 'nullable|string', // Puede ser null para registro manual
+            'modo_asistencia' => 'nullable|string|in:QR,Manual,Online,Confirmacion',
+            'observaciones' => 'nullable|string|max:500',
+            'participacion_id' => 'nullable|integer', // Para registro manual sin ticket
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                "success" => false,
+                "error" => "Datos inválidos",
+                "details" => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $eventoId = (int) $request->input('evento_id');
+            $ticketCodigo = $request->input('ticket_codigo');
+            $modoAsistencia = $request->input('modo_asistencia', 'Manual');
+            $observaciones = $request->input('observaciones');
+            $participacionId = $request->input('participacion_id');
+            $ongId = $request->user()->id_usuario;
+
+            $evento = Evento::find($eventoId);
+            if (!$evento) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Evento no encontrado",
+                ], 404);
+            }
+
+            // Verificar que el usuario autenticado es la ONG propietaria del evento
+            if ($evento->ong_id != $ongId) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "No tienes permiso para registrar asistencia en este evento",
+                ], 403);
+            }
+
+            // Validar que el ticket solo sea válido durante el evento
+            $ahora = now();
+            $fechaInicio = $evento->fecha_inicio ? \Carbon\Carbon::parse($evento->fecha_inicio) : null;
+            $fechaFin = $evento->fecha_fin ? \Carbon\Carbon::parse($evento->fecha_fin) : null;
+            
+            // Margen de tiempo permitido: 30 minutos antes del inicio y 2 horas después del fin
+            $margenAntes = 30; // minutos antes del inicio
+            $margenDespues = 120; // minutos después del fin (2 horas)
+            
+            if ($fechaInicio && $fechaFin) {
+                $fechaInicioConMargen = $fechaInicio->copy()->subMinutes($margenAntes);
+                $fechaFinConMargen = $fechaFin->copy()->addMinutes($margenDespues);
+                
+                // Verificar si estamos antes del evento (con margen)
+                if ($ahora->lt($fechaInicioConMargen)) {
+                    $tiempoRestante = $ahora->diffForHumans($fechaInicioConMargen, true);
+                    return response()->json([
+                        "success" => false,
+                        "error" => "El evento aún no ha comenzado. El registro de asistencia estará disponible {$tiempoRestante}.",
+                        "fecha_inicio_evento" => $fechaInicio->format('d/m/Y H:i'),
+                    ], 400);
+                }
+                
+                // Verificar si estamos después del evento (con margen)
+                if ($ahora->gt($fechaFinConMargen)) {
+                    $tiempoTranscurrido = $ahora->diffForHumans($fechaFinConMargen, true);
+                    return response()->json([
+                        "success" => false,
+                        "error" => "El evento ya finalizó. El registro de asistencia cerró {$tiempoTranscurrido}. Contacte al organizador para correcciones.",
+                        "fecha_fin_evento" => $fechaFin->format('d/m/Y H:i'),
+                    ], 400);
+                }
+                
+                // Si es registro por QR y estamos antes del inicio (pero dentro del margen), solo permitir manual
+                if ($modoAsistencia === 'QR' && $ahora->lt($fechaInicio)) {
+                    return response()->json([
+                        "success" => false,
+                        "error" => "El evento aún no ha comenzado. Use registro manual para casos especiales.",
+                        "fecha_inicio_evento" => $fechaInicio->format('d/m/Y H:i'),
+                    ], 400);
+                }
+            } elseif ($fechaInicio) {
+                // Si solo hay fecha_inicio, validar que no sea muy temprano
+                $fechaInicioConMargen = $fechaInicio->copy()->subMinutes($margenAntes);
+                if ($ahora->lt($fechaInicioConMargen)) {
+                    $tiempoRestante = $ahora->diffForHumans($fechaInicioConMargen, true);
+                    return response()->json([
+                        "success" => false,
+                        "error" => "El evento aún no ha comenzado. El registro de asistencia estará disponible {$tiempoRestante}.",
+                        "fecha_inicio_evento" => $fechaInicio->format('d/m/Y H:i'),
+                    ], 400);
+                }
+            }
+
+            // Buscar participación (puede ser registrada o no registrada)
+            $participacion = null;
+            $esNoRegistrado = false;
+            
+            if ($participacionId) {
+                // Primero buscar en participantes registrados
+                $participacion = EventoParticipacion::where('id', $participacionId)
+                    ->where('evento_id', $eventoId)
+                    ->first();
+                
+                // Si no se encuentra, buscar en participantes no registrados (voluntarios)
+                if (!$participacion) {
+                    $participanteNoRegistrado = EventoParticipanteNoRegistrado::where('id', $participacionId)
+                        ->where('evento_id', $eventoId)
+                        ->first();
+                    
+                    if ($participanteNoRegistrado) {
+                        $esNoRegistrado = true;
+                        $participacion = $participanteNoRegistrado;
+                    }
+                }
+            } elseif ($ticketCodigo) {
+                // Búsqueda por ticket (solo para participantes registrados)
+                $ticketCodigo = trim($ticketCodigo);
+                $participacion = EventoParticipacion::where('evento_id', $eventoId)
+                    ->where('ticket_codigo', $ticketCodigo)
+                    ->first();
+                    
+                // Si no se encuentra, intentar búsqueda case-insensitive
+                if (!$participacion) {
+                    $participacion = EventoParticipacion::where('evento_id', $eventoId)
+                        ->whereRaw('LOWER(ticket_codigo) = LOWER(?)', [$ticketCodigo])
+                        ->first();
+                }
+            } else {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Debe proporcionar ticket_codigo o participacion_id",
+                ], 422);
+            }
+
+            if (!$participacion) {
+                // Log para debugging
+                \Log::warning('Participación no encontrada', [
+                    'evento_id' => $eventoId,
+                    'ticket_codigo' => $ticketCodigo ? substr($ticketCodigo, 0, 20) . '...' : null,
+                    'participacion_id' => $participacionId,
+                    'ong_id' => $ongId
+                ]);
+                
+                // Verificar si existe el ticket en otro evento
+                $ticketEnOtroEvento = $ticketCodigo ? EventoParticipacion::where('ticket_codigo', $ticketCodigo)
+                    ->where('evento_id', '!=', $eventoId)
+                    ->exists() : false;
+                
+                $mensajeError = "Participación no encontrada para este evento.";
+                if ($ticketEnOtroEvento) {
+                    $mensajeError .= " El ticket pertenece a otro evento.";
+                } else {
+                    $mensajeError .= " Verifique que el código del ticket o ID de participación sea correcto.";
+                }
+                
+                return response()->json([
+                    "success" => false,
+                    "error" => $mensajeError,
+                ], 404);
+            }
+
+            // Verificar que la participación esté aprobada
+            if ($participacion->estado !== 'aprobada') {
+                return response()->json([
+                    "success" => false,
+                    "error" => "La participación debe estar aprobada para registrar asistencia",
+                ], 400);
+            }
+
+            // Manejar según el tipo de participación
+            if ($esNoRegistrado) {
+                // Participante no registrado (Voluntario) - solo tiene campo asistio
+                if ($participacion->asistio && empty($observaciones)) {
+                    return response()->json([
+                        "success" => false,
+                        "error" => "Este voluntario ya tiene asistencia registrada",
+                    ], 409);
+                }
+
+                $participacion->asistio = true;
+                $participacion->save();
+
+                return response()->json([
+                    "success" => true,
+                    "message" => "Asistencia del voluntario registrada correctamente",
+                    "participacion" => [
+                        'id' => $participacion->id,
+                        'evento_id' => $participacion->evento_id,
+                        'nombre' => trim($participacion->nombres . ' ' . ($participacion->apellidos ?? '')),
+                        'asistio' => $participacion->asistio,
+                        'tipo' => 'no_registrado',
+                        'tipo_usuario' => 'Voluntario',
+                    ],
+                ]);
+            } else {
+                // Participante registrado - tiene todos los campos de asistencia
+                $yaTieneCheckin = !is_null($participacion->checkin_at);
+                
+                // Normalizar observaciones: tratar "sin comentario" como vacío
+                $observacionesNormalizadas = $observaciones;
+                if ($observaciones && strtolower(trim($observaciones)) === 'sin comentario') {
+                    $observacionesNormalizadas = null;
+                }
+                
+                // Si es registro manual, siempre permitir (útil para correcciones o re-registros)
+                // Si es registro QR y ya tiene check-in, rechazar para evitar duplicados accidentales
+                if ($yaTieneCheckin && $modoAsistencia === 'QR') {
+                    return response()->json([
+                        "success" => false,
+                        "error" => "Este ticket ya fue utilizado para registrar asistencia. Use registro manual para actualizar.",
+                        "participacion" => $participacion,
+                    ], 409);
+                }
+
+                // Actualizar asistencia
+                // Si es registro manual y ya tiene check-in, actualizar la hora de check-in
+                $updateData = [
+                    'asistio' => true,
+                    'checkin_at' => $yaTieneCheckin && $modoAsistencia === 'Manual' ? now() : ($participacion->checkin_at ?? now()),
+                    'modo_asistencia' => $modoAsistencia,
+                    'registrado_por' => $ongId,
+                    'estado_asistencia' => 'asistido',
+                ];
+
+                // Si se proporcionan observaciones válidas, actualizarlas
+                if ($observacionesNormalizadas && trim($observacionesNormalizadas) !== '') {
+                    $updateData['observaciones'] = trim($observacionesNormalizadas);
+                }
+                // Si no hay observaciones nuevas y ya tiene check-in, mantener las existentes (no sobrescribir)
+
+                $participacion->update($updateData);
+
+                // Refrescar el modelo
+                $participacion->refresh();
+
+                return response()->json([
+                    "success" => true,
+                    "message" => "Asistencia registrada correctamente",
+                    "participacion" => [
+                        'id' => $participacion->id,
+                        'evento_id' => $participacion->evento_id,
+                        'externo_id' => $participacion->externo_id,
+                        'ticket_codigo' => $participacion->ticket_codigo,
+                        'asistio' => $participacion->asistio,
+                        'checkin_at' => $participacion->checkin_at,
+                        'modo_asistencia' => $participacion->modo_asistencia,
+                        'observaciones' => $participacion->observaciones,
+                        'estado' => $participacion->estado,
+                        'tipo' => 'registrado',
+                        'tipo_usuario' => 'Externo',
+                    ],
+                ]);
+            }
+        } catch (\Throwable $e) {
+            return response()->json([
+                "success" => false,
+                "error" => "Error al registrar asistencia: " . $e->getMessage(),
             ], 500);
         }
     }
@@ -222,6 +508,12 @@ class EventoParticipacionController extends Controller
             }
 
             $participacion->estado = 'aprobada';
+            
+            // Generar ticket si no existe
+            if (empty($participacion->ticket_codigo)) {
+                $participacion->ticket_codigo = Str::uuid()->toString();
+            }
+            
             $participacion->save();
 
             return response()->json([

@@ -28,14 +28,59 @@ document.addEventListener("DOMContentLoaded", async () => {
         const formatFecha = (fecha) => {
             if (!fecha) return 'No especificada';
             try {
-                return new Date(fecha).toLocaleString('es-ES', {
+                let fechaObj;
+                
+                if (typeof fecha === 'string') {
+                    // Limpiar la fecha (puede venir con espacios extra o formato ISO)
+                    fecha = fecha.trim();
+                    
+                    // Patrones para diferentes formatos de fecha
+                    // Formato MySQL: "2025-12-04 14:30:00" o "2025-12-04 14:30:00.000000"
+                    const mysqlPattern = /^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+                    // Formato ISO: "2025-12-04T14:30:00" o "2025-12-04T14:30:00Z"
+                    const isoPattern = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+                    
+                    let match = fecha.match(mysqlPattern) || fecha.match(isoPattern);
+                    
+                    if (match) {
+                        // Parsear manualmente para evitar conversión UTC
+                        // Las fechas en la BD están en hora local, no UTC
+                        const [, year, month, day, hour, minute, second] = match;
+                        // Crear fecha en hora local (mes es 0-indexed en JavaScript)
+                        fechaObj = new Date(
+                            parseInt(year, 10),
+                            parseInt(month, 10) - 1,
+                            parseInt(day, 10),
+                            parseInt(hour, 10),
+                            parseInt(minute, 10),
+                            parseInt(second || 0, 10)
+                        );
+                    } else {
+                        // Si no coincide con ningún patrón, intentar parsear directamente
+                        // pero esto puede causar problemas de zona horaria
+                        fechaObj = new Date(fecha);
+                    }
+                } else {
+                    fechaObj = new Date(fecha);
+                }
+                
+                // Verificar que la fecha sea válida
+                if (isNaN(fechaObj.getTime())) {
+                    console.warn('Fecha inválida:', fecha);
+                    return fecha; // Devolver original si no se puede parsear
+                }
+                
+                // Formatear en español
+                return fechaObj.toLocaleString('es-ES', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
                     hour: '2-digit',
-                    minute: '2-digit'
+                    minute: '2-digit',
+                    hour12: false // Usar formato 24 horas
                 });
             } catch (error) {
+                console.error('Error formateando fecha:', error, fecha);
                 return fecha;
             }
         };
@@ -379,6 +424,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         // Cargar participantes (que incluye voluntarios)
         await cargarParticipantes();
+        
+        // Cargar lista de asistencia si existe el contenedor
+        if (document.getElementById('listaAsistenciaContainer')) {
+            await cargarListaAsistencia();
+        }
 
         // Cargar contador de compartidos
         await cargarContadorCompartidos(eventoIdShow);
@@ -674,7 +724,10 @@ async function cargarParticipantes() {
 
             let estadoBadge = '';
             if (participante.estado === 'aprobada') {
-                estadoBadge = '<span class="badge" style="background: #00A36C; color: white; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;">Aprobada</span>';
+                const asistioBadge = participante.asistio 
+                    ? '<span class="badge ml-2" style="background: #28a745; color: white; padding: 0.3em 0.6em; border-radius: 15px; font-weight: 500; font-size: 0.75rem;"><i class="fas fa-check-circle mr-1"></i>Asistió</span>'
+                    : '<span class="badge ml-2" style="background: #ffc107; color: #333; padding: 0.3em 0.6em; border-radius: 15px; font-weight: 500; font-size: 0.75rem;"><i class="fas fa-clock mr-1"></i>Sin asistir</span>';
+                estadoBadge = '<span class="badge" style="background: #00A36C; color: white; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;">Aprobada</span>' + asistioBadge;
             } else if (participante.estado === 'rechazada') {
                 estadoBadge = '<span class="badge" style="background: #dc3545; color: white; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;">Rechazada</span>';
             } else {
@@ -718,6 +771,18 @@ async function cargarParticipantes() {
                                         <p class="mb-0" style="color: #333333; font-size: 0.9rem;">
                                             <i class="far fa-calendar mr-2" style="color: #00A36C;"></i> ${fechaInscripcion}
                                 </p>
+                                ${participante.ticket_codigo ? `
+                                        <p class="mb-1 mt-2" style="color: #333333; font-size: 0.85rem;">
+                                            <i class="fas fa-ticket-alt mr-2" style="color: #00A36C;"></i> 
+                                            <code style="background: #f8f9fa; padding: 0.2em 0.4em; border-radius: 4px; font-size: 0.8rem;">${participante.ticket_codigo.substring(0, 8)}...</code>
+                                        </p>
+                                ` : ''}
+                                ${participante.checkin_at ? `
+                                        <p class="mb-0" style="color: #28a745; font-size: 0.85rem; font-weight: 500;">
+                                            <i class="fas fa-check-circle mr-2"></i> 
+                                            Asistió: ${new Date(participante.checkin_at).toLocaleString('es-ES')}
+                                        </p>
+                                ` : ''}
                                     </div>
                                 ${(!esNoRegistrado && participante.estado === 'pendiente') ? `
                                         <div class="d-flex mt-3" style="gap: 0.5rem;">
@@ -810,6 +875,10 @@ async function aprobarParticipacion(participacionId) {
         }
 
         await cargarParticipantes();
+        // Cargar lista de asistencia si existe el contenedor
+        if (document.getElementById('listaAsistenciaContainer')) {
+            await cargarListaAsistencia();
+        }
 
     } catch (error) {
         console.error('Error aprobando participación:', error);
@@ -883,6 +952,10 @@ async function rechazarParticipacion(participacionId) {
         }
 
         await cargarParticipantes();
+        // Cargar lista de asistencia si existe el contenedor
+        if (document.getElementById('listaAsistenciaContainer')) {
+            await cargarListaAsistencia();
+        }
 
     } catch (error) {
         console.error('Error rechazando participación:', error);
@@ -921,7 +994,7 @@ async function configurarBotonesBanner(eventoId, evento) {
         id: eventoId,
         titulo: evento.titulo || 'Evento',
         descripcion: evento.descripcion || '',
-        url: `http://10.114.190.52:8000/evento/${eventoId}/qr`
+        url: `http://192.168.0.6:8000/evento/${eventoId}/qr`
     };
 }
 
@@ -977,7 +1050,7 @@ async function copiarEnlace() {
     // Usar la URL pública con IP para que cualquier usuario en la misma red pueda acceder
     const url = typeof getPublicUrl !== 'undefined' 
         ? getPublicUrl(`/evento/${evento.id}/qr`)
-        : `http://10.114.190.52:8000/evento/${evento.id}/qr`;
+        : `http://192.168.0.6:8000/evento/${evento.id}/qr`;
     
     // Registrar compartido
     await registrarCompartido(evento.id, 'link');
@@ -1087,7 +1160,7 @@ async function mostrarQR() {
     // URL pública con IP para acceso mediante QR (accesible desde otros dispositivos en la misma red)
     const qrUrl = typeof getPublicUrl !== 'undefined' 
         ? getPublicUrl(`/evento/${evento.id}/qr`)
-        : `http://10.114.190.52:8000/evento/${evento.id}/qr`;
+        : `http://192.168.0.6:8000/evento/${evento.id}/qr`;
     
     // Limpiar contenido anterior
     qrcodeDiv.innerHTML = '';
@@ -1260,6 +1333,10 @@ async function aprobarParticipacionNoRegistrado(participacionId) {
         }
 
         await cargarParticipantes();
+        // Cargar lista de asistencia si existe el contenedor
+        if (document.getElementById('listaAsistenciaContainer')) {
+            await cargarListaAsistencia();
+        }
     } catch (error) {
         console.error('Error aprobando participación:', error);
         if (typeof Swal !== 'undefined') {
@@ -1332,6 +1409,10 @@ async function rechazarParticipacionNoRegistrado(participacionId) {
         }
 
         await cargarParticipantes();
+        // Cargar lista de asistencia si existe el contenedor
+        if (document.getElementById('listaAsistenciaContainer')) {
+            await cargarListaAsistencia();
+        }
     } catch (error) {
         console.error('Error rechazando participación:', error);
         if (typeof Swal !== 'undefined') {
@@ -1344,4 +1425,329 @@ async function rechazarParticipacionNoRegistrado(participacionId) {
             alert('Error de conexión');
         }
     }
+}
+
+// =====================================
+// FUNCIONES DE CONTROL DE ASISTENCIA
+// =====================================
+
+// Cargar lista de asistencia y estadísticas
+async function cargarListaAsistencia() {
+    const container = document.getElementById('listaAsistenciaContainer');
+    const token = localStorage.getItem('token');
+    const eventoId = window.location.pathname.split("/")[3];
+
+    if (!container) return;
+
+    try {
+        container.innerHTML = `
+            <div class="text-center py-3">
+                <div class="spinner-border text-primary" role="status" style="color: #00A36C;">
+                    <span class="sr-only">Cargando...</span>
+                </div>
+            </div>
+        `;
+
+        const res = await fetch(`${API_BASE_URL}/api/participaciones/evento/${eventoId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            }
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+            container.innerHTML = `
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    ${data.error || 'Error al cargar lista de asistencia'}
+                </div>
+            `;
+            return;
+        }
+
+        const participantes = data.participantes || [];
+        const aprobados = participantes.filter(p => p.estado === 'aprobada');
+        const asistieron = aprobados.filter(p => p.asistio === true);
+        const pendientes = aprobados.filter(p => !p.asistio);
+
+        // Actualizar estadísticas
+        const totalInscritosEl = document.getElementById('totalInscritos');
+        const totalAsistieronEl = document.getElementById('totalAsistieron');
+        const totalPendientesEl = document.getElementById('totalPendientes');
+        
+        if (totalInscritosEl) totalInscritosEl.textContent = aprobados.length;
+        if (totalAsistieronEl) totalAsistieronEl.textContent = asistieron.length;
+        if (totalPendientesEl) totalPendientesEl.textContent = pendientes.length;
+
+        // Mostrar lista de asistencia
+        if (aprobados.length === 0) {
+            container.innerHTML = `
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    No hay participantes aprobados para este evento
+                </div>
+            `;
+            return;
+        }
+
+        let html = `
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead style="background: #f8f9fa;">
+                        <tr>
+                            <th style="border: none; color: #0C2B44; font-weight: 600;">Participante</th>
+                            <th style="border: none; color: #0C2B44; font-weight: 600;">Ticket</th>
+                            <th style="border: none; color: #0C2B44; font-weight: 600;" class="text-center">Estado</th>
+                            <th style="border: none; color: #0C2B44; font-weight: 600;" class="text-center">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        aprobados.forEach(participante => {
+            const nombre = participante.nombre || 'N/A';
+            const ticketCodigo = participante.ticket_codigo || 'N/A';
+            const asistio = participante.asistio === true;
+            const checkinAt = participante.checkin_at ? new Date(participante.checkin_at).toLocaleString('es-ES') : null;
+            
+            const estadoBadge = asistio 
+                ? `<span class="badge badge-success" style="background: #00A36C; padding: 0.4em 0.8em; border-radius: 20px;">
+                    <i class="fas fa-check-circle mr-1"></i>Asistió
+                   </span>`
+                : `<span class="badge badge-warning" style="background: #ffc107; color: #333; padding: 0.4em 0.8em; border-radius: 20px;">
+                    <i class="fas fa-clock mr-1"></i>Pendiente
+                   </span>`;
+
+            const botonAccion = asistio
+                ? `<span class="text-muted" style="font-size: 0.85rem;">${checkinAt}</span>`
+                : `<button class="btn btn-sm btn-success" 
+                           onclick="registrarAsistenciaPorId('${ticketCodigo}')"
+                           style="background: #00A36C; border: none; border-radius: 8px; padding: 0.3em 0.8em;">
+                    <i class="fas fa-check mr-1"></i>Marcar
+                  </button>`;
+
+            html += `
+                <tr style="border-bottom: 1px solid #f0f0f0;">
+                    <td style="border: none; padding: 1rem;">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center mr-2" 
+                                 style="width: 35px; height: 35px; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; font-weight: 600; font-size: 0.9rem;">
+                                ${nombre.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <div style="font-weight: 600; color: #0C2B44;">${nombre}</div>
+                                ${participante.correo ? `<small class="text-muted">${participante.correo}</small>` : ''}
+                            </div>
+                        </div>
+                    </td>
+                    <td style="border: none; padding: 1rem;">
+                        <code style="background: #f8f9fa; padding: 0.3em 0.6em; border-radius: 6px; font-size: 0.85rem; color: #0C2B44;">
+                            ${ticketCodigo.substring(0, 8)}...
+                        </code>
+                    </td>
+                    <td style="border: none; padding: 1rem;" class="text-center">
+                        ${estadoBadge}
+                    </td>
+                    <td style="border: none; padding: 1rem;" class="text-center">
+                        ${botonAccion}
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        container.innerHTML = html;
+
+    } catch (error) {
+        console.error('Error cargando lista de asistencia:', error);
+        container.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                Error de conexión al cargar lista de asistencia
+            </div>
+        `;
+    }
+}
+
+// Registrar asistencia manualmente ingresando código
+async function registrarAsistenciaManual() {
+    const ticketCodigo = document.getElementById('ticketCodigoInput').value.trim();
+    
+    if (!ticketCodigo) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Código requerido',
+                text: 'Por favor ingresa o escanea el código del ticket'
+            });
+        } else {
+            alert('Por favor ingresa el código del ticket');
+        }
+        return;
+    }
+
+    await registrarAsistenciaPorId(ticketCodigo);
+}
+
+// Registrar asistencia por código de ticket
+// Esta función ahora delega a la función en asistencia-functions.js
+async function registrarAsistenciaPorId(ticketCodigo, participacionId = null, observaciones = null) {
+    // Usar la función de asistencia-functions.js si está disponible
+    if (typeof window.registrarAsistenciaPorId === 'function' && window.registrarAsistenciaPorId !== registrarAsistenciaPorId) {
+        return await window.registrarAsistenciaPorId(ticketCodigo, participacionId, observaciones);
+    }
+    
+    // Fallback: implementación básica
+    const token = localStorage.getItem('token');
+    
+    // Extraer evento_id de la URL: /ong/eventos/{id}/detalle
+    const pathParts = window.location.pathname.split("/").filter(p => p !== '');
+    let eventoId = null;
+    
+    const eventosIndex = pathParts.indexOf('eventos');
+    if (eventosIndex !== -1 && pathParts[eventosIndex + 1]) {
+        eventoId = pathParts[eventosIndex + 1];
+    } else {
+        // Fallback: usar índice 3
+        const pathArray = window.location.pathname.split("/");
+        eventoId = pathArray[3];
+    }
+    
+    if (!eventoId || isNaN(eventoId)) {
+        console.error('Evento ID inválido:', eventoId, 'Path:', window.location.pathname);
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo identificar el evento. Por favor, recarga la página.'
+            });
+        }
+        return;
+    }
+
+    // Determinar modo de asistencia
+    const modoAsistencia = ticketCodigo && ticketCodigo !== 'N/A' ? 'QR' : 'Manual';
+
+    try {
+        const body = {
+            evento_id: parseInt(eventoId),
+            modo_asistencia: modoAsistencia
+        };
+
+        if (participacionId) {
+            body.participacion_id = participacionId;
+        } else if (ticketCodigo && ticketCodigo !== 'N/A') {
+            body.ticket_codigo = ticketCodigo.trim();
+        } else {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se puede registrar asistencia sin ticket o ID de participación'
+                });
+            }
+            return;
+        }
+
+        if (observaciones) {
+            body.observaciones = observaciones;
+        }
+
+        const res = await fetch(`${API_BASE_URL}/api/participaciones/registrar-asistencia`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body)
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+            console.error('Error del servidor:', data);
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.error || 'Error al registrar asistencia',
+                    footer: data.details ? JSON.stringify(data.details) : ''
+                });
+            } else {
+                alert('Error: ' + (data.error || 'Error al registrar asistencia'));
+            }
+            return;
+        }
+
+        // Limpiar input
+        const inputEl = document.getElementById('ticketCodigoInput');
+        if (inputEl) inputEl.value = '';
+        
+        // Mostrar éxito
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Asistencia registrada!',
+                text: data.message || 'La asistencia ha sido registrada correctamente',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        } else {
+            alert(data.message || 'Asistencia registrada correctamente');
+        }
+
+        // Recargar lista
+        if (typeof cargarListaAsistencia === 'function') {
+            await cargarListaAsistencia();
+        }
+        if (typeof cargarParticipantes === 'function') {
+            await cargarParticipantes();
+        }
+
+    } catch (error) {
+        console.error('Error registrando asistencia:', error);
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error de conexión al registrar asistencia: ' + error.message
+            });
+        } else {
+            alert('Error de conexión: ' + error.message);
+        }
+    }
+}
+
+// Activar escaneo QR (usando cámara)
+function activarEscaneoQR() {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'info',
+            title: 'Escaneo QR',
+            html: `
+                <p>Para escanear el código QR del ticket:</p>
+                <ol style="text-align: left;">
+                    <li>Abre la cámara de tu dispositivo</li>
+                    <li>Apunta hacia el código QR del ticket</li>
+                    <li>El código se escaneará automáticamente</li>
+                </ol>
+                <p class="mt-3">O ingresa el código manualmente en el campo de texto.</p>
+            `,
+            confirmButtonText: 'Entendido'
+        });
+    } else {
+        alert('Para escanear QR, usa la cámara de tu dispositivo o ingresa el código manualmente');
+    }
+    
+    // Enfocar el input para que el usuario pueda ingresar el código
+    const inputEl = document.getElementById('ticketCodigoInput');
+    if (inputEl) inputEl.focus();
 }
