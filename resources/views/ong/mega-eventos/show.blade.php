@@ -917,7 +917,7 @@ function configurarBotonesCompartir(megaEventoId, mega) {
         descripcion: mega.descripcion || '',
         url: typeof getPublicUrl !== 'undefined' 
             ? getPublicUrl(`/mega-evento/${megaEventoId}/qr`)
-            : `http://192.168.0.6:8000/mega-evento/${megaEventoId}/qr`
+            : `http://10.26.15.110:8000/mega-evento/${megaEventoId}/qr`
     };
 }
 

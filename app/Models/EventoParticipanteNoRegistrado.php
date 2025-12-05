@@ -16,6 +16,7 @@ class EventoParticipanteNoRegistrado extends Model
         'telefono',
         'estado',
         'asistio',
+        'ticket_codigo',
     ];
 
     protected $casts = [

@@ -121,6 +121,32 @@
 
     </div>
 
+    <!-- Sección: Eventos Activos - Marca tu Participación -->
+    <div class="row mb-4" id="seccionEventosActivos" style="display: none;">
+        <div class="col-12">
+            <div class="card shadow-sm" style="border: none; border-radius: 12px; background: #fff;">
+                <div class="card-header" style="background: linear-gradient(135deg, #00A36C 0%, #0C2B44 100%); border: none; border-radius: 12px 12px 0 0;">
+                    <h3 class="card-title mb-0" style="color: white; font-weight: 700; font-size: 1.3rem;">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        🟢 Eventos Activos - Marca tu Participación
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted mb-4">
+                        Los siguientes eventos están en curso. Confirma tu participación marcando tu asistencia.
+                    </p>
+                    <div id="listaEventosActivos" class="row">
+                        <!-- Los eventos se cargarán aquí dinámicamente -->
+                    </div>
+                    <div id="sinEventosActivos" class="text-center py-5" style="display: none;">
+                        <i class="fas fa-calendar-check fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No tienes eventos activos en este momento.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 @stop
 
@@ -689,9 +715,206 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('📊 Iniciando carga de estadísticas...');
     cargarEstadisticas();
     
+    // Cargar eventos activos para marcar asistencia
+    cargarEventosActivos();
+    
     // Actualizar estadísticas cada 5 minutos
     setInterval(cargarEstadisticas, 300000);
+    
+    // Actualizar eventos activos cada 2 minutos
+    setInterval(cargarEventosActivos, 120000);
 });
+
+// =======================================================
+//   🟢 Cargar Eventos Activos para Marcar Asistencia
+// =======================================================
+async function cargarEventosActivos() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+        const url = `${API_BASE_URL}/api/eventos/activos-para-marcar`;
+        const res = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        
+        if (data.success && data.eventos && data.eventos.length > 0) {
+            mostrarEventosActivos(data.eventos);
+            document.getElementById('seccionEventosActivos').style.display = 'block';
+            document.getElementById('sinEventosActivos').style.display = 'none';
+        } else {
+            document.getElementById('seccionEventosActivos').style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error cargando eventos activos:', error);
+        document.getElementById('seccionEventosActivos').style.display = 'none';
+    }
+}
+
+// =======================================================
+//   📋 Mostrar Eventos Activos en Cards
+// =======================================================
+function mostrarEventosActivos(eventos) {
+    const container = document.getElementById('listaEventosActivos');
+    container.innerHTML = '';
+
+    // Función helper para formatear fechas desde PostgreSQL sin conversión de zona horaria
+    const formatearFechaPostgreSQL = (fechaStr) => {
+        if (!fechaStr) return 'Fecha no especificada';
+        try {
+            let fechaObj;
+            
+            if (typeof fechaStr === 'string') {
+                fechaStr = fechaStr.trim();
+                
+                // Patrones para diferentes formatos de fecha
+                const mysqlPattern = /^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+                const isoPattern = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+                
+                let match = fechaStr.match(mysqlPattern) || fechaStr.match(isoPattern);
+                
+                if (match) {
+                    // Parsear manualmente para evitar conversión UTC
+                    const [, year, month, day, hour, minute, second] = match;
+                    fechaObj = new Date(
+                        parseInt(year, 10),
+                        parseInt(month, 10) - 1,
+                        parseInt(day, 10),
+                        parseInt(hour, 10),
+                        parseInt(minute, 10),
+                        parseInt(second || 0, 10)
+                    );
+                } else {
+                    fechaObj = new Date(fechaStr);
+                }
+            } else {
+                fechaObj = new Date(fechaStr);
+            }
+            
+            if (isNaN(fechaObj.getTime())) return fechaStr;
+            
+            const año = fechaObj.getFullYear();
+            const mes = fechaObj.getMonth();
+            const dia = fechaObj.getDate();
+            const horas = fechaObj.getHours();
+            const minutos = fechaObj.getMinutes();
+            
+            const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 
+                          'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+            
+            const horaFormateada = String(horas).padStart(2, '0');
+            const minutoFormateado = String(minutos).padStart(2, '0');
+            
+            return `${dia} de ${meses[mes]} de ${año}, ${horaFormateada}:${minutoFormateado}`;
+        } catch (error) {
+            console.error('Error formateando fecha:', error);
+            return fechaStr;
+        }
+    };
+
+    eventos.forEach(evento => {
+        const fechaFormateada = formatearFechaPostgreSQL(evento.fecha_inicio);
+
+        const card = document.createElement('div');
+        card.className = 'col-md-6 col-lg-4 mb-3';
+        card.innerHTML = `
+            <div class="card shadow-sm h-100" style="border: none; border-radius: 12px; transition: all 0.3s ease;">
+                <div class="card-body">
+                    <h5 class="card-title mb-3" style="font-weight: 700; color: #0C2B44;">
+                        ${evento.evento_titulo}
+                    </h5>
+                    <div class="mb-3">
+                        <p class="mb-1" style="color: #666;">
+                            <i class="far fa-clock mr-2"></i>
+                            <strong>Inicio:</strong> ${fechaFormateada}
+                        </p>
+                        ${evento.ubicacion ? `
+                            <p class="mb-0" style="color: #666;">
+                                <i class="fas fa-map-marker-alt mr-2"></i>
+                                <strong>Lugar:</strong> ${evento.ubicacion}
+                                ${evento.ciudad ? `, ${evento.ciudad}` : ''}
+                            </p>
+                        ` : ''}
+                    </div>
+                    <button 
+                        class="btn btn-success btn-block mt-3" 
+                        onclick="marcarAsistencia(${evento.evento_id}, ${evento.participacion_id})"
+                        id="btnMarcar_${evento.evento_id}"
+                        style="background: linear-gradient(135deg, #00A36C 0%, #0C2B44 100%); border: none; border-radius: 8px; font-weight: 600; padding: 0.75rem;">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        Marcar Asistencia
+                    </button>
+                    <div id="mensajeExito_${evento.evento_id}" class="alert alert-success mt-3" style="display: none; border-radius: 8px;">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        ¡Gracias por participar! Tu asistencia fue registrada correctamente.
+                    </div>
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+// =======================================================
+//   ✅ Marcar Asistencia del Usuario
+// =======================================================
+async function marcarAsistencia(eventoId, participacionId) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        alert('Debes iniciar sesión para marcar asistencia');
+        return;
+    }
+
+    const btnMarcar = document.getElementById(`btnMarcar_${eventoId}`);
+    const mensajeExito = document.getElementById(`mensajeExito_${eventoId}`);
+
+    // Deshabilitar botón mientras se procesa
+    btnMarcar.disabled = true;
+    btnMarcar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Procesando...';
+
+    try {
+        const url = `${API_BASE_URL}/api/eventos/${eventoId}/marcar-asistencia`;
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            // Ocultar botón y mostrar mensaje de éxito
+            btnMarcar.style.display = 'none';
+            mensajeExito.style.display = 'block';
+            
+            // Recargar la lista después de 2 segundos
+            setTimeout(() => {
+                cargarEventosActivos();
+            }, 2000);
+        } else {
+            alert(data.error || 'Error al marcar asistencia');
+            btnMarcar.disabled = false;
+            btnMarcar.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Marcar Asistencia';
+        }
+    } catch (error) {
+        console.error('Error marcando asistencia:', error);
+        alert('Error al marcar asistencia. Por favor, intenta nuevamente.');
+        btnMarcar.disabled = false;
+        btnMarcar.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Marcar Asistencia';
+    }
+}
 </script>
 
-@endpushA
+@endpush

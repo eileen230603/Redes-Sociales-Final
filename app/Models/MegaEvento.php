@@ -59,7 +59,7 @@ class MegaEvento extends Model
         }
 
         // Obtener la URL base desde PUBLIC_APP_URL o APP_URL
-        $baseUrl = env('PUBLIC_APP_URL', env('APP_URL', 'http://192.168.0.6:8000'));
+        $baseUrl = env('PUBLIC_APP_URL', env('APP_URL', 'http://10.26.15.110:8000'));
         
         // Generar URLs completas para cada imagen
         return array_map(function($imagen) use ($baseUrl) {

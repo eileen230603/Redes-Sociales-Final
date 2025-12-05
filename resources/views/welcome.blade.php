@@ -672,6 +672,631 @@
     </section>
 
     <!-- Footer -->
+    <footer class="bg-brand-primario text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">UNI2</h3>
+                    <p class="text-white/80">Conectando comunidades, transformando vidas.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Enlaces Rápidos</h4>
+                    <ul class="space-y-2 text-white/80">
+                        <li><a href="#sobre" class="hover:text-white transition">Sobre el Proyecto</a></li>
+                        <li><a href="#como-funciona" class="hover:text-white transition">Cómo Funciona</a></li>
+                        <li><a href="#servicios" class="hover:text-white transition">Servicios</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Contacto</h4>
+                    <p class="text-white/80">Soporte disponible para ayudarte</p>
+                </div>
+            </div>
+            <div class="border-t border-white/20 pt-8 text-center text-white/60">
+                <p>&copy; {{ date('Y') }} UNI2. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Sección de Validación de Asistencia para Usuarios No Registrados -->
+    @guest
+    <section id="validacionAsistenciaNoRegistrado" class="py-16 bg-gradient-to-br from-brand-primario via-brand-primario to-brand-acento">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white rounded-3xl shadow-2xl p-8 md:p-12" style="animation: fadeInUp 0.8s ease-out;">
+                <!-- Header -->
+                <div class="text-center mb-8">
+                    <div class="inline-block p-4 bg-brand-acento/10 rounded-full mb-4">
+                        <i class="fas fa-qrcode text-brand-acento text-4xl"></i>
+                    </div>
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-brand-primario mb-3">
+                        Registrar Asistencia
+                    </h2>
+                    <p class="text-gray-600 text-lg">
+                        Si participaste en un evento sin cuenta, ingresa tus datos y código de ticket para validar tu asistencia
+                    </p>
+                </div>
+
+                <!-- Formulario de Validación -->
+                <div class="mb-6">
+                    <form id="formValidacionNoRegistrado" onsubmit="event.preventDefault(); verificarTicketNoRegistrado();">
+                        <div class="space-y-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-brand-primario mb-2">
+                                    <i class="fas fa-user mr-2"></i> Nombres
+                                </label>
+                                <input 
+                                    type="text" 
+                                    id="nombresNoRegistrado" 
+                                    required
+                                    placeholder="Ingresa tus nombres"
+                                    class="w-full px-6 py-4 border-2 border-gray-300 rounded-xl focus:border-brand-acento focus:ring-2 focus:ring-brand-acento/20 outline-none transition text-lg"
+                                >
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-brand-primario mb-2">
+                                    <i class="fas fa-user mr-2"></i> Apellidos
+                                </label>
+                                <input 
+                                    type="text" 
+                                    id="apellidosNoRegistrado" 
+                                    required
+                                    placeholder="Ingresa tus apellidos"
+                                    class="w-full px-6 py-4 border-2 border-gray-300 rounded-xl focus:border-brand-acento focus:ring-2 focus:ring-brand-acento/20 outline-none transition text-lg"
+                                >
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-brand-primario mb-2">
+                                    <i class="fas fa-ticket-alt mr-2"></i> Código de Ticket
+                                </label>
+                                <input 
+                                    type="text" 
+                                    id="ticketCodigoNoRegistrado" 
+                                    required
+                                    placeholder="Ingresa tu código de ticket o escanea el QR"
+                                    class="w-full px-6 py-4 border-2 border-gray-300 rounded-xl focus:border-brand-acento focus:ring-2 focus:ring-brand-acento/20 outline-none transition text-lg"
+                                    onkeypress="if(event.key === 'Enter') verificarTicketNoRegistrado()"
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Botones de QR -->
+                        <div class="flex flex-col sm:flex-row gap-3 justify-center mb-4">
+                            <button 
+                                type="button"
+                                onclick="activarEscannerQRNoRegistrado()" 
+                                id="btnEscanearQRNoRegistrado"
+                                class="px-6 py-3 bg-brand-acento text-white rounded-xl font-semibold hover:bg-brand-acento/90 transition transform hover:scale-105"
+                            >
+                                <i class="fas fa-camera mr-2"></i> Escanear Código QR
+                            </button>
+                            <button 
+                                type="button"
+                                onclick="document.getElementById('inputQRImagenNoRegistrado').click()" 
+                                id="btnImportarQRNoRegistrado"
+                                class="px-6 py-3 bg-brand-primario text-white rounded-xl font-semibold hover:bg-brand-primario/90 transition transform hover:scale-105"
+                            >
+                                <i class="fas fa-upload mr-2"></i> Importar QR
+                            </button>
+                            <input 
+                                type="file" 
+                                id="inputQRImagenNoRegistrado" 
+                                accept="image/*" 
+                                style="display: none;"
+                                onchange="procesarQRImagenNoRegistrado(event)"
+                            >
+                        </div>
+
+                        <!-- Contenedor del Escáner QR -->
+                        <div id="qrScannerContainerNoRegistrado" style="display: none; margin-top: 1.5rem; padding: 1.5rem; background: #f8f9fa; border-radius: 12px; border: 2px dashed #00A36C;">
+                            <div class="flex justify-between items-center mb-3">
+                                <h6 class="font-bold text-brand-primario">
+                                    <i class="fas fa-camera mr-2 text-brand-acento"></i> Escáner QR Activo
+                                </h6>
+                                <button type="button" onclick="detenerEscannerQRNoRegistrado()" class="px-4 py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition">
+                                    <i class="fas fa-times mr-1"></i> Cerrar
+                                </button>
+                            </div>
+                            <div style="position: relative; width: 100%; max-width: 400px; margin: 0 auto; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);">
+                                <video id="qrVideoNoRegistrado" width="100%" style="display: block; background: #000; border-radius: 12px;"></video>
+                                <canvas id="qrCanvasNoRegistrado" style="display: none;"></canvas>
+                            </div>
+                            <p class="text-center mt-3 text-gray-600 text-sm">
+                                <i class="fas fa-info-circle mr-2"></i> Apunta la cámara hacia el código QR de tu ticket
+                            </p>
+                        </div>
+
+                        <button 
+                            type="submit"
+                            id="btnVerificarNoRegistrado"
+                            class="w-full px-8 py-4 bg-brand-primario text-white rounded-xl font-bold text-lg hover:bg-brand-primario/90 transition transform hover:scale-105 shadow-lg"
+                        >
+                            <i class="fas fa-search mr-2"></i> Verificar Ticket
+                        </button>
+                        <div id="mensajeLoginNoRegistrado" class="mt-4 text-center"></div>
+                    </form>
+                </div>
+
+                <!-- Información del Evento (se muestra después de verificar el ticket) -->
+                <div id="infoEventoContainerNoRegistrado" class="hidden mb-6 p-6 bg-gradient-to-r from-brand-primario/10 to-brand-acento/10 rounded-xl border-2 border-brand-acento/30">
+                    <h3 class="text-xl font-bold text-brand-primario mb-4">
+                        <i class="fas fa-calendar-check mr-2 text-brand-acento"></i> Confirmar Asistencia
+                    </h3>
+                    <div id="infoEventoDetalleNoRegistrado" class="mb-4">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                    <button 
+                        onclick="confirmarAsistenciaNoRegistrado()" 
+                        id="btnConfirmarAsistenciaNoRegistrado"
+                        class="w-full px-8 py-4 bg-brand-acento text-white rounded-xl font-bold text-lg hover:bg-brand-acento/90 transition transform hover:scale-105 shadow-lg"
+                    >
+                        <i class="fas fa-check-circle mr-2"></i> Confirmar Asistencia
+                    </button>
+                </div>
+
+                <!-- Mensajes de Resultado -->
+                <div id="mensajeResultadoNoRegistrado" class="hidden mt-4 p-4 rounded-xl"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Scripts para Validación de Asistencia de Usuarios No Registrados -->
+    <!-- Librería para escaneo QR (debe estar antes de los scripts) -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="{{ asset('assets/js/config.js') }}"></script>
+    <script>
+        let qrStreamNoRegistrado = null;
+        let qrScanningNoRegistrado = false;
+        let infoEventoNoRegistradoActual = null;
+
+        // Verificar ticket de usuario no registrado
+        async function verificarTicketNoRegistrado() {
+            const nombres = document.getElementById('nombresNoRegistrado').value.trim();
+            const apellidos = document.getElementById('apellidosNoRegistrado').value.trim();
+            const ticketCodigo = document.getElementById('ticketCodigoNoRegistrado').value.trim();
+
+            if (!nombres || !apellidos || !ticketCodigo) {
+                mostrarMensajeNoRegistrado('Por favor, completa todos los campos', 'error');
+                return;
+            }
+
+            const btnVerificar = document.getElementById('btnVerificarNoRegistrado');
+            btnVerificar.disabled = true;
+            btnVerificar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Verificando...';
+
+            try {
+                const apiUrl = window.API_BASE_URL || 'http://10.26.15.110:8000';
+                const res = await fetch(`${apiUrl}/api/verificar-ticket-no-registrado-welcome`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        nombres: nombres,
+                        apellidos: apellidos,
+                        ticket_codigo: ticketCodigo
+                    }),
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    infoEventoNoRegistradoActual = {
+                        ...data.data,
+                        nombres: nombres,
+                        apellidos: apellidos
+                    };
+                    mostrarInfoEventoNoRegistrado(data.data);
+                } else {
+                    mostrarMensajeNoRegistrado(data.error || 'Error al verificar ticket', 'error');
+                    document.getElementById('infoEventoContainerNoRegistrado').classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Error verificando ticket:', error);
+                mostrarMensajeNoRegistrado('Error al verificar ticket. Por favor, intenta nuevamente.', 'error');
+                document.getElementById('infoEventoContainerNoRegistrado').classList.add('hidden');
+            } finally {
+                btnVerificar.disabled = false;
+                btnVerificar.innerHTML = '<i class="fas fa-search mr-2"></i> Verificar Ticket';
+            }
+        }
+
+        // Mostrar información del evento para usuario no registrado
+        function mostrarInfoEventoNoRegistrado(evento) {
+            const container = document.getElementById('infoEventoDetalleNoRegistrado');
+            
+            if (evento.ya_validado) {
+                container.innerHTML = `
+                    <div class="alert alert-warning mb-3">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        Ya registraste tu asistencia para este evento.
+                    </div>
+                    <div class="mb-3">
+                        <p><strong>Evento:</strong> ${evento.evento_titulo}</p>
+                        <p><strong>Fecha:</strong> ${evento.fecha_inicio}</p>
+                        ${evento.ubicacion ? `<p><strong>Ubicación:</strong> ${evento.ubicacion}${evento.ciudad ? ', ' + evento.ciudad : ''}</p>` : ''}
+                    </div>
+                `;
+                document.getElementById('btnConfirmarAsistenciaNoRegistrado').style.display = 'none';
+            } else {
+                container.innerHTML = `
+                    <div class="mb-3">
+                        <p><strong>Participante:</strong> ${evento.participante}</p>
+                        <p><strong>Evento:</strong> ${evento.evento_titulo}</p>
+                        ${evento.evento_descripcion ? `<p><strong>Descripción:</strong> ${evento.evento_descripcion}</p>` : ''}
+                        <p><strong>Fecha de inicio:</strong> ${evento.fecha_inicio}</p>
+                        ${evento.ubicacion ? `<p><strong>Ubicación:</strong> ${evento.ubicacion}${evento.ciudad ? ', ' + evento.ciudad : ''}</p>` : ''}
+                        <p><strong>Tipo de evento:</strong> ${evento.evento_tipo || 'No especificado'}</p>
+                    </div>
+                `;
+                document.getElementById('btnConfirmarAsistenciaNoRegistrado').style.display = 'block';
+            }
+
+            document.getElementById('infoEventoContainerNoRegistrado').classList.remove('hidden');
+        }
+
+        // Confirmar asistencia de usuario no registrado
+        async function confirmarAsistenciaNoRegistrado() {
+            if (!infoEventoNoRegistradoActual) {
+                mostrarMensajeNoRegistrado('No hay información de evento para confirmar', 'error');
+                return;
+            }
+
+            const btnConfirmar = document.getElementById('btnConfirmarAsistenciaNoRegistrado');
+            btnConfirmar.disabled = true;
+            btnConfirmar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Confirmando...';
+
+            try {
+                const apiUrl = window.API_BASE_URL || 'http://10.26.15.110:8000';
+                const res = await fetch(`${apiUrl}/api/validar-asistencia-no-registrado-welcome`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        nombres: infoEventoNoRegistradoActual.nombres,
+                        apellidos: infoEventoNoRegistradoActual.apellidos,
+                        ticket_codigo: infoEventoNoRegistradoActual.ticket_codigo
+                    }),
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    mostrarMensajeNoRegistrado(data.message || '¡Asistencia confirmada correctamente!', 'success');
+                    // Limpiar formulario
+                    document.getElementById('nombresNoRegistrado').value = '';
+                    document.getElementById('apellidosNoRegistrado').value = '';
+                    document.getElementById('ticketCodigoNoRegistrado').value = '';
+                    document.getElementById('infoEventoContainerNoRegistrado').classList.add('hidden');
+                    infoEventoNoRegistradoActual = null;
+                } else {
+                    mostrarMensajeNoRegistrado(data.error || 'Error al confirmar asistencia', 'error');
+                }
+            } catch (error) {
+                console.error('Error confirmando asistencia:', error);
+                mostrarMensajeNoRegistrado('Error al confirmar asistencia. Por favor, intenta nuevamente.', 'error');
+            } finally {
+                btnConfirmar.disabled = false;
+                btnConfirmar.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Confirmar Asistencia';
+            }
+        }
+
+        // Mostrar mensaje para usuario no registrado
+        function mostrarMensajeNoRegistrado(mensaje, tipo) {
+            const mensajeDiv = document.getElementById('mensajeResultadoNoRegistrado');
+            const mensajeLogin = document.getElementById('mensajeLoginNoRegistrado');
+            
+            if (mensajeDiv) {
+                mensajeDiv.className = tipo === 'success' 
+                    ? 'mt-4 p-4 rounded-xl bg-green-100 border-2 border-green-500 text-green-800'
+                    : 'mt-4 p-4 rounded-xl bg-red-100 border-2 border-red-500 text-red-800';
+                mensajeDiv.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fas ${tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-3 text-xl"></i>
+                        <span class="font-semibold">${mensaje}</span>
+                    </div>
+                `;
+                mensajeDiv.classList.remove('hidden');
+                setTimeout(() => {
+                    mensajeDiv.classList.add('hidden');
+                }, 5000);
+            }
+            
+            if (mensajeLogin) {
+                mensajeLogin.innerHTML = tipo === 'error' 
+                    ? `<span class="text-red-600 font-semibold">${mensaje}</span>`
+                    : '';
+            }
+        }
+
+        // Activar escáner QR para usuario no registrado
+        async function activarEscannerQRNoRegistrado() {
+            const container = document.getElementById('qrScannerContainerNoRegistrado');
+            const video = document.getElementById('qrVideoNoRegistrado');
+            const canvas = document.getElementById('qrCanvasNoRegistrado');
+            const context = canvas.getContext('2d');
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
+                
+                qrStreamNoRegistrado = stream;
+                video.srcObject = stream;
+                video.setAttribute('playsinline', true);
+                video.play();
+                container.style.display = 'block';
+                qrScanningNoRegistrado = true;
+
+                video.addEventListener('loadedmetadata', () => {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                });
+
+                function scanQR() {
+                    if (!qrScanningNoRegistrado) return;
+
+                    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                        
+                        if (typeof jsQR !== 'undefined') {
+                            const code = jsQR(imageData.data, imageData.width, imageData.height);
+                            if (code) {
+                                detenerEscannerQRNoRegistrado();
+                                document.getElementById('ticketCodigoNoRegistrado').value = code.data;
+                                verificarTicketNoRegistrado();
+                            }
+                        }
+                    }
+
+                    requestAnimationFrame(scanQR);
+                }
+
+                scanQR();
+
+            } catch (error) {
+                console.error('Error accediendo a la cámara:', error);
+                mostrarMensajeNoRegistrado('No se pudo acceder a la cámara. Por favor, verifica los permisos.', 'error');
+            }
+        }
+
+        // Detener escáner QR para usuario no registrado
+        function detenerEscannerQRNoRegistrado() {
+            qrScanningNoRegistrado = false;
+            if (qrStreamNoRegistrado) {
+                qrStreamNoRegistrado.getTracks().forEach(track => track.stop());
+                qrStreamNoRegistrado = null;
+            }
+            const video = document.getElementById('qrVideoNoRegistrado');
+            if (video) {
+                video.srcObject = null;
+            }
+            document.getElementById('qrScannerContainerNoRegistrado').style.display = 'none';
+        }
+
+        // Procesar imagen QR importada
+        function procesarQRImagenNoRegistrado(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            // Validar que sea una imagen
+            if (!file.type.startsWith('image/')) {
+                mostrarMensajeNoRegistrado('Por favor, selecciona un archivo de imagen válido', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    // Crear canvas temporal para procesar la imagen
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    context.drawImage(img, 0, 0);
+
+                    // Obtener datos de la imagen
+                    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+
+                    // Procesar con jsQR
+                    if (typeof jsQR !== 'undefined') {
+                        const code = jsQR(imageData.data, imageData.width, imageData.height);
+                        
+                        if (code) {
+                            // QR encontrado, extraer código
+                            const ticketCodigo = code.data.trim();
+                            document.getElementById('ticketCodigoNoRegistrado').value = ticketCodigo;
+                            
+                            // Verificar que los nombres y apellidos estén completos antes de validar
+                            const nombres = document.getElementById('nombresNoRegistrado').value.trim();
+                            const apellidos = document.getElementById('apellidosNoRegistrado').value.trim();
+                            
+                            if (!nombres || !apellidos) {
+                                mostrarMensajeNoRegistrado('Por favor, completa los campos de nombres y apellidos antes de importar el QR', 'error');
+                                return;
+                            }
+                            
+                            // Validar con el backend (valida nombre, apellidos y ticket en PostgreSQL)
+                            verificarTicketNoRegistrado();
+                        } else {
+                            mostrarMensajeNoRegistrado('No se pudo leer el código QR de la imagen. Asegúrate de que la imagen sea clara y contenga un código QR válido.', 'error');
+                        }
+                    } else {
+                        mostrarMensajeNoRegistrado('Error: La librería de QR no está cargada. Por favor, recarga la página.', 'error');
+                    }
+                };
+                img.onerror = function() {
+                    mostrarMensajeNoRegistrado('Error al cargar la imagen. Por favor, intenta con otra imagen.', 'error');
+                };
+                img.src = e.target.result;
+            };
+            reader.onerror = function() {
+                mostrarMensajeNoRegistrado('Error al leer el archivo. Por favor, intenta nuevamente.', 'error');
+            };
+            reader.readAsDataURL(file);
+            
+            // Limpiar el input para permitir seleccionar el mismo archivo nuevamente
+            event.target.value = '';
+        }
+    </script>
+    @endguest
+
+    <!-- Sección de Validación de Asistencia para Usuarios Registrados -->
+    @auth
+    <section id="validacionAsistencia" class="py-16 bg-gradient-to-br from-brand-primario via-brand-primario to-brand-acento">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white rounded-3xl shadow-2xl p-8 md:p-12" style="animation: fadeInUp 0.8s ease-out;">
+                <!-- Header -->
+                <div class="text-center mb-8">
+                    <div class="inline-block p-4 bg-brand-acento/10 rounded-full mb-4">
+                        <i class="fas fa-qrcode text-brand-acento text-4xl"></i>
+                    </div>
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-brand-primario mb-3">
+                        Valida tu Asistencia
+                    </h2>
+                    <p class="text-gray-600 text-lg">
+                        Ingresa tus credenciales y luego tu código de ticket o escanea el código QR
+                    </p>
+                </div>
+
+                <!-- Paso 1: Formulario de Login -->
+                <div id="pasoLogin" class="mb-6">
+                    <form id="formLoginAsistencia" onsubmit="event.preventDefault(); hacerLoginAsistencia();">
+                        <div class="space-y-4 mb-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-brand-primario mb-2">
+                                    <i class="fas fa-envelope mr-2"></i> Correo Electrónico
+                                </label>
+                                <input 
+                                    type="email" 
+                                    id="emailAsistencia" 
+                                    required
+                                    placeholder="tu@correo.com"
+                                    class="w-full px-6 py-4 border-2 border-gray-300 rounded-xl focus:border-brand-acento focus:ring-2 focus:ring-brand-acento/20 outline-none transition text-lg"
+                                >
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-brand-primario mb-2">
+                                    <i class="fas fa-lock mr-2"></i> Contraseña
+                                </label>
+                                <input 
+                                    type="password" 
+                                    id="passwordAsistencia" 
+                                    required
+                                    placeholder="Tu contraseña"
+                                    class="w-full px-6 py-4 border-2 border-gray-300 rounded-xl focus:border-brand-acento focus:ring-2 focus:ring-brand-acento/20 outline-none transition text-lg"
+                                >
+                            </div>
+                        </div>
+                        <button 
+                            type="submit"
+                            id="btnLoginAsistencia"
+                            class="w-full px-8 py-4 bg-brand-acento text-white rounded-xl font-bold text-lg hover:bg-brand-acento/90 transition transform hover:scale-105 shadow-lg"
+                        >
+                            <i class="fas fa-sign-in-alt mr-2"></i> Iniciar Sesión
+                        </button>
+                        <div id="mensajeLogin" class="mt-4 text-center"></div>
+                    </form>
+                </div>
+
+                <!-- Paso 2: Formulario de Validación (oculto inicialmente) -->
+                <div id="pasoValidacion" class="mb-6" style="display: none;">
+                    <div class="mb-4 p-4 bg-green-50 border-2 border-green-200 rounded-xl">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle text-green-600 text-xl mr-3"></i>
+                                <div>
+                                    <p class="font-semibold text-green-800">Sesión iniciada</p>
+                                    <p class="text-sm text-green-600" id="nombreUsuarioLogueado"></p>
+                                </div>
+                            </div>
+                            <button onclick="cerrarSesionAsistencia()" class="text-sm text-red-600 hover:text-red-800 font-semibold">
+                                <i class="fas fa-sign-out-alt mr-1"></i> Cerrar Sesión
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <div class="flex flex-col md:flex-row gap-4 mb-4">
+                            <div class="flex-1">
+                                <input 
+                                    type="text" 
+                                    id="ticketCodigoInput" 
+                                    placeholder="Ingresa tu código de ticket o escanea el QR"
+                                    class="w-full px-6 py-4 border-2 border-gray-300 rounded-xl focus:border-brand-acento focus:ring-2 focus:ring-brand-acento/20 outline-none transition text-lg"
+                                    onkeypress="if(event.key === 'Enter') verificarTicket()"
+                                >
+                            </div>
+                            <button 
+                                onclick="verificarTicket()" 
+                                id="btnVerificar"
+                                class="px-8 py-4 bg-brand-primario text-white rounded-xl font-bold text-lg hover:bg-brand-primario/90 transition transform hover:scale-105 shadow-lg"
+                            >
+                                <i class="fas fa-search mr-2"></i> Verificar
+                            </button>
+                        </div>
+
+                        <!-- Botón Escanear QR -->
+                        <div class="flex justify-center mb-4">
+                            <button 
+                                onclick="activarEscannerQRWelcome()" 
+                                id="btnEscanearQR"
+                                class="px-6 py-3 bg-brand-acento text-white rounded-xl font-semibold hover:bg-brand-acento/90 transition transform hover:scale-105"
+                            >
+                                <i class="fas fa-camera mr-2"></i> Escanear Código QR
+                            </button>
+                        </div>
+
+                        <!-- Contenedor del Escáner QR -->
+                        <div id="qrScannerContainerWelcome" style="display: none; margin-top: 1.5rem; padding: 1.5rem; background: #f8f9fa; border-radius: 12px; border: 2px dashed #00A36C;">
+                            <div class="flex justify-between items-center mb-3">
+                                <h6 class="font-bold text-brand-primario">
+                                    <i class="fas fa-camera mr-2 text-brand-acento"></i> Escáner QR Activo
+                                </h6>
+                                <button onclick="detenerEscannerQRWelcome()" class="px-4 py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition">
+                                    <i class="fas fa-times mr-1"></i> Cerrar
+                                </button>
+                            </div>
+                            <div style="position: relative; width: 100%; max-width: 400px; margin: 0 auto; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);">
+                                <video id="qrVideoWelcome" width="100%" style="display: block; background: #000; border-radius: 12px;"></video>
+                                <canvas id="qrCanvasWelcome" style="display: none;"></canvas>
+                            </div>
+                            <p class="text-center mt-3 text-gray-600 text-sm">
+                                <i class="fas fa-info-circle mr-2"></i> Apunta la cámara hacia el código QR de tu ticket
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Información del Evento (se muestra después de verificar el ticket) -->
+                    <div id="infoEventoContainer" class="hidden mb-6 p-6 bg-gradient-to-r from-brand-primario/10 to-brand-acento/10 rounded-xl border-2 border-brand-acento/30">
+                        <h3 class="text-xl font-bold text-brand-primario mb-4">
+                            <i class="fas fa-calendar-check mr-2 text-brand-acento"></i> Información del Evento
+                        </h3>
+                        <div id="infoEventoDetalle" class="space-y-2">
+                            <!-- Se llenará dinámicamente -->
+                        </div>
+                        <button 
+                            onclick="confirmarAsistencia()" 
+                            id="btnConfirmarAsistencia"
+                            class="mt-4 w-full px-8 py-4 bg-brand-acento text-white rounded-xl font-bold text-lg hover:bg-brand-acento/90 transition transform hover:scale-105 shadow-lg"
+                        >
+                            <i class="fas fa-check-circle mr-2"></i> Confirmar Asistencia
+                        </button>
+                    </div>
+
+                    <!-- Mensajes de Resultado -->
+                    <div id="mensajeResultado" class="hidden mt-4 p-4 rounded-xl"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+    @endauth
+
+    <!-- Footer -->
     <footer class="bg-gray-900 text-white py-16">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid md:grid-cols-4 gap-12 mb-12">
@@ -810,5 +1435,336 @@
             });
         });
     </script>
+
+    <!-- Scripts para Validación de Asistencia de Usuarios Registrados -->
+    @auth
+    <script>
+        let qrStream = null;
+        let qrScanning = false;
+        let infoEventoActual = null; // Para guardar la info del evento verificado
+
+        // Verificar si ya hay sesión al cargar
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                // Verificar que el token sea válido y el usuario sea externo
+                verificarSesionYMostrarValidacion();
+            }
+        });
+
+        // Hacer login desde el formulario
+        async function hacerLoginAsistencia() {
+            const email = document.getElementById('emailAsistencia').value.trim();
+            const password = document.getElementById('passwordAsistencia').value.trim();
+            const mensajeDiv = document.getElementById('mensajeLogin');
+            const btnLogin = document.getElementById('btnLoginAsistencia');
+
+            if (!email || !password) {
+                mensajeDiv.innerHTML = '<span class="text-red-600 font-semibold">Por favor, completa todos los campos</span>';
+                return;
+            }
+
+            btnLogin.disabled = true;
+            btnLogin.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Iniciando sesión...';
+            mensajeDiv.innerHTML = '';
+
+            try {
+                const apiUrl = window.API_BASE_URL || 'http://10.26.15.110:8000';
+                const res = await fetch(`${apiUrl}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        correo_electronico: email,
+                        contrasena: password
+                    }),
+                });
+
+                const data = await res.json();
+
+                if (data.success && data.user) {
+                    // Verificar que sea usuario externo
+                    if (data.user.tipo_usuario !== 'Integrante externo') {
+                        mensajeDiv.innerHTML = '<span class="text-red-600 font-semibold">Esta funcionalidad es solo para usuarios externos (voluntarios)</span>';
+                        btnLogin.disabled = false;
+                        btnLogin.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i> Iniciar Sesión';
+                        return;
+                    }
+
+                    // Guardar token y datos del usuario
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('id_usuario', data.user.id_usuario);
+                    localStorage.setItem('tipo_usuario', data.user.tipo_usuario);
+                    localStorage.setItem('nombre_usuario', data.user.nombre_usuario || '');
+
+                    // Mostrar paso de validación
+                    mostrarPasoValidacion(data.user.nombre_usuario);
+                } else {
+                    mensajeDiv.innerHTML = `<span class="text-red-600 font-semibold">${data.error || 'Error al iniciar sesión'}</span>`;
+                    btnLogin.disabled = false;
+                    btnLogin.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i> Iniciar Sesión';
+                }
+            } catch (error) {
+                console.error('Error en login:', error);
+                mensajeDiv.innerHTML = '<span class="text-red-600 font-semibold">Error de conexión. Verifica que el servidor esté ejecutándose.</span>';
+                btnLogin.disabled = false;
+                btnLogin.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i> Iniciar Sesión';
+            }
+        }
+
+        // Verificar sesión existente
+        async function verificarSesionYMostrarValidacion() {
+            const token = localStorage.getItem('token');
+            const tipoUsuario = localStorage.getItem('tipo_usuario');
+            const nombreUsuario = localStorage.getItem('nombre_usuario');
+
+            if (token && tipoUsuario === 'Integrante externo') {
+                mostrarPasoValidacion(nombreUsuario);
+            }
+        }
+
+        // Mostrar paso de validación
+        function mostrarPasoValidacion(nombreUsuario) {
+            document.getElementById('pasoLogin').style.display = 'none';
+            document.getElementById('pasoValidacion').style.display = 'block';
+            document.getElementById('nombreUsuarioLogueado').textContent = nombreUsuario || 'Usuario';
+        }
+
+        // Cerrar sesión
+        function cerrarSesionAsistencia() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('id_usuario');
+            localStorage.removeItem('tipo_usuario');
+            localStorage.removeItem('nombre_usuario');
+            
+            document.getElementById('pasoLogin').style.display = 'block';
+            document.getElementById('pasoValidacion').style.display = 'none';
+            document.getElementById('infoEventoContainer').classList.add('hidden');
+            document.getElementById('ticketCodigoInput').value = '';
+            document.getElementById('emailAsistencia').value = '';
+            document.getElementById('passwordAsistencia').value = '';
+            infoEventoActual = null;
+        }
+
+        // Verificar ticket (mostrar info del evento)
+        async function verificarTicket() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                mostrarMensaje('Debes iniciar sesión primero', 'error');
+                return;
+            }
+
+            const ticketCodigo = document.getElementById('ticketCodigoInput').value.trim();
+            if (!ticketCodigo) {
+                mostrarMensaje('Por favor, ingresa un código de ticket', 'error');
+                return;
+            }
+
+            const btnVerificar = document.getElementById('btnVerificar');
+            btnVerificar.disabled = true;
+            btnVerificar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Verificando...';
+
+            try {
+                const apiUrl = window.API_BASE_URL || 'http://10.26.15.110:8000';
+                const res = await fetch(`${apiUrl}/api/verificar-ticket-welcome`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ticket_codigo: ticketCodigo
+                    }),
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    infoEventoActual = data.data;
+                    mostrarInfoEvento(data.data);
+                } else {
+                    mostrarMensaje(data.error || 'Error al verificar ticket', 'error');
+                    document.getElementById('infoEventoContainer').classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Error verificando ticket:', error);
+                mostrarMensaje('Error al verificar ticket. Por favor, intenta nuevamente.', 'error');
+                document.getElementById('infoEventoContainer').classList.add('hidden');
+            } finally {
+                btnVerificar.disabled = false;
+                btnVerificar.innerHTML = '<i class="fas fa-search mr-2"></i> Verificar';
+            }
+        }
+
+        // Mostrar información del evento
+        function mostrarInfoEvento(evento) {
+            const container = document.getElementById('infoEventoDetalle');
+            
+            if (evento.ya_validado) {
+                container.innerHTML = `
+                    <div class="p-4 bg-yellow-50 border-2 border-yellow-300 rounded-xl mb-4">
+                        <p class="text-yellow-800 font-semibold">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            Este ticket ya fue utilizado el ${evento.fecha_validacion_anterior}
+                        </p>
+                    </div>
+                    <div class="space-y-3">
+                        <p><strong class="text-brand-primario">Evento:</strong> ${evento.evento_titulo}</p>
+                        <p><strong class="text-brand-primario">Fecha:</strong> ${evento.fecha_inicio}</p>
+                        ${evento.ubicacion ? `<p><strong class="text-brand-primario">Ubicación:</strong> ${evento.ubicacion}${evento.ciudad ? ', ' + evento.ciudad : ''}</p>` : ''}
+                    </div>
+                `;
+                document.getElementById('btnConfirmarAsistencia').style.display = 'none';
+            } else {
+                container.innerHTML = `
+                    <div class="space-y-3">
+                        <p><strong class="text-brand-primario">Evento:</strong> ${evento.evento_titulo}</p>
+                        ${evento.evento_descripcion ? `<p><strong class="text-brand-primario">Descripción:</strong> ${evento.evento_descripcion}</p>` : ''}
+                        <p><strong class="text-brand-primario">Fecha de inicio:</strong> ${evento.fecha_inicio}</p>
+                        ${evento.ubicacion ? `<p><strong class="text-brand-primario">Ubicación:</strong> ${evento.ubicacion}${evento.ciudad ? ', ' + evento.ciudad : ''}</p>` : ''}
+                        <p><strong class="text-brand-primario">Tipo de evento:</strong> ${evento.evento_tipo || 'No especificado'}</p>
+                    </div>
+                `;
+                document.getElementById('btnConfirmarAsistencia').style.display = 'block';
+            }
+
+            document.getElementById('infoEventoContainer').classList.remove('hidden');
+        }
+
+        // Confirmar asistencia
+        async function confirmarAsistencia() {
+            if (!infoEventoActual) {
+                mostrarMensaje('No hay información de evento para confirmar', 'error');
+                return;
+            }
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                mostrarMensaje('Debes iniciar sesión', 'error');
+                return;
+            }
+
+            const btnConfirmar = document.getElementById('btnConfirmarAsistencia');
+            btnConfirmar.disabled = true;
+            btnConfirmar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Confirmando...';
+
+            try {
+                const apiUrl = window.API_BASE_URL || 'http://10.26.15.110:8000';
+                const res = await fetch(`${apiUrl}/api/validar-asistencia-welcome`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ticket_codigo: infoEventoActual.ticket_codigo,
+                        modo_validacion: 'Manual'
+                    }),
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    mostrarMensaje(data.message || '¡Asistencia confirmada correctamente!', 'success');
+                    document.getElementById('ticketCodigoInput').value = '';
+                    document.getElementById('infoEventoContainer').classList.add('hidden');
+                    infoEventoActual = null;
+                } else {
+                    mostrarMensaje(data.error || 'Error al confirmar asistencia', 'error');
+                }
+            } catch (error) {
+                console.error('Error confirmando asistencia:', error);
+                mostrarMensaje('Error al confirmar asistencia. Por favor, intenta nuevamente.', 'error');
+            } finally {
+                btnConfirmar.disabled = false;
+                btnConfirmar.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Confirmar Asistencia';
+            }
+        }
+
+        // Mostrar mensaje de resultado
+        function mostrarMensaje(mensaje, tipo) {
+            const mensajeDiv = document.getElementById('mensajeResultado');
+            mensajeDiv.className = tipo === 'success' 
+                ? 'mt-4 p-4 rounded-xl bg-green-100 border-2 border-green-500 text-green-800'
+                : 'mt-4 p-4 rounded-xl bg-red-100 border-2 border-red-500 text-red-800';
+            mensajeDiv.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas ${tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-3 text-xl"></i>
+                    <span class="font-semibold">${mensaje}</span>
+                </div>
+            `;
+            mensajeDiv.classList.remove('hidden');
+
+            setTimeout(() => {
+                mensajeDiv.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Activar escáner QR
+        async function activarEscannerQRWelcome() {
+            const container = document.getElementById('qrScannerContainerWelcome');
+            const video = document.getElementById('qrVideoWelcome');
+            const canvas = document.getElementById('qrCanvasWelcome');
+            const context = canvas.getContext('2d');
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
+                
+                qrStream = stream;
+                video.srcObject = stream;
+                video.setAttribute('playsinline', true);
+                video.play();
+                container.style.display = 'block';
+                qrScanning = true;
+
+                video.addEventListener('loadedmetadata', () => {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                });
+
+                function scanQR() {
+                    if (!qrScanning) return;
+
+                    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                        const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+                        if (code) {
+                            detenerEscannerQRWelcome();
+                            document.getElementById('ticketCodigoInput').value = code.data;
+                            verificarTicket();
+                        }
+                    }
+
+                    requestAnimationFrame(scanQR);
+                }
+
+                scanQR();
+
+            } catch (error) {
+                console.error('Error accediendo a la cámara:', error);
+                mostrarMensaje('No se pudo acceder a la cámara. Por favor, verifica los permisos.', 'error');
+            }
+        }
+
+        // Detener escáner QR
+        function detenerEscannerQRWelcome() {
+            qrScanning = false;
+            if (qrStream) {
+                qrStream.getTracks().forEach(track => track.stop());
+                qrStream = null;
+            }
+            const video = document.getElementById('qrVideoWelcome');
+            if (video) {
+                video.srcObject = null;
+            }
+            document.getElementById('qrScannerContainerWelcome').style.display = 'none';
+        }
+    </script>
+    @endauth
     </body>
 </html>

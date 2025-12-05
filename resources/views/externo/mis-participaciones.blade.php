@@ -4,50 +4,39 @@
 
 @section('content_body')
 <div class="container-fluid">
-    <!-- Header con diseño mejorado - Paleta de colores -->
-    <div class="card mb-4 shadow-sm" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border: none; border-radius: 15px; overflow: hidden;">
-        <div class="card-body py-4 px-4">
-            <div class="row align-items-center">
-                <div class="col-md-10">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-white rounded-circle p-3 mr-3 shadow-sm" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
-                            <i class="far fa-calendar-check" style="font-size: 1.8rem; color: #00A36C;"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-white mb-1" style="font-weight: 700; font-size: 1.75rem;">
-                                Mis Participaciones en Eventos
-                            </h3>
-                            <p class="text-white mb-0" style="opacity: 0.95; font-size: 1rem;">
-                                Revisa todos los eventos en los que estás participando
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-2 text-right d-none d-md-block">
-                    <i class="far fa-calendar-check" style="font-size: 4.5rem; color: rgba(255,255,255,0.15);"></i>
-                </div>
+    <!-- Header Minimalista -->
+    <div class="mb-5" style="padding-top: 1rem;">
+        <div class="d-flex align-items-center mb-3">
+            <div class="rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 56px; height: 56px; background: #f0fdf4; color: #00A36C;">
+                <i class="far fa-calendar-check" style="font-size: 1.5rem;"></i>
+            </div>
+            <div>
+                <h2 class="mb-1" style="font-weight: 700; font-size: 1.875rem; color: #111827;">
+                    Mis Participaciones
+                </h2>
+                <p class="mb-0" style="color: #6b7280; font-size: 0.95rem;">
+                    Revisa todos los eventos en los que estás participando
+                </p>
             </div>
         </div>
     </div>
 
-    <!-- Navbar de pestañas -->
-    <div class="card mb-4 shadow-sm" style="border: none; border-radius: 12px;">
-        <div class="card-body p-0">
-            <ul class="nav nav-tabs nav-justified" id="participacionesTabs" role="tablist" style="border-bottom: 2px solid #E5E7EB;">
-                <li class="nav-item" role="presentation">
-                    <a class="nav-link active" id="eventos-tab" data-toggle="tab" href="#eventos" role="tab" aria-controls="eventos" aria-selected="true" style="color: #0C2B44; font-weight: 600; padding: 1rem 1.5rem; border: none; border-bottom: 3px solid transparent; transition: all 0.3s;">
-                        <i class="far fa-calendar-alt mr-2"></i>Eventos
-                        <span id="eventos-count" class="badge badge-primary ml-2" style="background: #00A36C; border-radius: 12px; padding: 0.25em 0.6em;">0</span>
-                    </a>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <a class="nav-link" id="mega-eventos-tab" data-toggle="tab" href="#mega-eventos" role="tab" aria-controls="mega-eventos" aria-selected="false" style="color: #0C2B44; font-weight: 600; padding: 1rem 1.5rem; border: none; border-bottom: 3px solid transparent; transition: all 0.3s;">
-                        <i class="far fa-star mr-2"></i>Mega Eventos
-                        <span id="mega-eventos-count" class="badge badge-primary ml-2" style="background: #00A36C; border-radius: 12px; padding: 0.25em 0.6em;">0</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
+    <!-- Navbar de pestañas - Minimalista -->
+    <div class="mb-5">
+        <ul class="nav nav-tabs" id="participacionesTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" id="eventos-tab" data-toggle="tab" href="#eventos" role="tab" aria-controls="eventos" aria-selected="true">
+                    <i class="far fa-calendar-alt mr-2"></i>Eventos
+                    <span id="eventos-count" class="badge badge-minimalista ml-2" style="background: #e0f2fe; color: #0369a1; font-size: 0.75rem; padding: 0.25em 0.5em;">0</span>
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="mega-eventos-tab" data-toggle="tab" href="#mega-eventos" role="tab" aria-controls="mega-eventos" aria-selected="false">
+                    <i class="far fa-star mr-2"></i>Mega Eventos
+                    <span id="mega-eventos-count" class="badge badge-minimalista ml-2" style="background: #e0f2fe; color: #0369a1; font-size: 0.75rem; padding: 0.25em 0.5em;">0</span>
+                </a>
+            </li>
+        </ul>
     </div>
 
     <!-- Contenido de las pestañas -->
@@ -81,10 +70,18 @@
 
 @push('css')
 <style>
+    /* Estilo Minimalista */
+    body {
+        background-color: #f8f9fa;
+    }
+
     .evento-inscrito {
         position: relative;
-        border-radius: 12px;
+        border-radius: 16px;
         overflow: hidden;
+        background: #ffffff;
+        border: 1px solid #e5e7eb !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     .evento-inscrito::before {
@@ -93,30 +90,31 @@
         top: 0;
         left: 0;
         right: 0;
-        height: 5px;
+        height: 3px;
         background: linear-gradient(90deg, #00A36C 0%, #008a5a 100%);
         z-index: 1;
     }
     
     .evento-inscrito .card-body {
-        background: linear-gradient(to bottom, rgba(0, 163, 108, 0.05) 0%, rgba(248, 249, 250, 1) 15%);
+        background: #ffffff;
+        padding: 1.5rem;
     }
     
     .evento-inscrito:hover {
-        box-shadow: 0 10px 25px rgba(0, 163, 108, 0.25) !important;
-        transform: translateY(-3px);
-        transition: all 0.3s ease;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08) !important;
+        transform: translateY(-4px);
+        border-color: #d1d5db !important;
     }
 
     .card {
-        transition: all 0.3s ease;
-        border-radius: 12px;
-        border: 1px solid #F5F5F5;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 16px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
 
     .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 25px rgba(12, 43, 68, 0.15) !important;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08) !important;
     }
 
     .badge-success {
@@ -134,26 +132,144 @@
         color: white !important;
     }
 
-    /* Estilos para las pestañas */
+    /* Estilos para las pestañas - Minimalista */
+    .nav-tabs {
+        border-bottom: 1px solid #e5e7eb;
+        background: transparent;
+    }
+
     .nav-tabs .nav-link {
         border: none !important;
-        border-bottom: 3px solid transparent !important;
+        border-bottom: 2px solid transparent !important;
+        color: #6b7280;
+        font-weight: 500;
+        padding: 1rem 1.5rem;
+        transition: all 0.2s ease;
     }
 
     .nav-tabs .nav-link:hover {
         border-color: transparent !important;
         color: #00A36C !important;
+        background-color: rgba(0, 163, 108, 0.05);
     }
 
     .nav-tabs .nav-link.active {
         color: #00A36C !important;
         background-color: transparent !important;
         border-color: transparent !important;
-        border-bottom: 3px solid #00A36C !important;
+        border-bottom: 2px solid #00A36C !important;
+        font-weight: 600;
     }
 
     .nav-tabs .nav-link:focus {
         outline: none !important;
+    }
+
+    /* Botones minimalistas */
+    .btn-minimalista {
+        border-radius: 10px;
+        padding: 0.625rem 1.25rem;
+        font-weight: 500;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+    }
+
+    .btn-minimalista:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Sección de ticket mejorada */
+    .ticket-section {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin: 1rem 0;
+    }
+
+    .ticket-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    .ticket-button {
+        width: 100%;
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        font-weight: 500;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+        border: 1px solid;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .ticket-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .ticket-button-primary {
+        background: #00A36C;
+        color: white;
+        border-color: #00A36C;
+    }
+
+    .ticket-button-primary:hover {
+        background: #008a5a;
+        border-color: #008a5a;
+        color: white;
+    }
+
+    .ticket-button-secondary {
+        background: white;
+        color: #0C2B44;
+        border-color: #d1d5db;
+    }
+
+    .ticket-button-secondary:hover {
+        background: #f9fafb;
+        border-color: #00A36C;
+        color: #00A36C;
+    }
+
+    /* Espaciado mejorado */
+    .card-body {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-content {
+        flex: 1;
+    }
+
+    .card-actions {
+        margin-top: auto;
+        padding-top: 1rem;
+    }
+
+    /* Imagen mejorada */
+    .evento-image {
+        height: 240px;
+        object-fit: cover;
+        transition: transform 0.4s ease;
+    }
+
+    .evento-inscrito:hover .evento-image {
+        transform: scale(1.05);
+    }
+
+    /* Badges minimalistas */
+    .badge-minimalista {
+        padding: 0.375rem 0.75rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 500;
     }
 </style>
 @endpush
@@ -185,6 +301,60 @@ function formatearFechaOverlay(fechaFin) {
             <div style="font-size: 0.75rem; font-weight: 600; color: #00A36C; line-height: 1; margin-top: 2px;">${mes}</div>
         </div>
     `;
+}
+
+// Función helper para formatear fechas desde PostgreSQL sin conversión de zona horaria
+function formatearFechaPostgreSQL(fechaStr) {
+    if (!fechaStr) return 'Fecha no especificada';
+    try {
+        let fechaObj;
+        
+        if (typeof fechaStr === 'string') {
+            fechaStr = fechaStr.trim();
+            
+            // Patrones para diferentes formatos de fecha
+            const mysqlPattern = /^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+            const isoPattern = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+            
+            let match = fechaStr.match(mysqlPattern) || fechaStr.match(isoPattern);
+            
+            if (match) {
+                // Parsear manualmente para evitar conversión UTC
+                const [, year, month, day, hour, minute, second] = match;
+                fechaObj = new Date(
+                    parseInt(year, 10),
+                    parseInt(month, 10) - 1,
+                    parseInt(day, 10),
+                    parseInt(hour, 10),
+                    parseInt(minute, 10),
+                    parseInt(second || 0, 10)
+                );
+            } else {
+                fechaObj = new Date(fechaStr);
+            }
+        } else {
+            fechaObj = new Date(fechaStr);
+        }
+        
+        if (isNaN(fechaObj.getTime())) return fechaStr;
+        
+        const año = fechaObj.getFullYear();
+        const mes = fechaObj.getMonth();
+        const dia = fechaObj.getDate();
+        const horas = fechaObj.getHours();
+        const minutos = fechaObj.getMinutes();
+        
+        const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 
+                      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+        
+        const horaFormateada = String(horas).padStart(2, '0');
+        const minutoFormateado = String(minutos).padStart(2, '0');
+        
+        return `${dia} de ${meses[mes]} de ${año}, ${horaFormateada}:${minutoFormateado}`;
+    } catch (error) {
+        console.error('Error formateando fecha:', error);
+        return fechaStr;
+    }
 }
 
 async function cargarMisParticipaciones() {
@@ -235,15 +405,10 @@ async function cargarMisParticipaciones() {
         // Cargar eventos regulares
         if (tieneEventos) {
             eventosContainer.innerHTML = '';
+            
             eventosData.eventos.forEach(participacion => {
                 const evento = participacion.evento;
-                const fechaInicio = evento.fecha_inicio ? new Date(evento.fecha_inicio).toLocaleDateString('es-ES', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                }) : 'Fecha no especificada';
+                const fechaInicio = formatearFechaPostgreSQL(evento.fecha_inicio);
 
                 let estadoBadge = '';
                 let estadoColor = '';
@@ -292,73 +457,101 @@ async function cargarMisParticipaciones() {
                 colDiv.className = 'col-md-4 mb-4';
                 
                 colDiv.innerHTML = `
-                    <div class="card border-0 shadow-sm h-100 evento-inscrito" style="border-radius: 12px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; background: #f8f9fa; border: 2px solid #00A36C !important;">
+                    <div class="card border-0 shadow-sm h-100 evento-inscrito">
                         ${imagenPrincipal 
                             ? `<a href="/externo/eventos/${evento.id}/detalle" style="text-decoration: none; display: block;">
-                                <div class="position-relative" style="height: 200px; overflow: hidden; background: #f8f9fa; cursor: pointer;">
-                                    <img src="${imagenPrincipal}" alt="${evento.titulo}" class="w-100 h-100" style="object-fit: cover; transition: transform 0.3s;" 
-                                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\\'http://www.w3.org/2000/svg\\' width=\\\'400\\' height=\\\'200\\'%3E%3Crect fill=\\\'%23f8f9fa\\' width=\\\'400\\' height=\\\'200\\'/%3E%3Ctext x=\\\'50%25\\' y=\\\'50%25\\' text-anchor=\\\'middle\\' dy=\\\'.3em\\' fill=\\\'%23adb5bd\\' font-family=\\\'Arial\\' font-size=\\\'14\\'%3EImagen no disponible%3C/text%3E%3C/svg%3E'; this.style.objectFit='contain'; this.style.padding='20px';">
+                                <div class="position-relative" style="height: 240px; overflow: hidden; background: #f9fafb; cursor: pointer;">
+                                    <img src="${imagenPrincipal}" alt="${evento.titulo}" class="w-100 h-100 evento-image" 
+                                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\\'http://www.w3.org/2000/svg\\' width=\\\'400\\' height=\\\'240\\'%3E%3Crect fill=\\\'%23f9fafb\\' width=\\\'400\\' height=\\\'240\\'/%3E%3Ctext x=\\\'50%25\\' y=\\\'50%25\\' text-anchor=\\\'middle\\' dy=\\\'.3em\\' fill=\\\'%23d1d5db\\' font-family=\\\'Arial\\' font-size=\\\'14\\'%3EImagen no disponible%3C/text%3E%3C/svg%3E'; this.style.objectFit='contain'; this.style.padding='20px';">
                                 ${fechaOverlay}
-                                <div class="position-absolute" style="top: 12px; right: 12px; z-index: 10; pointer-events: none;">
+                                <div class="position-absolute" style="top: 16px; right: 16px; z-index: 10; pointer-events: none;">
                                     ${estadoEventoBadge}
                                 </div>
-                                <div class="position-absolute" style="top: 50px; left: 12px; z-index: 10; pointer-events: none;">
-                                    <span class="badge badge-${estadoColor}" style="${estadoColor === 'success' ? 'background-color: #00A36C !important;' : estadoColor === 'warning' ? 'background-color: #ffc107 !important;' : 'background-color: #dc3545 !important;'} color: white; font-size: 0.7rem; padding: 0.3em 0.6em; border-radius: 15px;"><i class="fas ${estadoIcon} mr-1"></i>${estadoBadge}</span>
+                                <div class="position-absolute" style="top: 16px; left: 16px; z-index: 10; pointer-events: none;">
+                                    <span class="badge badge-minimalista badge-${estadoColor}" style="${estadoColor === 'success' ? 'background-color: #00A36C !important;' : estadoColor === 'warning' ? 'background-color: #ffc107 !important;' : 'background-color: #dc3545 !important;'} color: white;"><i class="fas ${estadoIcon} mr-1"></i>${estadoBadge}</span>
                                 </div>
                                </div>
                                </a>`
                             : `<a href="/externo/eventos/${evento.id}/detalle" style="text-decoration: none; display: block;">
-                                <div class="position-relative" style="height: 200px; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                                <i class="far fa-calendar fa-4x text-white" style="opacity: 0.7;"></i>
+                                <div class="position-relative" style="height: 240px; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                <i class="far fa-calendar fa-4x text-white" style="opacity: 0.6;"></i>
                                 ${fechaOverlay}
-                                <div class="position-absolute" style="top: 12px; right: 12px; z-index: 10; pointer-events: none;">
+                                <div class="position-absolute" style="top: 16px; right: 16px; z-index: 10; pointer-events: none;">
                                     ${estadoEventoBadge}
                                 </div>
-                                <div class="position-absolute" style="top: 50px; left: 12px; z-index: 10; pointer-events: none;">
-                                    <span class="badge badge-${estadoColor}" style="${estadoColor === 'success' ? 'background-color: #00A36C !important;' : estadoColor === 'warning' ? 'background-color: #ffc107 !important;' : 'background-color: #dc3545 !important;'} color: white; font-size: 0.7rem; padding: 0.3em 0.6em; border-radius: 15px;"><i class="fas ${estadoIcon} mr-1"></i>${estadoBadge}</span>
+                                <div class="position-absolute" style="top: 16px; left: 16px; z-index: 10; pointer-events: none;">
+                                    <span class="badge badge-minimalista badge-${estadoColor}" style="${estadoColor === 'success' ? 'background-color: #00A36C !important;' : estadoColor === 'warning' ? 'background-color: #ffc107 !important;' : 'background-color: #dc3545 !important;'} color: white;"><i class="fas ${estadoIcon} mr-1"></i>${estadoBadge}</span>
                                 </div>
                                </div>`
                         }
-                        <div class="card-body p-4">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h5 class="mb-0" style="font-size: 1.1rem; font-weight: 600; color: #2c3e50; flex: 1;">${evento.titulo || 'Sin título'}</h5>
-                                <i class="fas fa-check-circle text-success ml-2" style="font-size: 1.2rem;" title="Estás inscrito en este evento"></i>
-                            </div>
-                            <span class="badge badge-${estadoColor} mb-2" style="${estadoColor === 'success' ? 'background-color: #00A36C !important;' : estadoColor === 'warning' ? 'background-color: #ffc107 !important;' : 'background-color: #dc3545 !important;'} color: white; font-size: 0.75rem; display: inline-block;">
-                                <i class="fas ${estadoIcon} mr-1"></i>Participas (${estadoBadge})
-                            </span>
-                            <p class="text-muted mb-3" style="font-size: 0.9rem; line-height: 1.5; color: #6c757d; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                                ${evento.descripcion || 'Sin descripción'}
-                            </p>
-                            ${evento.ciudad ? `<p class="text-muted mb-2" style="font-size: 0.85rem;"><i class="fas fa-map-marker-alt mr-1"></i> ${evento.ciudad}</p>` : ''}
-                            <div class="mb-3 d-flex align-items-center" style="color: #6c757d; font-size: 0.85rem;">
-                                <i class="far fa-calendar-alt mr-2"></i>
-                                <span>${fechaInicio}</span>
-                            </div>
-                            ${evento.tipo_evento ? `<span class="badge badge-info mb-3" style="font-size: 0.75rem;">${evento.tipo_evento}</span>` : ''}
-                            <div class="d-flex flex-column flex-sm-row gap-2 mt-auto">
-                                <a href="/externo/eventos/${evento.id}/detalle" class="btn btn-sm btn-block mb-2 mb-sm-0" style="background: linear-gradient(135deg, #00A36C 0%, #008a5a 100%); color: white; border: none; border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500; transition: all 0.2s;">
-                                    <i class="far fa-eye mr-1"></i> Ver Detalles
-                                </a>
+                        <div class="card-body">
+                            <div class="card-content">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <h5 class="mb-0" style="font-size: 1.25rem; font-weight: 600; color: #111827; line-height: 1.3;">${evento.titulo || 'Sin título'}</h5>
+                                    <i class="fas fa-check-circle text-success ml-2" style="font-size: 1.25rem; opacity: 0.8;" title="Estás inscrito en este evento"></i>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <span class="badge badge-minimalista badge-${estadoColor}" style="${estadoColor === 'success' ? 'background-color: #00A36C !important;' : estadoColor === 'warning' ? 'background-color: #ffc107 !important;' : 'background-color: #dc3545 !important;'} color: white;">
+                                        <i class="fas ${estadoIcon} mr-1"></i>${estadoBadge}
+                                    </span>
+                                    ${evento.tipo_evento ? `<span class="badge badge-minimalista badge-info ml-2" style="background-color: #e0f2fe !important; color: #0369a1 !important; font-size: 0.75rem;">${evento.tipo_evento}</span>` : ''}
+                                </div>
+                                
+                                <p class="text-muted mb-3" style="font-size: 0.9rem; line-height: 1.6; color: #6b7280; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                    ${evento.descripcion || 'Sin descripción'}
+                                </p>
+                                
+                                <div class="mb-3" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                    ${evento.ciudad ? `<div class="d-flex align-items-center" style="color: #6b7280; font-size: 0.875rem;"><i class="fas fa-map-marker-alt mr-2" style="width: 16px; color: #9ca3af;"></i><span>${evento.ciudad}</span></div>` : ''}
+                                    <div class="d-flex align-items-center" style="color: #6b7280; font-size: 0.875rem;">
+                                        <i class="far fa-calendar-alt mr-2" style="width: 16px; color: #9ca3af;"></i>
+                                        <span>${fechaInicio}</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Sección de Ticket - Diseño Minimalista Mejorado -->
                                 ${participacion.ticket_codigo ? `
-                                    <button type="button" class="btn btn-sm btn-outline-success btn-block" onclick="mostrarTicketEvento('${participacion.ticket_codigo}', '${evento.titulo || 'Evento'}')" style="border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500;">
-                                        <i class="fas fa-ticket-alt mr-1"></i> Ver Ticket
-                                    </button>
+                                    <div class="ticket-section">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px; background: #f0fdf4; color: #00A36C;">
+                                                <i class="fas fa-ticket-alt" style="font-size: 1.1rem;"></i>
+                                            </div>
+                                            <div>
+                                                <strong style="color: #111827; font-size: 0.95rem; font-weight: 600;">Ticket de Acceso</strong>
+                                                <p class="mb-0" style="font-size: 0.75rem; color: #6b7280; font-family: 'Courier New', monospace;">${participacion.ticket_codigo}</p>
+                                            </div>
+                                        </div>
+                                        <div class="ticket-buttons">
+                                            <button type="button" class="ticket-button ticket-button-primary" onclick="descargarQRTicket('${participacion.ticket_codigo}', '${evento.titulo || 'Evento'}')">
+                                                <i class="fas fa-download mr-2"></i> Descargar QR
+                                            </button>
+                                            <button type="button" class="ticket-button ticket-button-secondary" onclick="copiarCodigoTicket('${participacion.ticket_codigo}')">
+                                                <i class="fas fa-copy mr-2"></i> Copiar Código
+                                            </button>
+                                        </div>
+                                    </div>
                                 ` : ''}
+                            </div>
+                            
+                            <div class="card-actions">
+                                <a href="/externo/eventos/${evento.id}/detalle" class="btn btn-minimalista btn-block" style="background: #00A36C; color: white; border-color: #00A36C;">
+                                    <i class="far fa-eye mr-2"></i> Ver Detalles
+                                </a>
                             </div>
                         </div>
                     </div>
                 `;
                 
-                // Efecto hover
+                // Efecto hover mejorado
                 const card = colDiv.querySelector('.card');
                 card.onmouseenter = function() {
                     this.style.transform = 'translateY(-4px)';
-                    this.style.boxShadow = '0 8px 16px rgba(0, 163, 108, 0.3)';
+                    this.style.boxShadow = '0 12px 32px rgba(0, 0, 0, 0.08)';
                 };
                 card.onmouseleave = function() {
                     this.style.transform = 'translateY(0)';
-                    this.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+                    this.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
                 };
                 
                 eventosContainer.appendChild(colDiv);
@@ -366,11 +559,13 @@ async function cargarMisParticipaciones() {
         } else {
             eventosContainer.innerHTML = `
                 <div class="col-12">
-                    <div class="alert alert-info text-center">
-                        <i class="far fa-calendar-alt fa-3x mb-3" style="color: #00A36C;"></i>
-                        <h4>No tienes eventos registrados</h4>
-                        <p class="mb-3">Explora eventos disponibles e inscríbete</p>
-                        <a href="/externo/eventos" class="btn" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: none; border-radius: 8px; padding: 0.75rem 1.5rem; font-weight: 500;">
+                    <div class="text-center py-5" style="background: white; border-radius: 16px; border: 1px solid #e5e7eb; padding: 3rem 2rem;">
+                        <div class="mb-4">
+                            <i class="far fa-calendar-alt" style="font-size: 4rem; color: #d1d5db;"></i>
+                        </div>
+                        <h4 class="mb-2" style="color: #111827; font-weight: 600;">No tienes eventos registrados</h4>
+                        <p class="mb-4" style="color: #6b7280;">Explora eventos disponibles e inscríbete</p>
+                        <a href="/externo/eventos" class="btn btn-minimalista" style="background: #00A36C; color: white; border-color: #00A36C;">
                             <i class="far fa-calendar-alt mr-2"></i> Ver Eventos Disponibles
                         </a>
                     </div>
@@ -382,13 +577,7 @@ async function cargarMisParticipaciones() {
         if (tieneMegaEventos) {
             megaEventosContainer.innerHTML = '';
             megaEventosData.mega_eventos.forEach(mega => {
-                const fechaInicio = mega.fecha_inicio ? new Date(mega.fecha_inicio).toLocaleDateString('es-ES', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                }) : 'Fecha no especificada';
+                const fechaInicio = formatearFechaPostgreSQL(mega.fecha_inicio);
 
                 let estadoBadge = 'Aprobada';
                 let estadoColor = 'success';
@@ -411,62 +600,74 @@ async function cargarMisParticipaciones() {
                 colDiv.className = 'col-md-4 mb-4';
                 
                 colDiv.innerHTML = `
-                    <div class="card border-0 shadow-sm h-100 evento-inscrito" style="border-radius: 12px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; background: #f8f9fa; border: 2px solid #00A36C !important;">
+                    <div class="card border-0 shadow-sm h-100 evento-inscrito">
                         ${imagenPrincipal 
                             ? `<a href="/externo/mega-eventos/${mega.mega_evento_id}/detalle" style="text-decoration: none; display: block;">
-                                <div class="position-relative" style="height: 200px; overflow: hidden; background: #f8f9fa; cursor: pointer;">
-                                    <img src="${imagenPrincipal}" alt="${mega.titulo}" class="w-100 h-100" style="object-fit: cover; transition: transform 0.3s;" 
-                                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\\'http://www.w3.org/2000/svg\\' width=\\\'400\\' height=\\\'200\\'%3E%3Crect fill=\\\'%23f8f9fa\\' width=\\\'400\\' height=\\\'200\\'/%3E%3Ctext x=\\\'50%25\\' y=\\\'50%25\\' text-anchor=\\\'middle\\' dy=\\\'.3em\\' fill=\\\'%23adb5bd\\' font-family=\\\'Arial\\' font-size=\\\'14\\'%3EImagen no disponible%3C/text%3E%3C/svg%3E'; this.style.objectFit='contain'; this.style.padding='20px';">
+                                <div class="position-relative" style="height: 240px; overflow: hidden; background: #f9fafb; cursor: pointer;">
+                                    <img src="${imagenPrincipal}" alt="${mega.titulo}" class="w-100 h-100 evento-image" 
+                                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\\'http://www.w3.org/2000/svg\\' width=\\\'400\\' height=\\\'240\\'%3E%3Crect fill=\\\'%23f9fafb\\' width=\\\'400\\' height=\\\'240\\'/%3E%3Ctext x=\\\'50%25\\' y=\\\'50%25\\' text-anchor=\\\'middle\\' dy=\\\'.3em\\' fill=\\\'%23d1d5db\\' font-family=\\\'Arial\\' font-size=\\\'14\\'%3EImagen no disponible%3C/text%3E%3C/svg%3E'; this.style.objectFit='contain'; this.style.padding='20px';">
                                 ${fechaOverlay}
-                                <div class="position-absolute" style="top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: flex-start;">
-                                    <span class="badge" style="background: rgba(12, 43, 68, 0.9); color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500; pointer-events: none;"><i class="far fa-star mr-1"></i>Mega Evento</span>
-                                    <span class="badge badge-${estadoColor}" style="${estadoColor === 'success' ? 'background-color: #00A36C !important;' : estadoColor === 'warning' ? 'background-color: #ffc107 !important;' : 'background-color: #dc3545 !important;'} color: white; font-size: 0.7rem; padding: 0.3em 0.6em; border-radius: 15px; pointer-events: none;"><i class="fas ${estadoIcon} mr-1"></i>${estadoBadge}</span>
+                                <div class="position-absolute" style="top: 16px; left: 16px; right: 16px; display: flex; justify-content: space-between; align-items: flex-start; z-index: 10; pointer-events: none;">
+                                    <span class="badge badge-minimalista" style="background: rgba(12, 43, 68, 0.9); color: white;"><i class="far fa-star mr-1"></i>Mega Evento</span>
+                                    <span class="badge badge-minimalista badge-${estadoColor}" style="${estadoColor === 'success' ? 'background-color: #00A36C !important;' : estadoColor === 'warning' ? 'background-color: #ffc107 !important;' : 'background-color: #dc3545 !important;'} color: white;"><i class="fas ${estadoIcon} mr-1"></i>${estadoBadge}</span>
                                 </div>
                                </div>
                                </a>`
                             : `<a href="/externo/mega-eventos/${mega.mega_evento_id}/detalle" style="text-decoration: none; display: block;">
-                                <div class="position-relative" style="height: 200px; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                                <i class="far fa-star fa-4x text-white" style="opacity: 0.7;"></i>
+                                <div class="position-relative" style="height: 240px; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                <i class="far fa-star fa-4x text-white" style="opacity: 0.6;"></i>
                                 ${fechaOverlay}
-                                <div class="position-absolute" style="top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: flex-start;">
-                                    <span class="badge" style="background: rgba(12, 43, 68, 0.9); color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500; pointer-events: none;"><i class="far fa-star mr-1"></i>Mega Evento</span>
-                                    <span class="badge badge-${estadoColor}" style="${estadoColor === 'success' ? 'background-color: #00A36C !important;' : estadoColor === 'warning' ? 'background-color: #ffc107 !important;' : 'background-color: #dc3545 !important;'} color: white; font-size: 0.7rem; padding: 0.3em 0.6em; border-radius: 15px; pointer-events: none;"><i class="fas ${estadoIcon} mr-1"></i>${estadoBadge}</span>
+                                <div class="position-absolute" style="top: 16px; left: 16px; right: 16px; display: flex; justify-content: space-between; align-items: flex-start; z-index: 10; pointer-events: none;">
+                                    <span class="badge badge-minimalista" style="background: rgba(12, 43, 68, 0.9); color: white;"><i class="far fa-star mr-1"></i>Mega Evento</span>
+                                    <span class="badge badge-minimalista badge-${estadoColor}" style="${estadoColor === 'success' ? 'background-color: #00A36C !important;' : estadoColor === 'warning' ? 'background-color: #ffc107 !important;' : 'background-color: #dc3545 !important;'} color: white;"><i class="fas ${estadoIcon} mr-1"></i>${estadoBadge}</span>
                                 </div>
                                </div>`
                         }
-                        <div class="card-body p-4">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h5 class="mb-0" style="font-size: 1.1rem; font-weight: 600; color: #2c3e50; flex: 1;">${mega.titulo || 'Sin título'}</h5>
-                                <i class="fas fa-check-circle text-success ml-2" style="font-size: 1.2rem;" title="Estás participando en este mega evento"></i>
+                        <div class="card-body">
+                            <div class="card-content">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <h5 class="mb-0" style="font-size: 1.25rem; font-weight: 600; color: #111827; line-height: 1.3;">${mega.titulo || 'Sin título'}</h5>
+                                    <i class="fas fa-check-circle text-success ml-2" style="font-size: 1.25rem; opacity: 0.8;" title="Estás participando en este mega evento"></i>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <span class="badge badge-minimalista badge-${estadoColor}" style="${estadoColor === 'success' ? 'background-color: #00A36C !important;' : estadoColor === 'warning' ? 'background-color: #ffc107 !important;' : 'background-color: #dc3545 !important;'} color: white;">
+                                        <i class="fas ${estadoIcon} mr-1"></i>${estadoBadge}
+                                    </span>
+                                    ${mega.categoria ? `<span class="badge badge-minimalista badge-warning ml-2" style="background-color: #fef3c7 !important; color: #92400e !important; font-size: 0.75rem;">${mega.categoria}</span>` : ''}
+                                </div>
+                                
+                                <p class="text-muted mb-3" style="font-size: 0.9rem; line-height: 1.6; color: #6b7280; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                    ${mega.descripcion || 'Sin descripción'}
+                                </p>
+                                
+                                <div class="mb-3" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                    ${mega.ubicacion ? `<div class="d-flex align-items-center" style="color: #6b7280; font-size: 0.875rem;"><i class="fas fa-map-marker-alt mr-2" style="width: 16px; color: #9ca3af;"></i><span>${mega.ubicacion}</span></div>` : ''}
+                                    <div class="d-flex align-items-center" style="color: #6b7280; font-size: 0.875rem;">
+                                        <i class="far fa-calendar-alt mr-2" style="width: 16px; color: #9ca3af;"></i>
+                                        <span>${fechaInicio}</span>
+                                    </div>
+                                </div>
                             </div>
-                            <span class="badge badge-${estadoColor} mb-2" style="${estadoColor === 'success' ? 'background-color: #00A36C !important;' : estadoColor === 'warning' ? 'background-color: #ffc107 !important;' : 'background-color: #dc3545 !important;'} color: white; font-size: 0.75rem; display: inline-block;">
-                                <i class="fas ${estadoIcon} mr-1"></i>Participas (${estadoBadge})
-                            </span>
-                            <p class="text-muted mb-3" style="font-size: 0.9rem; line-height: 1.5; color: #6c757d; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                                ${mega.descripcion || 'Sin descripción'}
-                            </p>
-                            ${mega.ubicacion ? `<p class="text-muted mb-2" style="font-size: 0.85rem;"><i class="fas fa-map-marker-alt mr-1"></i> ${mega.ubicacion}</p>` : ''}
-                            <div class="mb-3 d-flex align-items-center" style="color: #6c757d; font-size: 0.85rem;">
-                                <i class="far fa-calendar-alt mr-2"></i>
-                                <span>${fechaInicio}</span>
+                            
+                            <div class="card-actions">
+                                <a href="/externo/mega-eventos/${mega.mega_evento_id}/detalle" class="btn btn-minimalista btn-block" style="background: #00A36C; color: white; border-color: #00A36C;">
+                                    <i class="far fa-eye mr-2"></i> Ver Detalles
+                                </a>
                             </div>
-                            ${mega.categoria ? `<span class="badge badge-warning mb-3" style="font-size: 0.75rem;">${mega.categoria}</span>` : ''}
-                            <a href="/externo/mega-eventos/${mega.mega_evento_id}/detalle" class="btn btn-sm btn-block mt-auto" style="background: linear-gradient(135deg, #00A36C 0%, #008a5a 100%); color: white; border: none; border-radius: 8px; padding: 0.5em 1.2em; font-weight: 500; transition: all 0.2s;">
-                                <i class="far fa-eye mr-1"></i> Ver Detalles
-                            </a>
                         </div>
                     </div>
                 `;
                 
-                // Efecto hover
+                // Efecto hover mejorado
                 const card = colDiv.querySelector('.card');
                 card.onmouseenter = function() {
                     this.style.transform = 'translateY(-4px)';
-                    this.style.boxShadow = '0 8px 16px rgba(0, 163, 108, 0.3)';
+                    this.style.boxShadow = '0 12px 32px rgba(0, 0, 0, 0.08)';
                 };
                 card.onmouseleave = function() {
                     this.style.transform = 'translateY(0)';
-                    this.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+                    this.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
                 };
                 
                 megaEventosContainer.appendChild(colDiv);
@@ -474,11 +675,13 @@ async function cargarMisParticipaciones() {
         } else {
             megaEventosContainer.innerHTML = `
                 <div class="col-12">
-                    <div class="alert alert-info text-center">
-                        <i class="far fa-star fa-3x mb-3" style="color: #00A36C;"></i>
-                        <h4>No tienes mega eventos registrados</h4>
-                        <p class="mb-3">Explora mega eventos disponibles e inscríbete</p>
-                        <a href="/externo/mega-eventos" class="btn" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: none; border-radius: 8px; padding: 0.75rem 1.5rem; font-weight: 500;">
+                    <div class="text-center py-5" style="background: white; border-radius: 16px; border: 1px solid #e5e7eb; padding: 3rem 2rem;">
+                        <div class="mb-4">
+                            <i class="far fa-star" style="font-size: 4rem; color: #d1d5db;"></i>
+                        </div>
+                        <h4 class="mb-2" style="color: #111827; font-weight: 600;">No tienes mega eventos registrados</h4>
+                        <p class="mb-4" style="color: #6b7280;">Explora mega eventos disponibles e inscríbete</p>
+                        <a href="/externo/mega-eventos" class="btn btn-minimalista" style="background: #00A36C; color: white; border-color: #00A36C;">
                             <i class="far fa-star mr-2"></i> Ver Mega Eventos Disponibles
                         </a>
                     </div>
@@ -498,6 +701,129 @@ async function cargarMisParticipaciones() {
         `;
         megaEventosContainer.innerHTML = eventosContainer.innerHTML;
     }
+}
+
+/**
+ * Descargar QR del ticket como imagen
+ */
+function descargarQRTicket(ticketCodigo, tituloEvento) {
+    // Cargar librería QRCode si no está disponible
+    const generarYDescargarQR = () => {
+        try {
+            // Crear contenedor temporal
+            const container = document.createElement('div');
+            container.style.position = 'absolute';
+            container.style.left = '-9999px';
+            container.id = 'temp-qr-container-' + Date.now();
+            document.body.appendChild(container);
+
+            // Generar QR
+            new QRCode(container, {
+                text: ticketCodigo,
+                width: 400,
+                height: 400,
+                colorDark: "#0C2B44",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            // Esperar a que se genere el QR
+            setTimeout(() => {
+                const canvas = container.querySelector('canvas');
+                if (canvas) {
+                    // Convertir canvas a imagen
+                    canvas.toBlob((blob) => {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `QR-Ticket-${tituloEvento.replace(/[^a-z0-9]/gi, '_')}-${ticketCodigo.substring(0, 8)}.png`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    });
+                } else {
+                    alert('Error al generar el código QR');
+                }
+                document.body.removeChild(container);
+            }, 500);
+        } catch (e) {
+            console.error('Error generando QR:', e);
+            alert('Error al generar el código QR. Por favor, intenta nuevamente.');
+        }
+    };
+
+    if (typeof QRCode === 'undefined') {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+        script.onload = generarYDescargarQR;
+        script.onerror = () => {
+            alert('No se pudo cargar la librería de QR. Por favor, recarga la página e intenta nuevamente.');
+        };
+        document.head.appendChild(script);
+    } else {
+        generarYDescargarQR();
+    }
+}
+
+/**
+ * Copiar código del ticket al portapapeles
+ */
+function copiarCodigoTicket(ticketCodigo) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(ticketCodigo).then(() => {
+            // Mostrar notificación de éxito
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Código copiado!',
+                    text: 'El código del ticket ha sido copiado al portapapeles',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } else {
+                alert('Código copiado al portapapeles: ' + ticketCodigo);
+            }
+        }).catch(err => {
+            console.error('Error copiando:', err);
+            // Fallback: usar método antiguo
+            copiarCodigoFallback(ticketCodigo);
+        });
+    } else {
+        // Fallback para navegadores antiguos
+        copiarCodigoFallback(ticketCodigo);
+    }
+}
+
+/**
+ * Método fallback para copiar código
+ */
+function copiarCodigoFallback(ticketCodigo) {
+    const textArea = document.createElement('textarea');
+    textArea.value = ticketCodigo;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+        document.execCommand('copy');
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Código copiado!',
+                text: 'El código del ticket ha sido copiado al portapapeles',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        } else {
+            alert('Código copiado al portapapeles: ' + ticketCodigo);
+        }
+    } catch (err) {
+        console.error('Error copiando:', err);
+        alert('No se pudo copiar automáticamente. Código: ' + ticketCodigo);
+    }
+    document.body.removeChild(textArea);
 }
 
 /**

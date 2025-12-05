@@ -417,7 +417,7 @@ class MegaEventoController extends Controller
                         
                         // Si el host no es localhost ni el dominio actual, es URL de internet
                         if (!empty($host) && 
-                            !in_array($host, ['localhost', '127.0.0.1']) && 
+                            !in_array($host, ['localhost', '127.0.0.1', '10.26.15.110']) && 
                             $host !== $appHost &&
                             strpos($host, $appHost) === false &&
                             strpos($appHost, $host) === false) {

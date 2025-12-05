@@ -423,6 +423,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         await cargarReacciones();
 
         // Cargar participantes (que incluye voluntarios)
+        // Ejecutar inmediatamente, no esperar
         await cargarParticipantes();
         
         // Cargar lista de asistencia si existe el contenedor
@@ -435,6 +436,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         // Configurar botones del banner
         configurarBotonesBanner(eventoIdShow, e);
+        
+        // Establecer eventoIdActual para control de asistencia
+        if (typeof window.eventoIdActual === 'undefined') {
+            window.eventoIdActual = eventoIdShow;
+        } else {
+            window.eventoIdActual = eventoIdShow;
+        }
+        
+        // Verificar si se debe mostrar el botón de control de asistencia
+        if (typeof verificarMostrarBotonControlAsistencia === 'function' && e.estado_dinamico) {
+            verificarMostrarBotonControlAsistencia(e.estado_dinamico);
+        }
 
         // Iniciar auto-refresco de reacciones (ONG ve el aumento casi en tiempo real)
         iniciarAutoRefrescoReacciones(eventoIdShow);
@@ -646,28 +659,21 @@ function iniciarAutoRefrescoReacciones(eventoId) {
     }
 }
 
-// Función para cargar participantes
+// Función para cargar participantes (igual que cargarReacciones)
 async function cargarParticipantes() {
-    // Verificar si el evento está finalizado
-    const estadoBadge = document.getElementById('estadoBadge');
-    if (estadoBadge && estadoBadge.textContent.trim() === 'Finalizado') {
-        const container = document.getElementById('participantesContainer');
-        if (container) {
-            container.innerHTML = `
-                <div class="alert alert-info" style="border-radius: 12px; border: none; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; padding: 1.5rem;">
-                    <i class="far fa-info-circle mr-2"></i>
-                    Este evento fue finalizado. Ya no se pueden gestionar participantes.
-                </div>
-            `;
-        }
+    const container = document.getElementById('participantesContainer');
+    if (!container) {
+        console.warn('⚠️ Container participantesContainer no encontrado');
         return;
     }
-    
-    const container = document.getElementById('participantesContainer');
-    if (!container) return;
 
     const token = localStorage.getItem('token');
+    // Obtener eventoId directamente de la URL, igual que cargarReacciones
     const eventoId = window.location.pathname.split("/")[3];
+    
+    console.log('📋 Iniciando carga de participantes para evento:', eventoId);
+    console.log('🔑 Token presente:', !!token);
+    console.log('🌐 API_BASE_URL:', API_BASE_URL);
 
     try {
         container.innerHTML = `
@@ -679,14 +685,20 @@ async function cargarParticipantes() {
             </div>
         `;
 
-        const res = await fetch(`${API_BASE_URL}/api/participaciones/evento/${eventoId}`, {
+        const url = `${API_BASE_URL}/api/participaciones/evento/${eventoId}`;
+        console.log('🌐 URL de petición:', url);
+
+        const res = await fetch(url, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Accept': 'application/json'
             }
         });
 
+        console.log('📡 Status de respuesta:', res.status);
+
         const data = await res.json();
+        console.log('✅ Respuesta del servidor:', data);
 
         if (!res.ok || !data.success) {
             container.innerHTML = `
@@ -699,6 +711,7 @@ async function cargarParticipantes() {
         }
 
         if (!data.participantes || data.participantes.length === 0) {
+            console.log('ℹ️ No hay participantes en este evento');
             container.innerHTML = `
                 <div class="text-center py-5" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border-radius: 12px; padding: 3rem 2rem;">
                     <div style="background: rgba(255, 255, 255, 0.15); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; backdrop-filter: blur(10px);">
@@ -710,17 +723,67 @@ async function cargarParticipantes() {
             `;
             return;
         }
+        
+        console.log('📊 Total participantes recibidos:', data.participantes.length);
+        console.log('📊 Participantes registrados:', data.participantes.filter(p => p.tipo === 'registrado').length);
+        console.log('📊 Participantes no registrados:', data.participantes.filter(p => p.tipo === 'no_registrado').length);
 
-        // Crear lista de participantes con diseño limpio
+        // Función helper para parsear fechas correctamente
+        function parsearFechaLocal(fechaStr) {
+            if (!fechaStr) return null;
+            try {
+                if (typeof fechaStr === 'string') {
+                    fechaStr = fechaStr.trim();
+                    const match = fechaStr.match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})/);
+                    if (match) {
+                        const [, year, month, day, hour, minute, second] = match;
+                        return new Date(
+                            parseInt(year, 10),
+                            parseInt(month, 10) - 1,
+                            parseInt(day, 10),
+                            parseInt(hour, 10),
+                            parseInt(minute, 10),
+                            parseInt(second || 0, 10)
+                        );
+                    }
+                }
+                return new Date(fechaStr);
+            } catch (error) {
+                return new Date(fechaStr);
+            }
+        }
+        
+        // Crear grid de participantes (igual que reacciones)
+        console.log('🎨 Iniciando renderizado de participantes...');
+        console.log('🎨 Datos recibidos para renderizar:', data.participantes);
+        
+        if (!Array.isArray(data.participantes)) {
+            console.error('❌ data.participantes no es un array:', typeof data.participantes);
+            container.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    Error: Los datos recibidos no tienen el formato correcto.
+                </div>
+            `;
+            return;
+        }
+        
         let html = '<div class="row">';
-        data.participantes.forEach(participante => {
-            const fechaInscripcion = new Date(participante.fecha_inscripcion).toLocaleDateString('es-ES', {
+        data.participantes.forEach((participante, index) => {
+            console.log(`🎨 Renderizando participante ${index + 1}:`, {
+                nombre: participante.nombre,
+                tipo: participante.tipo,
+                estado: participante.estado
+            });
+            
+            const fechaObj = parsearFechaLocal(participante.fecha_inscripcion);
+            const fechaInscripcion = fechaObj ? fechaObj.toLocaleDateString('es-ES', {
                 year: 'numeric',
                 month: '2-digit',
                 day: '2-digit',
                 hour: '2-digit',
                 minute: '2-digit'
-            });
+            }) : 'N/A';
 
             let estadoBadge = '';
             if (participante.estado === 'aprobada') {
@@ -734,86 +797,112 @@ async function cargarParticipantes() {
                 estadoBadge = '<span class="badge" style="background: #ffc107; color: #333333; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;">Pendiente</span>';
             }
 
-            const inicial = (participante.nombre || 'U').charAt(0).toUpperCase();
+            // Asegurar que tenemos un nombre válido
+            const nombreParticipante = participante.nombre || participante.nombres || 'Sin nombre';
+            const inicial = nombreParticipante.charAt(0).toUpperCase();
             const fotoPerfil = participante.foto_perfil || null;
-            const esNoRegistrado = participante.tipo === 'no_registrado';
+            const esNoRegistrado = participante.tipo === 'no_registrado' || participante.tipo_usuario === 'Voluntario';
             const tipoBadge = esNoRegistrado 
-                ? '<span class="badge badge-info ml-2" style="background: #17a2b8; color: white; padding: 0.25em 0.5em; border-radius: 12px; font-size: 0.75rem; font-weight: 500;"><i class="fas fa-user-clock mr-1"></i> No registrado</span>'
-                : '';
+                ? '<span class="badge badge-info ml-2" style="background: #17a2b8; color: white; padding: 0.25em 0.5em; border-radius: 12px; font-size: 0.75rem; font-weight: 500;"><i class="fas fa-user-clock mr-1"></i> Voluntario</span>'
+                : '<span class="badge badge-primary ml-2" style="background: #007bff; color: white; padding: 0.25em 0.5em; border-radius: 12px; font-size: 0.75rem; font-weight: 500;"><i class="fas fa-user mr-1"></i> Externo</span>';
 
             html += `
-                <div class="col-md-6 mb-4">
+                <div class="col-md-6 col-lg-4 mb-3 participante-card" style="animation-delay: ${index * 0.1}s;">
                     <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; border: 1px solid #F5F5F5; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(12, 43, 68, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';">
                         <div class="card-body p-4">
-                        <div class="d-flex align-items-start mb-3">
-                            ${fotoPerfil ? `
-                                    <img src="${fotoPerfil}" alt="${participante.nombre}" class="rounded-circle mr-3" style="width: 55px; height: 55px; object-fit: cover; border: 3px solid #00A36C; flex-shrink: 0;">
-                            ` : `
-                                    <div class="rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 55px; height: 55px; font-weight: 600; font-size: 1.2rem; flex-shrink: 0; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white;">
-                                    ${inicial}
+                            <div class="d-flex align-items-center mb-3">
+                                ${fotoPerfil ? `
+                                    <img src="${fotoPerfil}" alt="${nombreParticipante}" class="rounded-circle mr-3" style="width: 50px; height: 50px; object-fit: cover; border: 3px solid #00A36C; animation: fadeInUp 0.5s ease-out;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 50px; height: 50px; font-weight: 600; font-size: 1.2rem; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; animation: fadeInUp 0.5s ease-out; display: none;">
+                                        ${inicial}
+                                    </div>
+                                ` : `
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 50px; height: 50px; font-weight: 600; font-size: 1.2rem; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; animation: fadeInUp 0.5s ease-out;">
+                                        ${inicial}
+                                    </div>
+                                `}
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center mb-1 flex-wrap">
+                                        <h6 class="mb-0" style="color: #0C2B44; font-weight: 700; font-size: 1rem;">${nombreParticipante}</h6>
+                                        ${tipoBadge}
+                                    </div>
+                                    <small style="color: #333333; font-size: 0.85rem; display: block;">
+                                        <i class="far fa-envelope mr-1" style="color: #00A36C;"></i> ${participante.correo || participante.email || 'N/A'}
+                                    </small>
+                                    ${(participante.telefono || participante.phone_number) ? `
+                                        <small style="color: #333333; font-size: 0.85rem; display: block;">
+                                            <i class="far fa-phone mr-1" style="color: #00A36C;"></i> ${participante.telefono || participante.phone_number}
+                                        </small>
+                                    ` : ''}
                                 </div>
-                            `}
-                            <div class="flex-grow-1">
-                                <div class="d-flex justify-content-between align-items-start mb-2 flex-wrap">
-                                        <div>
-                                            <h6 class="mb-0" style="color: #0C2B44; font-weight: 700; font-size: 1.05rem;">${participante.nombre || 'N/A'}</h6>
-                                            ${tipoBadge}
-                                        </div>
+                                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem;">
                                     ${estadoBadge}
                                 </div>
-                                    <div class="mb-2">
-                                        <p class="mb-1" style="color: #333333; font-size: 0.9rem;">
-                                            <i class="far fa-envelope mr-2" style="color: #00A36C;"></i> ${participante.correo || 'N/A'}
-                                </p>
-                                        <p class="mb-1" style="color: #333333; font-size: 0.9rem;">
-                                            <i class="far fa-phone mr-2" style="color: #00A36C;"></i> ${participante.telefono || 'N/A'}
-                                </p>
-                                        <p class="mb-0" style="color: #333333; font-size: 0.9rem;">
-                                            <i class="far fa-calendar mr-2" style="color: #00A36C;"></i> ${fechaInscripcion}
-                                </p>
-                                ${participante.ticket_codigo ? `
-                                        <p class="mb-1 mt-2" style="color: #333333; font-size: 0.85rem;">
-                                            <i class="fas fa-ticket-alt mr-2" style="color: #00A36C;"></i> 
-                                            <code style="background: #f8f9fa; padding: 0.2em 0.4em; border-radius: 4px; font-size: 0.8rem;">${participante.ticket_codigo.substring(0, 8)}...</code>
-                                        </p>
-                                ` : ''}
-                                ${participante.checkin_at ? `
-                                        <p class="mb-0" style="color: #28a745; font-size: 0.85rem; font-weight: 500;">
-                                            <i class="fas fa-check-circle mr-2"></i> 
-                                            Asistió: ${new Date(participante.checkin_at).toLocaleString('es-ES')}
-                                        </p>
-                                ` : ''}
-                                    </div>
-                                ${(!esNoRegistrado && participante.estado === 'pendiente') ? `
-                                        <div class="d-flex mt-3" style="gap: 0.5rem;">
-                                            <button class="btn btn-sm flex-fill" onclick="${esNoRegistrado ? 'aprobarParticipacionNoRegistrado' : 'aprobarParticipacion'}(${participante.id})" title="Aprobar" style="background: #00A36C; color: white; border: none; border-radius: 8px; font-weight: 500;">
-                                                <i class="far fa-check-circle mr-1"></i> Aprobar
-                                        </button>
-                                            <button class="btn btn-sm flex-fill" onclick="${esNoRegistrado ? 'rechazarParticipacionNoRegistrado' : 'rechazarParticipacion'}(${participante.id})" title="Rechazar" style="background: #dc3545; color: white; border: none; border-radius: 8px; font-weight: 500;">
-                                                <i class="far fa-times-circle mr-1"></i> Rechazar
-                                        </button>
-                                    </div>
-                                ` : ''}
-                                </div>
                             </div>
+                            <div class="mt-3 pt-3" style="border-top: 1px solid #F5F5F5;">
+                                <small style="color: #333333; font-size: 0.8rem;">
+                                    <i class="far fa-clock mr-1" style="color: #00A36C;"></i> ${fechaInscripcion}
+                                </small>
+                                ${participante.comentario ? `
+                                    <br><small style="color: #495057; font-size: 0.8rem; display: block; margin-top: 0.5rem;">
+                                        <i class="fas fa-comment mr-1" style="color: #00A36C;"></i> ${participante.comentario}
+                                    </small>
+                                ` : ''}
+                            </div>
+                            ${(!esNoRegistrado && participante.estado === 'pendiente') ? `
+                                <div class="d-flex mt-3" style="gap: 0.5rem;">
+                                    <button class="btn btn-sm flex-fill" onclick="aprobarParticipacion(${participante.id})" title="Aprobar" style="background: #00A36C; color: white; border: none; border-radius: 8px; font-weight: 500;">
+                                        <i class="far fa-check-circle mr-1"></i> Aprobar
+                                    </button>
+                                    <button class="btn btn-sm flex-fill" onclick="rechazarParticipacion(${participante.id})" title="Rechazar" style="background: #dc3545; color: white; border: none; border-radius: 8px; font-weight: 500;">
+                                        <i class="far fa-times-circle mr-1"></i> Rechazar
+                                    </button>
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
             `;
         });
         html += '</div>';
-        html += `<div class="mt-4 text-center"><span class="badge" style="background: #0C2B44; color: white; padding: 0.5em 1em; border-radius: 20px; font-weight: 500;">Total: ${data.count} participante(s)</span></div>`;
+        html += `<div class="mt-4 text-center"><span class="badge" style="background: #0C2B44; color: white; padding: 0.5em 1em; border-radius: 20px; font-weight: 500;">Total: ${data.count || data.participantes.length} participante(s)</span></div>`;
 
+        console.log('🎨 HTML generado, longitud:', html.length);
+        console.log('🎨 Insertando HTML en container:', container.id);
         container.innerHTML = html;
+        console.log('✅ HTML insertado correctamente');
+        
+        // Agregar animación de entrada a las tarjetas de participantes (igual que reacciones)
+        setTimeout(() => {
+            const cards = container.querySelectorAll('.participante-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease-out';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        }, 100);
 
     } catch (error) {
-        console.error('Error cargando participantes:', error);
-        container.innerHTML = `
-            <div class="alert" style="background: #f8d7da; border: 1px solid #dc3545; color: #721c24; border-radius: 8px; padding: 1rem;">
-                <i class="far fa-exclamation-triangle mr-2"></i>
-                Error de conexión al cargar participantes
-            </div>
-        `;
+        console.error('❌ Error completo cargando participantes:', error);
+        console.error('❌ Stack trace:', error.stack);
+        console.error('❌ Mensaje:', error.message);
+        
+        if (container) {
+            container.innerHTML = `
+                <div class="alert" style="background: #f8d7da; border: 1px solid #dc3545; color: #721c24; border-radius: 8px; padding: 1rem;">
+                    <i class="far fa-exclamation-triangle mr-2"></i>
+                    <strong>Error de conexión al cargar participantes</strong>
+                    <p class="mb-0 mt-2"><small>${error.message || 'Error desconocido'}</small></p>
+                    <button class="btn btn-sm btn-secondary mt-2" onclick="cargarParticipantes()">
+                        <i class="fas fa-redo mr-1"></i> Reintentar
+                    </button>
+                </div>
+            `;
+        }
     }
 }
 
@@ -994,7 +1083,7 @@ async function configurarBotonesBanner(eventoId, evento) {
         id: eventoId,
         titulo: evento.titulo || 'Evento',
         descripcion: evento.descripcion || '',
-        url: `http://192.168.0.6:8000/evento/${eventoId}/qr`
+        url: `http://10.26.15.110:8000/evento/${eventoId}/qr`
     };
 }
 
@@ -1050,7 +1139,7 @@ async function copiarEnlace() {
     // Usar la URL pública con IP para que cualquier usuario en la misma red pueda acceder
     const url = typeof getPublicUrl !== 'undefined' 
         ? getPublicUrl(`/evento/${evento.id}/qr`)
-        : `http://192.168.0.6:8000/evento/${evento.id}/qr`;
+        : `http://10.26.15.110:8000/evento/${evento.id}/qr`;
     
     // Registrar compartido
     await registrarCompartido(evento.id, 'link');
@@ -1160,7 +1249,7 @@ async function mostrarQR() {
     // URL pública con IP para acceso mediante QR (accesible desde otros dispositivos en la misma red)
     const qrUrl = typeof getPublicUrl !== 'undefined' 
         ? getPublicUrl(`/evento/${evento.id}/qr`)
-        : `http://192.168.0.6:8000/evento/${evento.id}/qr`;
+        : `http://10.26.15.110:8000/evento/${evento.id}/qr`;
     
     // Limpiar contenido anterior
     qrcodeDiv.innerHTML = '';

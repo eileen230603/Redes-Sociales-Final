@@ -124,14 +124,62 @@ async function cargarEventosExterno() {
             return !eventosInscritos.has(e.id);
         });
 
+        // Función helper para formatear fechas desde PostgreSQL sin conversión de zona horaria
+        const formatearFechaPostgreSQL = (fechaStr) => {
+            if (!fechaStr) return 'Fecha no especificada';
+            try {
+                let fechaObj;
+                
+                if (typeof fechaStr === 'string') {
+                    fechaStr = fechaStr.trim();
+                    
+                    // Patrones para diferentes formatos de fecha
+                    const mysqlPattern = /^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+                    const isoPattern = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+                    
+                    let match = fechaStr.match(mysqlPattern) || fechaStr.match(isoPattern);
+                    
+                    if (match) {
+                        // Parsear manualmente para evitar conversión UTC
+                        const [, year, month, day, hour, minute, second] = match;
+                        fechaObj = new Date(
+                            parseInt(year, 10),
+                            parseInt(month, 10) - 1,
+                            parseInt(day, 10),
+                            parseInt(hour, 10),
+                            parseInt(minute, 10),
+                            parseInt(second || 0, 10)
+                        );
+                    } else {
+                        fechaObj = new Date(fechaStr);
+                    }
+                } else {
+                    fechaObj = new Date(fechaStr);
+                }
+                
+                if (isNaN(fechaObj.getTime())) return fechaStr;
+                
+                const año = fechaObj.getFullYear();
+                const mes = fechaObj.getMonth();
+                const dia = fechaObj.getDate();
+                const horas = fechaObj.getHours();
+                const minutos = fechaObj.getMinutes();
+                
+                const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 
+                              'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+                
+                const horaFormateada = String(horas).padStart(2, '0');
+                const minutoFormateado = String(minutos).padStart(2, '0');
+                
+                return `${dia} de ${meses[mes]} de ${año}, ${horaFormateada}:${minutoFormateado}`;
+            } catch (error) {
+                console.error('Error formateando fecha:', error);
+                return fechaStr;
+            }
+        };
+
         data.eventos.forEach(e => {
-            const fechaInicio = e.fecha_inicio ? new Date(e.fecha_inicio).toLocaleDateString('es-ES', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-            }) : 'Fecha no especificada';
+            const fechaInicio = formatearFechaPostgreSQL(e.fecha_inicio);
 
             // Ya no está inscrito porque lo filtramos arriba
             const estaInscrito = false;
@@ -376,13 +424,7 @@ async function cargarMegaEventos() {
         }
 
         data.mega_eventos.forEach(mega => {
-            const fechaInicio = mega.fecha_inicio ? new Date(mega.fecha_inicio).toLocaleDateString('es-ES', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-            }) : 'Fecha no especificada';
+            const fechaInicio = formatearFechaPostgreSQL(mega.fecha_inicio);
 
             const estaParticipando = participacionesMap[mega.mega_evento_id] || false;
 
@@ -543,54 +585,78 @@ async function participarMegaEvento(megaEventoId) {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-    // Cargar eventos iniciales
-    await cargarEventosExterno();
+    // Cargar eventos iniciales si el contenedor existe
+    const listaEventos = document.getElementById("listaEventos");
+    if (listaEventos) {
+        await cargarEventosExterno();
+    }
 
-    // Event listeners para filtros de eventos
-    document.getElementById('filtroTipo').addEventListener('change', function() {
-        filtrosExterno.tipo_evento = this.value;
-        cargarEventosExterno();
-    });
-
-    // Búsqueda con debounce para eventos
-    let searchTimeout;
-    document.getElementById('buscador').addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            filtrosExterno.buscar = this.value;
-            filtrosMegaEventos.buscar = this.value;
+    // Event listeners para filtros de eventos (solo si existen)
+    const filtroTipo = document.getElementById('filtroTipo');
+    if (filtroTipo) {
+        filtroTipo.addEventListener('change', function() {
+            filtrosExterno.tipo_evento = this.value;
             cargarEventosExterno();
-            // Si estamos en el tab de mega eventos, también buscar ahí
-            if (document.getElementById('mega-eventos-tab').classList.contains('active')) {
+        });
+    }
+
+    // Búsqueda con debounce para eventos (solo si existe)
+    const buscador = document.getElementById('buscador');
+    if (buscador) {
+        let searchTimeout;
+        buscador.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                filtrosExterno.buscar = this.value;
+                filtrosMegaEventos.buscar = this.value;
+                if (listaEventos) {
+                    cargarEventosExterno();
+                }
+                // Si estamos en el tab de mega eventos, también buscar ahí
+                const megaEventosTab = document.getElementById('mega-eventos-tab');
+                if (megaEventosTab && megaEventosTab.classList.contains('active')) {
+                    cargarMegaEventos();
+                }
+            }, 500);
+        });
+    }
+
+    // Botón limpiar (solo si existe)
+    const btnLimpiar = document.getElementById('btnLimpiar');
+    if (btnLimpiar) {
+        btnLimpiar.addEventListener('click', function() {
+            if (buscador) buscador.value = '';
+            if (filtroTipo) filtroTipo.value = 'todos';
+            filtrosExterno = {
+                tipo_evento: 'todos',
+                buscar: ''
+            };
+            filtrosMegaEventos = {
+                categoria: 'todos',
+                buscar: ''
+            };
+            if (listaEventos) {
+                cargarEventosExterno();
+            }
+            const megaEventosTab = document.getElementById('mega-eventos-tab');
+            if (megaEventosTab && megaEventosTab.classList.contains('active')) {
                 cargarMegaEventos();
             }
-        }, 500);
-    });
+        });
+    }
 
-    // Botón limpiar
-    document.getElementById('btnLimpiar').addEventListener('click', function() {
-        document.getElementById('buscador').value = '';
-        document.getElementById('filtroTipo').value = 'todos';
-        filtrosExterno = {
-            tipo_evento: 'todos',
-            buscar: ''
-        };
-        filtrosMegaEventos = {
-            categoria: 'todos',
-            buscar: ''
-        };
-        cargarEventosExterno();
-        if (document.getElementById('mega-eventos-tab').classList.contains('active')) {
+    // Event listeners para tabs (solo si existen)
+    const eventosTab = document.getElementById('eventos-tab');
+    if (eventosTab) {
+        eventosTab.addEventListener('shown.bs.tab', function() {
+            cargarEventosExterno();
+        });
+    }
+
+    const megaEventosTab = document.getElementById('mega-eventos-tab');
+    if (megaEventosTab) {
+        megaEventosTab.addEventListener('shown.bs.tab', function() {
             cargarMegaEventos();
-        }
-    });
-
-    // Event listeners para tabs
-    document.getElementById('eventos-tab').addEventListener('shown.bs.tab', function() {
-        cargarEventosExterno();
-    });
-
-    document.getElementById('mega-eventos-tab').addEventListener('shown.bs.tab', function() {
-        cargarMegaEventos();
-    });
+        });
+    }
 });

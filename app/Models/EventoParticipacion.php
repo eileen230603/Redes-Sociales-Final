@@ -22,12 +22,17 @@ class EventoParticipacion extends Model
         'registrado_por',
         'estado_asistencia',
         'estado_participacion_id',
+        'ip_registro',
+        'ubicacion_aproximada',
+        'fecha_modificacion',
+        'usuario_modifico',
     ];
 
     protected $casts = [
         'asistio' => 'boolean',
         'checkin_at' => 'datetime',
         'checkout_at' => 'datetime',
+        'fecha_modificacion' => 'datetime',
     ];
 
     protected $attributes = [
@@ -65,5 +70,21 @@ class EventoParticipacion extends Model
     public function externo()
     {
         return $this->belongsTo(User::class, 'externo_id', 'id_usuario');
+    }
+
+    /**
+     * Usuario que registró la asistencia (ONG)
+     */
+    public function registradoPor()
+    {
+        return $this->belongsTo(User::class, 'registrado_por', 'id_usuario');
+    }
+
+    /**
+     * Usuario que modificó el estado de asistencia
+     */
+    public function usuarioModifico()
+    {
+        return $this->belongsTo(User::class, 'usuario_modifico', 'id_usuario');
     }
 }

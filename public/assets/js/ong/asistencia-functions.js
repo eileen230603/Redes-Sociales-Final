@@ -283,7 +283,7 @@ async function cargarListaAsistencia() {
             html += `
                 <tr style="border-bottom: 2px solid rgba(0, 163, 108, 0.1); ${rowStyle}; transition: all 0.3s ease;" 
                     onmouseover="this.style.background='linear-gradient(90deg, rgba(0, 163, 108, 0.12) 0%, rgba(0, 163, 108, 0.05) 100%)'; this.style.transform='scale(1.01)'"
-                    onmouseout="this.style.background='${rowStyle.includes('asistido') ? 'linear-gradient(90deg, rgba(0, 163, 108, 0.08) 0%, rgba(0, 163, 108, 0.03) 100%)' : 'linear-gradient(90deg, rgba(255, 193, 7, 0.05) 0%, rgba(255, 193, 7, 0.02) 100%)}'; this.style.transform='scale(1)'">
+                    onmouseout="this.style.background='${rowStyle.includes('asistido') ? 'linear-gradient(90deg, rgba(0, 163, 108, 0.08) 0%, rgba(0, 163, 108, 0.03) 100%)' : 'linear-gradient(90deg, rgba(255, 193, 7, 0.05) 0%, rgba(255, 193, 7, 0.02) 100%)'}'; this.style.transform='scale(1)'">
                     <td style="border: none; padding: 1.25rem;">
                         <div class="d-flex align-items-center">
                             <div class="rounded-circle d-flex align-items-center justify-content-center mr-3" 

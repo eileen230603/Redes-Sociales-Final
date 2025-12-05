@@ -77,6 +77,34 @@
 <script src="{{ asset('assets/js/config.js') }}"></script>
 
 <script>
+// Función helper para parsear fechas correctamente
+function parsearFecha(fechaStr) {
+    if (!fechaStr) return null;
+    try {
+        if (typeof fechaStr === 'string') {
+            fechaStr = fechaStr.trim();
+            const mysqlPattern = /^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+            const isoPattern = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+            let match = fechaStr.match(mysqlPattern) || fechaStr.match(isoPattern);
+            if (match) {
+                const [, year, month, day, hour, minute, second] = match;
+                return new Date(
+                    parseInt(year, 10),
+                    parseInt(month, 10) - 1,
+                    parseInt(day, 10),
+                    parseInt(hour, 10),
+                    parseInt(minute, 10),
+                    parseInt(second || 0, 10)
+                );
+            }
+        }
+        return new Date(fechaStr);
+    } catch (error) {
+        console.error('Error parseando fecha:', error);
+        return null;
+    }
+}
+
 let filtrosActuales = {
     categoria: 'todos',
     buscar: '',
@@ -143,8 +171,8 @@ async function cargarMegaEventos() {
         // Ordenar mega eventos
         if (filtrosActuales.orden === 'recientes') {
             megaEventos.sort((a, b) => {
-                const fechaA = new Date(a.fecha_finalizacion || a.fecha_fin || 0);
-                const fechaB = new Date(b.fecha_finalizacion || b.fecha_fin || 0);
+                const fechaA = parsearFecha(a.fecha_finalizacion || a.fecha_fin) || new Date(0);
+                const fechaB = parsearFecha(b.fecha_finalizacion || b.fecha_fin) || new Date(0);
                 return fechaB - fechaA; // Más recientes primero
             });
         } else {

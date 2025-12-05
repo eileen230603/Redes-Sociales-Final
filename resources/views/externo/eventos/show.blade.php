@@ -77,6 +77,150 @@
         </div>
     </div>
 
+    <!-- Modal de Registrar Asistencia -->
+    <div id="modalRegistrarAsistencia" class="modal fade" tabindex="-1" role="dialog" style="display: none;">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+                <div class="modal-header" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border-radius: 16px 16px 0 0; color: white;">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="fas fa-clipboard-check mr-2"></i>
+                        Registrar Asistencia
+                    </h5>
+                    <button type="button" class="close text-white" onclick="cerrarModalRegistrarAsistencia()" aria-label="Close" style="opacity: 0.9;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-4">
+                    <!-- Mensaje informativo sobre tiempo límite -->
+                    <div id="mensajeTiempoLimite" class="alert alert-info mb-4" style="display: none; border-radius: 10px; border-left: 4px solid #17a2b8;">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-clock mr-3 mt-1" style="font-size: 1.5rem;"></i>
+                            <div>
+                                <strong>Tiempo límite para registrar asistencia</strong>
+                                <p class="mb-0 mt-1" id="textoTiempoLimite"></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <p class="text-muted mb-4">
+                        Ingresa tu código de ticket o escanea el código QR para registrar tu asistencia a este evento.
+                    </p>
+
+                    <!-- Formulario de Validación -->
+                    <div class="mb-4">
+                        <div class="flex flex-col md:flex-row gap-4 mb-4">
+                            <div class="flex-1">
+                                <input 
+                                    type="text" 
+                                    id="ticketCodigoInputDetalle" 
+                                    placeholder="Ingresa tu código de ticket o escanea el QR"
+                                    class="form-control form-control-lg"
+                                    style="border-radius: 8px; padding: 0.75rem 1rem;"
+                                    onkeypress="if(event.key === 'Enter') verificarTicketDetalle()"
+                                >
+                            </div>
+                            <button 
+                                onclick="verificarTicketDetalle()" 
+                                id="btnVerificarDetalle"
+                                class="btn btn-primary btn-lg"
+                                style="border-radius: 8px; padding: 0.75rem 1.5rem; font-weight: 600;"
+                            >
+                                <i class="fas fa-search mr-2"></i> Verificar
+                            </button>
+                        </div>
+
+                        <!-- Botones de QR -->
+                        <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center mb-4">
+                            <button 
+                                onclick="activarEscannerQRDetalle()" 
+                                id="btnEscanearQRDetalle"
+                                class="btn btn-info"
+                                style="border-radius: 8px; padding: 0.6rem 1.2rem; font-weight: 500;"
+                            >
+                                <i class="fas fa-camera mr-2"></i> Escanear Código QR
+                            </button>
+                            <button 
+                                type="button"
+                                onclick="document.getElementById('inputQRImagenDetalle').click()"
+                                id="btnImportarQRDetalle"
+                                class="btn btn-primary"
+                                style="border-radius: 8px; padding: 0.6rem 1.2rem; font-weight: 500;"
+                            >
+                                <i class="fas fa-upload mr-2"></i> Importar QR
+                            </button>
+                            <input
+                                type="file"
+                                id="inputQRImagenDetalle"
+                                accept="image/*"
+                                style="display: none;"
+                                onchange="procesarQRImagenDetalle(event)"
+                            >
+                        </div>
+
+                        <!-- Contenedor del Escáner QR -->
+                        <div id="qrScannerContainerDetalle" style="display: none; margin-top: 1.5rem; padding: 1.5rem; background: #f8f9fa; border-radius: 12px; border: 2px dashed #00A36C;">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="font-weight-bold text-brand-primario mb-0">
+                                    <i class="fas fa-camera mr-2 text-brand-acento"></i> Escáner QR Activo
+                                </h6>
+                                <button onclick="detenerEscannerQRDetalle()" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-times mr-1"></i> Cerrar
+                                </button>
+                            </div>
+                            <div style="position: relative; width: 100%; max-width: 400px; margin: 0 auto; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);">
+                                <video id="qrVideoDetalle" width="100%" style="display: block; background: #000; border-radius: 12px;"></video>
+                                <canvas id="qrCanvasDetalle" style="display: none;"></canvas>
+                            </div>
+                            <p class="text-center mt-3 text-muted text-sm">
+                                <i class="fas fa-info-circle mr-2"></i> Apunta la cámara hacia el código QR de tu ticket
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Información del Evento (se muestra después de verificar el ticket) -->
+                    <div id="infoEventoContainerDetalle" class="hidden mb-4 p-4 bg-gradient-to-r from-brand-primario/10 to-brand-acento/10 rounded-xl border-2 border-brand-acento/30">
+                        <h5 class="font-weight-bold text-brand-primario mb-3">
+                            <i class="fas fa-calendar-check mr-2 text-brand-acento"></i> Confirmar Asistencia
+                        </h5>
+                        <div id="infoEventoDetalleDetalle" class="mb-3">
+                            <!-- Se llenará dinámicamente -->
+                        </div>
+                        
+                        <!-- Campo de comentario -->
+                        <div class="form-group mb-3">
+                            <label for="comentarioAsistencia" class="font-weight-semibold text-dark">
+                                <i class="fas fa-comment-dots mr-2 text-info"></i> Comentario (opcional)
+                            </label>
+                            <textarea 
+                                id="comentarioAsistencia" 
+                                class="form-control" 
+                                rows="3" 
+                                placeholder="Agrega un comentario sobre tu asistencia al evento..."
+                                style="border-radius: 8px; resize: vertical;"
+                                maxlength="500"
+                            ></textarea>
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle mr-1"></i> Máximo 500 caracteres
+                            </small>
+                        </div>
+                        
+                        <button 
+                            onclick="confirmarAsistenciaDetalle()" 
+                            id="btnConfirmarAsistenciaDetalle"
+                            class="btn btn-success btn-block btn-lg"
+                            style="border-radius: 8px; padding: 0.75rem; font-weight: 600;"
+                        >
+                            <i class="fas fa-check-circle mr-2"></i> Confirmar Asistencia
+                        </button>
+                    </div>
+
+                    <!-- Mensajes de Resultado -->
+                    <div id="mensajeResultadoDetalle" class="hidden mt-4 p-4 rounded-xl"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="container mt-4">
         <!-- Mensaje de Evento Finalizado -->
         <div id="mensajeEventoFinalizado" class="alert alert-info mb-4" style="display: none; border-radius: 12px; border: none; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; padding: 1.5rem;">
@@ -113,6 +257,9 @@
         </button>
         <button class="btn btn-danger d-none" id="btnCancelar">
                 <i class="fas fa-times-circle mr-2"></i> Cancelar Inscripción
+        </button>
+        <button class="btn btn-info d-none" id="btnRegistrarAsistencia" onclick="abrirModalRegistrarAsistencia()">
+                <i class="fas fa-clipboard-check mr-2"></i> Registrar Asistencia
         </button>
         </div>
 
@@ -349,29 +496,38 @@
     .modal.show {
         display: block !important;
     }
+    
+    .hidden {
+        display: none !important;
+    }
+    
+    /* Estilos para mensajes de éxito y error */
+    .alert {
+        animation: slideInDown 0.3s ease-out;
+    }
+    
+    @keyframes slideInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 </style>
 @endsection
 
 @section('js')
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" onload="console.log('QRCode loaded')" onerror="console.error('Failed to load QRCode')"></script>
-<script>
-    // Esperar a que QRCode esté disponible
-    window.addEventListener('load', function() {
-        if (typeof QRCode === 'undefined') {
-            console.warn('QRCode not loaded, retrying...');
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js';
-            script.onload = function() {
-                console.log('QRCode loaded on retry');
-            };
-            document.head.appendChild(script);
-        }
-    });
-</script>
+<!-- Librería jsQR para escanear códigos QR -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<!-- Librería QRCode para generar códigos QR (solo para compartir) -->
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs2@0.0.2/qrcode.min.js"></script>
 <script>
     // Definir PUBLIC_BASE_URL desde variable de entorno
-    window.PUBLIC_BASE_URL = "{{ env('PUBLIC_APP_URL', 'http://192.168.0.6:8000') }}";
+    window.PUBLIC_BASE_URL = "{{ env('PUBLIC_APP_URL', 'http://10.26.15.110:8000') }}";
     console.log("🌐 PUBLIC_BASE_URL desde .env:", window.PUBLIC_BASE_URL);
 </script>
 <script src="{{ asset('assets/js/config.js') }}"></script>
@@ -426,5 +582,446 @@
             });
         }
     });
+
+    // Variables globales para el modal de registrar asistencia
+    let qrStreamDetalle = null;
+    let qrScanningDetalle = false;
+    let infoEventoDetalleActual = null;
+
+    // Abrir modal de registrar asistencia
+    function abrirModalRegistrarAsistencia() {
+        const modal = document.getElementById('modalRegistrarAsistencia');
+        
+        // Verificar y mostrar mensaje de tiempo límite si aplica
+        if (window.eventoActualGlobal) {
+            const eventoActualGlobal = window.eventoActualGlobal;
+            const ahora = new Date();
+            let fechaFin = null;
+            
+            // Parsear fecha de fin correctamente
+            if (eventoActualGlobal.fecha_fin) {
+                if (typeof eventoActualGlobal.fecha_fin === 'string') {
+                    const match = eventoActualGlobal.fecha_fin.trim().match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})/);
+                    if (match) {
+                        const [, year, month, day, hour, minute, second] = match;
+                        fechaFin = new Date(
+                            parseInt(year, 10),
+                            parseInt(month, 10) - 1,
+                            parseInt(day, 10),
+                            parseInt(hour, 10),
+                            parseInt(minute, 10),
+                            parseInt(second || 0, 10)
+                        );
+                    } else {
+                        fechaFin = new Date(eventoActualGlobal.fecha_fin);
+                    }
+                } else {
+                    fechaFin = new Date(eventoActualGlobal.fecha_fin);
+                }
+            }
+            
+            const eventoTerminado = fechaFin && ahora > fechaFin;
+            
+            if (eventoTerminado && fechaFin) {
+                const diferenciaMs = ahora - fechaFin;
+                const horasDesdeFinalizacion = diferenciaMs / (1000 * 60 * 60);
+                const dentroDe24Horas = horasDesdeFinalizacion <= 24;
+                
+                if (dentroDe24Horas) {
+                    const horasRestantes = 24 - horasDesdeFinalizacion;
+                    const horas = Math.floor(horasRestantes);
+                    const minutos = Math.floor((horasRestantes - horas) * 60);
+                    
+                    document.getElementById('mensajeTiempoLimite').style.display = 'block';
+                    document.getElementById('textoTiempoLimite').innerHTML = 
+                        `Este evento finalizó hace ${Math.floor(horasDesdeFinalizacion)} horas. Tienes <strong>${horas} horas y ${minutos} minutos</strong> restantes para registrar tu asistencia.`;
+                } else {
+                    document.getElementById('mensajeTiempoLimite').style.display = 'none';
+                }
+            } else {
+                document.getElementById('mensajeTiempoLimite').style.display = 'none';
+            }
+        }
+        
+        if (modal && typeof $ !== 'undefined') {
+            $(modal).modal('show');
+        } else if (modal) {
+            modal.style.display = 'block';
+            modal.classList.add('show');
+            document.body.classList.add('modal-open');
+        }
+    }
+
+    // Cerrar modal
+    function cerrarModalRegistrarAsistencia() {
+        const modal = document.getElementById('modalRegistrarAsistencia');
+        if (modal && typeof $ !== 'undefined') {
+            $(modal).modal('hide');
+        } else if (modal) {
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+            document.body.classList.remove('modal-open');
+        }
+        detenerEscannerQRDetalle();
+        document.getElementById('ticketCodigoInputDetalle').value = '';
+        document.getElementById('infoEventoContainerDetalle').classList.add('hidden');
+        infoEventoDetalleActual = null;
+    }
+
+    // Verificar ticket desde detalle
+    async function verificarTicketDetalle() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            mostrarMensajeDetalle('Debes iniciar sesión', 'error');
+            return;
+        }
+
+        const ticketCodigo = document.getElementById('ticketCodigoInputDetalle').value.trim();
+        if (!ticketCodigo) {
+            mostrarMensajeDetalle('Por favor, ingresa un código de ticket', 'error');
+            return;
+        }
+        
+        // Verificar si aún está dentro del período de 24 horas
+        if (window.eventoActualGlobal) {
+            const ahora = new Date();
+            let fechaFin = null;
+            
+            if (window.eventoActualGlobal.fecha_fin) {
+                if (typeof window.eventoActualGlobal.fecha_fin === 'string') {
+                    const match = window.eventoActualGlobal.fecha_fin.trim().match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})/);
+                    if (match) {
+                        const [, year, month, day, hour, minute, second] = match;
+                        fechaFin = new Date(
+                            parseInt(year, 10),
+                            parseInt(month, 10) - 1,
+                            parseInt(day, 10),
+                            parseInt(hour, 10),
+                            parseInt(minute, 10),
+                            parseInt(second || 0, 10)
+                        );
+                    } else {
+                        fechaFin = new Date(window.eventoActualGlobal.fecha_fin);
+                    }
+                }
+            }
+            
+            if (fechaFin && ahora > fechaFin) {
+                const diferenciaMs = ahora - fechaFin;
+                const horasDesdeFinalizacion = diferenciaMs / (1000 * 60 * 60);
+                
+                if (horasDesdeFinalizacion > 24) {
+                    mostrarMensajeDetalle('El plazo de 24 horas para registrar asistencia ha expirado. Ya no es posible registrar tu asistencia a este evento.', 'error');
+                    return;
+                }
+            }
+        }
+
+        const btnVerificar = document.getElementById('btnVerificarDetalle');
+        btnVerificar.disabled = true;
+        btnVerificar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Verificando...';
+
+        try {
+            const apiUrl = window.API_BASE_URL || 'http://10.26.15.110:8000';
+            const res = await fetch(`${apiUrl}/api/verificar-ticket-welcome`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ticket_codigo: ticketCodigo
+                }),
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                console.log('✅ Ticket verificado correctamente:', data.data);
+                infoEventoDetalleActual = data.data;
+                mostrarInfoEventoDetalle(data.data);
+            } else {
+                console.error('❌ Error al verificar ticket:', data.error);
+                mostrarMensajeDetalle(data.error || 'Error al verificar ticket', 'error');
+                document.getElementById('infoEventoContainerDetalle').classList.add('hidden');
+            }
+        } catch (error) {
+            console.error('Error verificando ticket:', error);
+            mostrarMensajeDetalle('Error al verificar ticket. Por favor, intenta nuevamente.', 'error');
+            document.getElementById('infoEventoContainerDetalle').classList.add('hidden');
+        } finally {
+            btnVerificar.disabled = false;
+            btnVerificar.innerHTML = '<i class="fas fa-search mr-2"></i> Verificar';
+        }
+    }
+
+    // Mostrar información del evento en detalle
+    function mostrarInfoEventoDetalle(evento) {
+        const container = document.getElementById('infoEventoDetalleDetalle');
+        
+        if (evento.ya_validado) {
+            container.innerHTML = `
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    Este ticket ya fue utilizado el ${evento.fecha_validacion_anterior}
+                </div>
+                <div class="mb-3">
+                    <p><strong>Evento:</strong> ${evento.evento_titulo}</p>
+                    <p><strong>Fecha:</strong> ${evento.fecha_inicio}</p>
+                    ${evento.ubicacion ? `<p><strong>Ubicación:</strong> ${evento.ubicacion}${evento.ciudad ? ', ' + evento.ciudad : ''}</p>` : ''}
+                </div>
+            `;
+            document.getElementById('btnConfirmarAsistenciaDetalle').style.display = 'none';
+        } else {
+            container.innerHTML = `
+                <div class="mb-3">
+                    <p><strong>Evento:</strong> ${evento.evento_titulo}</p>
+                    ${evento.evento_descripcion ? `<p><strong>Descripción:</strong> ${evento.evento_descripcion}</p>` : ''}
+                    <p><strong>Fecha de inicio:</strong> ${evento.fecha_inicio}</p>
+                    ${evento.ubicacion ? `<p><strong>Ubicación:</strong> ${evento.ubicacion}${evento.ciudad ? ', ' + evento.ciudad : ''}</p>` : ''}
+                    <p><strong>Tipo de evento:</strong> ${evento.evento_tipo || 'No especificado'}</p>
+                </div>
+            `;
+            document.getElementById('btnConfirmarAsistenciaDetalle').style.display = 'block';
+        }
+
+        document.getElementById('infoEventoContainerDetalle').classList.remove('hidden');
+    }
+
+    // Confirmar asistencia desde detalle
+    async function confirmarAsistenciaDetalle() {
+        if (!infoEventoDetalleActual) {
+            mostrarMensajeDetalle('No hay información de evento para confirmar', 'error');
+            return;
+        }
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            mostrarMensajeDetalle('Debes iniciar sesión', 'error');
+            return;
+        }
+
+        const comentario = document.getElementById('comentarioAsistencia').value.trim();
+
+        const btnConfirmar = document.getElementById('btnConfirmarAsistenciaDetalle');
+        btnConfirmar.disabled = true;
+        btnConfirmar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Confirmando...';
+
+        try {
+            const apiUrl = window.API_BASE_URL || 'http://10.26.15.110:8000';
+            const body = {
+                ticket_codigo: infoEventoDetalleActual.ticket_codigo,
+                modo_validacion: 'Manual'
+            };
+            
+            // Agregar comentario solo si existe
+            if (comentario) {
+                body.comentario = comentario;
+            }
+
+            const res = await fetch(`${apiUrl}/api/validar-asistencia-welcome`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(body),
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                console.log('✅ Asistencia confirmada exitosamente');
+                mostrarMensajeDetalle(data.message || '¡Asistencia confirmada correctamente!', 'success');
+                document.getElementById('ticketCodigoInputDetalle').value = '';
+                document.getElementById('comentarioAsistencia').value = '';
+                document.getElementById('infoEventoContainerDetalle').classList.add('hidden');
+                infoEventoDetalleActual = null;
+                
+                // Cerrar modal después de 2 segundos
+                setTimeout(() => {
+                    cerrarModalRegistrarAsistencia();
+                    // Recargar página para actualizar estado
+                    location.reload();
+                }, 2000);
+            } else {
+                console.error('❌ Error al confirmar asistencia:', data.error);
+                mostrarMensajeDetalle(data.error || 'Error al confirmar asistencia', 'error');
+            }
+        } catch (error) {
+            console.error('Error confirmando asistencia:', error);
+            mostrarMensajeDetalle('Error al confirmar asistencia. Por favor, intenta nuevamente.', 'error');
+        } finally {
+            btnConfirmar.disabled = false;
+            btnConfirmar.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Confirmar Asistencia';
+        }
+    }
+
+    // Mostrar mensaje en modal de detalle
+    function mostrarMensajeDetalle(mensaje, tipo) {
+        const mensajeDiv = document.getElementById('mensajeResultadoDetalle');
+        
+        if (tipo === 'success') {
+            mensajeDiv.className = 'alert alert-success mt-4';
+            mensajeDiv.style.backgroundColor = '#28a745';
+            mensajeDiv.style.color = 'white';
+            mensajeDiv.style.border = 'none';
+            mensajeDiv.style.borderRadius = '12px';
+            mensajeDiv.style.padding = '1.5rem';
+            mensajeDiv.style.fontWeight = '600';
+            mensajeDiv.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle mr-3" style="font-size: 2rem;"></i>
+                    <div>
+                        <div style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem;">¡Éxito!</div>
+                        <div style="font-size: 0.95rem;">${mensaje}</div>
+                    </div>
+                </div>
+            `;
+        } else {
+            mensajeDiv.className = 'alert alert-danger mt-4';
+            mensajeDiv.style.backgroundColor = '#dc3545';
+            mensajeDiv.style.color = 'white';
+            mensajeDiv.style.border = 'none';
+            mensajeDiv.style.borderRadius = '12px';
+            mensajeDiv.style.padding = '1.5rem';
+            mensajeDiv.style.fontWeight = '600';
+            mensajeDiv.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-circle mr-3" style="font-size: 2rem;"></i>
+                    <div>
+                        <div style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem;">Error</div>
+                        <div style="font-size: 0.95rem;">${mensaje}</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        mensajeDiv.classList.remove('hidden');
+        mensajeDiv.style.display = 'block';
+
+        // Auto-ocultar después de 5 segundos
+        setTimeout(() => {
+            mensajeDiv.classList.add('hidden');
+            mensajeDiv.style.display = 'none';
+        }, 5000);
+    }
+
+    // Activar escáner QR en detalle
+    async function activarEscannerQRDetalle() {
+        const container = document.getElementById('qrScannerContainerDetalle');
+        const video = document.getElementById('qrVideoDetalle');
+        const canvas = document.getElementById('qrCanvasDetalle');
+        const context = canvas.getContext('2d');
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'environment' } 
+            });
+            
+            qrStreamDetalle = stream;
+            video.srcObject = stream;
+            video.setAttribute('playsinline', true);
+            video.play();
+            container.style.display = 'block';
+            qrScanningDetalle = true;
+
+            video.addEventListener('loadedmetadata', () => {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+            });
+
+            function scanQR() {
+                if (!qrScanningDetalle) return;
+
+                if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                    
+                    // Usar jsQR si está disponible
+                    if (typeof jsQR !== 'undefined') {
+                        const code = jsQR(imageData.data, imageData.width, imageData.height);
+                        if (code) {
+                            detenerEscannerQRDetalle();
+                            document.getElementById('ticketCodigoInputDetalle').value = code.data;
+                            verificarTicketDetalle();
+                        }
+                    }
+                }
+
+                requestAnimationFrame(scanQR);
+            }
+
+            scanQR();
+
+        } catch (error) {
+            console.error('Error accediendo a la cámara:', error);
+            mostrarMensajeDetalle('No se pudo acceder a la cámara. Por favor, verifica los permisos.', 'error');
+        }
+    }
+
+    // Detener escáner QR en detalle
+    function detenerEscannerQRDetalle() {
+        qrScanningDetalle = false;
+        if (qrStreamDetalle) {
+            qrStreamDetalle.getTracks().forEach(track => track.stop());
+            qrStreamDetalle = null;
+        }
+        const video = document.getElementById('qrVideoDetalle');
+        if (video) {
+            video.srcObject = null;
+        }
+        document.getElementById('qrScannerContainerDetalle').style.display = 'none';
+    }
+
+    // Procesar imagen QR importada
+    function procesarQRImagenDetalle(event) {
+        const file = event.target.files[0];
+        if (!file) { return; }
+        
+        if (!file.type.startsWith('image/')) {
+            mostrarMensajeDetalle('Por favor, selecciona un archivo de imagen válido', 'error');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                context.drawImage(img, 0, 0);
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                
+                if (typeof jsQR !== 'undefined') {
+                    const code = jsQR(imageData.data, imageData.width, imageData.height);
+                    if (code) {
+                        const ticketCodigo = code.data.trim();
+                        document.getElementById('ticketCodigoInputDetalle').value = ticketCodigo;
+                        mostrarMensajeDetalle('QR importado correctamente. Verificando...', 'success');
+                        // Verificar automáticamente
+                        setTimeout(() => {
+                            verificarTicketDetalle();
+                        }, 500);
+                    } else {
+                        mostrarMensajeDetalle('No se pudo leer el código QR de la imagen. Asegúrate de que la imagen sea clara y contenga un código QR válido.', 'error');
+                    }
+                } else {
+                    mostrarMensajeDetalle('Error: La librería de QR no está cargada. Por favor, recarga la página.', 'error');
+                }
+            };
+            img.onerror = function() {
+                mostrarMensajeDetalle('Error al cargar la imagen. Por favor, intenta con otra imagen.', 'error');
+            };
+            img.src = e.target.result;
+        };
+        reader.onerror = function() {
+            mostrarMensajeDetalle('Error al leer el archivo. Por favor, intenta nuevamente.', 'error');
+        };
+        reader.readAsDataURL(file);
+        event.target.value = ''; // Clear input for re-selection
+    }
 </script>
 @endsection

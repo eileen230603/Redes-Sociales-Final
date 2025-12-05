@@ -21,19 +21,60 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
     const e = json.evento;
+    
+    // Guardar evento en variable global para usar en modal de asistencia
+    if (typeof window !== 'undefined') {
+        window.eventoActualGlobal = e;
+    }
 
         // Helper para formatear fechas
         const formatFecha = (fecha) => {
             if (!fecha) return 'No especificada';
             try {
-                return new Date(fecha).toLocaleString('es-ES', {
+                let fechaObj;
+                
+                if (typeof fecha === 'string') {
+                    fecha = fecha.trim();
+                    
+                    // Patrones para diferentes formatos de fecha
+                    const mysqlPattern = /^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+                    const isoPattern = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+                    
+                    let match = fecha.match(mysqlPattern) || fecha.match(isoPattern);
+                    
+                    if (match) {
+                        // Parsear manualmente para evitar conversión UTC
+                        const [, year, month, day, hour, minute, second] = match;
+                        fechaObj = new Date(
+                            parseInt(year, 10),
+                            parseInt(month, 10) - 1,
+                            parseInt(day, 10),
+                            parseInt(hour, 10),
+                            parseInt(minute, 10),
+                            parseInt(second || 0, 10)
+                        );
+                    } else {
+                        fechaObj = new Date(fecha);
+                    }
+                } else {
+                    fechaObj = new Date(fecha);
+                }
+                
+                if (isNaN(fechaObj.getTime())) {
+                    console.warn('Fecha inválida:', fecha);
+                    return fecha;
+                }
+                
+                return fechaObj.toLocaleString('es-ES', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
                     hour: '2-digit',
-                    minute: '2-digit'
+                    minute: '2-digit',
+                    hour12: false
                 });
             } catch (error) {
+                console.error('Error formateando fecha:', error, fecha);
                 return fecha;
             }
         };
@@ -523,6 +564,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function verificarInscripcion(eventoId) {
     const token = localStorage.getItem("token");
     try {
+        // Obtener información del evento para verificar estado
+        const eventoRes = await fetch(`${API_BASE_URL}/api/eventos/detalle/${eventoId}`, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Accept": "application/json"
+            }
+        });
+        const eventoData = await eventoRes.json();
+        const evento = eventoData.evento;
+
+        // Obtener participaciones del usuario
         const res = await fetch(`${API_BASE_URL}/api/participaciones/mis-eventos`, {
             headers: {
                 "Authorization": `Bearer ${token}`,
@@ -531,10 +583,127 @@ async function verificarInscripcion(eventoId) {
         });
         const data = await res.json();
         if (data.success && data.eventos) {
-            const estaInscrito = data.eventos.some(participacion => participacion.evento_id == eventoId);
+            const participacion = data.eventos.find(p => p.evento_id == eventoId);
+            const estaInscrito = !!participacion;
+            
             if (estaInscrito) {
                 document.getElementById("btnParticipar").classList.add("d-none");
                 document.getElementById("btnCancelar").classList.remove("d-none");
+                
+                // Verificar si el evento está en curso (activo) para mostrar botón de registrar asistencia
+                const btnRegistrarAsistencia = document.getElementById("btnRegistrarAsistencia");
+                if (btnRegistrarAsistencia && evento) {
+                    // Verificar estado dinámico del evento
+                    const ahora = new Date();
+                    
+                    // Parsear fechas correctamente para evitar problemas de zona horaria
+                    let fechaInicio = null;
+                    let fechaFin = null;
+                    
+                    if (evento.fecha_inicio) {
+                        if (typeof evento.fecha_inicio === 'string') {
+                            const match = evento.fecha_inicio.trim().match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})/);
+                            if (match) {
+                                const [, year, month, day, hour, minute, second] = match;
+                                fechaInicio = new Date(
+                                    parseInt(year, 10),
+                                    parseInt(month, 10) - 1,
+                                    parseInt(day, 10),
+                                    parseInt(hour, 10),
+                                    parseInt(minute, 10),
+                                    parseInt(second || 0, 10)
+                                );
+                            } else {
+                                fechaInicio = new Date(evento.fecha_inicio);
+                            }
+                        } else {
+                            fechaInicio = new Date(evento.fecha_inicio);
+                        }
+                    }
+                    
+                    if (evento.fecha_fin) {
+                        if (typeof evento.fecha_fin === 'string') {
+                            const match = evento.fecha_fin.trim().match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})/);
+                            if (match) {
+                                const [, year, month, day, hour, minute, second] = match;
+                                fechaFin = new Date(
+                                    parseInt(year, 10),
+                                    parseInt(month, 10) - 1,
+                                    parseInt(day, 10),
+                                    parseInt(hour, 10),
+                                    parseInt(minute, 10),
+                                    parseInt(second || 0, 10)
+                                );
+                            } else {
+                                fechaFin = new Date(evento.fecha_fin);
+                            }
+                        } else {
+                            fechaFin = new Date(evento.fecha_fin);
+                        }
+                    }
+                    
+                    // Verificar si el evento ya terminó
+                    const eventoTerminado = fechaFin && ahora > fechaFin;
+                    
+                    // Calcular si han pasado menos de 24 horas desde que terminó el evento
+                    let dentroDe24Horas = false;
+                    let horasDesdeFinalizacion = 0;
+                    
+                    if (eventoTerminado && fechaFin) {
+                        const diferenciaMs = ahora - fechaFin;
+                        horasDesdeFinalizacion = diferenciaMs / (1000 * 60 * 60); // Convertir a horas
+                        dentroDe24Horas = horasDesdeFinalizacion <= 24;
+                    }
+                    
+                    // El evento permite registro de asistencia si:
+                    // 1. No ha terminado, O
+                    // 2. Terminó hace menos de 24 horas
+                    const puedeRegistrarAsistencia = !eventoTerminado || dentroDe24Horas;
+                    
+                    // También verificar si ya marcó asistencia
+                    const yaMarcado = participacion.estado_asistencia === 'asistido' || participacion.asistio === true;
+                    
+                    console.log('🎟️ Verificando botón de registrar asistencia:', {
+                        estaInscrito: true,
+                        fechaInicio: fechaInicio,
+                        fechaFin: fechaFin,
+                        ahora: ahora,
+                        eventoTerminado: eventoTerminado,
+                        horasDesdeFinalizacion: horasDesdeFinalizacion.toFixed(2),
+                        dentroDe24Horas: dentroDe24Horas,
+                        puedeRegistrarAsistencia: puedeRegistrarAsistencia,
+                        yaMarcado: yaMarcado,
+                        mostrarBoton: puedeRegistrarAsistencia && !yaMarcado
+                    });
+                    
+                    // Mostrar botón si está inscrito, puede registrar asistencia y no ha marcado asistencia
+                    if (puedeRegistrarAsistencia && !yaMarcado) {
+                        btnRegistrarAsistencia.classList.remove("d-none");
+                        
+                        // Si el evento ya terminó, mostrar mensaje informativo
+                        if (eventoTerminado && dentroDe24Horas) {
+                            const horasRestantes = (24 - horasDesdeFinalizacion).toFixed(1);
+                            console.log(`✅ Mostrando botón de registrar asistencia (evento terminó, quedan ${horasRestantes} horas para registrar)`);
+                        } else {
+                            console.log('✅ Mostrando botón de registrar asistencia');
+                        }
+                    } else {
+                        btnRegistrarAsistencia.classList.add("d-none");
+                        if (eventoTerminado && !dentroDe24Horas) {
+                            console.log('❌ Ocultando botón: han pasado más de 24 horas desde que terminó el evento');
+                        } else if (yaMarcado) {
+                            console.log('❌ Ocultando botón: ya marcó asistencia');
+                        }
+                    }
+                }
+            } else {
+                document.getElementById("btnParticipar").classList.remove("d-none");
+                document.getElementById("btnCancelar").classList.add("d-none");
+                const btnRegistrarAsistencia = document.getElementById("btnRegistrarAsistencia");
+                if (btnRegistrarAsistencia) {
+                    btnRegistrarAsistencia.classList.add("d-none");
+                }
+                console.log('ℹ️ Usuario no inscrito, ocultando botón de registrar asistencia');
             }
         }
     } catch (error) {
@@ -724,7 +893,7 @@ async function configurarBotonesBanner(eventoId, evento) {
         id: eventoId,
         titulo: evento.titulo || 'Evento',
         descripcion: evento.descripcion || '',
-        url: `http://192.168.0.6:8000/evento/${eventoId}/qr`,
+        url: `http://10.26.15.110:8000/evento/${eventoId}/qr`,
         finalizado: eventoFinalizado
     };
 }
@@ -814,7 +983,7 @@ async function copiarEnlace() {
     // Usar la URL pública con IP para que cualquier usuario en la misma red pueda acceder
     const url = typeof getPublicUrl !== 'undefined' 
         ? getPublicUrl(`/evento/${evento.id}/qr`)
-        : `http://192.168.0.6:8000/evento/${evento.id}/qr`;
+        : `http://10.26.15.110:8000/evento/${evento.id}/qr`;
     
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url).then(() => {
@@ -921,7 +1090,7 @@ async function mostrarQR() {
     // URL pública con IP para acceso mediante QR (accesible desde otros dispositivos en la misma red)
     const qrUrl = typeof getPublicUrl !== 'undefined' 
         ? getPublicUrl(`/evento/${evento.id}/qr`)
-        : `http://192.168.0.6:8000/evento/${evento.id}/qr`;
+        : `http://10.26.15.110:8000/evento/${evento.id}/qr`;
     
     // Limpiar contenido anterior
     qrcodeDiv.innerHTML = '';

@@ -207,13 +207,61 @@ async function cargarEventosEmpresa() {
                 console.warn('Evento no encontrado para participación:', item.id);
                 return;
             }
-            const fechaInicio = e.fecha_inicio ? new Date(e.fecha_inicio).toLocaleDateString('es-ES', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-            }) : 'Fecha no especificada';
+            // Función helper para formatear fechas desde PostgreSQL sin conversión de zona horaria
+            const formatearFechaPostgreSQL = (fechaStr) => {
+                if (!fechaStr) return 'Fecha no especificada';
+                try {
+                    let fechaObj;
+                    
+                    if (typeof fechaStr === 'string') {
+                        fechaStr = fechaStr.trim();
+                        
+                        // Patrones para diferentes formatos de fecha
+                        const mysqlPattern = /^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+                        const isoPattern = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+                        
+                        let match = fechaStr.match(mysqlPattern) || fechaStr.match(isoPattern);
+                        
+                        if (match) {
+                            // Parsear manualmente para evitar conversión UTC
+                            const [, year, month, day, hour, minute, second] = match;
+                            fechaObj = new Date(
+                                parseInt(year, 10),
+                                parseInt(month, 10) - 1,
+                                parseInt(day, 10),
+                                parseInt(hour, 10),
+                                parseInt(minute, 10),
+                                parseInt(second || 0, 10)
+                            );
+                        } else {
+                            fechaObj = new Date(fechaStr);
+                        }
+                    } else {
+                        fechaObj = new Date(fechaStr);
+                    }
+                    
+                    if (isNaN(fechaObj.getTime())) return fechaStr;
+                    
+                    const año = fechaObj.getFullYear();
+                    const mes = fechaObj.getMonth();
+                    const dia = fechaObj.getDate();
+                    const horas = fechaObj.getHours();
+                    const minutos = fechaObj.getMinutes();
+                    
+                    const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 
+                                  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+                    
+                    const horaFormateada = String(horas).padStart(2, '0');
+                    const minutoFormateado = String(minutos).padStart(2, '0');
+                    
+                    return `${dia} de ${meses[mes]} de ${año}, ${horaFormateada}:${minutoFormateado}`;
+                } catch (error) {
+                    console.error('Error formateando fecha:', error);
+                    return fechaStr;
+                }
+            };
+            
+            const fechaInicio = formatearFechaPostgreSQL(e.fecha_inicio);
 
             // Formatear fecha límite de inscripción
             let fechaLimiteHTML = '';

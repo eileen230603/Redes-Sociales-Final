@@ -21,32 +21,52 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
 
   result.innerHTML = "Verificando...";
 
-  const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ correo_electronico, contrasena }),
-  });
+  // Asegurar que API_BASE_URL esté definido
+  const apiUrl = window.API_BASE_URL || API_BASE_URL || "http://10.26.15.110:8000";
+  
+  // Debug: Verificar qué URL se está usando
+  console.log("🔍 Intentando login con URL:", apiUrl);
+  console.log("🔍 window.API_BASE_URL:", window.API_BASE_URL);
+  console.log("🔍 API_BASE_URL (global):", typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : 'undefined');
+  
+  try {
+    const res = await fetch(`${apiUrl}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ correo_electronico, contrasena }),
+    });
 
-  const data = await res.json();
-  console.log("LOGIN RESPONSE:", data);
+    // Verificar si la respuesta es válida antes de parsear JSON
+    if (!res.ok) {
+      if (res.status === 0 || res.statusText === '') {
+        throw new Error('No se pudo conectar con el servidor. Verifica que el servidor esté ejecutándose.');
+      }
+    }
 
-  if (!res.ok || !data.success) {
-    result.innerHTML = data.error;
-    return;
+    const data = await res.json();
+    console.log("LOGIN RESPONSE:", data);
+
+    if (!res.ok || !data.success) {
+      result.innerHTML = `<span style="color: #ff6b6b;">${data.error || 'Error al iniciar sesión'}</span>`;
+      return;
+    }
+
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("id_usuario", data.user.id_usuario);
+    localStorage.setItem("id_entidad", data.user.id_entidad);
+    localStorage.setItem("tipo_usuario", data.user.tipo_usuario);
+    localStorage.setItem("nombre_usuario", data.user.nombre_usuario ?? "");
+    localStorage.setItem("usuario", JSON.stringify(data.user));
+
+    // REDIRECCIÓN
+    let ruta = "/";
+    if (data.user.tipo_usuario === "ONG") ruta = "/ong/eventos";
+    if (data.user.tipo_usuario === "Empresa") ruta = "/home-empresa";
+    if (data.user.tipo_usuario === "Integrante externo") ruta = "/home-externo";
+
+    window.location.href = ruta;
+  } catch (error) {
+    console.error("Error en login:", error);
+    result.innerHTML = `<span style="color: #ff6b6b;">${error.message || 'Error de conexión. Verifica que el servidor esté ejecutándose.'}</span>`;
   }
-
-  localStorage.setItem("token", data.token);
-  localStorage.setItem("id_usuario", data.user.id_usuario);
-  localStorage.setItem("id_entidad", data.user.id_entidad);
-  localStorage.setItem("tipo_usuario", data.user.tipo_usuario);
-  localStorage.setItem("nombre_usuario", data.user.nombre_usuario ?? "");
-  localStorage.setItem("usuario", JSON.stringify(data.user));
-
-  // REDIRECCIÓN
-  let ruta = "/";
-  if (data.user.tipo_usuario === "ONG") ruta = "/ong/eventos";
-  if (data.user.tipo_usuario === "Empresa") ruta = "/home-empresa";
-  if (data.user.tipo_usuario === "Integrante externo") ruta = "/home-externo";
-
-  window.location.href = ruta;
 });

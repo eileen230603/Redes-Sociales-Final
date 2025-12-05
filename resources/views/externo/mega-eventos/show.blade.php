@@ -976,7 +976,7 @@ function setMegaEventoParaCompartir(megaEvento) {
         ...megaEvento,
         url: typeof getPublicUrl !== 'undefined' 
             ? getPublicUrl(`/mega-evento/${megaEvento.mega_evento_id}/qr`)
-            : `http://192.168.0.6:8000/mega-evento/${megaEvento.mega_evento_id}/qr`
+            : `http://10.26.15.110:8000/mega-evento/${megaEvento.mega_evento_id}/qr`
     };
     console.log('Mega evento para compartir configurado:', megaEventoParaCompartir);
 }
@@ -1072,7 +1072,7 @@ async function copiarEnlaceMegaEvento() {
     // URL pública para compartir (debe ser accesible desde cualquier dispositivo)
     const url = typeof getPublicUrl !== 'undefined' 
         ? getPublicUrl(`/mega-evento/${megaEventoId}/qr`)
-        : `http://192.168.0.6:8000/mega-evento/${megaEventoId}/qr`;
+        : `http://10.26.15.110:8000/mega-evento/${megaEventoId}/qr`;
 
     // Registrar compartido en backend
     await registrarCompartidoMegaEvento(megaEventoId, 'link');
@@ -1133,7 +1133,7 @@ async function mostrarQRMegaEvento() {
     // URL pública para compartir (debe ser accesible desde cualquier dispositivo)
     const qrUrl = typeof getPublicUrl !== 'undefined' 
         ? getPublicUrl(`/mega-evento/${megaEventoId}/qr`)
-        : `http://192.168.0.6:8000/mega-evento/${megaEventoId}/qr`;
+        : `http://10.26.15.110:8000/mega-evento/${megaEventoId}/qr`;
 
     // Registrar compartido en backend
     await registrarCompartidoMegaEvento(megaEventoId, 'qr');

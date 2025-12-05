@@ -26,14 +26,50 @@ document.addEventListener("DOMContentLoaded", async () => {
         const formatFecha = (fecha) => {
             if (!fecha) return 'No especificada';
             try {
-                return new Date(fecha).toLocaleString('es-ES', {
+                let fechaObj;
+                
+                if (typeof fecha === 'string') {
+                    fecha = fecha.trim();
+                    
+                    // Patrones para diferentes formatos de fecha
+                    const mysqlPattern = /^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+                    const isoPattern = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+                    
+                    let match = fecha.match(mysqlPattern) || fecha.match(isoPattern);
+                    
+                    if (match) {
+                        // Parsear manualmente para evitar conversión UTC
+                        const [, year, month, day, hour, minute, second] = match;
+                        fechaObj = new Date(
+                            parseInt(year, 10),
+                            parseInt(month, 10) - 1,
+                            parseInt(day, 10),
+                            parseInt(hour, 10),
+                            parseInt(minute, 10),
+                            parseInt(second || 0, 10)
+                        );
+                    } else {
+                        fechaObj = new Date(fecha);
+                    }
+                } else {
+                    fechaObj = new Date(fecha);
+                }
+                
+                if (isNaN(fechaObj.getTime())) {
+                    console.warn('Fecha inválida:', fecha);
+                    return fecha;
+                }
+                
+                return fechaObj.toLocaleString('es-ES', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
                     hour: '2-digit',
-                    minute: '2-digit'
+                    minute: '2-digit',
+                    hour12: false
                 });
             } catch (error) {
+                console.error('Error formateando fecha:', error, fecha);
                 return fecha;
             }
         };
@@ -473,7 +509,7 @@ async function configurarBotonesBanner(eventoId, evento) {
         id: eventoId,
         titulo: evento.titulo || 'Evento',
         descripcion: evento.descripcion || '',
-        url: `http://192.168.0.6:8000/evento/${eventoId}/qr`
+        url: `http://10.26.15.110:8000/evento/${eventoId}/qr`
     };
 }
 
@@ -547,7 +583,7 @@ async function copiarEnlace() {
     // Usar la URL pública con IP para que cualquier usuario en la misma red pueda acceder
     const url = typeof getPublicUrl !== 'undefined' 
         ? getPublicUrl(`/evento/${evento.id}/qr`)
-        : `http://192.168.0.6:8000/evento/${evento.id}/qr`;
+        : `http://10.26.15.110:8000/evento/${evento.id}/qr`;
     
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url).then(() => {
@@ -654,7 +690,7 @@ async function mostrarQR() {
     // URL pública con IP para acceso mediante QR (accesible desde otros dispositivos en la misma red)
     const qrUrl = typeof getPublicUrl !== 'undefined' 
         ? getPublicUrl(`/evento/${evento.id}/qr`)
-        : `http://192.168.0.6:8000/evento/${evento.id}/qr`;
+        : `http://10.26.15.110:8000/evento/${evento.id}/qr`;
     
     // Limpiar contenido anterior
     qrcodeDiv.innerHTML = '';

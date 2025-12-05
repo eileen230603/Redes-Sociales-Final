@@ -96,6 +96,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/participaciones/{participacionId}/rechazar', [EventoParticipacionController::class, 'rechazar']);
     Route::put('/participaciones-no-registradas/{participacionId}/aprobar', [EventoParticipacionController::class, 'aprobarNoRegistrado']);
     Route::put('/participaciones-no-registradas/{participacionId}/rechazar', [EventoParticipacionController::class, 'rechazarNoRegistrado']);
+    
+    // ----------- CONTROL DE ASISTENCIA -----------
+    // Usuario externo: marcar su propia asistencia
+    Route::post('/eventos/{eventoId}/marcar-asistencia', [EventoParticipacionController::class, 'marcarAsistenciaUsuario']);
+    Route::get('/eventos/activos-para-marcar', [EventoParticipacionController::class, 'eventosActivosParaMarcar']);
+    // Validación desde welcome.php
+    Route::get('/eventos/en-curso-usuario', [EventoParticipacionController::class, 'eventosEnCursoUsuario']);
+    Route::post('/verificar-ticket-welcome', [EventoParticipacionController::class, 'verificarTicketWelcome']);
+    Route::post('/validar-asistencia-welcome', [EventoParticipacionController::class, 'validarAsistenciaWelcome']);
+    // Validación para usuarios no registrados (sin autenticación)
+    Route::post('/verificar-ticket-no-registrado-welcome', [EventoParticipacionController::class, 'verificarTicketNoRegistradoWelcome']);
+    Route::post('/validar-asistencia-no-registrado-welcome', [EventoParticipacionController::class, 'validarAsistenciaNoRegistradoWelcome']);
+    // ONG: control de asistencia
+    Route::get('/eventos/{eventoId}/control-asistencia', [EventoParticipacionController::class, 'controlAsistencia']);
+    Route::put('/participaciones/{participacionId}/modificar-asistencia', [EventoParticipacionController::class, 'modificarAsistencia']);
+    Route::get('/eventos/{eventoId}/exportar-asistencia-pdf', [EventoParticipacionController::class, 'exportarAsistenciaPDF']);
+    Route::get('/eventos/{eventoId}/exportar-asistencia-excel', [EventoParticipacionController::class, 'exportarAsistenciaExcel']);
+    Route::get('/eventos/{eventoId}/participantes-completo', [EventoParticipacionController::class, 'obtenerParticipantesCompleto']);
+    Route::get('/eventos/{eventoId}/exportar-participantes-completo', [EventoParticipacionController::class, 'exportarParticipantesCompleto']);
 
     // ----------- REACCIONES (Favoritos) -----------
     Route::post('/reacciones/toggle', [EventoReaccionController::class, 'toggle']);

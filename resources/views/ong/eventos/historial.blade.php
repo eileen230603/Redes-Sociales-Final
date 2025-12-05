@@ -72,6 +72,34 @@
 <script src="{{ asset('assets/js/config.js') }}"></script>
 
 <script>
+// Función helper para parsear fechas correctamente
+function parsearFecha(fechaStr) {
+    if (!fechaStr) return null;
+    try {
+        if (typeof fechaStr === 'string') {
+            fechaStr = fechaStr.trim();
+            const mysqlPattern = /^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+            const isoPattern = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+            let match = fechaStr.match(mysqlPattern) || fechaStr.match(isoPattern);
+            if (match) {
+                const [, year, month, day, hour, minute, second] = match;
+                return new Date(
+                    parseInt(year, 10),
+                    parseInt(month, 10) - 1,
+                    parseInt(day, 10),
+                    parseInt(hour, 10),
+                    parseInt(minute, 10),
+                    parseInt(second || 0, 10)
+                );
+            }
+        }
+        return new Date(fechaStr);
+    } catch (error) {
+        console.error('Error parseando fecha:', error);
+        return null;
+    }
+}
+
 let filtrosActuales = {
     tipo_evento: 'todos',
     buscar: '',
@@ -140,14 +168,14 @@ async function cargarEventos() {
         // Ordenar eventos
         if (filtrosActuales.orden === 'recientes') {
             eventos.sort((a, b) => {
-                const fechaA = new Date(a.fecha_finalizacion || a.fecha_fin || 0);
-                const fechaB = new Date(b.fecha_finalizacion || b.fecha_fin || 0);
+                const fechaA = parsearFecha(a.fecha_finalizacion || a.fecha_fin) || new Date(0);
+                const fechaB = parsearFecha(b.fecha_finalizacion || b.fecha_fin) || new Date(0);
                 return fechaB - fechaA; // Más recientes primero
             });
         } else {
             eventos.sort((a, b) => {
-                const fechaA = new Date(a.fecha_finalizacion || a.fecha_fin || 0);
-                const fechaB = new Date(b.fecha_finalizacion || b.fecha_fin || 0);
+                const fechaA = parsearFecha(a.fecha_finalizacion || a.fecha_fin) || new Date(0);
+                const fechaB = parsearFecha(b.fecha_finalizacion || b.fecha_fin) || new Date(0);
                 return fechaA - fechaB; // Más antiguos primero
             });
         }
@@ -173,8 +201,9 @@ async function cargarEventos() {
                 : null;
             
             const fechaFin = e.fecha_finalizacion || e.fecha_fin;
-            const fechaFinDia = fechaFin ? new Date(fechaFin).getDate() : '';
-            const fechaFinMes = fechaFin ? new Date(fechaFin).toLocaleString('es-ES', { month: 'short' }) : '';
+            const fechaFinObj = fechaFin ? parsearFecha(fechaFin) : null;
+            const fechaFinDia = fechaFinObj ? fechaFinObj.getDate() : '';
+            const fechaFinMes = fechaFinObj ? fechaFinObj.toLocaleString('es-ES', { month: 'short' }) : '';
             
             const estadoBadge = {
                 'finalizado': { class: 'badge-info', text: 'Finalizado' },
@@ -214,7 +243,7 @@ async function cargarEventos() {
                                 <div>
                                     <small class="text-muted">
                                         <i class="far fa-calendar-check mr-1"></i>
-                                        ${e.fecha_finalizacion ? new Date(e.fecha_finalizacion).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Fecha no especificada'}
+                                        ${e.fecha_finalizacion ? (parsearFecha(e.fecha_finalizacion) || new Date(e.fecha_finalizacion)).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Fecha no especificada'}
                                     </small>
                                 </div>
                                 <span class="badge badge-secondary" style="font-size: 0.75rem;">${e.tipo_evento || 'N/A'}</span>
