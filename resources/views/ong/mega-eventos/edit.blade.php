@@ -815,7 +815,7 @@ document.getElementById('editMegaEventoForm').addEventListener('submit', async (
                     const currentOrigin = window.location.origin;
                     
                     // Si es URL de internet (no es localhost ni el dominio actual), mantenerla
-                    if (host !== 'localhost' && host !== '127.0.0.1' && host !== '10.26.15.110' && 
+                    if (host !== 'localhost' && host !== '127.0.0.1' && host !== '192.168.0.6' && 
                         !urlObj.origin.includes(currentHost) &&
                         !currentOrigin.includes(host) &&
                         !host.includes(currentHost) && 

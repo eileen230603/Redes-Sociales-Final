@@ -244,7 +244,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         }
 
-        // Patrocinadores (del campo JSON - legacy)
+        // Patrocinadores - Diseño mejorado con avatares
         if (e.patrocinadores && Array.isArray(e.patrocinadores) && e.patrocinadores.length > 0) {
             const patrocinadoresCard = document.getElementById('patrocinadoresCard');
             if (patrocinadoresCard) {
@@ -254,24 +254,45 @@ document.addEventListener("DOMContentLoaded", async () => {
             patrocinadoresDiv.innerHTML = '';
             e.patrocinadores.forEach(pat => {
                 const nombre = typeof pat === 'object' ? (pat.nombre || 'N/A') : pat;
-                const avatar = typeof pat === 'object' ? (pat.avatar || null) : null;
+                const fotoPerfil = typeof pat === 'object' ? (pat.foto_perfil || null) : null;
                 const inicial = nombre.charAt(0).toUpperCase();
                 
                 const item = document.createElement('div');
-                item.className = 'd-flex align-items-center mb-2 mr-3';
-                item.style.cssText = 'background: #f8f9fa; padding: 0.5rem 0.75rem; border-radius: 8px; border-left: 3px solid #007bff;';
+                item.className = 'd-flex align-items-center mb-3';
+                item.style.cssText = 'background: white; padding: 1rem; border-radius: 12px; border: 1px solid #e9ecef; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.3s ease; width: 100%;';
+                item.onmouseover = function() {
+                    this.style.transform = 'translateY(-2px)';
+                    this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.12)';
+                };
+                item.onmouseout = function() {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+                };
                 
-                if (avatar) {
+                if (fotoPerfil) {
                     item.innerHTML = `
-                        <img src="${avatar}" alt="${nombre}" class="rounded-circle mr-2" style="width: 35px; height: 35px; object-fit: cover; border: 2px solid #007bff;">
-                        <span style="font-weight: 500; color: #2c3e50;">${nombre}</span>
+                        <img src="${fotoPerfil}" alt="${nombre}" 
+                             class="rounded-circle mr-3" 
+                             style="width: 60px; height: 60px; object-fit: cover; border: 3px solid #667eea; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2); flex-shrink: 0;">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0" style="color: #2c3e50; font-weight: 600; font-size: 1rem;">${nombre}</h6>
+                            <small style="color: #6c757d; font-size: 0.85rem;">
+                                <i class="fas fa-handshake mr-1" style="color: #667eea;"></i> Patrocinador
+                            </small>
+                        </div>
                     `;
                 } else {
                     item.innerHTML = `
-                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mr-2" style="width: 35px; height: 35px; font-weight: 600; font-size: 0.9rem;">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center mr-3" 
+                             style="width: 60px; height: 60px; font-weight: 700; font-size: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: 3px solid #667eea; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2); flex-shrink: 0;">
                             ${inicial}
                         </div>
-                        <span style="font-weight: 500; color: #2c3e50;">${nombre}</span>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0" style="color: #2c3e50; font-weight: 600; font-size: 1rem;">${nombre}</h6>
+                            <small style="color: #6c757d; font-size: 0.85rem;">
+                                <i class="fas fa-handshake mr-1" style="color: #667eea;"></i> Patrocinador
+                            </small>
+                        </div>
                     `;
                 }
                 patrocinadoresDiv.appendChild(item);
@@ -419,7 +440,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         configurarBotonesBanner(id, e);
 
         // Iniciar auto-refresco de reacciones para empresas
-        iniciarAutoRefrescoReaccionesEmpresa(id);
+        // Auto-refresco deshabilitado - las reacciones se actualizan solo manualmente
 
     } catch (err) {
         console.error("Error:", err);
@@ -472,26 +493,11 @@ async function cargarContadorCompartidos(eventoId) {
 }
 
 // Auto-refresco de reacciones para empresas
-let refrescoReaccionesIntervalEmpresa = null;
-
-function iniciarAutoRefrescoReaccionesEmpresa(eventoId) {
-    try {
-        if (refrescoReaccionesIntervalEmpresa) {
-            clearInterval(refrescoReaccionesIntervalEmpresa);
-        }
-
-        // Cada 10 segundos actualiza el contador de reacciones
-        refrescoReaccionesIntervalEmpresa = setInterval(async () => {
-            try {
-                await cargarContadorReacciones(eventoId);
-            } catch (err) {
-                console.warn('Error en auto-refresco de reacciones:', err);
-            }
-        }, 10000); // Cada 10 segundos
-    } catch (error) {
-        console.warn('Error iniciando auto-refresco de reacciones:', error);
-    }
-}
+// ==============================
+// Auto-refresco de reacciones (Empresa) - DESHABILITADO
+// ==============================
+// El auto-refresco ha sido deshabilitado para mejorar el rendimiento
+// Las reacciones se actualizan solo cuando el usuario interactúa con el botón
 
 // Configurar botones del banner (reacción, comentar, compartir)
 async function configurarBotonesBanner(eventoId, evento) {
@@ -509,7 +515,7 @@ async function configurarBotonesBanner(eventoId, evento) {
         id: eventoId,
         titulo: evento.titulo || 'Evento',
         descripcion: evento.descripcion || '',
-        url: `http://10.26.15.110:8000/evento/${eventoId}/qr`
+        url: `http://192.168.0.6:8000/evento/${eventoId}/qr`
     };
 }
 
@@ -583,7 +589,7 @@ async function copiarEnlace() {
     // Usar la URL pública con IP para que cualquier usuario en la misma red pueda acceder
     const url = typeof getPublicUrl !== 'undefined' 
         ? getPublicUrl(`/evento/${evento.id}/qr`)
-        : `http://10.26.15.110:8000/evento/${evento.id}/qr`;
+        : `http://192.168.0.6:8000/evento/${evento.id}/qr`;
     
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url).then(() => {
@@ -690,7 +696,7 @@ async function mostrarQR() {
     // URL pública con IP para acceso mediante QR (accesible desde otros dispositivos en la misma red)
     const qrUrl = typeof getPublicUrl !== 'undefined' 
         ? getPublicUrl(`/evento/${evento.id}/qr`)
-        : `http://10.26.15.110:8000/evento/${evento.id}/qr`;
+        : `http://192.168.0.6:8000/evento/${evento.id}/qr`;
     
     // Limpiar contenido anterior
     qrcodeDiv.innerHTML = '';

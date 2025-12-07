@@ -9,6 +9,7 @@ use App\Models\EventoReaccion;
 use App\Models\EventoCompartido;
 use App\Models\IntegranteExterno;
 use App\Models\MegaEventoParticipanteExterno;
+use App\Models\Notificacion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -813,6 +814,81 @@ class DashboardExternoController extends Controller
                 ];
             })
             ->filter();
+    }
+
+    /**
+     * Obtener notificaciones del usuario externo (incluyendo alertas de eventos próximos)
+     */
+    public function notificaciones(Request $request)
+    {
+        try {
+            $user = $request->user();
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Usuario no autenticado'
+                ], 401);
+            }
+
+            $externoId = $user->id_usuario;
+
+            // Obtener todas las notificaciones del usuario externo
+            $notificaciones = Notificacion::where('externo_id', $externoId)
+                ->whereNull('ong_id') // Notificaciones para usuarios externos
+                ->with(['evento:id,titulo,fecha_inicio'])
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function($notificacion) {
+                    return [
+                        'id' => $notificacion->id,
+                        'tipo' => $notificacion->tipo,
+                        'titulo' => $notificacion->titulo,
+                        'mensaje' => $notificacion->mensaje,
+                        'leida' => $notificacion->leida,
+                        'evento_id' => $notificacion->evento_id,
+                        'evento_titulo' => $notificacion->evento ? $notificacion->evento->titulo : null,
+                        'fecha_inicio' => $notificacion->evento ? $notificacion->evento->fecha_inicio : null,
+                        'fecha' => $notificacion->created_at,
+                    ];
+                });
+
+            $noLeidas = Notificacion::where('externo_id', $externoId)
+                ->whereNull('ong_id')
+                ->where('leida', false)
+                ->count();
+
+            // Obtener alertas de eventos próximos
+            $alertasEventosProximos = Notificacion::where('externo_id', $externoId)
+                ->whereNull('ong_id')
+                ->where('tipo', 'evento_proximo')
+                ->where('leida', false)
+                ->with(['evento:id,titulo,fecha_inicio'])
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function($notificacion) {
+                    return [
+                        'id' => $notificacion->id,
+                        'titulo' => $notificacion->titulo,
+                        'mensaje' => $notificacion->mensaje,
+                        'evento_id' => $notificacion->evento_id,
+                        'evento_titulo' => $notificacion->evento ? $notificacion->evento->titulo : null,
+                        'fecha_inicio' => $notificacion->evento ? $notificacion->evento->fecha_inicio : null,
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'notificaciones' => $notificaciones,
+                'no_leidas' => $noLeidas,
+                'alertas_eventos_proximos' => $alertasEventosProximos
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al obtener notificaciones: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
 

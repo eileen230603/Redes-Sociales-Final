@@ -188,8 +188,25 @@ class Evento extends Model
             }
         }
 
-        // Obtener la URL base desde PUBLIC_APP_URL o APP_URL
-        $baseUrl = env('PUBLIC_APP_URL', env('APP_URL', 'http://10.26.15.110:8000'));
+        // Obtener la URL base desde PUBLIC_APP_URL, APP_URL o del request actual
+        $baseUrl = env('PUBLIC_APP_URL', env('APP_URL'));
+        
+        // Si no hay baseUrl configurada, intentar obtenerla del request actual
+        if (empty($baseUrl) && app()->runningInConsole() === false) {
+            try {
+                $request = request();
+                if ($request) {
+                    $baseUrl = $request->getSchemeAndHttpHost();
+                }
+            } catch (\Exception $e) {
+                // Si falla, usar el valor por defecto
+            }
+        }
+        
+        // Si aún no hay baseUrl, usar un valor por defecto
+        if (empty($baseUrl)) {
+            $baseUrl = 'http://127.0.0.1:8000';
+        }
         
         // Generar URLs completas para cada imagen
         return array_map(function($imagen) use ($baseUrl) {
@@ -197,8 +214,13 @@ class Evento extends Model
                 return null;
             }
 
-            // Si ya es una URL completa, retornarla
+            // Si ya es una URL completa, verificar si tiene IPs antiguas y reemplazarlas
             if (strpos($imagen, 'http://') === 0 || strpos($imagen, 'https://') === 0) {
+                // Reemplazar IPs antiguas con la nueva si están presentes
+                $imagen = str_replace('http://10.26.15.110:8000', $baseUrl, $imagen);
+                $imagen = str_replace('https://10.26.15.110:8000', $baseUrl, $imagen);
+                $imagen = str_replace('http://192.168.0.6:8000', $baseUrl, $imagen);
+                $imagen = str_replace('https://192.168.0.6:8000', $baseUrl, $imagen);
                 return $imagen;
             }
 

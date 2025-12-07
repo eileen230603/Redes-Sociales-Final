@@ -13,17 +13,20 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         .evento-banner {
-            height: 400px;
+            height: 450px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             position: relative;
             overflow: hidden;
+            border-radius: 0 0 24px 24px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
         }
         .banner-image {
             width: 100%;
             height: 100%;
             background-size: cover;
             background-position: center;
-            opacity: 0.3;
+            opacity: 0.25;
+            transition: transform 0.5s ease;
         }
         .banner-overlay {
             position: absolute;
@@ -31,56 +34,177 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%);
+            background: linear-gradient(to bottom, rgba(102, 126, 234, 0.4) 0%, rgba(118, 75, 162, 0.7) 100%);
         }
         .banner-content {
             position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
-            padding: 2rem;
+            padding: 3rem 2rem;
             color: white;
         }
-        .card {
-            border-radius: 12px;
-            border: 1px solid #F5F5F5;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        /* Variables de color */
+        :root {
+            --primary-color: #667eea;
+            --primary-dark: #764ba2;
+            --dark-color: #2c3e50;
+            --border-color: #e9ecef;
+            --bg-light: #f8f9fa;
+            --shadow-sm: 0 2px 8px rgba(102, 126, 234, 0.08);
+            --shadow-md: 0 4px 16px rgba(102, 126, 234, 0.12);
         }
+
+        body {
+            background-color: #f5f7fa;
+        }
+
+        /* Iconos de sección - Con container y icono adentro */
+        .section-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+            flex-shrink: 0;
+        }
+
+        /* Items de información */
+        .info-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .info-item:hover {
+            background: #ffffff;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+            transform: translateX(4px);
+        }
+
+        .info-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #667eea;
+            font-size: 1.2rem;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .info-content {
+            flex: 1;
+        }
+
+        .info-label {
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            font-size: 1rem;
+            color: #2c3e50;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .card {
+            border-radius: 16px;
+            border: none !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12) !important;
+        }
+
         .btn-participar {
-            background: #00A36C;
+            background: linear-gradient(135deg, #00A36C 0%, #008a5a 100%);
             color: white;
             border: none;
-            border-radius: 50px;
+            border-radius: 10px;
             padding: 0.75rem 2rem;
             font-weight: 600;
             transition: all 0.3s ease;
-        }
-        .btn-participar:hover {
-            background: #008a5a;
-            transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 163, 108, 0.3);
         }
+        .btn-participar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 163, 108, 0.4);
+        }
         .form-control {
-            border-radius: 8px;
-            border: 1px solid #E0E0E0;
-            padding: 0.75rem;
+            border-radius: 10px;
+            border: 2px solid #E0E0E0;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
         }
         .form-control:focus {
-            border-color: #00A36C;
-            box-shadow: 0 0 0 0.2rem rgba(0, 163, 108, 0.25);
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            outline: none;
         }
         .btn-outline-danger:hover, .btn-danger {
-            transform: scale(1.05);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
         }
         .btn-outline-primary:hover {
-            transform: scale(1.05);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
         }
         #contadorReaccionesPublico {
             background: rgba(255, 255, 255, 0.2);
-            color: #333;
+            color: #dc3545;
             padding: 0.25em 0.5em;
             border-radius: 12px;
             font-weight: 600;
+        }
+
+        /* Badges mejorados */
+        .badge {
+            border-radius: 50px;
+            padding: 0.5em 1em;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        /* Responsive */
+        @media (max-width: 991px) {
+            .section-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+
+            .info-icon {
+                font-size: 1rem;
+            }
+
+            h5 {
+                font-size: 1rem !important;
+            }
+
+            .evento-banner {
+                height: 350px !important;
+            }
+
+            .evento-banner h1 {
+                font-size: 2rem !important;
+            }
         }
     </style>
 </head>
@@ -92,10 +216,17 @@
             <div class="banner-overlay"></div>
             <div class="banner-content">
                 <div class="container">
-                    <h1 class="mb-2" style="font-size: 2.5rem; font-weight: 700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">{{ $evento->titulo ?? 'Evento' }}</h1>
-                    <div class="d-flex flex-wrap align-items-center gap-3">
-                        <span class="badge badge-light" style="font-size: 0.9rem; padding: 0.5em 1em;">{{ $evento->tipo_evento ?? 'Evento' }}</span>
-                        <span class="badge badge-success" style="font-size: 0.9rem; padding: 0.5em 1em;">{{ ucfirst($evento->estado ?? 'Publicado') }}</span>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="mr-3" style="width: 64px; height: 64px; background: rgba(255,255,255,0.15); border-radius: 16px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); box-shadow: 0 4px 16px rgba(0,0,0,0.2);">
+                            <i class="fas fa-calendar-alt" style="font-size: 2rem;"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <h1 class="mb-2" style="font-size: 2.75rem; font-weight: 700; text-shadow: 2px 2px 8px rgba(0,0,0,0.5); letter-spacing: -0.5px; line-height: 1.2;">{{ $evento->titulo ?? 'Evento' }}</h1>
+                            <div class="d-flex flex-wrap align-items-center" style="gap: 0.75rem;">
+                                <span class="badge" style="font-size: 0.95rem; padding: 0.6em 1.2em; background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); border-radius: 50px; font-weight: 500;">{{ $evento->tipo_evento ?? 'Evento' }}</span>
+                                <span class="badge badge-success" style="font-size: 0.95rem; padding: 0.6em 1.2em; border-radius: 50px; font-weight: 500;">{{ ucfirst($evento->estado ?? 'Publicado') }}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -145,15 +276,16 @@
         </div>
 
         <div class="container mt-4">
-            <!-- Botones de Acción (Reacción y Compartir) -->
-            <div class="d-flex justify-content-end mb-4 flex-wrap" style="gap: 0.5rem;">
-                <button class="btn btn-outline-danger d-flex align-items-center" id="btnReaccionarPublico" style="border-radius: 50px; transition: all 0.3s ease;">
+            <!-- Botones de Acción (Reacción y Compartir) - Mejorados -->
+            <div class="d-flex justify-content-end mb-4 flex-wrap" style="gap: 0.75rem;">
+                <button class="btn btn-outline-danger d-flex align-items-center" id="btnReaccionarPublico" style="border-radius: 10px; padding: 0.6rem 1.5rem; font-weight: 500; box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2); transition: all 0.3s ease;">
                     <i class="far fa-heart mr-2" id="iconoCorazonPublico" style="transition: all 0.3s ease;"></i>
                     <span id="textoReaccionPublico">Me gusta</span>
-                    <span class="badge badge-light ml-2" id="contadorReaccionesPublico">0</span>
+                    <span class="badge badge-light ml-2" id="contadorReaccionesPublico" style="background: rgba(255,255,255,0.3); color: #dc3545;">0</span>
                 </button>
-                <button class="btn btn-outline-primary d-flex align-items-center" id="btnCompartirPublico" style="border-radius: 50px; transition: all 0.3s ease;">
-                    <i class="fas fa-share-alt mr-2"></i> Compartir <span id="contadorCompartidosPublico" class="badge badge-light ml-2" style="font-weight: 600;">0</span>
+                <button class="btn btn-outline-primary d-flex align-items-center" id="btnCompartirPublico" style="border-radius: 10px; padding: 0.6rem 1.5rem; font-weight: 500; box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2); transition: all 0.3s ease;">
+                    <i class="fas fa-share-alt mr-2"></i> Compartir 
+                    <span id="contadorCompartidosPublico" class="badge badge-light ml-2" style="background: rgba(255,255,255,0.3); color: #007bff; font-weight: 600;">0</span>
                 </button>
             </div>
 
@@ -161,46 +293,69 @@
                 <!-- Columna Principal -->
                 <div class="col-lg-8">
                     <!-- Descripción -->
-                    <div class="card mb-4">
+                    <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
                         <div class="card-body p-4">
-                            <h4 class="mb-3" style="color: #2c3e50; font-weight: 600;">
-                                <i class="fas fa-align-left mr-2 text-primary"></i> Descripción
-                            </h4>
-                            <p class="mb-0" style="color: #6c757d; line-height: 1.8; font-size: 1rem;">{{ $evento->descripcion ?? 'Sin descripción disponible.' }}</p>
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="section-icon mr-3">
+                                    <i class="fas fa-align-left"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem;">
+                                        Descripción
+                                    </h5>
+                                </div>
+                            </div>
+                            <p class="mb-0 text-muted" style="line-height: 1.8; font-size: 1rem; color: #495057;">{{ $evento->descripcion ?? 'Sin descripción disponible.' }}</p>
                         </div>
                     </div>
 
                     <!-- Información del Evento -->
-                    <div class="card mb-4">
+                    <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
                         <div class="card-body p-4">
-                            <h4 class="mb-4" style="color: #2c3e50; font-weight: 600;">
-                                <i class="fas fa-info-circle mr-2 text-primary"></i> Información del Evento
-                            </h4>
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="section-icon mr-3">
+                                    <i class="fas fa-info-circle"></i>
+                                </div>
+                                        <div>
+                                    <h5 class="mb-0" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem;">
+                                        Información del Evento
+                                    </h5>
+                                    <p class="mb-0 text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">
+                                        Detalles importantes del evento
+                                    </p>
+                                        </div>
+                                    </div>
                             <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <div class="d-flex align-items-start">
-                                        <i class="fas fa-calendar-alt text-primary mr-3 mt-1" style="font-size: 1.2rem;"></i>
-                                        <div>
-                                            <h6 class="mb-1" style="color: #495057; font-weight: 600;">Fecha de Inicio</h6>
-                                            <p class="mb-0 text-muted">{{ $evento->fecha_inicio ? \Carbon\Carbon::parse($evento->fecha_inicio)->format('d/m/Y H:i') : 'No especificada' }}</p>
+                                <div class="col-md-6 mb-4">
+                                    <div class="info-item">
+                                        <div class="info-icon">
+                                            <i class="fas fa-calendar-check"></i>
+                                </div>
+                                        <div class="info-content">
+                                            <h6 class="info-label">Fecha de Inicio</h6>
+                                            <p class="info-value">{{ $evento->fecha_inicio ? \Carbon\Carbon::parse($evento->fecha_inicio)->format('d/m/Y H:i') : 'No especificada' }}</p>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <div class="d-flex align-items-start">
-                                        <i class="fas fa-calendar-check text-primary mr-3 mt-1" style="font-size: 1.2rem;"></i>
-                                        <div>
-                                            <h6 class="mb-1" style="color: #495057; font-weight: 600;">Fecha de Fin</h6>
-                                            <p class="mb-0 text-muted">{{ $evento->fecha_fin ? \Carbon\Carbon::parse($evento->fecha_fin)->format('d/m/Y H:i') : 'No especificada' }}</p>
+                                <div class="col-md-6 mb-4">
+                                    <div class="info-item">
+                                        <div class="info-icon">
+                                            <i class="fas fa-calendar-times"></i>
+                                        </div>
+                                        <div class="info-content">
+                                            <h6 class="info-label">Fecha de Fin</h6>
+                                            <p class="info-value">{{ $evento->fecha_fin ? \Carbon\Carbon::parse($evento->fecha_fin)->format('d/m/Y H:i') : 'No especificada' }}</p>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <div class="d-flex align-items-start">
-                                        <i class="fas fa-users text-primary mr-3 mt-1" style="font-size: 1.2rem;"></i>
-                                        <div>
-                                            <h6 class="mb-1" style="color: #495057; font-weight: 600;">Capacidad Máxima</h6>
-                                            <p class="mb-0 text-muted">{{ $evento->capacidad_maxima ? $evento->capacidad_maxima . ' personas' : 'Sin límite' }}</p>
+                                <div class="col-md-6 mb-4">
+                                    <div class="info-item">
+                                        <div class="info-icon">
+                                            <i class="fas fa-users"></i>
+                                        </div>
+                                        <div class="info-content">
+                                            <h6 class="info-label">Capacidad Máxima</h6>
+                                            <p class="info-value">{{ $evento->capacidad_maxima ? $evento->capacidad_maxima . ' personas' : 'Sin límite' }}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -234,27 +389,51 @@
 
                     <!-- Ubicación -->
                     @if($evento->ciudad || $evento->direccion)
-                    <div class="card mb-4">
+                    <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
                         <div class="card-body p-4">
-                            <h4 class="mb-3" style="color: #2c3e50; font-weight: 600;">
-                                <i class="fas fa-map-marker-alt mr-2 text-primary"></i> Ubicación
-                            </h4>
-                            <div class="row">
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="section-icon mr-3">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem;">
+                                        Ubicación
+                                    </h5>
+                                    <p class="mb-0 text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">
+                                        Lugar donde se realizará el evento
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
                                 @if($evento->ciudad)
                                 <div class="col-md-6 mb-3">
-                                    <h6 class="mb-1" style="color: #495057; font-weight: 600;">Ciudad</h6>
-                                    <p class="mb-0 text-muted">{{ $evento->ciudad }}</p>
+                                    <div class="info-item">
+                                        <div class="info-icon">
+                                            <i class="fas fa-city"></i>
+                                        </div>
+                                        <div class="info-content">
+                                            <h6 class="info-label">Ciudad</h6>
+                                            <p class="info-value">{{ $evento->ciudad }}</p>
+                                        </div>
+                                    </div>
                                 </div>
                                 @endif
                                 @if($evento->direccion)
                                 <div class="col-md-6 mb-3">
-                                    <h6 class="mb-1" style="color: #495057; font-weight: 600;">Dirección</h6>
-                                    <p class="mb-0 text-muted">{{ $evento->direccion }}</p>
+                                    <div class="info-item">
+                                        <div class="info-icon">
+                                            <i class="fas fa-road"></i>
+                                        </div>
+                                        <div class="info-content">
+                                            <h6 class="info-label">Dirección</h6>
+                                            <p class="info-value">{{ $evento->direccion }}</p>
+                                        </div>
+                                    </div>
                                 </div>
                                 @endif
                             </div>
                             @if($evento->lat && $evento->lng)
-                            <div id="mapContainer" class="mt-3" style="height: 300px; border-radius: 8px; overflow: hidden;"></div>
+                            <div id="mapContainer" class="mt-3 rounded" style="height: 350px; overflow: hidden; border: 2px solid #f0f0f0; box-shadow: 0 2px 12px rgba(0,0,0,0.05);"></div>
                             @endif
                         </div>
                     </div>
@@ -262,11 +441,21 @@
 
                     <!-- Galería de Imágenes -->
                     @if($evento->imagenes && is_array($evento->imagenes) && count($evento->imagenes) > 0)
-                    <div class="card mb-4">
+                    <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
                         <div class="card-body p-4">
-                            <h4 class="mb-4" style="color: #2c3e50; font-weight: 600;">
-                                <i class="fas fa-images mr-2 text-primary"></i> Galería de Imágenes
-                            </h4>
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="section-icon mr-3">
+                                    <i class="fas fa-images"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem;">
+                                        Galería de Imágenes
+                                    </h5>
+                                    <p class="mb-0 text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">
+                                        Imágenes promocionales del evento
+                                    </p>
+                                </div>
+                            </div>
                             <div class="row">
                                 @foreach($evento->imagenes as $index => $imgUrl)
                                     @php
@@ -274,10 +463,10 @@
                                     @endphp
                                     @if($fullUrl)
                                     <div class="col-md-4 mb-3">
-                                        <div class="gallery-item" style="border-radius: 12px; overflow: hidden; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.08);" onclick="mostrarImagenGaleriaPublico('{{ $fullUrl }}')">
+                                        <div class="gallery-item" style="border-radius: 12px; overflow: hidden; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s ease;" onclick="mostrarImagenGaleriaPublico('{{ $fullUrl }}')" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
                                             <img src="{{ $fullUrl }}"
                                                  alt="Imagen {{ $index + 1 }}"
-                                                 style="width: 100%; height: 180px; object-fit: cover; display: block;"
+                                                 style="width: 100%; height: 200px; object-fit: cover; display: block;"
                                                  onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27400%27 height=%27200%27%3E%3Crect fill=%27%23f8f9fa%27 width=%27400%27 height=%27200%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 text-anchor=%27middle%27 dy=%27.3em%27 fill=%27%23adb5bd%27 font-family=%27Arial%27 font-size=%2714%27%3EImagen no disponible%3C/text%3E%3C/svg%3E';">
                                         </div>
                                     </div>
@@ -350,56 +539,63 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-    {{-- Lucide icons para página pública de evento --}}
+    {{-- Lucide icons para página pública de evento (opcional) --}}
     <script type="module">
-        import { createIcons, icons } from "https://unpkg.com/lucide@latest/dist/esm/lucide.js";
-
-        const faToLucidePublic = {
-            'fa-link': 'link-2',
-            'fa-qrcode': 'qr-code',
-            'fa-heart': 'heart',
-            'fa-share-alt': 'share-2',
-            'fa-align-left': 'align-left',
-            'fa-info-circle': 'info',
-            'fa-calendar-alt': 'calendar',
-            'fa-calendar-check': 'calendar-check',
-            'fa-users': 'users',
-            'fa-map-marker-alt': 'map-pin',
-            'fa-images': 'images',
-            'fa-user-plus': 'user-plus',
-            'fa-check-circle': 'check-circle-2',
-        };
-
-        window.addEventListener('DOMContentLoaded', () => {
+        (async () => {
             try {
-                document.querySelectorAll('i[class*=\"fa-\"]').forEach(el => {
-                    const classes = el.className.split(/\\s+/);
-                    const faClass = classes.find(c => c.startsWith('fa-') || c.startsWith('fas') || c.startsWith('far'));
-                    if (!faClass) return;
+                const { createIcons, icons } = await import("https://unpkg.com/lucide@latest/dist/esm/lucide.js").catch(() => null);
+                if (!icons || !createIcons) return;
 
-                    // Buscar la clase tipo fa-xxx
-                    const faIconClass = classes.find(c => c.startsWith('fa-'));
-                    if (!faIconClass) return;
+                const faToLucidePublic = {
+                    'fa-link': 'link-2',
+                    'fa-qrcode': 'qr-code',
+                    'fa-heart': 'heart',
+                    'fa-share-alt': 'share-2',
+                    'fa-align-left': 'align-left',
+                    'fa-info-circle': 'info',
+                    'fa-calendar-alt': 'calendar',
+                    'fa-calendar-check': 'calendar-check',
+                    'fa-users': 'users',
+                    'fa-map-marker-alt': 'map-pin',
+                    'fa-images': 'images',
+                    'fa-user-plus': 'user-plus',
+                    'fa-check-circle': 'check-circle-2',
+                };
 
-                    const lucideName = faToLucidePublic[faIconClass];
-                    if (!lucideName || !icons[lucideName]) return;
+                window.addEventListener('DOMContentLoaded', () => {
+                    try {
+                        document.querySelectorAll('i[class*="fa-"]').forEach(el => {
+                            const classes = el.className.split(/\s+/);
+                            const faClass = classes.find(c => c.startsWith('fa-') || c.startsWith('fas') || c.startsWith('far'));
+                            if (!faClass) return;
 
-                    el.setAttribute('data-lucide', lucideName);
-                    el.className = classes.filter(c => !c.startsWith('fa')).join(' ').trim();
+                            // Buscar la clase tipo fa-xxx
+                            const faIconClass = classes.find(c => c.startsWith('fa-'));
+                            if (!faIconClass) return;
+
+                            const lucideName = faToLucidePublic[faIconClass];
+                            if (!lucideName || !icons[lucideName]) return;
+
+                            el.setAttribute('data-lucide', lucideName);
+                            el.className = classes.filter(c => !c.startsWith('fa')).join(' ').trim();
+                        });
+
+                        createIcons({ icons });
+                    } catch (e) {
+                        // Silenciar error, usar Font Awesome como fallback
+                    }
                 });
-
-                createIcons({ icons });
             } catch (e) {
-                console.warn('Lucide público no pudo inicializarse:', e);
+                // Silenciar error, usar Font Awesome como fallback
             }
-        });
+        })();
     </script>
     <script>
         const eventoId = {{ $eventoId }};
         const API_BASE_URL = '{{ url("/") }}';
         const PUBLIC_BASE_URL = typeof getPublicUrl !== 'undefined' 
-            ? (window.PUBLIC_BASE_URL || 'http://10.26.15.110:8000')
-            : 'http://10.26.15.110:8000';
+            ? (window.PUBLIC_BASE_URL || 'http://192.168.0.6:8000')
+            : 'http://192.168.0.6:8000';
         
         // Almacenar datos del evento para compartir
         window.eventoParaCompartir = {

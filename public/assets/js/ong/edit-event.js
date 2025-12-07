@@ -43,15 +43,93 @@ let imagenesExistentes = [];
 let imagenesAEliminar = [];
 let urlImages = []; // Array para almacenar URLs de imágenes nuevas
 
-// =====================================================
-// 1. Cargar datos del evento
-// =====================================================
-document.addEventListener("DOMContentLoaded", async () => {
+// ===============================
+// 🗺️ MAPA LEAFLET
+// ===============================
+let map, clickMarker;
+let ciudadDetectada = "";
+
+function initMap() {
+    const pos = [-16.5, -68.15]; // La Paz, Bolivia por defecto
+
+    // Verificar que el elemento del mapa exista
+    const mapElement = document.getElementById("map");
+    if (!mapElement) {
+        console.warn("Elemento del mapa no encontrado");
+        return;
+    }
+
+    map = L.map("map").setView(pos, 13);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+
+    map.on("click", (e) => {
+        const { lat, lng } = e.latlng;
+
+        if (clickMarker) clickMarker.setLatLng(e.latlng);
+        else clickMarker = L.marker(e.latlng).addTo(map);
+
+        const latInput = document.getElementById("lat");
+        const lngInput = document.getElementById("lng");
+        
+        if (latInput) latInput.value = lat;
+        if (lngInput) lngInput.value = lng;
+
+        reverseGeocode(lat, lng);
+    });
+}
+
+// ===============================
+// 🌍 GEOCODIFICACIÓN INVERSA
+// ===============================
+async function reverseGeocode(lat, lng) {
     try {
-        const res = await fetch(`${API_BASE_URL}/api/eventos/detalle/${eventoId}`, {
+        const r = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+        );
+        const data = await r.json();
+
+        const direccion = data.display_name ?? "";
+        document.getElementById("locacion").value = direccion;
+        
+        // Actualizar también el campo de dirección si está vacío
+        const direccionInput = document.getElementById("direccion");
+        if (!direccionInput.value) {
+            direccionInput.value = direccion;
+        }
+
+        ciudadDetectada =
+            data.address?.city ||
+            data.address?.town ||
+            data.address?.village ||
+            data.address?.state ||
+            "Sin especificar";
+
+        document.getElementById("ciudadInfo").innerText = "Ciudad: " + ciudadDetectada;
+
+        // Actualizar también el campo de ciudad si está vacío
+        const ciudadInput = document.getElementById("ciudad");
+        if (!ciudadInput.value) {
+            ciudadInput.value = ciudadDetectada;
+        }
+
+    } catch (e) {
+        console.warn("No se pudo obtener dirección");
+    }
+}
+
+// =====================================================
+// Función para cargar/recargar datos del evento
+// =====================================================
+async function cargarDatosEvento() {
+    try {
+        // Agregar timestamp para evitar caché
+        const timestamp = new Date().getTime();
+        const res = await fetch(`${API_BASE_URL}/api/eventos/detalle/${eventoId}?_t=${timestamp}`, {
             headers: {
                 "Authorization": `Bearer ${token}`,
-                "Accept": "application/json"
+                "Accept": "application/json",
+                "Cache-Control": "no-cache"
             }
         });
 
@@ -59,15 +137,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (!data.success) {
             mostrarNotificacion("error", "Error", "Error cargando datos del evento");
-            return;
+            return false;
         }
 
         const e = data.evento;
 
-        // rellenar
-        document.getElementById("titulo").value = e.titulo;
-        document.getElementById("descripcion").value = e.descripcion;
-        document.getElementById("tipo_evento").value = e.tipo_evento;
+        // Guardar datos originales del evento para referencia
+        window.eventoOriginal = {
+            lat: e.lat,
+            lng: e.lng,
+            direccion: e.direccion,
+            ciudad: e.ciudad
+        };
+
+        // Rellenar campos del formulario
+        document.getElementById("titulo").value = e.titulo || "";
+        document.getElementById("descripcion").value = e.descripcion || "";
+        document.getElementById("tipo_evento").value = e.tipo_evento || "";
 
         document.getElementById("fecha_inicio").value =
             e.fecha_inicio ? e.fecha_inicio.replace(" ", "T") : "";
@@ -84,6 +170,54 @@ document.addEventListener("DOMContentLoaded", async () => {
         document.getElementById("ciudad").value = e.ciudad ?? "";
         document.getElementById("direccion").value = e.direccion ?? "";
 
+        // Actualizar coordenadas del mapa si existen
+        if (e.lat && e.lng) {
+            const lat = parseFloat(e.lat);
+            const lng = parseFloat(e.lng);
+            
+            if (!isNaN(lat) && !isNaN(lng)) {
+                // Establecer la vista del mapa en la ubicación existente
+                if (map) {
+                map.setView([lat, lng], 13);
+                
+                    // Actualizar marcador
+                if (clickMarker) {
+                    clickMarker.setLatLng([lat, lng]);
+                } else {
+                    clickMarker = L.marker([lat, lng]).addTo(map);
+                    }
+                }
+                
+                // Establecer valores en los campos ocultos
+                const latInput = document.getElementById("lat");
+                const lngInput = document.getElementById("lng");
+                const locacionInput = document.getElementById("locacion");
+                
+                if (latInput) latInput.value = lat;
+                if (lngInput) lngInput.value = lng;
+                
+                // Si hay dirección, establecerla en el campo de locación
+                if (e.direccion && locacionInput) {
+                    locacionInput.value = e.direccion;
+                } else if (locacionInput && !locacionInput.value) {
+                    // Si no hay dirección, hacer geocodificación inversa
+                    reverseGeocode(lat, lng);
+                }
+                
+                // Establecer ciudad si existe
+                if (e.ciudad) {
+                    ciudadDetectada = e.ciudad;
+                    const ciudadInfo = document.getElementById("ciudadInfo");
+                    if (ciudadInfo) {
+                        ciudadInfo.innerText = "Ciudad: " + ciudadDetectada;
+                    }
+                } else {
+                    // Si no hay ciudad, intentar obtenerla de la geocodificación
+                    reverseGeocode(lat, lng);
+                }
+            }
+        }
+
         // Cargar imágenes existentes
         if (e.imagenes && Array.isArray(e.imagenes) && e.imagenes.length > 0) {
             imagenesExistentes = e.imagenes.filter(img => img && img.trim() !== '');
@@ -92,10 +226,51 @@ document.addEventListener("DOMContentLoaded", async () => {
             document.getElementById("imagenesExistentes").innerHTML = '<p class="text-muted">No hay imágenes disponibles</p>';
         }
 
+        // Limpiar nuevas imágenes y URLs agregadas (ya que se guardaron)
+        const nuevasImagenesInput = document.getElementById("nuevasImagenes");
+        if (nuevasImagenesInput) {
+            nuevasImagenesInput.value = "";
+        }
+        const previewNuevasImagenes = document.getElementById("previewNuevasImagenes");
+        if (previewNuevasImagenes) {
+            previewNuevasImagenes.innerHTML = "";
+        }
+        urlImages = [];
+        updateUrlImagesPreview();
+
+        return true;
     } catch (e) {
         console.error(e);
         mostrarNotificacion("error", "Error", "Error obteniendo los datos del evento");
+        return false;
     }
+}
+
+// Función para recargar datos después de actualizar
+async function recargarDatosEvento() {
+    // Esperar un momento para que el servidor procese los cambios
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Recargar datos
+    const exito = await cargarDatosEvento();
+    
+    if (exito) {
+        // Mostrar notificación de actualización exitosa
+        setTimeout(() => {
+            mostrarNotificacion("success", "Datos actualizados", "Los datos del evento se han actualizado correctamente en la pantalla");
+        }, 300);
+    }
+}
+
+// =====================================================
+// 1. Cargar datos del evento al cargar la página
+// =====================================================
+document.addEventListener("DOMContentLoaded", async () => {
+    // Inicializar mapa primero
+    initMap();
+    
+    // Luego cargar datos
+    await cargarDatosEvento();
 });
 
 // Función para mostrar imágenes existentes
@@ -326,14 +501,9 @@ document.getElementById("editEventForm").addEventListener("submit", async (e) =>
         return;
     }
 
-    // Validar fecha de inicio sea futura (solo si se cambió)
+    // Validar fecha de inicio (permitir fechas pasadas para eventos existentes)
     const fechaInicioDate = new Date(fechaInicio);
-    const ahora = new Date();
-    if (fechaInicioDate <= ahora) {
-        mostrarNotificacion("error", "Fecha inválida", "La fecha de inicio debe ser una fecha futura");
-        document.getElementById("fecha_inicio").focus();
-        return;
-    }
+    // No validamos que sea futura porque puede ser un evento existente que se está editando
 
     // Validar fecha de fin si está presente
     const fechaFin = document.getElementById("fecha_fin").value;
@@ -394,8 +564,41 @@ document.getElementById("editEventForm").addEventListener("submit", async (e) =>
     }
     
     formData.append("estado", estado);
-    formData.append("ciudad", document.getElementById("ciudad").value || "");
-    formData.append("direccion", document.getElementById("direccion").value || "");
+    
+    // Coordenadas del mapa - SIEMPRE enviar si están disponibles
+    const latInput = document.getElementById("lat");
+    const lngInput = document.getElementById("lng");
+    const locacionInput = document.getElementById("locacion");
+    
+    let lat = latInput ? latInput.value.trim() : "";
+    let lng = lngInput ? lngInput.value.trim() : "";
+    const locacion = locacionInput ? locacionInput.value.trim() : "";
+    
+    // Si no hay coordenadas en los campos ocultos pero hay coordenadas en el evento original, mantenerlas
+    // Esto asegura que si el usuario no cambia la ubicación, se mantengan las coordenadas originales
+    if ((!lat || !lng) && window.eventoOriginal) {
+        if (window.eventoOriginal.lat && window.eventoOriginal.lng) {
+            lat = window.eventoOriginal.lat.toString();
+            lng = window.eventoOriginal.lng.toString();
+        }
+    }
+    
+    // Enviar coordenadas si están disponibles (incluso si no se cambió la ubicación)
+    if (lat && lng) {
+        const latNum = parseFloat(lat);
+        const lngNum = parseFloat(lng);
+        if (!isNaN(latNum) && !isNaN(lngNum)) {
+            formData.append("lat", latNum);
+            formData.append("lng", lngNum);
+        }
+    }
+    
+    // Ciudad y dirección - usar la dirección del mapa si está disponible, sino la del campo
+    const ciudadValue = ciudadDetectada || document.getElementById("ciudad").value || "";
+    const direccionValue = locacion || document.getElementById("direccion").value || "";
+    
+    formData.append("ciudad", ciudadValue);
+    formData.append("direccion", direccionValue);
 
     // Agregar nuevas imágenes (archivos)
     const nuevasImagenesInput = document.getElementById("nuevasImagenes");
@@ -413,9 +616,26 @@ document.getElementById("editEventForm").addEventListener("submit", async (e) =>
         formData.append("imagenes_urls", JSON.stringify(urlImages));
     }
 
+    // Mostrar indicador de carga
+    const submitBtn = document.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Guardando...';
+    }
+
+    // Log de datos que se van a enviar
+    console.log("=== ENVIANDO ACTUALIZACIÓN DE EVENTO ===");
+    console.log("Evento ID:", eventoId);
+    console.log("Datos del FormData:");
+    for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ' + (typeof pair[1] === 'object' ? '[File]' : pair[1]));
+    }
+
     try {
+        // Usar POST directamente (la ruta API acepta tanto POST como PUT)
         const res = await fetch(`${API_BASE_URL}/api/eventos/${eventoId}`, {
-            method: "PUT",
+            method: "POST",
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Accept": "application/json"
@@ -424,7 +644,15 @@ document.getElementById("editEventForm").addEventListener("submit", async (e) =>
             body: formData
         });
 
+        console.log("Respuesta del servidor - Status:", res.status);
         const data = await res.json();
+        console.log("Respuesta del servidor - Data:", data);
+
+        // Restaurar botón
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+        }
 
         if (!res.ok || !data.success) {
             // Si hay errores de validación, mostrarlos
@@ -451,22 +679,30 @@ document.getElementById("editEventForm").addEventListener("submit", async (e) =>
                 mensajeError = erroresArray.join('\n');
             }
             
+            console.error("Error al actualizar evento:", data);
             mostrarNotificacion("error", "Error al actualizar evento", mensajeError);
-            console.error("Error completo:", data);
             return;
         }
 
         // Mostrar notificación de éxito
-        mostrarNotificacion("success", "¡Éxito!", "Evento actualizado correctamente");
+        console.log("Evento actualizado exitosamente:", data.evento);
+        mostrarNotificacion("success", "Evento actualizado", "El evento ha sido actualizado exitosamente. Redirigiendo a detalles...");
         
-        // Redirigir después de 2 segundos
+        // Redirigir a la pantalla de detalles del evento después de 1.5 segundos
         setTimeout(() => {
-            window.location.href = "/ong/eventos";
-        }, 2000);
+            window.location.href = `/ong/eventos/${eventoId}/detalle`;
+        }, 1500);
 
     } catch (err) {
-        console.error(err);
-        mostrarNotificacion("error", "Error de servidor", "No se pudo conectar con el servidor");
+        console.error("Error de conexión:", err);
+        
+        // Restaurar botón en caso de error
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+        }
+        
+        mostrarNotificacion("error", "Error de servidor", "No se pudo conectar con el servidor: " + err.message);
     }
 });
 

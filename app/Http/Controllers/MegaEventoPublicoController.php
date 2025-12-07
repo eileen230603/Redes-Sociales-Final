@@ -26,10 +26,13 @@ class MegaEventoPublicoController extends Controller
             if ($megaEvento->ong_organizadora_principal) {
                 $ong = Ong::where('user_id', $megaEvento->ong_organizadora_principal)->first();
                 if ($ong) {
+                    // El accessor foto_perfil_url ya normaliza las URLs
+                    $fotoPerfil = $ong->foto_perfil_url ?? null;
+                    
                     $megaEvento->creador = [
                         'tipo' => 'ONG',
                         'nombre' => $ong->nombre_ong ?? 'ONG',
-                        'foto_perfil' => $ong->foto_perfil_url ?? null,
+                        'foto_perfil' => $fotoPerfil,
                         'id' => $ong->user_id ?? null
                     ];
                 } else {
@@ -43,7 +46,7 @@ class MegaEventoPublicoController extends Controller
             $megaEvento->makeVisible('imagenes');
 
             // Procesar imágenes para usar IP fija (accesible desde cualquier dispositivo)
-            $baseUrl = 'http://10.26.15.110:8000';
+            $baseUrl = 'http://192.168.0.6:8000';
             if ($megaEvento->imagenes && is_array($megaEvento->imagenes)) {
                 $megaEvento->imagenes = array_map(function($imagen) use ($baseUrl) {
                     if (empty($imagen) || !is_string($imagen)) {

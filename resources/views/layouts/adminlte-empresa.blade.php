@@ -5,40 +5,47 @@
 @section('title', 'UNI2 • Panel de Empresa')
 
 @push('js')
-    {{-- Lucide icons para panel Empresa --}}
+    {{-- Lucide icons para panel Empresa (opcional) --}}
     <script type="module">
-        import { createIcons, icons } from "https://unpkg.com/lucide@latest/dist/esm/lucide.js";
-
-        const faToLucide = {
-            'fa-home': 'home',
-            'fa-calendar-check': 'calendar-check',
-            'fa-hand-holding-heart': 'hand-heart',
-            'fa-bell': 'bell',
-            'fa-chart-bar': 'bar-chart-3',
-            'fa-user-circle': 'user-round',
-            'fa-globe': 'globe-2',
-            'fa-sign-out-alt': 'log-out',
-        };
-
-        window.addEventListener('DOMContentLoaded', () => {
+        (async () => {
             try {
-                document.querySelectorAll('i[class*=\"fa-\"]').forEach(el => {
-                    const classes = el.className.split(/\\s+/);
-                    const faClass = classes.find(c => c.startsWith('fa-'));
-                    if (!faClass) return;
+                const { createIcons, icons } = await import("https://unpkg.com/lucide@latest/dist/esm/lucide.js").catch(() => null);
+                if (!icons || !createIcons) return;
 
-                    const lucideName = faToLucide[faClass];
-                    if (!lucideName || !icons[lucideName]) return;
+                const faToLucide = {
+                    'fa-home': 'home',
+                    'fa-calendar-check': 'calendar-check',
+                    'fa-hand-holding-heart': 'hand-heart',
+                    'fa-bell': 'bell',
+                    'fa-chart-bar': 'bar-chart-3',
+                    'fa-user-circle': 'user-round',
+                    'fa-globe': 'globe-2',
+                    'fa-sign-out-alt': 'log-out',
+                };
 
-                    el.setAttribute('data-lucide', lucideName);
-                    el.className = classes.filter(c => !c.startsWith('fa')).join(' ').trim();
+                window.addEventListener('DOMContentLoaded', () => {
+                    try {
+                        document.querySelectorAll('i[class*="fa-"]').forEach(el => {
+                            const classes = el.className.split(/\s+/);
+                            const faClass = classes.find(c => c.startsWith('fa-'));
+                            if (!faClass) return;
+
+                            const lucideName = faToLucide[faClass];
+                            if (!lucideName || !icons[lucideName]) return;
+
+                            el.setAttribute('data-lucide', lucideName);
+                            el.className = classes.filter(c => !c.startsWith('fa')).join(' ').trim();
+                        });
+
+                        createIcons({ icons });
+                    } catch (e) {
+                        // Silenciar error, usar Font Awesome como fallback
+                    }
                 });
-
-                createIcons({ icons });
             } catch (e) {
-                console.warn('Lucide empresa no pudo inicializarse:', e);
+                // Silenciar error, usar Font Awesome como fallback
             }
-        });
+        })();
     </script>
 @endpush
 
@@ -1055,6 +1062,9 @@ function inicializarNotificacionesEmpresa() {
     });
     
     window.addEventListener('focus', actualizarContadorNotificacionesEmpresa);
+</script>
+{{-- Script de alertas para eventos próximos --}}
+<script src="{{ asset('assets/js/ong/alertas-eventos-proximos.js') }}"></script>
 }
 
 // Ejecutar cuando el DOM esté listo

@@ -15,6 +15,7 @@ class EventoParticipacion extends Model
         'asistio',
         'puntos',
         'ticket_codigo',
+        'qr_descargado_at',
         'checkin_at',
         'checkout_at',
         'modo_asistencia',
@@ -30,6 +31,7 @@ class EventoParticipacion extends Model
 
     protected $casts = [
         'asistio' => 'boolean',
+        'qr_descargado_at' => 'datetime',
         'checkin_at' => 'datetime',
         'checkout_at' => 'datetime',
         'fecha_modificacion' => 'datetime',

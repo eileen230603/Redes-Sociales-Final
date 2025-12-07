@@ -7,11 +7,18 @@ const eventoIdShow = window.location.pathname.split("/")[3];
 
 document.addEventListener("DOMContentLoaded", async () => {
     try {
-        const url = `${API_BASE_URL}/api/eventos/detalle/${eventoIdShow}`;
+        // Agregar timestamp para evitar caché y obtener datos actualizados
+        const timestamp = new Date().getTime();
+        const url = `${API_BASE_URL}/api/eventos/detalle/${eventoIdShow}?_t=${timestamp}`;
         const res = await fetch(url, {
+            method: 'GET',
+            cache: 'no-cache',
             headers: {
                 "Authorization": `Bearer ${tokenShow}`,
-                "Accept": "application/json"
+                "Accept": "application/json",
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0"
             }
         });
 
@@ -265,7 +272,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             inscripcionAbierta.textContent = 'Cerrada';
         }
 
-        // Patrocinadores
+        // Patrocinadores - Diseño mejorado con avatares
         if (e.patrocinadores && Array.isArray(e.patrocinadores) && e.patrocinadores.length > 0) {
             const patrocinadoresCard = document.getElementById('patrocinadoresCard');
             patrocinadoresCard.style.display = 'block';
@@ -273,24 +280,45 @@ document.addEventListener("DOMContentLoaded", async () => {
             patrocinadoresDiv.innerHTML = '';
             e.patrocinadores.forEach(pat => {
                 const nombre = typeof pat === 'object' ? (pat.nombre || 'N/A') : pat;
-                const avatar = typeof pat === 'object' ? (pat.avatar || null) : null;
+                const fotoPerfil = typeof pat === 'object' ? (pat.foto_perfil || null) : null;
                 const inicial = nombre.charAt(0).toUpperCase();
                 
                 const item = document.createElement('div');
-                item.className = 'd-flex align-items-center mb-2 mr-3';
-                item.style.cssText = 'background: #f8f9fa; padding: 0.5rem 0.75rem; border-radius: 8px; border-left: 3px solid #007bff;';
+                item.className = 'd-flex align-items-center mb-3';
+                item.style.cssText = 'background: white; padding: 1rem; border-radius: 12px; border: 1px solid #e9ecef; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.3s ease; width: 100%;';
+                item.onmouseover = function() {
+                    this.style.transform = 'translateY(-2px)';
+                    this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.12)';
+                };
+                item.onmouseout = function() {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+                };
                 
-                if (avatar) {
+                if (fotoPerfil) {
                     item.innerHTML = `
-                        <img src="${avatar}" alt="${nombre}" class="rounded-circle mr-2" style="width: 35px; height: 35px; object-fit: cover; border: 2px solid #007bff;">
-                        <span style="font-weight: 500; color: #2c3e50;">${nombre}</span>
+                        <img src="${fotoPerfil}" alt="${nombre}" 
+                             class="rounded-circle mr-3" 
+                             style="width: 60px; height: 60px; object-fit: cover; border: 3px solid #00A36C; box-shadow: 0 4px 12px rgba(0, 163, 108, 0.2); flex-shrink: 0;">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0" style="color: #2c3e50; font-weight: 600; font-size: 1rem;">${nombre}</h6>
+                            <small style="color: #6c757d; font-size: 0.85rem;">
+                                <i class="fas fa-handshake mr-1" style="color: #00A36C;"></i> Patrocinador
+                            </small>
+                        </div>
                     `;
                 } else {
                     item.innerHTML = `
-                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mr-2" style="width: 35px; height: 35px; font-weight: 600; font-size: 0.9rem;">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center mr-3" 
+                             style="width: 60px; height: 60px; font-weight: 700; font-size: 1.5rem; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: 3px solid #00A36C; box-shadow: 0 4px 12px rgba(0, 163, 108, 0.2); flex-shrink: 0;">
                             ${inicial}
                         </div>
-                        <span style="font-weight: 500; color: #2c3e50;">${nombre}</span>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0" style="color: #2c3e50; font-weight: 600; font-size: 1rem;">${nombre}</h6>
+                            <small style="color: #6c757d; font-size: 0.85rem;">
+                                <i class="fas fa-handshake mr-1" style="color: #00A36C;"></i> Patrocinador
+                            </small>
+                        </div>
                     `;
                 }
                 patrocinadoresDiv.appendChild(item);
@@ -449,11 +477,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             verificarMostrarBotonControlAsistencia(e.estado_dinamico);
         }
 
-        // Iniciar auto-refresco de reacciones (ONG ve el aumento casi en tiempo real)
-        iniciarAutoRefrescoReacciones(eventoIdShow);
-
-        // Iniciar auto-refresco de reacciones (ONG ve el aumento casi en tiempo real)
-        iniciarAutoRefrescoReacciones(eventoIdShow);
+        // Cargar reacciones inicialmente (sin auto-refresco)
+        cargarReacciones();
 
     } catch (err) {
         console.error("Error:", err);
@@ -551,53 +576,163 @@ async function cargarReacciones() {
             return;
         }
 
-        // Crear grid de usuarios que reaccionaron
+        // Función helper para parsear fechas correctamente desde PostgreSQL
+        // La fecha viene en formato 'Y-m-d H:i:s' en zona horaria de Bolivia (America/La_Paz)
+        function parsearFechaLocal(fechaStr) {
+            if (!fechaStr) return null;
+            try {
+                if (typeof fechaStr === 'string') {
+                    fechaStr = fechaStr.trim();
+                    
+                    // Patrón para formato PostgreSQL: "2025-01-15 14:30:00" o "2025-01-15T14:30:00"
+                    // También puede venir con microsegundos: "2025-01-15 14:30:00.123456"
+                    const match = fechaStr.match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/);
+                    
+                    if (match) {
+                        const [, year, month, day, hour, minute, second] = match;
+                        // Crear fecha en hora local (no UTC) ya que el servidor ya la convirtió a zona horaria local
+                        // El servidor envía la fecha en formato 'Y-m-d H:i:s' en zona horaria de Bolivia
+                        const fechaLocal = new Date(
+                            parseInt(year, 10),
+                            parseInt(month, 10) - 1, // Los meses en JavaScript son 0-indexed
+                            parseInt(day, 10),
+                            parseInt(hour, 10),
+                            parseInt(minute, 10),
+                            parseInt(second || 0, 10)
+                        );
+                        
+                        // Verificar que la fecha sea válida
+                        if (isNaN(fechaLocal.getTime())) {
+                            console.warn('Fecha inválida después del parseo:', fechaStr);
+                            return null;
+                        }
+                        
+                        return fechaLocal;
+                    } else {
+                        // Si no coincide con el patrón, intentar parsear directamente
+                        // pero esto puede causar problemas de zona horaria
+                        const fechaParseada = new Date(fechaStr);
+                        if (isNaN(fechaParseada.getTime())) {
+                            console.warn('No se pudo parsear la fecha:', fechaStr);
+                            return null;
+                        }
+                        return fechaParseada;
+                    }
+                } else if (fechaStr instanceof Date) {
+                    // Si ya es un objeto Date, devolverlo directamente
+                    return fechaStr;
+                } else {
+                    // Intentar convertir a Date
+                    const fechaParseada = new Date(fechaStr);
+                    if (isNaN(fechaParseada.getTime())) {
+                        console.warn('No se pudo convertir a fecha:', fechaStr);
+                        return null;
+                    }
+                    return fechaParseada;
+                }
+            } catch (error) {
+                console.error('Error parseando fecha:', error, fechaStr);
+                return null;
+            }
+        }
+
+        // Crear grid de usuarios que reaccionaron con diseño mejorado
         let html = '<div class="row">';
         data.reacciones.forEach((reaccion, index) => {
-            const fechaReaccion = new Date(reaccion.fecha_reaccion).toLocaleString('es-ES', {
+            const fechaReaccionObj = parsearFechaLocal(reaccion.fecha_reaccion);
+            const fechaReaccion = fechaReaccionObj ? fechaReaccionObj.toLocaleString('es-ES', {
                 year: 'numeric',
-                month: 'long',
-                day: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
                 hour: '2-digit',
                 minute: '2-digit'
-            });
+            }) : 'N/A';
 
             const inicialNombre = (reaccion.nombre || 'U').charAt(0).toUpperCase();
             const fotoPerfil = reaccion.foto_perfil || null;
-            const esNoRegistrado = reaccion.tipo === 'no_registrado';
-            const tipoBadge = esNoRegistrado 
-                ? '<span class="badge badge-info ml-2" style="background: #17a2b8; color: white; padding: 0.25em 0.5em; border-radius: 12px; font-size: 0.75rem; font-weight: 500;"><i class="fas fa-user-clock mr-1"></i> No registrado</span>'
-                : '';
+            const tipoUsuario = reaccion.tipo_usuario || (reaccion.tipo === 'externo' ? 'Externo' : 'No Registrado');
+            const telefono = reaccion.telefono || null;
+            
+            // Determinar color del badge según tipo
+            let badgeColor = '#17a2b8'; // Azul por defecto
+            let badgeIcon = 'fas fa-user';
+            if (tipoUsuario === 'Externo') {
+                badgeColor = '#007bff';
+                badgeIcon = 'fas fa-user';
+            } else if (tipoUsuario === 'No Registrado') {
+                badgeColor = '#6c757d';
+                badgeIcon = 'fas fa-user-clock';
+            }
 
-            html += `
-                <div class="col-md-6 col-lg-4 mb-3 reaccion-card" style="animation-delay: ${index * 0.1}s;">
-                    <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; border: 1px solid #F5F5F5; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(12, 43, 68, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';">
-                        <div class="card-body p-4">
-                            <div class="d-flex align-items-center mb-3">
-                                ${fotoPerfil ? `
-                                    <img src="${fotoPerfil}" alt="${reaccion.nombre}" class="rounded-circle mr-3" style="width: 50px; height: 50px; object-fit: cover; border: 3px solid #00A36C; animation: fadeInUp 0.5s ease-out;">
-                                ` : `
-                                    <div class="rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 50px; height: 50px; font-weight: 600; font-size: 1.2rem; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; animation: fadeInUp 0.5s ease-out;">
+            // Construir avatar (solo uno, foto_perfil o inicial)
+            let avatarHTML = '';
+            if (fotoPerfil) {
+                // Normalizar URL de foto de perfil
+                let fotoPerfilUrl = fotoPerfil;
+                if (fotoPerfil.startsWith('http://') || fotoPerfil.startsWith('https://')) {
+                    const pathMatch = fotoPerfil.match(/\/storage\/[^?]*/);
+                    if (pathMatch) {
+                        fotoPerfilUrl = window.location.origin + pathMatch[0];
+                    }
+                } else if (fotoPerfil.startsWith('/storage/')) {
+                    fotoPerfilUrl = window.location.origin + fotoPerfil;
+                }
+                
+                avatarHTML = `
+                    <div class="position-relative" style="flex-shrink: 0; margin-right: 1rem;">
+                        <img src="${fotoPerfilUrl}" alt="${reaccion.nombre || 'Usuario'}" 
+                             class="rounded-circle" 
+                             style="width: 70px; height: 70px; object-fit: cover; border: 4px solid #00A36C; box-shadow: 0 4px 12px rgba(0, 163, 108, 0.3); display: block;"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                             style="width: 70px; height: 70px; font-weight: 700; font-size: 1.5rem; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: 4px solid #00A36C; box-shadow: 0 4px 12px rgba(0, 163, 108, 0.3); position: absolute; top: 0; left: 0; display: none;">
                                         ${inicialNombre}
                                     </div>
-                                `}
-                                <div class="flex-grow-1">
-                                    <div class="d-flex align-items-center mb-1">
-                                        <h6 class="mb-0" style="color: #0C2B44; font-weight: 700; font-size: 1rem;">${reaccion.nombre || 'N/A'}</h6>
-                                        ${tipoBadge}
+                    </div>
+                `;
+            } else {
+                avatarHTML = `
+                    <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                         style="width: 70px; height: 70px; font-weight: 700; font-size: 1.5rem; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: 4px solid #00A36C; box-shadow: 0 4px 12px rgba(0, 163, 108, 0.3); flex-shrink: 0; margin-right: 1rem;">
+                                        ${inicialNombre}
                                     </div>
-                                    <small style="color: #333333; font-size: 0.85rem;">
-                                        <i class="far fa-envelope mr-1" style="color: #00A36C;"></i> ${reaccion.correo || 'N/A'}
-                                    </small>
+                `;
+            }
+
+            html += `
+                <div class="col-md-6 col-lg-4 mb-4 reaccion-card" style="animation-delay: ${index * 0.1}s;">
+                    <div class="card border-0 shadow-sm h-100" style="border-radius: 16px; border: 1px solid #f0f0f0; transition: all 0.3s ease; background: white; overflow: hidden;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)';">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-start mb-3" style="flex-wrap: nowrap;">
+                                ${avatarHTML}
+                                <div class="flex-grow-1" style="min-width: 0; overflow: hidden;">
+                                    <div class="d-flex align-items-center mb-2" style="flex-wrap: wrap; gap: 0.5rem;">
+                                        <h6 class="mb-0" style="color: #2c3e50; font-weight: 700; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;">${reaccion.nombre || 'N/A'}</h6>
+                                        <span class="badge" style="background: ${badgeColor}; color: white; padding: 0.4em 0.8em; border-radius: 50px; font-size: 0.75rem; font-weight: 500; white-space: nowrap; flex-shrink: 0;">
+                                            <i class="${badgeIcon} mr-1"></i> ${tipoUsuario}
+                                        </span>
+                                    </div>
+                                    ${reaccion.correo ? `
+                                        <div class="mb-2 d-flex align-items-center" style="color: #495057; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            <i class="fas fa-envelope mr-2" style="color: #6c757d; width: 16px; flex-shrink: 0;"></i>
+                                            <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${reaccion.correo}</span>
                                 </div>
-                                <div style="background: rgba(220, 53, 69, 0.1); width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;">
-                                    <i class="far fa-heart" style="font-size: 1.3rem; color: #dc3545; transition: all 0.3s ease;"></i>
+                                    ` : ''}
+                                    ${telefono ? `
+                                        <div class="mb-2 d-flex align-items-center" style="color: #495057; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            <i class="fas fa-phone mr-2" style="color: #6c757d; width: 16px; flex-shrink: 0;"></i>
+                                            <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${telefono}</span>
                                 </div>
+                                    ` : ''}
                             </div>
-                            <div class="mt-3 pt-3" style="border-top: 1px solid #F5F5F5;">
-                                <small style="color: #333333; font-size: 0.8rem;">
-                                    <i class="far fa-clock mr-1" style="color: #00A36C;"></i> ${fechaReaccion}
-                                </small>
+                            </div>
+                            <div class="mt-3 pt-3 d-flex align-items-center justify-content-between" style="border-top: 1px solid #f0f0f0; flex-wrap: nowrap;">
+                                <div style="color: #6c757d; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0;">
+                                    <i class="fas fa-clock mr-1" style="color: #00A36C;"></i> ${fechaReaccion}
+                                </div>
+                                <div style="background: rgba(220, 53, 69, 0.1); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-left: 0.5rem;">
+                                    <i class="fas fa-heart" style="font-size: 1.1rem; color: #dc3545;"></i>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -605,7 +740,7 @@ async function cargarReacciones() {
             `;
         });
         html += '</div>';
-        html += `<div class="mt-4 text-center"><span class="badge" style="background: #0C2B44; color: white; padding: 0.5em 1em; border-radius: 20px; font-weight: 500;">Total: ${data.total} reacción(es)</span></div>`;
+        html += `<div class="mt-4 text-center"><span class="badge" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; padding: 0.6em 1.2em; border-radius: 50px; font-weight: 600; font-size: 0.9rem;">Total: ${data.total} reacción${data.total !== 1 ? 'es' : ''}</span></div>`;
 
         container.innerHTML = html;
         
@@ -635,29 +770,10 @@ async function cargarReacciones() {
 }
 
 // ==============================
-// Auto-refresco de reacciones (ONG)
+// Auto-refresco de reacciones (ONG) - DESHABILITADO
 // ==============================
-let refrescoReaccionesInterval = null;
-
-function iniciarAutoRefrescoReacciones(eventoId) {
-    try {
-        if (refrescoReaccionesInterval) {
-            clearInterval(refrescoReaccionesInterval);
-        }
-
-        // Cada 10 segundos vuelve a consultar total y lista de reacciones
-        refrescoReaccionesInterval = setInterval(async () => {
-            try {
-                await cargarContadorReacciones(eventoId);
-                await cargarReacciones();
-            } catch (err) {
-                console.warn('Error en auto-refresco de reacciones:', err);
-            }
-        }, 10000);
-    } catch (error) {
-        console.warn('No se pudo iniciar el auto-refresco de reacciones:', error);
-    }
-}
+// El auto-refresco ha sido deshabilitado para mejorar el rendimiento
+// Las reacciones se cargan solo cuando el usuario hace clic en "Actualizar"
 
 // Función para cargar participantes (igual que cargarReacciones)
 async function cargarParticipantes() {
@@ -728,28 +844,63 @@ async function cargarParticipantes() {
         console.log('📊 Participantes registrados:', data.participantes.filter(p => p.tipo === 'registrado').length);
         console.log('📊 Participantes no registrados:', data.participantes.filter(p => p.tipo === 'no_registrado').length);
 
-        // Función helper para parsear fechas correctamente
+        // Función helper para parsear fechas correctamente desde PostgreSQL
+        // La fecha viene en formato 'Y-m-d H:i:s' en zona horaria de Bolivia (America/La_Paz)
         function parsearFechaLocal(fechaStr) {
             if (!fechaStr) return null;
             try {
                 if (typeof fechaStr === 'string') {
                     fechaStr = fechaStr.trim();
-                    const match = fechaStr.match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})/);
+                    
+                    // Patrón para formato PostgreSQL: "2025-01-15 14:30:00" o "2025-01-15T14:30:00"
+                    // También puede venir con microsegundos: "2025-01-15 14:30:00.123456"
+                    const match = fechaStr.match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/);
+                    
                     if (match) {
                         const [, year, month, day, hour, minute, second] = match;
-                        return new Date(
+                        // Crear fecha en hora local (no UTC) ya que el servidor ya la convirtió a zona horaria local
+                        // El servidor envía la fecha en formato 'Y-m-d H:i:s' en zona horaria de Bolivia
+                        const fechaLocal = new Date(
                             parseInt(year, 10),
-                            parseInt(month, 10) - 1,
+                            parseInt(month, 10) - 1, // Los meses en JavaScript son 0-indexed
                             parseInt(day, 10),
                             parseInt(hour, 10),
                             parseInt(minute, 10),
                             parseInt(second || 0, 10)
                         );
+                        
+                        // Verificar que la fecha sea válida
+                        if (isNaN(fechaLocal.getTime())) {
+                            console.warn('Fecha inválida después del parseo:', fechaStr);
+                            return null;
+                        }
+                        
+                        return fechaLocal;
+                    } else {
+                        // Si no coincide con el patrón, intentar parsear directamente
+                        // pero esto puede causar problemas de zona horaria
+                        const fechaParseada = new Date(fechaStr);
+                        if (isNaN(fechaParseada.getTime())) {
+                            console.warn('No se pudo parsear la fecha:', fechaStr);
+                            return null;
+                        }
+                        return fechaParseada;
                     }
+                } else if (fechaStr instanceof Date) {
+                    // Si ya es un objeto Date, devolverlo directamente
+                    return fechaStr;
+                } else {
+                    // Intentar convertir a Date
+                    const fechaParseada = new Date(fechaStr);
+                    if (isNaN(fechaParseada.getTime())) {
+                        console.warn('No se pudo convertir a fecha:', fechaStr);
+                        return null;
+                    }
+                    return fechaParseada;
                 }
-                return new Date(fechaStr);
             } catch (error) {
-                return new Date(fechaStr);
+                console.error('Error parseando fecha:', error, fechaStr);
+                return null;
             }
         }
         
@@ -777,7 +928,7 @@ async function cargarParticipantes() {
             });
             
             const fechaObj = parsearFechaLocal(participante.fecha_inscripcion);
-            const fechaInscripcion = fechaObj ? fechaObj.toLocaleDateString('es-ES', {
+            const fechaInscripcion = fechaObj ? fechaObj.toLocaleString('es-ES', {
                 year: 'numeric',
                 month: '2-digit',
                 day: '2-digit',
@@ -1083,7 +1234,7 @@ async function configurarBotonesBanner(eventoId, evento) {
         id: eventoId,
         titulo: evento.titulo || 'Evento',
         descripcion: evento.descripcion || '',
-        url: `http://10.26.15.110:8000/evento/${eventoId}/qr`
+        url: `http://192.168.0.6:8000/evento/${eventoId}/qr`
     };
 }
 
@@ -1139,7 +1290,7 @@ async function copiarEnlace() {
     // Usar la URL pública con IP para que cualquier usuario en la misma red pueda acceder
     const url = typeof getPublicUrl !== 'undefined' 
         ? getPublicUrl(`/evento/${evento.id}/qr`)
-        : `http://10.26.15.110:8000/evento/${evento.id}/qr`;
+        : `http://192.168.0.6:8000/evento/${evento.id}/qr`;
     
     // Registrar compartido
     await registrarCompartido(evento.id, 'link');
@@ -1249,7 +1400,7 @@ async function mostrarQR() {
     // URL pública con IP para acceso mediante QR (accesible desde otros dispositivos en la misma red)
     const qrUrl = typeof getPublicUrl !== 'undefined' 
         ? getPublicUrl(`/evento/${evento.id}/qr`)
-        : `http://10.26.15.110:8000/evento/${evento.id}/qr`;
+        : `http://192.168.0.6:8000/evento/${evento.id}/qr`;
     
     // Limpiar contenido anterior
     qrcodeDiv.innerHTML = '';

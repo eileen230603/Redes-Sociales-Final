@@ -4,68 +4,82 @@
 @section('title', 'UNI2 • Panel Principal')
 
 @push('js')
-    {{-- Lucide icons: reemplazar Font Awesome visualmente en todo el panel --}}
+    {{-- Lucide icons: reemplazar Font Awesome visualmente en todo el panel (opcional) --}}
     <script type="module">
-        import { createIcons, icons } from "https://unpkg.com/lucide@latest/dist/esm/lucide.js";
-
-        const faToLucide = {
-            // Generales
-            'fa-home': 'home',
-            'fa-layer-group': 'layout-dashboard',
-            'fa-bell': 'bell',
-            'fa-globe': 'globe-2',
-            'fa-sign-out-alt': 'log-out',
-            'fa-users': 'users',
-            'fa-user-circle': 'user-round',
-            'fa-tachometer-alt': 'gauge',
-            'fa-chart-bar': 'bar-chart-3',
-            'fa-info-circle': 'info',
-            'fa-exclamation-triangle': 'alert-triangle',
-            'fa-hand-holding-heart': 'hand-heart',
-
-            // Calendario / eventos
-            'fa-calendar': 'calendar',
-            'fa-calendar-alt': 'calendar-range',
-            'fa-calendar-check': 'calendar-check',
-            'fa-calendar-plus': 'calendar-plus',
-            'fa-list': 'list',
-            'fa-angle-left': 'chevron-left',
-            'fa-history': 'history',
-
-            // Iconos de UI varios
-            'fa-heart': 'heart',
-            'fa-star': 'star',
-            'fa-share-alt': 'share-2',
-            'fa-images': 'images',
-            'fa-map-marker-alt': 'map-pin',
-            'fa-user-plus': 'user-plus',
-            'fa-check-circle': 'check-circle-2',
-            'fa-times-circle': 'x-circle',
-            'fa-phone': 'phone',
-            'fa-envelope': 'mail',
-            'fa-clock': 'clock',
-        };
-
-        window.addEventListener('DOMContentLoaded', () => {
+        (async () => {
             try {
-                document.querySelectorAll('i[class*="fa-"]').forEach(el => {
-                    const classes = el.className.split(/\s+/);
-                    const faClass = classes.find(c => c.startsWith('fa-'));
-                    if (!faClass) return;
-
-                    const lucideName = faToLucide[faClass];
-                    if (!lucideName || !icons[lucideName]) return;
-
-                    el.setAttribute('data-lucide', lucideName);
-                    // Quitamos las clases de icono de FA, pero dejamos espaciados (mr-2, etc.)
-                    el.className = classes.filter(c => !c.startsWith('fa')).join(' ').trim();
+                const { createIcons, icons } = await import("https://unpkg.com/lucide@latest/dist/esm/lucide.js").catch(() => {
+                    // Si falla la carga, retornar null para que se use Font Awesome
+                    return null;
                 });
 
-                createIcons({ icons });
+                if (!icons || !createIcons) {
+                    // Si no se pudo cargar, continuar con Font Awesome
+                    return;
+                }
+
+                const faToLucide = {
+                    // Generales
+                    'fa-home': 'home',
+                    'fa-layer-group': 'layout-dashboard',
+                    'fa-bell': 'bell',
+                    'fa-globe': 'globe-2',
+                    'fa-sign-out-alt': 'log-out',
+                    'fa-users': 'users',
+                    'fa-user-circle': 'user-round',
+                    'fa-tachometer-alt': 'gauge',
+                    'fa-chart-bar': 'bar-chart-3',
+                    'fa-info-circle': 'info',
+                    'fa-exclamation-triangle': 'alert-triangle',
+                    'fa-hand-holding-heart': 'hand-heart',
+
+                    // Calendario / eventos
+                    'fa-calendar': 'calendar',
+                    'fa-calendar-alt': 'calendar-range',
+                    'fa-calendar-check': 'calendar-check',
+                    'fa-calendar-plus': 'calendar-plus',
+                    'fa-list': 'list',
+                    'fa-angle-left': 'chevron-left',
+                    'fa-history': 'history',
+
+                    // Iconos de UI varios
+                    'fa-heart': 'heart',
+                    'fa-star': 'star',
+                    'fa-share-alt': 'share-2',
+                    'fa-images': 'images',
+                    'fa-map-marker-alt': 'map-pin',
+                    'fa-user-plus': 'user-plus',
+                    'fa-check-circle': 'check-circle-2',
+                    'fa-times-circle': 'x-circle',
+                    'fa-phone': 'phone',
+                    'fa-envelope': 'mail',
+                    'fa-clock': 'clock',
+                };
+
+                window.addEventListener('DOMContentLoaded', () => {
+                    try {
+                        document.querySelectorAll('i[class*="fa-"]').forEach(el => {
+                            const classes = el.className.split(/\s+/);
+                            const faClass = classes.find(c => c.startsWith('fa-'));
+                            if (!faClass) return;
+
+                            const lucideName = faToLucide[faClass];
+                            if (!lucideName || !icons[lucideName]) return;
+
+                            el.setAttribute('data-lucide', lucideName);
+                            // Quitamos las clases de icono de FA, pero dejamos espaciados (mr-2, etc.)
+                            el.className = classes.filter(c => !c.startsWith('fa')).join(' ').trim();
+                        });
+
+                        createIcons({ icons });
+                    } catch (e) {
+                        // Silenciar error, usar Font Awesome como fallback
+                    }
+                });
             } catch (e) {
-                console.warn('Lucide no pudo inicializarse:', e);
+                // Silenciar error, usar Font Awesome como fallback
             }
-        });
+        })();
     </script>
 @endpush
 
@@ -184,12 +198,21 @@
                     </a>
                 </li>
 
-                {{-- Historial de eventos --}}
+                {{-- Eventos en curso --}}
+                <li class="nav-item">
+                    <a href="{{ route('ong.eventos.en-curso') }}" 
+                       class="nav-link {{ request()->is('ong/eventos/en-curso*') ? 'active' : '' }}">
+                        <i class="far fa-play-circle nav-icon text-success"></i>
+                        <p>Eventos en curso</p>
+                    </a>
+                </li>
+
+                {{-- Eventos finalizados --}}
                 <li class="nav-item">
                     <a href="{{ route('ong.eventos.historial') }}" 
                        class="nav-link {{ request()->is('ong/eventos/historial*') ? 'active' : '' }}">
                         <i class="far fa-history nav-icon text-warning"></i>
-                        <p>Historial de eventos</p>
+                        <p>Eventos finalizados</p>
                     </a>
                 </li>
 
@@ -1176,10 +1199,13 @@
 {{-- JS --}}
 @section('js')
 <script src="{{ asset('vendor/adminlte/dist/js/adminlte.min.js') }}"></script>
-<script src="{{ asset('js/custom.js') }}"></script>
+@if(file_exists(public_path('js/custom.js')))
+<script src="{{ asset('js/custom.js') }}?v={{ time() }}"></script>
+@endif
 <script src="{{ asset('assets/js/config.js') }}"></script>
 {{-- Script global para icono de notificaciones en todas las pantallas ONG --}}
 <script src="{{ asset('js/notificaciones-ong.js') }}"></script>
+<script src="{{ asset('assets/js/ong/alertas-eventos-proximos.js') }}"></script>
 <script>
 async function cerrarSesion(event) {
     event.preventDefault();

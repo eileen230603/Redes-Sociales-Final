@@ -311,6 +311,26 @@ class MegaEventoController extends Controller
             // El accessor del modelo ya genera URLs completas
             $megaEvento->makeVisible('imagenes');
 
+            // Asegurar que la relación ongPrincipal incluya el accessor foto_perfil_url
+            if ($megaEvento->ongPrincipal) {
+                // Forzar que se incluya el accessor en la serialización
+                $megaEvento->ongPrincipal->makeVisible(['foto_perfil_url']);
+                
+                // Obtener el foto_perfil_url del accessor (ya normalizado)
+                $fotoPerfilUrl = $megaEvento->ongPrincipal->foto_perfil_url;
+                
+                // También agregar manualmente para asegurar que esté disponible
+                $megaEvento->ong_principal = [
+                    'user_id' => $megaEvento->ongPrincipal->user_id,
+                    'nombre_ong' => $megaEvento->ongPrincipal->nombre_ong,
+                    'foto_perfil_url' => $fotoPerfilUrl,
+                    'foto_perfil' => $megaEvento->ongPrincipal->foto_perfil,
+                ];
+                
+                // También asegurar que la relación ongPrincipal tenga el accessor en su serialización
+                $megaEvento->ongPrincipal->setAttribute('foto_perfil_url', $fotoPerfilUrl);
+            }
+
             // Agregar información adicional útil
             $megaEvento->total_participantes = DB::table('mega_evento_participantes_externos')
                 ->where('mega_evento_id', $id)
@@ -417,7 +437,7 @@ class MegaEventoController extends Controller
                         
                         // Si el host no es localhost ni el dominio actual, es URL de internet
                         if (!empty($host) && 
-                            !in_array($host, ['localhost', '127.0.0.1', '10.26.15.110']) && 
+                            !in_array($host, ['localhost', '127.0.0.1', '192.168.0.6']) && 
                             $host !== $appHost &&
                             strpos($host, $appHost) === false &&
                             strpos($appHost, $host) === false) {

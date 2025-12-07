@@ -63,7 +63,8 @@ Route::middleware('auth:sanctum')->group(function () {
         
         // CRUD (al final, con restricción numérica)
         Route::post('/',                 [EventController::class, 'store']);
-        Route::put('/{id}',              [EventController::class, 'update'])->where('id', '[0-9]+');
+        Route::post('/{id}',             [EventController::class, 'update'])->where('id', '[0-9]+'); // POST para compatibilidad con FormData
+        Route::put('/{id}',              [EventController::class, 'update'])->where('id', '[0-9]+'); // Mantener PUT para compatibilidad
         Route::delete('/{id}',           [EventController::class, 'destroy'])->where('id', '[0-9]+');
     });
 
@@ -108,6 +109,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Validación para usuarios no registrados (sin autenticación)
     Route::post('/verificar-ticket-no-registrado-welcome', [EventoParticipacionController::class, 'verificarTicketNoRegistradoWelcome']);
     Route::post('/validar-asistencia-no-registrado-welcome', [EventoParticipacionController::class, 'validarAsistenciaNoRegistradoWelcome']);
+    // Registrar descarga de QR (solo una vez)
+    Route::post('/registrar-descarga-qr', [EventoParticipacionController::class, 'registrarDescargaQR']);
     // ONG: control de asistencia
     Route::get('/eventos/{eventoId}/control-asistencia', [EventoParticipacionController::class, 'controlAsistencia']);
     Route::put('/participaciones/{participacionId}/modificar-asistencia', [EventoParticipacionController::class, 'modificarAsistencia']);

@@ -478,25 +478,14 @@ async function cargarMegaEventos() {
                     this.style.objectFit = 'contain';
                 };
                 
-                // Overlay hover effect
-                const overlay = document.createElement('div');
-                overlay.className = 'position-absolute w-100 h-100 d-flex align-items-center justify-content-center';
-                overlay.style.cssText = 'top: 0; left: 0; background: rgba(0,0,0,0); transition: background 0.3s; pointer-events: none;';
-                overlay.innerHTML = '<i class="fas fa-eye fa-2x text-white" style="opacity: 0; transition: opacity 0.3s;"></i>';
-                
                 imgWrapper.onmouseenter = function() {
                     img.style.transform = 'scale(1.05)';
-                    overlay.style.background = 'rgba(0,0,0,0.3)';
-                    overlay.querySelector('i').style.opacity = '1';
                 };
                 imgWrapper.onmouseleave = function() {
                     img.style.transform = 'scale(1)';
-                    overlay.style.background = 'rgba(0,0,0,0)';
-                    overlay.querySelector('i').style.opacity = '0';
                 };
                 
                 imgWrapper.appendChild(img);
-                imgWrapper.appendChild(overlay);
                 cardDiv.appendChild(imgWrapper);
             } else {
                 const placeholder = document.createElement('div');

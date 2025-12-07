@@ -11,14 +11,6 @@ Route::options('/storage/{path}', [App\Http\Controllers\StorageController::class
 Route::get('/storage/{path}', [App\Http\Controllers\StorageController::class, 'serve'])
     ->where('path', '.*');
 
-// --- SERVIR ARCHIVOS DE STORAGE CON CORS (MÁXIMA PRIORIDAD) ---
-// Esta ruta DEBE estar al principio para tener máxima prioridad
-Route::options('/storage/{path}', [App\Http\Controllers\StorageController::class, 'options'])
-    ->where('path', '.*');
-
-Route::get('/storage/{path}', [App\Http\Controllers\StorageController::class, 'serve'])
-    ->where('path', '.*');
-
 // ---------------- AUTH ----------------
 Route::view('/', 'welcome')->name('inicio');
 Route::view('/login', 'auth.login')->name('login');
@@ -66,6 +58,7 @@ Route::prefix('voluntario/mega-eventos')->name('voluntario.mega-eventos.')->grou
 // ---------------- ONG: EVENTOS ----------------
 Route::prefix('ong/eventos')->name('ong.eventos.')->group(function () {
     Route::view('/', 'ong.eventos.index')->name('index');
+    Route::view('/en-curso', 'ong.eventos.en-curso')->name('en-curso');
     Route::view('/historial', 'ong.eventos.historial')->name('historial');
     Route::view('/crear', 'ong.eventos.create')->name('create');
     Route::view('/{id}/editar', 'ong.eventos.edit')->name('edit');

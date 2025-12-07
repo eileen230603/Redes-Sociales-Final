@@ -864,7 +864,7 @@
             btnVerificar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Verificando...';
 
             try {
-                const apiUrl = window.API_BASE_URL || 'http://10.26.15.110:8000';
+                const apiUrl = window.API_BASE_URL || 'http://192.168.0.6:8000';
                 const res = await fetch(`${apiUrl}/api/verificar-ticket-no-registrado-welcome`, {
                     method: 'POST',
                     headers: {
@@ -946,7 +946,7 @@
             btnConfirmar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Confirmando...';
 
             try {
-                const apiUrl = window.API_BASE_URL || 'http://10.26.15.110:8000';
+                const apiUrl = window.API_BASE_URL || 'http://192.168.0.6:8000';
                 const res = await fetch(`${apiUrl}/api/validar-asistencia-no-registrado-welcome`, {
                     method: 'POST',
                     headers: {
@@ -1469,7 +1469,7 @@
             mensajeDiv.innerHTML = '';
 
             try {
-                const apiUrl = window.API_BASE_URL || 'http://10.26.15.110:8000';
+                const apiUrl = window.API_BASE_URL || 'http://192.168.0.6:8000';
                 const res = await fetch(`${apiUrl}/api/auth/login`, {
                     method: 'POST',
                     headers: {
@@ -1566,7 +1566,7 @@
             btnVerificar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Verificando...';
 
             try {
-                const apiUrl = window.API_BASE_URL || 'http://10.26.15.110:8000';
+                const apiUrl = window.API_BASE_URL || 'http://192.168.0.6:8000';
                 const res = await fetch(`${apiUrl}/api/verificar-ticket-welcome`, {
                     method: 'POST',
                     headers: {
@@ -1650,7 +1650,7 @@
             btnConfirmar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Confirmando...';
 
             try {
-                const apiUrl = window.API_BASE_URL || 'http://10.26.15.110:8000';
+                const apiUrl = window.API_BASE_URL || 'http://192.168.0.6:8000';
                 const res = await fetch(`${apiUrl}/api/validar-asistencia-welcome`, {
                     method: 'POST',
                     headers: {

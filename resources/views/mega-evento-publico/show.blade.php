@@ -8,73 +8,210 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <style>
+        /* Variables CSS */
+        :root {
+            --primary-color: #ffc107;
+            --secondary-color: #ff9800;
+            --text-dark: #2c3e50;
+            --text-muted: #6c757d;
+            --border-radius: 16px;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.12);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.15);
+        }
+
         body {
             background-color: #f8f9fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+
+        /* Animaciones */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(30px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 0.9;
+            }
+        }
+
         .evento-banner {
-            height: 400px;
+            height: 450px;
             background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
             position: relative;
             overflow: hidden;
         }
+
         .banner-image {
             width: 100%;
             height: 100%;
             background-size: cover;
             background-position: center;
-            opacity: 0.3;
+            opacity: 0.25;
+            transition: transform 0.5s ease;
         }
+
+        .evento-banner:hover .banner-image {
+            transform: scale(1.05);
+        }
+
         .banner-overlay {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%);
+            background: linear-gradient(to bottom, rgba(255, 193, 7, 0.4) 0%, rgba(255, 152, 0, 0.7) 100%);
         }
+
         .banner-content {
             position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
-            padding: 2rem;
+            padding: 3rem 2rem;
             color: white;
         }
-        .card {
+
+        /* Section Icon (para títulos principales) */
+        .section-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
             border-radius: 12px;
-            border: 1px solid #F5F5F5;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-        .btn-participar {
-            background: #00A36C;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: white;
+            font-size: 1.25rem;
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .section-icon:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255, 193, 7, 0.3);
+        }
+
+        /* Info Icon (para items individuales) */
+        .info-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffc107;
+            font-size: 1.2rem;
+            margin-right: 1rem;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 1rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-item:hover {
+            background: rgba(255, 193, 7, 0.03);
+            transform: translateX(5px);
+        }
+
+        .info-item:hover .info-icon {
+            color: #ff9800;
+            transform: scale(1.1);
+        }
+
+        .info-content {
+            flex: 1;
+        }
+
+        .info-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            font-size: 1rem;
+            color: var(--text-dark);
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .card {
+            border-radius: var(--border-radius);
             border: none;
-            border-radius: 50px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md) !important;
+            transform: translateY(-2px);
+        }
+
+        .btn-participar {
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            color: #333;
+            border: none;
+            border-radius: 12px;
             padding: 0.75rem 2rem;
             font-weight: 600;
             transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2);
         }
+
         .btn-participar:hover {
-            background: #008a5a;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 163, 108, 0.3);
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
         }
+
         .form-control {
-            border-radius: 8px;
+            border-radius: 12px;
             border: 1px solid #E0E0E0;
             padding: 0.75rem;
+            transition: all 0.3s ease;
         }
+
         .form-control:focus {
-            border-color: #00A36C;
-            box-shadow: 0 0 0 0.2rem rgba(0, 163, 108, 0.25);
+            border-color: #ffc107;
+            box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+            transform: translateY(-1px);
         }
+
         .btn-outline-danger:hover, .btn-danger {
-            transform: scale(1.05);
+            transform: translateY(-2px);
         }
-        .btn-outline-primary:hover {
-            transform: scale(1.05);
+
+        .btn-outline-warning:hover {
+            transform: translateY(-2px);
         }
+
         #contadorReaccionesPublico {
             background: rgba(255, 255, 255, 0.2);
             color: #333;
@@ -82,20 +219,57 @@
             border-radius: 12px;
             font-weight: 600;
         }
+
+        /* Galería de imágenes mejorada */
+        .gallery-item {
+            transition: all 0.3s ease;
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.05);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .section-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+
+            .info-icon {
+                font-size: 1rem;
+            }
+
+            .evento-banner {
+                height: 350px !important;
+            }
+
+            h1 {
+                font-size: 2rem !important;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container-fluid px-0">
-        <!-- Banner Superior -->
-        <div class="evento-banner">
-            <div class="banner-image" id="bannerImage"></div>
+        <!-- Banner Superior - Mejorado -->
+        <div class="evento-banner" style="border-radius: 0 0 24px 24px;">
+            <div class="banner-image" id="bannerImage" style="transition: transform 0.5s ease;"></div>
             <div class="banner-overlay"></div>
             <div class="banner-content">
                 <div class="container">
-                    <h1 class="mb-2" style="font-size: 2.5rem; font-weight: 700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">{{ $megaEvento->titulo ?? 'Mega Evento' }}</h1>
-                    <div class="d-flex flex-wrap align-items-center gap-3">
-                        <span class="badge badge-warning" style="font-size: 0.9rem; padding: 0.5em 1em;">{{ ucfirst($megaEvento->categoria ?? 'Mega Evento') }}</span>
-                        <span class="badge badge-success" style="font-size: 0.9rem; padding: 0.5em 1em;">{{ ucfirst($megaEvento->estado ?? 'Publicado') }}</span>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="mr-3" style="width: 64px; height: 64px; background: rgba(255,255,255,0.15); border-radius: 16px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); box-shadow: 0 4px 16px rgba(0,0,0,0.2); animation: pulse 2s ease-in-out infinite;">
+                            <i class="fas fa-star" style="font-size: 2rem; color: white;"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <h1 class="mb-2" style="font-size: 2.75rem; font-weight: 700; text-shadow: 2px 2px 8px rgba(0,0,0,0.5); letter-spacing: -0.5px; line-height: 1.2; animation: fadeInUp 0.6s ease-out;">{{ $megaEvento->titulo ?? 'Mega Evento' }}</h1>
+                            <div class="d-flex flex-wrap align-items-center" style="gap: 0.75rem;">
+                                <span class="badge" style="font-size: 0.95rem; padding: 0.6em 1.2em; background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); border-radius: 50px; font-weight: 500; animation: fadeInUp 0.8s ease-out;">{{ ucfirst($megaEvento->categoria ?? 'Mega Evento') }}</span>
+                                <span class="badge badge-success" style="font-size: 0.95rem; padding: 0.6em 1.2em; border-radius: 50px; font-weight: 500; animation: fadeInUp 0.9s ease-out;">{{ ucfirst($megaEvento->estado ?? 'Publicado') }}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -145,14 +319,14 @@
         </div>
 
         <div class="container mt-4">
-            <!-- Botones de Acción (Reacción y Compartir) -->
-            <div class="d-flex justify-content-end mb-4 flex-wrap" style="gap: 0.5rem;">
-                <button class="btn btn-outline-danger d-flex align-items-center" id="btnReaccionarPublico" style="border-radius: 50px; transition: all 0.3s ease;">
+            <!-- Botones de Acción (Reacción y Compartir) - Mejorados -->
+            <div class="d-flex justify-content-end mb-4 flex-wrap" style="gap: 0.75rem;">
+                <button class="btn btn-outline-danger d-flex align-items-center" id="btnReaccionarPublico" style="border-radius: 12px; padding: 0.6rem 1.5rem; font-weight: 500; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(220,53,69,0.2);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(220,53,69,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(220,53,69,0.2)'">
                     <i class="far fa-heart mr-2" id="iconoCorazonPublico" style="transition: all 0.3s ease;"></i>
                     <span id="textoReaccionPublico">Me gusta</span>
                     <span class="badge badge-light ml-2" id="contadorReaccionesPublico">0</span>
                 </button>
-                <button class="btn btn-outline-warning d-flex align-items-center" id="btnCompartirPublico" style="border-radius: 50px; transition: all 0.3s ease;">
+                <button class="btn btn-outline-warning d-flex align-items-center" id="btnCompartirPublico" style="border-radius: 12px; padding: 0.6rem 1.5rem; font-weight: 500; transition: all 0.3s ease; border-color: #ffc107; color: #856404; box-shadow: 0 2px 8px rgba(255,193,7,0.2);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(255,193,7,0.3)'; this.style.background='#ffc107'; this.style.color='#333'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(255,193,7,0.2)'; this.style.background='transparent'; this.style.color='#856404'">
                     <i class="fas fa-share-alt mr-2"></i> Compartir <span id="contadorCompartidosPublico" class="badge badge-light ml-2" style="font-weight: 600;">0</span>
                 </button>
             </div>
@@ -161,68 +335,125 @@
                 <!-- Columna Principal -->
                 <div class="col-lg-8">
                     <!-- Descripción -->
-                    <div class="card mb-4">
+                    <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; animation: fadeInUp 0.5s ease-out;">
                         <div class="card-body p-4">
-                            <h4 class="mb-3" style="color: #2c3e50; font-weight: 600;">
-                                <i class="fas fa-align-left mr-2 text-warning"></i> Descripción
-                            </h4>
-                            <p class="mb-0" style="color: #6c757d; line-height: 1.8; font-size: 1rem;">{{ $megaEvento->descripcion ?? 'Sin descripción disponible.' }}</p>
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="section-icon mr-3">
+                                    <i class="fas fa-align-left"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0" style="font-weight: 700; color: #2c3e50; font-size: 1.1rem;">
+                                        Descripción
+                                    </h5>
+                                    <p class="mb-0 text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">
+                                        Información detallada del mega evento
+                                    </p>
+                                </div>
+                            </div>
+                            <p class="mb-0" style="color: #495057; line-height: 1.8; font-size: 1rem;">{{ $megaEvento->descripcion ?? 'Sin descripción disponible.' }}</p>
                         </div>
                     </div>
 
                     <!-- Información del Evento -->
-                    <div class="card mb-4">
+                    <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; animation: fadeInUp 0.6s ease-out;">
                         <div class="card-body p-4">
-                            <h4 class="mb-4" style="color: #2c3e50; font-weight: 600;">
-                                <i class="fas fa-info-circle mr-2 text-warning"></i> Información del Mega Evento
-                            </h4>
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="section-icon mr-3">
+                                    <i class="fas fa-info-circle"></i>
+                                </div>
+                                        <div>
+                                    <h5 class="mb-0" style="font-weight: 700; color: #2c3e50; font-size: 1.1rem;">
+                                        Información del Mega Evento
+                                    </h5>
+                                    <p class="mb-0 text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">
+                                        Detalles importantes del evento
+                                    </p>
+                                        </div>
+                                    </div>
                             <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <div class="d-flex align-items-start">
-                                        <i class="fas fa-calendar-alt text-warning mr-3 mt-1" style="font-size: 1.2rem;"></i>
-                                        <div>
-                                            <h6 class="mb-1" style="color: #495057; font-weight: 600;">Fecha de Inicio</h6>
-                                            <p class="mb-0 text-muted">{{ $megaEvento->fecha_inicio ? \Carbon\Carbon::parse($megaEvento->fecha_inicio)->format('d/m/Y H:i') : 'No especificada' }}</p>
+                                <div class="col-md-6 mb-4">
+                                    <div class="info-item">
+                                        <div class="info-icon">
+                                            <i class="fas fa-calendar-alt"></i>
+                                </div>
+                                        <div class="info-content">
+                                            <h6 class="info-label">Fecha de Inicio</h6>
+                                            <p class="info-value">
+                                                @if($megaEvento->fecha_inicio)
+                                                    @php
+                                                        $fecha = \Carbon\Carbon::parse($megaEvento->fecha_inicio);
+                                                        $meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+                                                    @endphp
+                                                    {{ $fecha->format('d') }} de {{ $meses[$fecha->month - 1] }} de {{ $fecha->year }}, {{ $fecha->format('H:i') }}
+                                                @else
+                                                    No especificada
+                                                @endif
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <div class="d-flex align-items-start">
-                                        <i class="fas fa-calendar-check text-warning mr-3 mt-1" style="font-size: 1.2rem;"></i>
-                                        <div>
-                                            <h6 class="mb-1" style="color: #495057; font-weight: 600;">Fecha de Fin</h6>
-                                            <p class="mb-0 text-muted">{{ $megaEvento->fecha_fin ? \Carbon\Carbon::parse($megaEvento->fecha_fin)->format('d/m/Y H:i') : 'No especificada' }}</p>
+                                <div class="col-md-6 mb-4">
+                                    <div class="info-item">
+                                        <div class="info-icon">
+                                            <i class="fas fa-calendar-check"></i>
+                                        </div>
+                                        <div class="info-content">
+                                            <h6 class="info-label">Fecha de Fin</h6>
+                                            <p class="info-value">
+                                                @if($megaEvento->fecha_fin)
+                                                    @php
+                                                        $fecha = \Carbon\Carbon::parse($megaEvento->fecha_fin);
+                                                        $meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+                                                    @endphp
+                                                    {{ $fecha->format('d') }} de {{ $meses[$fecha->month - 1] }} de {{ $fecha->year }}, {{ $fecha->format('H:i') }}
+                                                @else
+                                                    No especificada
+                                                @endif
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <div class="d-flex align-items-start">
-                                        <i class="fas fa-users text-warning mr-3 mt-1" style="font-size: 1.2rem;"></i>
-                                        <div>
-                                            <h6 class="mb-1" style="color: #495057; font-weight: 600;">Capacidad Máxima</h6>
-                                            <p class="mb-0 text-muted">{{ $megaEvento->capacidad_maxima ? $megaEvento->capacidad_maxima . ' personas' : 'Sin límite' }}</p>
+                                <div class="col-md-6 mb-4">
+                                    <div class="info-item">
+                                        <div class="info-icon">
+                                            <i class="fas fa-users"></i>
+                                        </div>
+                                        <div class="info-content">
+                                            <h6 class="info-label">Capacidad Máxima</h6>
+                                            <p class="info-value">{{ $megaEvento->capacidad_maxima ? $megaEvento->capacidad_maxima . ' personas' : 'Sin límite' }}</p>
                                         </div>
                                     </div>
                                 </div>
                                 @if($megaEvento->creador && $megaEvento->creador['nombre'])
-                                <div class="col-md-6 mb-3">
-                                    <div class="d-flex align-items-start">
-                                        <i class="fas fa-user-circle text-warning mr-3 mt-1" style="font-size: 1.2rem;"></i>
-                                        <div>
-                                            <h6 class="mb-1" style="color: #495057; font-weight: 600;">Creado por</h6>
-                                            <div class="d-flex align-items-center" style="gap: 0.5rem;">
+                                <div class="col-md-6 mb-4">
+                                    <div class="info-item" style="position: relative;">
+                                        <div class="info-icon">
+                                            <i class="fas fa-building"></i>
+                                        </div>
+                                        <div class="info-content">
+                                            <h6 class="info-label">ONG Organizadora</h6>
+                                            <div class="d-flex align-items-center" style="gap: 0.75rem;">
+                                                <div style="position: relative; flex-shrink: 0;">
                                                 @if($megaEvento->creador['foto_perfil'])
                                                     <img src="{{ $megaEvento->creador['foto_perfil'] }}" alt="{{ $megaEvento->creador['nombre'] }}" 
                                                          class="rounded-circle" 
-                                                         style="width: 32px; height: 32px; object-fit: cover; border: 2px solid #ffc107;">
+                                                             style="width: 70px; height: 70px; object-fit: cover; border: 3px solid #ffc107; box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2); display: block;"
+                                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                                                             style="width: 70px; height: 70px; font-weight: 700; font-size: 1.5rem; background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); color: white; border: 3px solid #ffc107; box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2); position: absolute; top: 0; left: 0; display: none;">
+                                                            {{ strtoupper(substr($megaEvento->creador['nombre'], 0, 1)) }}
+                                                        </div>
                                                 @else
-                                                    <div class="rounded-circle bg-warning text-white d-flex align-items-center justify-content-center" 
-                                                         style="width: 32px; height: 32px; font-weight: 600; font-size: 0.9rem;">
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                                                             style="width: 70px; height: 70px; font-weight: 700; font-size: 1.5rem; background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); color: white; border: 3px solid #ffc107; box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);">
                                                         {{ strtoupper(substr($megaEvento->creador['nombre'], 0, 1)) }}
                                                     </div>
                                                 @endif
-                                                <span style="color: #495057; font-weight: 500;">{{ $megaEvento->creador['nombre'] }}</span>
+                                                </div>
+                                                <div>
+                                                    <div style="color: #495057; font-weight: 600; font-size: 1rem; margin-bottom: 0.25rem;">{{ $megaEvento->creador['nombre'] }}</div>
                                                 <span class="badge badge-warning" style="font-size: 0.75rem; padding: 0.25em 0.5em;">{{ $megaEvento->creador['tipo'] }}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -234,18 +465,30 @@
 
                     <!-- Ubicación -->
                     @if($megaEvento->ubicacion || ($megaEvento->lat && $megaEvento->lng))
-                    <div class="card mb-4">
+                    <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; animation: fadeInUp 0.7s ease-out;">
                         <div class="card-body p-4">
-                            <h4 class="mb-3" style="color: #2c3e50; font-weight: 600;">
-                                <i class="fas fa-map-marker-alt mr-2 text-warning"></i> Ubicación
-                            </h4>
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="section-icon mr-3">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0" style="font-weight: 700; color: #2c3e50; font-size: 1.1rem;">
+                                        Ubicación
+                                    </h5>
+                                </div>
+                            </div>
                             @if($megaEvento->ubicacion)
-                            <div class="mb-3">
-                                <p class="mb-0 text-muted" style="font-size: 1.1rem;">{{ $megaEvento->ubicacion }}</p>
+                            <div class="info-item mb-3" style="background: linear-gradient(135deg, rgba(255, 193, 7, 0.05) 0%, rgba(255, 152, 0, 0.05) 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid #ffc107;">
+                                <div class="info-icon" style="font-size: 1.5rem; color: #ffc107;">
+                                    <i class="fas fa-map-marked-alt"></i>
+                                </div>
+                                <div class="info-content">
+                                    <p class="info-value" style="font-size: 1rem; font-weight: 500;">{{ $megaEvento->ubicacion }}</p>
+                                </div>
                             </div>
                             @endif
                             @if($megaEvento->lat && $megaEvento->lng)
-                            <div id="mapContainer" class="mt-3" style="height: 300px; border-radius: 8px; overflow: hidden;"></div>
+                            <div id="mapContainer" class="mt-3" style="height: 350px; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.3s ease;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.12)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'"></div>
                             @endif
                         </div>
                     </div>
@@ -253,17 +496,27 @@
 
                     <!-- Galería de Imágenes -->
                     @if($megaEvento->imagenes && is_array($megaEvento->imagenes) && count($megaEvento->imagenes) > 0)
-                    <div class="card mb-4">
+                    <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; animation: fadeInUp 0.8s ease-out;">
                         <div class="card-body p-4">
-                            <h4 class="mb-4" style="color: #2c3e50; font-weight: 600;">
-                                <i class="fas fa-images mr-2 text-warning"></i> Galería de Imágenes
-                            </h4>
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="section-icon mr-3">
+                                    <i class="fas fa-images"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0" style="font-weight: 700; color: #2c3e50; font-size: 1.1rem;">
+                                        Galería de Imágenes
+                                    </h5>
+                                    <p class="mb-0 text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">
+                                        Imágenes promocionales del mega evento
+                                    </p>
+                                </div>
+                            </div>
                             <div class="row" id="galeriaImagenes">
                                 @foreach($megaEvento->imagenes as $index => $imgUrl)
                                     @if($imgUrl)
                                     @php
-                                        // Asegurar que la URL esté completa con IP fija para acceso desde cualquier dispositivo
-                                        $baseUrl = 'http://10.26.15.110:8000';
+                                        // Normalizar URL usando el origen actual
+                                        $baseUrl = request()->getSchemeAndHttpHost();
                                         $fullUrl = $imgUrl;
                                         if (strpos($imgUrl, 'http://') !== 0 && strpos($imgUrl, 'https://') !== 0) {
                                             if (strpos($imgUrl, '/storage/') === 0) {
@@ -276,11 +529,13 @@
                                         }
                                     @endphp
                                     <div class="col-md-4 mb-3">
-                                        <div class="gallery-item" style="border-radius: 12px; overflow: hidden; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.08);" data-img-url="{{ $fullUrl }}" data-index="{{ $index }}" onclick="mostrarImagenGaleriaPublico('{{ $fullUrl }}')">
+                                        <div class="gallery-item" style="border-radius: 16px; overflow: hidden; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.3s ease; height: 240px; background: #f8f9fa;" data-img-url="{{ $fullUrl }}" data-index="{{ $index }}" onclick="mostrarImagenGaleriaPublico('{{ $fullUrl }}')" onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'">
                                             <img src="{{ $fullUrl }}"
                                                  alt="Imagen {{ $index + 1 }}"
-                                                 style="width: 100%; height: 180px; object-fit: cover; display: block;"
-                                                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27400%27 height=%27200%27%3E%3Crect fill=%27%23f8f9fa%27 width=%27400%27 height=%27200%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 text-anchor=%27middle%27 dy=%27.3em%27 fill=%27%23adb5bd%27 font-family=%27Arial%27 font-size=%2714%27%3EImagen no disponible%3C/text%3E%3C/svg%3E';">
+                                                 style="width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s ease;"
+                                                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27400%27 height=%27240%27%3E%3Crect fill=%27%23f8f9fa%27 width=%27400%27 height=%27240%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 text-anchor=%27middle%27 dy=%27.3em%27 fill=%27%23adb5bd%27 font-family=%27Arial%27 font-size=%2714%27%3EImagen no disponible%3C/text%3E%3C/svg%3E';"
+                                                 onmouseover="this.style.transform='scale(1.05)'"
+                                                 onmouseout="this.style.transform='scale(1)'">
                                         </div>
                                     </div>
                                     @endif
@@ -293,11 +548,18 @@
 
                 <!-- Sidebar - Formulario de Participación -->
                 <div class="col-lg-4">
-                    <div class="card mb-4" style="position: sticky; top: 20px;">
+                    <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; position: sticky; top: 2rem; animation: fadeInUp 0.5s ease-out;">
                         <div class="card-body p-4">
-                            <h5 class="mb-4" style="color: #2c3e50; font-weight: 600;">
-                                <i class="fas fa-user-plus mr-2 text-warning"></i> Participar en este Mega Evento
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="section-icon mr-3">
+                                    <i class="fas fa-user-plus"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0" style="font-weight: 700; color: #2c3e50; font-size: 1.1rem;">
+                                        Participar en este Mega Evento
                             </h5>
+                                </div>
+                            </div>
                             <!-- Mensaje si ya está participando -->
                             <div id="mensajeYaParticipa" class="alert alert-info" style="display: none;">
                                 <i class="fas fa-info-circle mr-2"></i>
@@ -327,11 +589,18 @@
                     </div>
 
                     <!-- Información Rápida -->
-                    <div class="card">
+                    <div class="card border-0 shadow-sm" style="border-radius: 16px; animation: fadeInUp 0.6s ease-out;">
                         <div class="card-body p-4">
-                            <h5 class="mb-3" style="color: #2c3e50; font-weight: 600;">
-                                <i class="fas fa-info-circle mr-2 text-warning"></i> Información Rápida
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="section-icon mr-3">
+                                    <i class="fas fa-info-circle"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0" style="font-weight: 700; color: #2c3e50; font-size: 1.1rem;">
+                                        Información Rápida
                             </h5>
+                                </div>
+                            </div>
                             <div class="mb-3 pb-3 border-bottom">
                                 <small class="text-muted d-block mb-1">Estado</small>
                                 <span class="badge badge-success">{{ ucfirst($megaEvento->estado ?? 'Publicado') }}</span>
@@ -362,56 +631,64 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-    {{-- Lucide icons para página pública de evento --}}
+    {{-- Lucide icons para página pública de evento (opcional) --}}
     <script type="module">
-        import { createIcons, icons } from "https://unpkg.com/lucide@latest/dist/esm/lucide.js";
-
-        const faToLucidePublic = {
-            'fa-link': 'link-2',
-            'fa-qrcode': 'qr-code',
-            'fa-heart': 'heart',
-            'fa-share-alt': 'share-2',
-            'fa-align-left': 'align-left',
-            'fa-info-circle': 'info',
-            'fa-calendar-alt': 'calendar',
-            'fa-calendar-check': 'calendar-check',
-            'fa-users': 'users',
-            'fa-map-marker-alt': 'map-pin',
-            'fa-images': 'images',
-            'fa-user-plus': 'user-plus',
-            'fa-check-circle': 'check-circle-2',
-        };
-
-        window.addEventListener('DOMContentLoaded', () => {
+        (async () => {
             try {
-                document.querySelectorAll('i[class*=\"fa-\"]').forEach(el => {
-                    const classes = el.className.split(/\\s+/);
-                    const faClass = classes.find(c => c.startsWith('fa-') || c.startsWith('fas') || c.startsWith('far'));
-                    if (!faClass) return;
+                const { createIcons, icons } = await import("https://unpkg.com/lucide@latest/dist/esm/lucide.js").catch(() => null);
+                if (!icons || !createIcons) return;
 
-                    // Buscar la clase tipo fa-xxx
-                    const faIconClass = classes.find(c => c.startsWith('fa-'));
-                    if (!faIconClass) return;
+                const faToLucidePublic = {
+                    'fa-link': 'link-2',
+                    'fa-qrcode': 'qr-code',
+                    'fa-heart': 'heart',
+                    'fa-share-alt': 'share-2',
+                    'fa-align-left': 'align-left',
+                    'fa-info-circle': 'info',
+                    'fa-calendar-alt': 'calendar',
+                    'fa-calendar-check': 'calendar-check',
+                    'fa-users': 'users',
+                    'fa-map-marker-alt': 'map-pin',
+                    'fa-images': 'images',
+                    'fa-user-plus': 'user-plus',
+                    'fa-check-circle': 'check-circle-2',
+                };
 
-                    const lucideName = faToLucidePublic[faIconClass];
-                    if (!lucideName || !icons[lucideName]) return;
+                window.addEventListener('DOMContentLoaded', () => {
+                    try {
+                        document.querySelectorAll('i[class*="fa-"]').forEach(el => {
+                            const classes = el.className.split(/\s+/);
+                            const faClass = classes.find(c => c.startsWith('fa-') || c.startsWith('fas') || c.startsWith('far'));
+                            if (!faClass) return;
 
-                    el.setAttribute('data-lucide', lucideName);
-                    el.className = classes.filter(c => !c.startsWith('fa')).join(' ').trim();
+                            // Buscar la clase tipo fa-xxx
+                            const faIconClass = classes.find(c => c.startsWith('fa-'));
+                            if (!faIconClass) return;
+
+                            const lucideName = faToLucidePublic[faIconClass];
+                            if (!lucideName || !icons[lucideName]) return;
+
+                            el.setAttribute('data-lucide', lucideName);
+                            el.className = classes.filter(c => !c.startsWith('fa')).join(' ').trim();
+                        });
+
+                        createIcons({ icons });
+                    } catch (e) {
+                        // Silenciar error, usar Font Awesome como fallback
+                    }
                 });
-
-                createIcons({ icons });
             } catch (e) {
-                console.warn('Lucide público no pudo inicializarse:', e);
+                // Silenciar error, usar Font Awesome como fallback
+                // Si lucide no carga, se usará Font Awesome automáticamente
             }
-        });
+        })();
     </script>
     <script>
         const megaEventoId = {{ $megaEventoId }};
         const API_BASE_URL = '{{ url("/") }}';
         const PUBLIC_BASE_URL = typeof getPublicUrl !== 'undefined' 
-            ? (window.PUBLIC_BASE_URL || 'http://10.26.15.110:8000')
-            : 'http://10.26.15.110:8000';
+            ? (window.PUBLIC_BASE_URL || 'http://192.168.0.6:8000')
+            : 'http://192.168.0.6:8000';
         
         // Almacenar datos del mega evento para compartir
         window.megaEventoParaCompartir = {
@@ -922,7 +1199,7 @@
         });
 
         // Helper para construir URL de imagen con IP fija
-        const IMAGE_BASE_URL = 'http://10.26.15.110:8000';
+        const IMAGE_BASE_URL = 'http://192.168.0.6:8000';
         function buildImageUrl(imgUrl) {
             if (!imgUrl || imgUrl.trim() === '') return null;
             // Si ya es una URL completa, retornarla directamente
@@ -1056,11 +1333,11 @@
             $bannerUrl = $bannerImg;
             if (strpos($bannerImg, 'http://') !== 0 && strpos($bannerImg, 'https://') !== 0) {
                 if (strpos($bannerImg, '/storage/') === 0) {
-                    $bannerUrl = 'http://10.26.15.110:8000' . $bannerImg;
+                    $bannerUrl = 'http://192.168.0.6:8000' . $bannerImg;
                 } elseif (strpos($bannerImg, 'storage/') === 0) {
-                    $bannerUrl = 'http://10.26.15.110:8000/storage/' . $bannerImg;
+                    $bannerUrl = 'http://192.168.0.6:8000/storage/' . $bannerImg;
                 } else {
-                    $bannerUrl = 'http://10.26.15.110:8000/storage/' . ltrim($bannerImg, '/');
+                    $bannerUrl = 'http://192.168.0.6:8000/storage/' . ltrim($bannerImg, '/');
                 }
             }
         @endphp
@@ -1070,16 +1347,136 @@
         }
         @endif
 
-        // Mapa
-        @if($megaEvento->lat && $megaEvento->lng)
-        document.addEventListener('DOMContentLoaded', function() {
-            const map = L.map('mapContainer').setView([{{ $megaEvento->lat }}, {{ $megaEvento->lng }}], 13);
+        // Mapa - Implementación mejorada igual a eventos/detalles
+        const mapContainer = document.getElementById('mapContainer');
+        if (mapContainer) {
+            const inicializarMapa = async () => {
+                let lat = {{ $megaEvento->lat ?? 'null' }};
+                let lng = {{ $megaEvento->lng ?? 'null' }};
+                let direccionCompleta = '{{ addslashes($megaEvento->ubicacion ?? "") }}';
+
+                // Si no hay coordenadas pero hay ubicación, hacer geocodificación
+                if ((!lat || !lng) && direccionCompleta && direccionCompleta.trim() !== '') {
+                    try {
+                        // Usar Nominatim (OpenStreetMap) para geocodificación
+                        const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(direccionCompleta)}&limit=1`;
+                        const geocodeRes = await fetch(geocodeUrl, {
+                            headers: {
+                                'User-Agent': 'MegaEventoApp/1.0'
+                            }
+                        });
+                        const geocodeData = await geocodeRes.json();
+                        
+                        if (geocodeData && geocodeData.length > 0) {
+                            lat = parseFloat(geocodeData[0].lat);
+                            lng = parseFloat(geocodeData[0].lon);
+                        }
+                    } catch (error) {
+                        console.warn('Error en geocodificación:', error);
+                    }
+                }
+
+                // Validar coordenadas antes de mostrar el mapa
+                if (lat && lng && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng))) {
+                    // Asegurar que el contenedor esté visible y tenga tamaño
+                    mapContainer.style.display = 'block';
+                    mapContainer.style.height = '350px';
+                    mapContainer.style.width = '100%';
+                    
+                    // Limpiar contenido previo
+                    mapContainer.innerHTML = '';
+                    
+                    // Esperar a que el DOM esté completamente listo
+                    setTimeout(() => {
+                        try {
+                            // Verificar que Leaflet esté disponible
+                            if (typeof L === 'undefined') {
+                                console.error('Leaflet no está cargado');
+                                mapContainer.innerHTML = '<div class="alert alert-warning p-3 m-0">Error: La librería de mapas no está cargada. Por favor, recarga la página.</div>';
+                                return;
+                            }
+                            
+                            // Limpiar cualquier mapa anterior
+                            if (window.megaEventoMapa) {
+                                try {
+                                    window.megaEventoMapa.remove();
+                                } catch (e) {
+                                    console.warn('Error al remover mapa anterior:', e);
+                                }
+                            }
+                            
+                            const latNum = parseFloat(lat);
+                            const lngNum = parseFloat(lng);
+                            
+                            // Inicializar el mapa con opciones mejoradas
+                            const map = L.map('mapContainer', {
+                                zoomControl: true,
+                                scrollWheelZoom: true,
+                                doubleClickZoom: true,
+                                boxZoom: true,
+                                keyboard: true,
+                                dragging: true,
+                                touchZoom: true
+                            }).setView([latNum, lngNum], 13);
+                            
+                            // Guardar referencia global
+                            window.megaEventoMapa = map;
+                            
+                            // Agregar capa de tiles con opciones mejoradas
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
+                                attribution: '© OpenStreetMap contributors',
+                                maxZoom: 19,
+                                minZoom: 3
             }).addTo(map);
-            L.marker([{{ $megaEvento->lat }}, {{ $megaEvento->lng }}]).addTo(map).bindPopup('{{ $megaEvento->ubicacion ?? "Ubicación del mega evento" }}');
-        });
-        @endif
+                            
+                            // Esperar a que los tiles se carguen
+                            map.whenReady(() => {
+                                // Agregar marcador con popup mejorado
+                                const marker = L.marker([latNum, lngNum]).addTo(map);
+                                const popupContent = `
+                                    <div style="padding: 0.5rem; min-width: 200px;">
+                                        <strong style="color: #2c3e50; font-size: 1rem; display: block; margin-bottom: 0.25rem;">${direccionCompleta || 'Ubicación del mega evento'}</strong>
+                                    </div>
+                                `;
+                                marker.bindPopup(popupContent).openPopup();
+                                
+                                // Ajustar el mapa múltiples veces para asegurar renderizado completo
+                                setTimeout(() => {
+                                    map.invalidateSize();
+                                }, 100);
+                                
+                                setTimeout(() => {
+                                    map.invalidateSize();
+                                }, 300);
+                                
+                                setTimeout(() => {
+                                    map.invalidateSize();
+                                }, 500);
+                                
+                                // Forzar actualización después de un segundo
+                                setTimeout(() => {
+                                    map.invalidateSize();
+                                    map.setView([latNum, lngNum], map.getZoom());
+                                }, 1000);
+                            });
+                            
+                        } catch (error) {
+                            console.error('Error inicializando mapa:', error);
+                            mapContainer.innerHTML = `<div class="alert alert-danger p-3 m-0">Error al cargar el mapa: ${error.message}</div>`;
+                        }
+                    }, 500);
+                } else {
+                    mapContainer.style.display = 'none';
+                }
+            };
+
+            // Inicializar el mapa cuando el DOM esté listo
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', inicializarMapa);
+            } else {
+                inicializarMapa();
+            }
+        }
     </script>
 </body>
 </html>

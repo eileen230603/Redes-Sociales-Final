@@ -34,50 +34,141 @@ class EventController extends Controller
     }
 
     /**
+     * Normalizar URL del avatar de una empresa
+     */
+    private function normalizarAvatarUrl($avatar)
+    {
+        if (!$avatar) return null;
+        
+        // Si ya es una URL completa, verificar si tiene IPs antiguas y reemplazarlas
+        if (str_starts_with($avatar, 'http://') || str_starts_with($avatar, 'https://')) {
+            // Obtener la URL base actual
+            $baseUrl = env('PUBLIC_APP_URL', env('APP_URL'));
+            if (empty($baseUrl) && app()->runningInConsole() === false) {
+                try {
+                    $request = request();
+                    if ($request) {
+                        $baseUrl = $request->getSchemeAndHttpHost();
+                    }
+                } catch (\Exception $e) {
+                    // Si falla, usar el valor por defecto
+                }
+            }
+            if (empty($baseUrl)) {
+                $baseUrl = 'http://127.0.0.1:8000';
+            }
+            
+            // Reemplazar IPs antiguas con la URL actual
+            $avatar = str_replace('http://10.26.15.110:8000', $baseUrl, $avatar);
+            $avatar = str_replace('https://10.26.15.110:8000', $baseUrl, $avatar);
+            $avatar = str_replace('http://192.168.0.6:8000', $baseUrl, $avatar);
+            $avatar = str_replace('https://192.168.0.6:8000', $baseUrl, $avatar);
+            
+            return $avatar;
+        }
+        
+        // Obtener la URL base
+        $baseUrl = env('PUBLIC_APP_URL', env('APP_URL'));
+        if (empty($baseUrl) && app()->runningInConsole() === false) {
+            try {
+                $request = request();
+                if ($request) {
+                    $baseUrl = $request->getSchemeAndHttpHost();
+                }
+            } catch (\Exception $e) {
+                // Si falla, usar el valor por defecto
+            }
+        }
+        if (empty($baseUrl)) {
+            $baseUrl = 'http://127.0.0.1:8000';
+        }
+        
+        // Normalizar la ruta
+        if (str_starts_with($avatar, '/storage/')) {
+            return rtrim($baseUrl, '/') . $avatar;
+        } elseif (str_starts_with($avatar, 'storage/')) {
+            return rtrim($baseUrl, '/') . '/storage/' . ltrim($avatar, 'storage/');
+        } else {
+            return rtrim($baseUrl, '/') . '/storage/' . ltrim($avatar, '/');
+        }
+    }
+
+    /**
      * Enriquecer patrocinadores con información completa (avatar y nombre)
      */
-    private function enriquecerPatrocinadores($patrocinadores)
+    private function enriquecerPatrocinadores($patrocinadores, $eventoId = null)
     {
-        if (!is_array($patrocinadores) || empty($patrocinadores)) {
-            return [];
-        }
-
         $enriquecidos = [];
+        
+        // 1. Procesar patrocinadores del campo JSON
+        if (is_array($patrocinadores) && !empty($patrocinadores)) {
         foreach ($patrocinadores as $pat) {
-            // Si es un ID numérico, buscar la empresa
-            if (is_numeric($pat)) {
-                $empresa = Empresa::where('user_id', $pat)->first();
-                if ($empresa) {
-                    $enriquecidos[] = [
-                        'id' => $pat,
-                        'nombre' => $empresa->nombre_empresa,
-                        'avatar' => $empresa->foto_perfil_url ?? null,
-                        'tipo' => 'empresa'
-                    ];
+                $empresaId = null;
+                
+                // Extraer ID de empresa
+                if (is_array($pat) && isset($pat['id'])) {
+                    $empresaId = $pat['id'];
+                } elseif (is_numeric($pat)) {
+                    $empresaId = $pat;
+                } elseif (is_string($pat) && is_numeric($pat)) {
+                    $empresaId = (int)$pat;
                 }
-            } elseif (is_string($pat)) {
-                // Si es un string, puede ser un nombre o un ID como string
-                if (is_numeric($pat)) {
-                    $empresa = Empresa::where('user_id', (int)$pat)->first();
+                
+                // Si tenemos un ID, buscar la empresa
+                if ($empresaId) {
+                    $empresa = Empresa::where('user_id', $empresaId)->first();
                     if ($empresa) {
+                        // Usar el accessor foto_perfil_url igual que con el creador
+                        $fotoPerfil = $empresa->foto_perfil_url ?? null;
+                        
                         $enriquecidos[] = [
-                            'id' => (int)$pat,
+                            'id' => $empresaId,
                             'nombre' => $empresa->nombre_empresa,
-                            'avatar' => $empresa->foto_perfil_url ?? null,
+                            'foto_perfil' => $fotoPerfil,
                             'tipo' => 'empresa'
                         ];
                     }
-                } else {
+                } elseif (is_string($pat) && !is_numeric($pat)) {
                     // Si es solo texto, mantenerlo pero sin avatar
                     $enriquecidos[] = [
                         'id' => null,
                         'nombre' => $pat,
-                        'avatar' => null,
+                        'foto_perfil' => null,
                         'tipo' => 'texto'
                     ];
                 }
             }
         }
+        
+        // 2. Si se proporciona eventoId, también obtener patrocinadores desde la tabla
+        if ($eventoId) {
+            $patrocinadoresTabla = EventoEmpresaParticipacion::where('evento_id', $eventoId)
+                ->where('tipo_colaboracion', 'Patrocinador')
+                ->where('activo', true)
+                ->with('empresa')
+                ->get();
+            
+            foreach ($patrocinadoresTabla as $participacion) {
+                if ($participacion->empresa) {
+                    $empresa = $participacion->empresa;
+                    $empresaId = $empresa->user_id;
+                    // Verificar si ya está en la lista
+                    $existe = collect($enriquecidos)->contains('id', $empresaId);
+                    if (!$existe) {
+                        // Usar el accessor foto_perfil_url igual que con el creador
+                        $fotoPerfil = $empresa->foto_perfil_url ?? null;
+                        
+                        $enriquecidos[] = [
+                            'id' => $empresaId,
+                            'nombre' => $empresa->nombre_empresa,
+                            'foto_perfil' => $fotoPerfil,
+                            'tipo' => 'empresa'
+                        ];
+                    }
+                }
+            }
+        }
+        
         return $enriquecidos;
     }
 
@@ -418,7 +509,7 @@ class EventController extends Controller
             // Enriquecer patrocinadores, auspiciadores, invitados y empresas colaboradoras con información completa
             // Y calcular estado dinámico basado en fechas
             $eventos->transform(function ($e) {
-                $e->patrocinadores = $this->enriquecerPatrocinadores($this->safeArray($e->patrocinadores));
+                $e->patrocinadores = $this->enriquecerPatrocinadores($this->safeArray($e->patrocinadores), $e->id);
                 $e->auspiciadores = $this->enriquecerAuspiciadores($this->safeArray($e->auspiciadores ?? []));
                 $e->invitados = $this->enriquecerInvitados($this->safeArray($e->invitados));
                 $e->empresas_colaboradoras = $this->enriquecerEmpresasColaboradoras($e->id);
@@ -455,6 +546,25 @@ class EventController extends Controller
             
             $query = Evento::where('estado', 'publicado');
             
+            // Excluir eventos finalizados
+            $query->where(function($q) {
+                $q->where('estado', '!=', 'finalizado')
+                  ->orWhereNull('fecha_finalizacion')
+                  ->orWhere('fecha_finalizacion', '>', now());
+            });
+            
+            // Si el usuario está autenticado, excluir eventos en los que ya participa
+            if ($request->user()) {
+                $userId = $request->user()->id_usuario;
+                $eventosParticipando = EventoParticipacion::where('externo_id', $userId)
+                    ->pluck('evento_id')
+                    ->toArray();
+                
+                if (!empty($eventosParticipando)) {
+                    $query->whereNotIn('id', $eventosParticipando);
+                }
+            }
+            
             // Filtro por tipo de evento (case-insensitive)
             if ($request->has('tipo_evento') && $request->tipo_evento !== '' && $request->tipo_evento !== 'todos') {
                 $tipoEventoFiltro = strtolower(trim($request->tipo_evento));
@@ -475,7 +585,7 @@ class EventController extends Controller
             \Log::info("Eventos publicados encontrados: " . $eventos->count());
 
             $eventos->transform(function ($e) {
-                $e->patrocinadores = $this->enriquecerPatrocinadores($this->safeArray($e->patrocinadores));
+                $e->patrocinadores = $this->enriquecerPatrocinadores($this->safeArray($e->patrocinadores), $e->id);
                 $e->auspiciadores = $this->enriquecerAuspiciadores($this->safeArray($e->auspiciadores ?? []));
                 $e->invitados = $this->enriquecerInvitados($this->safeArray($e->invitados));
                 $e->empresas_colaboradoras = $this->enriquecerEmpresasColaboradoras($e->id);
@@ -509,16 +619,22 @@ class EventController extends Controller
     public function show($id)
     {
         try {
+            // Obtener el evento sin caché para asegurar datos actualizados
+            // Usar fresh() para forzar una nueva consulta a la base de datos
             $evento = Evento::with('ong')->find($id);
-
+            
             if (!$evento) {
                 return response()->json([
                     "success" => false,
                     "message" => "Evento no encontrado"
                 ], 404);
             }
+            
+            // Forzar refresh para obtener los datos más recientes
+            $evento = $evento->fresh(['ong']);
 
-            $evento->patrocinadores = $this->enriquecerPatrocinadores($this->safeArray($evento->patrocinadores));
+            // Obtener patrocinadores (desde JSON y tabla, sin duplicados)
+            $evento->patrocinadores = $this->enriquecerPatrocinadores($this->safeArray($evento->patrocinadores), $evento->id);
             $evento->auspiciadores = $this->enriquecerAuspiciadores($this->safeArray($evento->auspiciadores ?? []));
             $evento->invitados = $this->enriquecerInvitados($this->safeArray($evento->invitados));
             
@@ -801,10 +917,17 @@ class EventController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            \Log::info("=== INICIO ACTUALIZACIÓN EVENTO ID: {$id} ===");
+            \Log::info("Datos recibidos:", $request->all());
+            
             $evento = Evento::find($id);
 
-            if (!$evento)
+            if (!$evento) {
+                \Log::error("Evento no encontrado: {$id}");
                 return response()->json(["success" => false, "message" => "Evento no encontrado"], 404);
+            }
+
+            \Log::info("Evento encontrado. Estado actual: {$evento->estado}, Título: {$evento->titulo}");
 
             $validator = Validator::make($request->all(), [
                 'titulo' => 'sometimes|required|string|max:255',
@@ -827,6 +950,7 @@ class EventController extends Controller
             ]);
 
             if ($validator->fails()) {
+                \Log::error("Errores de validación:", $validator->errors()->toArray());
                 return response()->json([
                     "success" => false,
                     "errors" => $validator->errors()
@@ -834,6 +958,7 @@ class EventController extends Controller
             }
 
             $data = $validator->validated();
+            \Log::info("Datos validados:", $data);
 
             // Procesar imágenes: obtener las existentes primero
             $imagenesActuales = $this->safeArray($evento->getRawOriginal('imagenes') ?? []);
@@ -891,8 +1016,16 @@ class EventController extends Controller
             
             // TRANSACCIÓN: Actualizar evento + sincronizar patrocinadores
             DB::transaction(function () use ($evento, $data, $request, $seEstaFinalizando) {
+                \Log::info("Iniciando transacción de actualización");
+                \Log::info("Datos a actualizar:", $data);
+                
                 // 1. Actualizar evento
-            $evento->update($data);
+                $resultado = $evento->update($data);
+                \Log::info("Resultado de update(): " . ($resultado ? 'true' : 'false'));
+                
+                // Refrescar el modelo para obtener los datos actualizados
+                $evento->refresh();
+                \Log::info("Evento refrescado. Nuevo estado: {$evento->estado}, Nuevo título: {$evento->titulo}");
                 
                 // 2. Si se está finalizando el evento, crear notificación para la ONG
                 if ($seEstaFinalizando && $evento->ong_id) {
@@ -979,11 +1112,25 @@ class EventController extends Controller
             // Forzar refresh para obtener las imágenes procesadas
             $evento->refresh();
             $evento->makeVisible('imagenes');
+            
+            // Obtener el evento actualizado de la base de datos directamente
+            $eventoActualizado = Evento::find($id);
+            if ($eventoActualizado) {
+                \Log::info("Evento final después de actualización:");
+                \Log::info("- ID: {$eventoActualizado->id}");
+                \Log::info("- Título: {$eventoActualizado->titulo}");
+                \Log::info("- Estado: {$eventoActualizado->estado}");
+                \Log::info("- Lat: " . ($eventoActualizado->lat ?? 'null'));
+                \Log::info("- Lng: " . ($eventoActualizado->lng ?? 'null'));
+                \Log::info("- Ciudad: " . ($eventoActualizado->ciudad ?? 'null'));
+                \Log::info("- Dirección: " . ($eventoActualizado->direccion ?? 'null'));
+            }
+            \Log::info("=== FIN ACTUALIZACIÓN EVENTO ID: {$id} ===");
 
             return response()->json([
                 "success" => true,
                 "message" => "Evento actualizado correctamente",
-                "evento" => $evento->fresh()
+                "evento" => $eventoActualizado ? $eventoActualizado->fresh() : $evento->fresh()
             ]);
 
         } catch (\Throwable $e) {
@@ -1065,7 +1212,7 @@ class EventController extends Controller
             
             // Enriquecer datos y agregar estado dinámico
             $eventos->transform(function ($e) {
-                $e->patrocinadores = $this->enriquecerPatrocinadores($this->safeArray($e->patrocinadores));
+                $e->patrocinadores = $this->enriquecerPatrocinadores($this->safeArray($e->patrocinadores), $e->id);
                 $e->auspiciadores = $this->enriquecerAuspiciadores($this->safeArray($e->auspiciadores ?? []));
                 $e->invitados = $this->enriquecerInvitados($this->safeArray($e->invitados));
                 $e->empresas_colaboradoras = $this->enriquecerEmpresasColaboradoras($e->id);
@@ -1109,6 +1256,15 @@ class EventController extends Controller
                 ->distinct('externo_id')
                 ->count('externo_id');
             
+            // Calcular participantes únicos no registrados (por email único)
+            $participantesNoRegistradosUnicos = EventoParticipanteNoRegistrado::whereIn('evento_id', $eventosIds)
+                ->whereNotNull('email')
+                ->distinct('email')
+                ->count('email');
+            
+            // Total de participantes únicos (registrados + no registrados únicos)
+            $totalParticipantesUnicos = $totalVoluntariosUnicos + $participantesNoRegistradosUnicos;
+            
             $totalReacciones = EventoReaccion::whereIn('evento_id', $eventosIds)->count();
             $totalCompartidos = EventoCompartido::whereIn('evento_id', $eventosIds)->count();
             
@@ -1121,9 +1277,17 @@ class EventController extends Controller
                 ? round(($totalParticipantesAsistieron / $totalParticipantesAprobados) * 100, 2) 
                 : 0;
             
-            $engagementRate = $totalParticipantes > 0 
-                ? round((($totalReacciones + $totalCompartidos) / $totalParticipantes) * 100, 2) 
+            // Engagement Rate: usar participantes únicos para evitar valores > 100%
+            // Si no hay participantes únicos, usar totalParticipantes como fallback
+            $denominadorEngagement = $totalParticipantesUnicos > 0 ? $totalParticipantesUnicos : $totalParticipantes;
+            $engagementRate = $denominadorEngagement > 0 
+                ? round((($totalReacciones + $totalCompartidos) / $denominadorEngagement) * 100, 2) 
                 : 0;
+            
+            // Limitar el Engagement Rate al 100% máximo (por si acaso)
+            if ($engagementRate > 100) {
+                $engagementRate = 100;
+            }
             
             $tasaFinalizacion = $estadisticas['total'] > 0 
                 ? round(($estadisticas['finalizados'] / $estadisticas['total']) * 100, 2) 
@@ -1311,13 +1475,26 @@ class EventController extends Controller
     public function empresasDisponibles()
     {
         try {
-            $empresas = Empresa::select('user_id', 'nombre_empresa', 'descripcion')
+            $empresas = Empresa::select('user_id', 'nombre_empresa', 'descripcion', 'foto_perfil', 'NIT')
                 ->get()
                 ->map(function ($empresa) {
+                    // Construir URL completa de la foto de perfil
+                    $fotoPerfil = null;
+                    if ($empresa->foto_perfil) {
+                        $baseUrl = env('PUBLIC_APP_URL', env('APP_URL', 'http://192.168.0.6:8000'));
+                        if (strpos($empresa->foto_perfil, 'http://') === 0 || strpos($empresa->foto_perfil, 'https://') === 0) {
+                            $fotoPerfil = $empresa->foto_perfil;
+                        } else {
+                            $fotoPerfil = rtrim($baseUrl, '/') . '/storage/' . ltrim($empresa->foto_perfil, '/');
+                        }
+                    }
+                    
                     return [
                         'id' => $empresa->user_id,
                         'nombre' => $empresa->nombre_empresa,
-                        'descripcion' => $empresa->descripcion ?? ''
+                        'descripcion' => $empresa->descripcion ?? '',
+                        'foto_perfil' => $fotoPerfil,
+                        'NIT' => $empresa->NIT ?? null
                     ];
                 });
 

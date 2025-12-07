@@ -704,9 +704,84 @@ async function cargarMisParticipaciones() {
 }
 
 /**
- * Descargar QR del ticket como imagen
+ * Descargar QR del ticket como imagen (solo una vez)
  */
-function descargarQRTicket(ticketCodigo, tituloEvento) {
+async function descargarQRTicket(ticketCodigo, tituloEvento) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Debes iniciar sesión para descargar el QR del ticket'
+            });
+        } else {
+            alert('Debes iniciar sesión para descargar el QR del ticket');
+        }
+        return;
+    }
+
+    // Mostrar indicador de carga
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Verificando...',
+            text: 'Validando descarga del QR',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    }
+
+    try {
+        // Primero registrar la descarga en el backend
+        const apiUrl = window.API_BASE_URL || 'http://192.168.0.6:8000';
+        const res = await fetch(`${apiUrl}/api/registrar-descarga-qr`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                ticket_codigo: ticketCodigo
+            })
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+            // Si ya fue descargado, mostrar mensaje específico
+            if (data.ya_descargado) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'QR ya descargado',
+                        html: `El QR de este ticket ya fue descargado anteriormente.<br><small>Fecha: ${data.fecha_descarga_anterior || 'No disponible'}</small><br><br><small>Solo se permite una descarga por ticket por seguridad.</small>`,
+                        confirmButtonText: 'Entendido'
+                    });
+                } else {
+                    alert(`El QR de este ticket ya fue descargado anteriormente (${data.fecha_descarga_anterior || 'No disponible'}). Solo se permite una descarga por ticket.`);
+                }
+            } else {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.error || 'No se pudo autorizar la descarga del QR'
+                    });
+                } else {
+                    alert(data.error || 'No se pudo autorizar la descarga del QR');
+                }
+            }
+            return;
+        }
+
+        // Si la descarga fue autorizada, proceder a generar y descargar el QR
+        if (typeof Swal !== 'undefined') {
+            Swal.close();
+        }
+
     // Cargar librería QRCode si no está disponible
     const generarYDescargarQR = () => {
         try {
@@ -741,15 +816,42 @@ function descargarQRTicket(ticketCodigo, tituloEvento) {
                         a.click();
                         document.body.removeChild(a);
                         URL.revokeObjectURL(url);
+                            
+                            // Mostrar mensaje de éxito
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: '¡QR descargado!',
+                                    text: 'El código QR del ticket se ha descargado correctamente',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+                            }
+                        });
+                    } else {
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Error al generar el código QR'
                     });
                 } else {
                     alert('Error al generar el código QR');
+                        }
                 }
                 document.body.removeChild(container);
             }, 500);
         } catch (e) {
             console.error('Error generando QR:', e);
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al generar el código QR. Por favor, intenta nuevamente.'
+                    });
+                } else {
             alert('Error al generar el código QR. Por favor, intenta nuevamente.');
+                }
         }
     };
 
@@ -758,11 +860,32 @@ function descargarQRTicket(ticketCodigo, tituloEvento) {
         script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
         script.onload = generarYDescargarQR;
         script.onerror = () => {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'No se pudo cargar la librería de QR. Por favor, recarga la página e intenta nuevamente.'
+                    });
+                } else {
             alert('No se pudo cargar la librería de QR. Por favor, recarga la página e intenta nuevamente.');
+                }
         };
         document.head.appendChild(script);
     } else {
         generarYDescargarQR();
+        }
+
+    } catch (error) {
+        console.error('Error descargando QR:', error);
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al procesar la descarga. Por favor, intenta nuevamente.'
+            });
+        } else {
+            alert('Error al procesar la descarga. Por favor, intenta nuevamente.');
+        }
     }
 }
 

@@ -12,40 +12,47 @@
     </div>
 
     <div id="megaEventoContent" style="display: none;">
-        <!-- Banner Superior con Imagen Principal (igual que eventos) -->
-        <div id="eventBanner" class="position-relative" style="height: 400px; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); overflow: hidden;">
-            <div id="bannerImage" class="w-100 h-100" style="background-size: cover; background-position: center; opacity: 0.3;"></div>
-            <div class="position-absolute" style="top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to bottom, rgba(12, 43, 68, 0.3) 0%, rgba(0, 163, 108, 0.6) 100%);"></div>
-            <div class="position-absolute" style="bottom: 0; left: 0; right: 0; padding: 2rem; color: white;">
+        <!-- Banner Superior con Imagen Principal - Mejorado -->
+        <div id="eventBanner" class="position-relative" style="height: 450px; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); overflow: hidden; border-radius: 0 0 24px 24px;">
+            <div id="bannerImage" class="w-100 h-100" style="background-size: cover; background-position: center; opacity: 0.25; transition: transform 0.5s ease;"></div>
+            <div class="position-absolute" style="top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to bottom, rgba(12, 43, 68, 0.4) 0%, rgba(0, 163, 108, 0.7) 100%);"></div>
+            <div class="position-absolute" style="bottom: 0; left: 0; right: 0; padding: 3rem 2rem; color: white;">
                 <div class="container">
-                    <h1 id="titulo" class="mb-2" style="font-size: 2.5rem; font-weight: 700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">-</h1>
-                    <div class="d-flex flex-wrap align-items-center gap-3">
-                        <span id="categoriaBadge" class="badge badge-light" style="font-size: 0.9rem; padding: 0.5em 1em;">-</span>
-                        <span id="estadoBadge" class="badge" style="font-size: 0.9rem; padding: 0.5em 1em;">-</span>
-                        <span id="publicoBadge" class="badge" style="font-size: 0.9rem; padding: 0.5em 1em;">-</span>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="mr-3" style="width: 64px; height: 64px; background: rgba(255,255,255,0.15); border-radius: 16px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); box-shadow: 0 4px 16px rgba(0,0,0,0.2); animation: pulse 2s ease-in-out infinite;">
+                            <i class="fas fa-star" style="font-size: 2rem;"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <h1 id="titulo" class="mb-2" style="font-size: 2.75rem; font-weight: 700; text-shadow: 2px 2px 8px rgba(0,0,0,0.5); letter-spacing: -0.5px; line-height: 1.2; animation: fadeInUp 0.6s ease-out;">-</h1>
+                            <div class="d-flex flex-wrap align-items-center" style="gap: 0.75rem;">
+                                <span id="categoriaBadge" class="badge" style="font-size: 0.95rem; padding: 0.6em 1.2em; background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); border-radius: 50px; font-weight: 500; animation: fadeInUp 0.8s ease-out;">-</span>
+                                <span id="estadoBadge" class="badge" style="font-size: 0.95rem; padding: 0.6em 1.2em; border-radius: 50px; font-weight: 500; animation: fadeInUp 0.9s ease-out;">-</span>
+                                <span id="publicoBadge" class="badge" style="font-size: 0.95rem; padding: 0.6em 1.2em; border-radius: 50px; font-weight: 500; animation: fadeInUp 1s ease-out;">-</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="container mt-4">
-            <!-- Botones de Acción -->
-            <div class="d-flex justify-content-end mb-4 flex-wrap" style="gap: 0.5rem;">
-                <a href="{{ route('ong.mega-eventos.index') }}" class="btn btn-secondary">
+            <!-- Botones de Acción - Mejorados -->
+            <div class="d-flex justify-content-end mb-4 flex-wrap" style="gap: 0.75rem;">
+                <a href="{{ route('ong.mega-eventos.index') }}" class="btn btn-outline-secondary" style="border-radius: 12px; padding: 0.6rem 1.5rem; font-weight: 500; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'">
                     <i class="fas fa-arrow-left mr-2"></i> Volver
                 </a>
-                <button class="btn btn-outline-danger" id="btnReaccionar">
+                <button class="btn btn-outline-danger" id="btnReaccionar" style="border-radius: 12px; padding: 0.6rem 1.5rem; font-weight: 500; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(220,53,69,0.2);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(220,53,69,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(220,53,69,0.2)'">
                     <i class="fas fa-heart mr-2" id="iconoCorazon"></i>
                     <span id="textoReaccion">Me gusta</span>
                     <span id="contadorReacciones" class="badge badge-light ml-2">0</span>
                 </button>
-                <button class="btn btn-primary" id="btnCompartir">
+                <button class="btn btn-primary" id="btnCompartir" style="border-radius: 12px; padding: 0.6rem 1.5rem; font-weight: 500; transition: all 0.3s ease; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border: none; box-shadow: 0 2px 8px rgba(12,43,68,0.2);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(12,43,68,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(12,43,68,0.2)'">
                     <i class="fas fa-share-alt mr-2"></i> Compartir <span id="contadorCompartidos" class="badge badge-light ml-2">0</span>
                 </button>
-                <a href="#" id="seguimientoLink" class="btn btn-info">
+                <a href="#" id="seguimientoLink" class="btn btn-info" style="border-radius: 12px; padding: 0.6rem 1.5rem; font-weight: 500; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(23,162,184,0.2);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(23,162,184,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(23,162,184,0.2)'">
                     <i class="fas fa-chart-line mr-2"></i> Seguimiento
                 </a>
-                <a href="#" id="editLink" class="btn btn-success">
+                <a href="#" id="editLink" class="btn btn-success" style="border-radius: 12px; padding: 0.6rem 1.5rem; font-weight: 500; transition: all 0.3s ease; background: linear-gradient(135deg, #00A36C 0%, #008a5a 100%); border: none; box-shadow: 0 2px 8px rgba(0,163,108,0.2);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,163,108,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,163,108,0.2)'">
                     <i class="fas fa-edit mr-2"></i> Editar Mega Evento
                 </a>
             </div>
@@ -53,174 +60,260 @@
             <div class="row">
                 <!-- Columna Principal -->
                 <div class="col-lg-8">
-                <div class="card mb-4">
-                    <div class="card-header bg-white">
-                        <h5 class="card-title mb-0 text-dark">
-                            <i class="fas fa-info-circle mr-2 text-info"></i> Información del Mega Evento
+                <!-- Descripción -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; animation: fadeInUp 0.5s ease-out;">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="section-icon mr-3">
+                                <i class="fas fa-align-left"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem;">
+                                    Descripción
                         </h5>
+                                <p class="mb-0 text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">
+                                    Información detallada del mega evento
+                                </p>
                     </div>
-                    <div class="card-body">
-                        <div class="mb-4">
-                            <label class="font-weight-bold text-dark mb-2">
-                                <i class="fas fa-align-left mr-2 text-primary"></i>Descripción
-                            </label>
-                            <p id="descripcion" class="mb-0 text-muted" style="line-height: 1.8;">-</p>
+                        </div>
+                        <p id="descripcion" class="mb-0" style="color: #495057; line-height: 1.8; font-size: 1rem;">-</p>
+                    </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <div class="d-flex align-items-start">
-                                    <i class="fas fa-calendar mr-3 mt-1 text-info"></i>
+                <!-- Información del Mega Evento -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; animation: fadeInUp 0.6s ease-out;">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="section-icon mr-3">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
                                     <div>
-                                        <h6 class="mb-1 font-weight-bold text-dark">Fecha de Inicio</h6>
-                                        <p id="fecha_inicio" class="mb-0 text-muted">-</p>
+                                <h5 class="mb-0" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem;">
+                                    Información del Mega Evento
+                                </h5>
+                                <p class="mb-0 text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">
+                                    Detalles importantes del evento
+                                </p>
+                                    </div>
+                                </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <div class="info-item">
+                                    <div class="info-icon">
+                                        <i class="fas fa-calendar-alt"></i>
+                            </div>
+                                    <div class="info-content">
+                                        <h6 class="info-label">Fecha de Inicio</h6>
+                                        <p id="fecha_inicio" class="info-value">-</p>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <div class="d-flex align-items-start">
-                                    <i class="fas fa-calendar-check mr-3 mt-1 text-success"></i>
-                                    <div>
-                                        <h6 class="mb-1 font-weight-bold text-dark">Fecha de Fin</h6>
-                                        <p id="fecha_fin" class="mb-0 text-muted">-</p>
+                            <div class="col-md-6 mb-4">
+                                <div class="info-item">
+                                    <div class="info-icon">
+                                        <i class="fas fa-calendar-check"></i>
+                                                </div>
+                                    <div class="info-content">
+                                        <h6 class="info-label">Fecha de Fin</h6>
+                                        <p id="fecha_fin" class="info-value">-</p>
+                                            </div>
+                                        </div>
                                     </div>
+                            <div class="col-md-6 mb-4">
+                                <div class="info-item">
+                                    <div class="info-icon">
+                                        <i class="fas fa-users"></i>
+                                </div>
+                                    <div class="info-content">
+                                        <h6 class="info-label">Capacidad Máxima</h6>
+                                        <p id="capacidad_maxima" class="info-value">-</p>
+                            </div>
                                 </div>
                             </div>
                             <div class="col-md-12 mb-3">
-                                <div class="card bg-light">
-                                    <div class="card-body">
-                                        <div class="d-flex align-items-start">
-                                            <i class="fas fa-map-marker-alt mr-3 mt-1 text-danger fa-2x"></i>
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-2 font-weight-bold text-dark">Ubicación del Evento</h6>
-                                                <div id="ubicacionContainer">
-                                                    <p id="ubicacion" class="mb-0 text-muted">-</p>
-                                                </div>
-                                            </div>
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="section-icon mr-3">
+                                        <i class="fas fa-map"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-0" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem;">
+                                            Mapa de Ubicación
+                                        </h5>
+                                    </div>
+                                </div>
+                                <div id="map" class="rounded" style="height: 350px; border: 1px solid #e9ecef; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.3s ease;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.12)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'"></div>
+                            </div>
+                            <div class="col-md-12 mb-4">
+                                <div class="info-item" style="background: linear-gradient(135deg, rgba(12, 43, 68, 0.05) 0%, rgba(0, 163, 108, 0.05) 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid #00A36C;">
+                                    <div class="info-icon" style="font-size: 1.5rem; color: #00A36C;">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <h6 class="info-label" style="color: #0C2B44; font-weight: 600; margin-bottom: 0.5rem;">Ubicación del Evento</h6>
+                                        <div id="ubicacionContainer">
+                                            <p id="ubicacion" class="info-value" style="font-size: 1rem; font-weight: 500;">-</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <div class="d-flex align-items-start">
-                                    <i class="fas fa-users mr-3 mt-1 text-success"></i>
-                                    <div>
-                                        <h6 class="mb-1 font-weight-bold text-dark">Capacidad Máxima</h6>
-                                        <p id="capacidad_maxima" class="mb-0 text-muted">-</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-12 mb-3">
-                                <label class="font-weight-bold text-dark mb-2">
-                                    <i class="fas fa-map mr-2 text-danger"></i>Mapa de Ubicación
-                                </label>
-                                <div id="map" class="rounded" style="height: 350px; border: 1px solid #ced4da; overflow: hidden;"></div>
-                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Imágenes -->
-                <div class="card mb-4">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0 text-dark">
-                            <i class="fas fa-images mr-2 text-warning"></i> Imágenes Promocionales
+                <!-- Galería de Imágenes -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; animation: fadeInUp 0.7s ease-out;">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <div class="d-flex align-items-center">
+                                <div class="section-icon mr-3">
+                                    <i class="fas fa-images"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem;">
+                                        Galería de Imágenes
                         </h5>
-                        <span id="imagenesCount" class="badge badge-primary">0</span>
+                                    <p class="mb-0 text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">
+                                        Imágenes promocionales del mega evento
+                                    </p>
                     </div>
-                    <div class="card-body">
+                            </div>
+                            <span id="imagenesCount" class="badge" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; font-size: 0.9rem; padding: 0.5em 1em; border-radius: 50px; font-weight: 600;">0</span>
+                        </div>
                         <div id="imagenesContainer" class="row">
-                            <div class="col-12 text-center py-3">
-                                <div class="spinner-border text-primary" role="status" style="width: 2rem; height: 2rem;">
+                            <div class="col-12 text-center py-4">
+                                <div class="spinner-border" role="status" style="color: #00A36C; width: 3rem; height: 3rem;">
                                     <span class="sr-only">Cargando...</span>
                                 </div>
-                                <p class="mt-2 text-muted" style="font-size: 0.9rem;">Cargando imágenes...</p>
+                                <p class="mt-3 text-muted">Cargando imágenes...</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Reacciones (Favoritos) -->
-                <div class="card mb-4">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0 text-dark">
-                            <i class="fas fa-heart mr-2 text-danger"></i> Reacciones y Favoritos
+                <!-- Reacciones y Favoritos -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; animation: fadeInUp 0.8s ease-out;">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <div class="d-flex align-items-center">
+                                <div class="section-icon mr-3">
+                                    <i class="fas fa-heart"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem;">
+                                        Reacciones y Favoritos
                         </h5>
-                        <button class="btn btn-sm btn-secondary btn-actualizar-reacciones" onclick="cargarReaccionesMegaEvento()">
+                                    <p class="mb-0 text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">
+                                        Usuarios que han marcado este mega evento como favorito
+                                    </p>
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary btn-actualizar-reacciones" onclick="cargarReaccionesMegaEvento()" style="border-radius: 8px; padding: 0.4rem 1rem; transition: all 0.3s ease;" onmouseover="this.style.transform='rotate(180deg)'" onmouseout="this.style.transform='rotate(0deg)'">
                             <i class="fas fa-sync mr-1"></i> Actualizar
                         </button>
                     </div>
-                    <div class="card-body">
-                        <p class="mb-3 text-muted">
-                            Usuarios que han marcado este mega evento como favorito con un corazón.
-                        </p>
                         <div id="reaccionesContainer">
-                            <div class="text-center py-3">
-                                <div class="spinner-border text-primary" role="status">
+                            <div class="text-center py-4">
+                                <div class="spinner-border" role="status" style="color: #00A36C; width: 3rem; height: 3rem;">
                                     <span class="sr-only">Cargando...</span>
                                 </div>
-                                <p class="mt-2 text-muted">Cargando reacciones...</p>
+                                <p class="mt-3 text-muted">Cargando reacciones...</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Información Adicional -->
-            <div class="col-md-4">
-                <div class="card mb-4">
-                    <div class="card-header bg-success">
-                        <h6 class="card-title mb-0 text-white">
-                            <i class="fas fa-building mr-2"></i> ONG Organizadora
-                        </h6>
+            <!-- Sidebar - Información Adicional -->
+            <div class="col-lg-4">
+                <!-- ONG Organizadora -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; position: sticky; top: 2rem; animation: fadeInUp 0.5s ease-out;">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="section-icon mr-3">
+                                <i class="fas fa-building"></i>
                     </div>
-                    <div class="card-body">
-                        <p id="ong_organizadora" class="mb-0 text-muted">-</p>
+                            <div>
+                                <h5 class="mb-0" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem;">
+                                    ONG Organizadora
+                                </h5>
                     </div>
                 </div>
-
-                <div class="card mb-4">
-                    <div class="card-header bg-info">
-                        <h6 class="card-title mb-0 text-white">
-                            <i class="fas fa-calendar mr-2"></i> Fechas del Sistema
-                        </h6>
+                        <div class="info-item">
+                            <div id="ongAvatarContainer" class="mr-3" style="flex-shrink: 0; position: relative;">
+                                <!-- Avatar se cargará aquí dinámicamente -->
                     </div>
-                    <div class="card-body">
-                        <div class="mb-3 pb-3 border-bottom">
-                            <small class="d-block mb-1 font-weight-bold text-dark">Fecha de Creación</small>
-                            <p id="fecha_creacion" class="mb-0 text-muted">-</p>
+                            <div class="info-content">
+                                <p id="ong_organizadora" class="info-value" style="font-size: 1rem; font-weight: 500;">-</p>
                         </div>
-                        <div>
-                            <small class="d-block mb-1 font-weight-bold text-dark">Última Actualización</small>
-                            <p id="fecha_actualizacion" class="mb-0 text-muted">-</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="card mb-4">
-                    <div class="card-header bg-primary">
-                        <h6 class="card-title mb-0 text-white">
-                            <i class="fas fa-cog mr-2"></i> Estado
-                        </h6>
+                <!-- Fechas del Sistema -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; animation: fadeInUp 0.6s ease-out;">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="section-icon mr-3">
+                                <i class="fas fa-calendar-alt"></i>
                     </div>
-                    <div class="card-body">
-                        <div class="mb-3 pb-3 border-bottom">
-                            <small class="d-block mb-1 font-weight-bold text-dark">
-                                <i class="fas fa-flag mr-1 text-info"></i> Estado del Evento
-                            </small>
-                            <div id="estado" class="mb-0">-</div>
+                            <div>
+                                <h5 class="mb-0" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem;">
+                                    Fechas del Sistema
+                                </h5>
                         </div>
-                        <div class="mb-3 pb-3 border-bottom">
-                            <small class="d-block mb-1 font-weight-bold text-dark">
-                                <i class="fas fa-eye mr-1 text-primary"></i> Visibilidad
-                            </small>
-                            <div id="es_publico" class="mb-0">-</div>
+                        </div>
+                        <div class="info-item mb-3 pb-3" style="border-bottom: 1px solid #e9ecef;">
+                            <div class="info-icon">
+                                <i class="fas fa-plus-circle"></i>
+                            </div>
+                            <div class="info-content">
+                                <h6 class="info-label">Fecha de Creación</h6>
+                                <p id="fecha_creacion" class="info-value">-</p>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-sync-alt"></i>
+                            </div>
+                            <div class="info-content">
+                                <h6 class="info-label">Última Actualización</h6>
+                                <p id="fecha_actualizacion" class="info-value">-</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información Adicional -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; animation: fadeInUp 0.7s ease-out;">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="section-icon mr-3">
+                                <i class="fas fa-info-circle"></i>
                         </div>
                         <div>
-                            <small class="d-block mb-1 font-weight-bold text-dark">
-                                <i class="fas fa-power-off mr-1 text-success"></i> Activo
-                            </small>
-                            <div id="activo" class="mb-0">-</div>
+                                <h5 class="mb-0" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem;">
+                                    Información Adicional
+                                </h5>
+                        </div>
+                    </div>
+                        <div class="info-item mb-3 pb-3" style="border-bottom: 1px solid #e9ecef;">
+                            <div class="info-icon">
+                                <i class="fas fa-flag"></i>
+                </div>
+                            <div class="info-content" style="flex: 1;">
+                                <h6 class="info-label" style="font-size: 0.85rem; font-weight: 600; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Estado del Evento</h6>
+                                <div id="estado" class="info-value" style="font-size: 1rem; font-weight: 500;">-</div>
+            </div>
+        </div>
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <div class="info-content" style="flex: 1;">
+                                <h6 class="info-label" style="font-size: 0.85rem; font-weight: 600; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Visibilidad</h6>
+                                <div id="es_publico" class="info-value" style="font-size: 1rem; font-weight: 500;">-</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -276,25 +369,151 @@
 @push('css')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-    /* Estilos con nueva paleta de colores */
-    #megaEventoContent {
-        animation: fadeIn 0.3s ease-in;
+    /* Variables CSS */
+    :root {
+        --primary-color: #0C2B44;
+        --secondary-color: #00A36C;
+        --text-dark: #2c3e50;
+        --text-muted: #6c757d;
+        --border-radius: 16px;
+        --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+        --shadow-md: 0 4px 12px rgba(0,0,0,0.12);
+        --shadow-lg: 0 8px 24px rgba(0,0,0,0.15);
     }
     
+    /* Animaciones */
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }
     }
     
+    @keyframes fadeInUp {
+        from { 
+            opacity: 0; 
+            transform: translateY(30px); 
+        }
+        to { 
+            opacity: 1; 
+            transform: translateY(0); 
+        }
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.05);
+            opacity: 0.9;
+        }
+    }
+
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    /* Contenido principal */
+    #megaEventoContent {
+        animation: fadeIn 0.5s ease-in;
+    }
+
+    /* Banner con efecto hover */
+    #eventBanner:hover #bannerImage {
+        transform: scale(1.05);
+    }
+
+    /* Section Icon (para títulos principales) */
+    .section-icon {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.25rem;
+        box-shadow: 0 4px 12px rgba(12, 43, 68, 0.2);
+        flex-shrink: 0;
+        transition: all 0.3s ease;
+    }
+
+    .section-icon:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(12, 43, 68, 0.3);
+    }
+
+    /* Info Icon (para items individuales) */
+    .info-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #0C2B44;
+        font-size: 1.2rem;
+        margin-right: 1rem;
+        flex-shrink: 0;
+        transition: all 0.3s ease;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 1rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        margin-bottom: 0.5rem;
+    }
+
+    .info-item:hover {
+        background: rgba(12, 43, 68, 0.03);
+        transform: translateX(5px);
+    }
+
+    .info-item:hover .info-icon {
+        color: #00A36C;
+        transform: scale(1.1);
+    }
+
+    .info-content {
+        flex: 1;
+    }
+
+    .info-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .info-value {
+        font-size: 1rem;
+        color: var(--text-dark);
+        margin: 0;
+        font-weight: 500;
+    }
+
+    /* Cards mejoradas */
     .card {
-        transition: box-shadow 0.2s ease;
+        transition: all 0.3s ease;
+        border: none;
     }
     
     .card:hover {
-        box-shadow: 0 4px 12px rgba(12, 43, 68, 0.12) !important;
+        box-shadow: var(--shadow-md) !important;
+        transform: translateY(-2px);
     }
     
-    /* Mejoras en las imágenes */
+    /* Imágenes con efecto hover */
     #imagenesContainer img {
         transition: transform 0.3s ease;
     }
@@ -303,25 +522,25 @@
         transform: scale(1.05);
     }
     
-    /* Estilo para el header */
-    #headerImage {
-        transition: all 0.3s ease;
-    }
-    
-    /* Badges con nueva paleta */
+    /* Badges mejorados */
     .badge {
         font-weight: 500;
         padding: 0.5em 0.8em;
         border-radius: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .badge:hover {
+        transform: scale(1.05);
     }
     
     .badge-success {
-        background-color: #00A36C !important;
+        background: linear-gradient(135deg, #00A36C 0%, #008a5a 100%) !important;
         color: white !important;
     }
     
     .badge-info {
-        background-color: #0C2B44 !important;
+        background: linear-gradient(135deg, #0C2B44 0%, #1a4d6b 100%) !important;
         color: white !important;
     }
     
@@ -331,7 +550,7 @@
     }
     
     .badge-primary {
-        background-color: #0C2B44 !important;
+        background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%) !important;
         color: white !important;
     }
     
@@ -340,14 +559,60 @@
         color: white !important;
     }
     
-    /* Mejoras en el mapa */
+    /* Mapa mejorado */
     #map {
-        transition: box-shadow 0.2s ease;
+        transition: all 0.3s ease;
+        border-radius: 12px;
     }
     
     #map:hover {
-        box-shadow: 0 4px 12px rgba(12, 43, 68, 0.15);
+        box-shadow: var(--shadow-md);
     }
+
+    /* Botones mejorados */
+    .btn {
+        transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn:active {
+        transform: translateY(0);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+        }
+
+        .info-icon {
+            font-size: 1rem;
+        }
+
+        #eventBanner {
+            height: 350px !important;
+        }
+
+        #titulo {
+            font-size: 2rem !important;
+        }
+    }
+
+    /* Animación para reacciones */
+    .reaccion-card {
+        animation: fadeInUp 0.5s ease-out;
+    }
+
+    .reaccion-card:nth-child(1) { animation-delay: 0.1s; }
+    .reaccion-card:nth-child(2) { animation-delay: 0.2s; }
+    .reaccion-card:nth-child(3) { animation-delay: 0.3s; }
+    .reaccion-card:nth-child(4) { animation-delay: 0.4s; }
+    .reaccion-card:nth-child(5) { animation-delay: 0.5s; }
 </style>
 @endpush
 
@@ -582,18 +847,65 @@ function displayMegaEvento(mega) {
             descripcionEl.textContent = descripcion;
         }
 
-        // Fechas
+        // Función para formatear fechas desde PostgreSQL sin conversión de zona horaria
+        function formatearFechaPostgreSQL(fechaStr) {
+            if (!fechaStr) return 'Fecha no especificada';
+            try {
+                let fechaObj;
+                
+                if (typeof fechaStr === 'string') {
+                    fechaStr = fechaStr.trim();
+                    
+                    // Patrones para diferentes formatos de fecha
+                    const mysqlPattern = /^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+                    const isoPattern = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+                    
+                    let match = fechaStr.match(mysqlPattern) || fechaStr.match(isoPattern);
+                    
+                    if (match) {
+                        // Parsear manualmente para evitar conversión UTC
+                        const [, year, month, day, hour, minute, second] = match;
+                        fechaObj = new Date(
+                            parseInt(year, 10),
+                            parseInt(month, 10) - 1,
+                            parseInt(day, 10),
+                            parseInt(hour, 10),
+                            parseInt(minute, 10),
+                            parseInt(second || 0, 10)
+                        );
+                    } else {
+                        fechaObj = new Date(fechaStr);
+                    }
+                } else {
+                    fechaObj = new Date(fechaStr);
+                }
+                
+                if (isNaN(fechaObj.getTime())) return fechaStr;
+                
+                const año = fechaObj.getFullYear();
+                const mes = fechaObj.getMonth();
+                const dia = fechaObj.getDate();
+                const horas = fechaObj.getHours();
+                const minutos = fechaObj.getMinutes();
+                
+                const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 
+                              'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+                
+                const horaFormateada = String(horas).padStart(2, '0');
+                const minutoFormateado = String(minutos).padStart(2, '0');
+                
+                return `${dia} de ${meses[mes]} de ${año}, ${horaFormateada}:${minutoFormateado}`;
+            } catch (error) {
+                console.error('Error formateando fecha:', error);
+                return fechaStr;
+            }
+        }
+
+        // Fechas - Corregidas para obtener correctamente desde PostgreSQL
         const fechaInicioEl = document.getElementById('fecha_inicio');
         if (fechaInicioEl) {
             if (mega.fecha_inicio) {
-                const fechaInicio = new Date(mega.fecha_inicio);
-                fechaInicioEl.textContent = fechaInicio.toLocaleString('es-ES', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
+                fechaInicioEl.textContent = formatearFechaPostgreSQL(mega.fecha_inicio);
             } else {
                 fechaInicioEl.textContent = '-';
             }
@@ -602,14 +914,7 @@ function displayMegaEvento(mega) {
         const fechaFinEl = document.getElementById('fecha_fin');
         if (fechaFinEl) {
             if (mega.fecha_fin) {
-                const fechaFin = new Date(mega.fecha_fin);
-                fechaFinEl.textContent = fechaFin.toLocaleString('es-ES', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
+                fechaFinEl.textContent = formatearFechaPostgreSQL(mega.fecha_fin);
             } else {
                 fechaFinEl.textContent = '-';
             }
@@ -647,14 +952,91 @@ function displayMegaEvento(mega) {
                 : 'Sin límite';
         }
 
-        // ONG Organizadora
+        // ONG Organizadora - Con avatar
         const ongEl = document.getElementById('ong_organizadora');
-        if (ongEl) {
+        const ongAvatarContainer = document.getElementById('ongAvatarContainer');
+        if (ongEl && ongAvatarContainer) {
+            console.log('Mega evento completo:', mega);
+            console.log('Mega evento ONG data:', mega.ong_principal, mega.ongPrincipal);
+            
+            // Intentar obtener la información de la ONG de diferentes formas
+            let ong = null;
             if (mega.ong_principal) {
-                ongEl.textContent = mega.ong_principal.nombre_ong || '-';
-            } else {
-                ongEl.textContent = '-';
+                ong = mega.ong_principal;
+            } else if (mega.ongPrincipal) {
+                ong = mega.ongPrincipal;
             }
+            
+            if (ong) {
+                console.log('ONG encontrada:', ong);
+                console.log('Propiedades de ONG:', Object.keys(ong));
+                const nombreOng = ong.nombre_ong || ong.nombre || '-';
+                ongEl.textContent = nombreOng;
+                
+                // Obtener avatar de la ONG - intentar múltiples propiedades
+                let fotoPerfil = ong.foto_perfil_url || ong.foto_perfil || ong.avatar || null;
+                console.log('Foto perfil ONG (raw):', fotoPerfil);
+                
+                // Si la URL viene del backend, puede que ya esté normalizada, pero verificamos
+                if (fotoPerfil && typeof fotoPerfil === 'string' && fotoPerfil.trim() !== '') {
+                    // Normalizar URL de la imagen
+                    const avatarUrl = buildImageUrl(fotoPerfil);
+                    console.log('Avatar URL normalizada:', avatarUrl);
+                    
+                    // Crear contenedor con posición relativa para el fallback
+                    ongAvatarContainer.innerHTML = '';
+                    ongAvatarContainer.style.position = 'relative';
+                    
+                    // Crear fallback primero (para que esté detrás)
+                    const fallback = document.createElement('div');
+                    fallback.className = 'rounded-circle d-flex align-items-center justify-content-center';
+                    fallback.style.cssText = 'width: 70px; height: 70px; font-weight: 700; font-size: 1.5rem; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: 3px solid #00A36C; box-shadow: 0 4px 12px rgba(0, 163, 108, 0.2); position: absolute; top: 0; left: 0; z-index: 1; display: none;';
+                    const inicial = nombreOng && nombreOng !== '-' ? nombreOng.charAt(0).toUpperCase() : '?';
+                    fallback.textContent = inicial;
+                    ongAvatarContainer.appendChild(fallback);
+                    
+                    // Crear imagen
+                    const img = document.createElement('img');
+                    img.src = avatarUrl;
+                    img.alt = nombreOng;
+                    img.className = 'rounded-circle';
+                    img.style.cssText = 'width: 70px; height: 70px; object-fit: cover; border: 3px solid #00A36C; box-shadow: 0 4px 12px rgba(0, 163, 108, 0.2); display: block; position: relative; z-index: 2;';
+                    
+                    img.onerror = function() {
+                        console.error('Error cargando avatar de ONG:', avatarUrl);
+                        console.error('URL intentada:', this.src);
+                        this.style.display = 'none';
+                        fallback.style.display = 'flex';
+                    };
+                    
+                    img.onload = function() {
+                        console.log('Avatar de ONG cargado correctamente:', avatarUrl);
+                        fallback.style.display = 'none';
+                    };
+                    
+                    ongAvatarContainer.appendChild(img);
+            } else {
+                    console.log('No hay foto_perfil disponible, mostrando inicial');
+                    const inicial = nombreOng && nombreOng !== '-' ? nombreOng.charAt(0).toUpperCase() : '?';
+                    ongAvatarContainer.innerHTML = `
+                        <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                             style="width: 70px; height: 70px; font-weight: 700; font-size: 1.5rem; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: 3px solid #00A36C; box-shadow: 0 4px 12px rgba(0, 163, 108, 0.2);">
+                            ${inicial}
+                        </div>
+                    `;
+                }
+            } else {
+                console.warn('No se encontró información de la ONG organizadora');
+                ongEl.textContent = '-';
+                ongAvatarContainer.innerHTML = `
+                    <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                         style="width: 70px; height: 70px; font-weight: 700; font-size: 1.5rem; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: 3px solid #00A36C; box-shadow: 0 4px 12px rgba(0, 163, 108, 0.2);">
+                        ?
+                    </div>
+                `;
+            }
+        } else {
+            console.error('Elementos del DOM no encontrados:', { ongEl, ongAvatarContainer });
         }
 
         // Fechas del sistema
@@ -690,21 +1072,21 @@ function displayMegaEvento(mega) {
     // Solo establecer el estado en el sidebar si el elemento existe
     const estadoElement = document.getElementById('estado');
     if (estadoElement) {
-        estadoElement.innerHTML = estadoBadgesHTML[mega.estado] || '<span class="badge badge-secondary" style="background: #333333 !important; color: white !important;">' + (mega.estado || 'N/A') + '</span>';
+        const estadoBadgesHTMLStyled = {
+            'planificacion': '<span class="badge badge-secondary" style="background: #6c757d !important; color: white !important; font-size: 0.9rem; padding: 0.5em 1em; border-radius: 50px; font-weight: 600;">Planificación</span>',
+            'activo': '<span class="badge badge-success" style="background: #00A36C !important; color: white !important; font-size: 0.9rem; padding: 0.5em 1em; border-radius: 50px; font-weight: 600;">Activo</span>',
+            'en_curso': '<span class="badge badge-info" style="background: #17a2b8 !important; color: white !important; font-size: 0.9rem; padding: 0.5em 1em; border-radius: 50px; font-weight: 600;">En Curso</span>',
+            'finalizado': '<span class="badge badge-primary" style="background: #0C2B44 !important; color: white !important; font-size: 0.9rem; padding: 0.5em 1em; border-radius: 50px; font-weight: 600;">Finalizado</span>',
+            'cancelado': '<span class="badge badge-danger" style="background: #dc3545 !important; color: white !important; font-size: 0.9rem; padding: 0.5em 1em; border-radius: 50px; font-weight: 600;">Cancelado</span>'
+        };
+        estadoElement.innerHTML = estadoBadgesHTMLStyled[mega.estado] || '<span class="badge badge-secondary" style="background: #6c757d !important; color: white !important; font-size: 0.9rem; padding: 0.5em 1em; border-radius: 50px; font-weight: 600;">' + (mega.estado || 'N/A') + '</span>';
     }
 
     const esPublicoElement = document.getElementById('es_publico');
     if (esPublicoElement) {
         esPublicoElement.innerHTML = mega.es_publico 
-            ? '<span class="badge badge-info" style="background: #0C2B44 !important; color: white !important;">Público</span>' 
-            : '<span class="badge badge-secondary" style="background: #333333 !important; color: white !important;">Privado</span>';
-    }
-
-    const activoElement = document.getElementById('activo');
-    if (activoElement) {
-        activoElement.innerHTML = mega.activo 
-            ? '<span class="badge badge-success" style="background: #00A36C !important; color: white !important;">Activo</span>' 
-            : '<span class="badge badge-danger" style="background: #dc3545 !important; color: white !important;">Inactivo</span>';
+            ? '<span class="badge badge-info" style="background: #17a2b8 !important; color: white !important; font-size: 0.9rem; padding: 0.5em 1em; border-radius: 50px; font-weight: 600;">Público</span>' 
+            : '<span class="badge badge-secondary" style="background: #6c757d !important; color: white !important; font-size: 0.9rem; padding: 0.5em 1em; border-radius: 50px; font-weight: 600;">Privado</span>';
     }
 
         // Imágenes (el modelo ya devuelve URLs completas)
@@ -746,29 +1128,35 @@ function displayMegaEvento(mega) {
             
             const imgWrapper = document.createElement('div');
             imgWrapper.className = 'position-relative overflow-hidden';
-            imgWrapper.style.cssText = 'height: 220px; background: #f8f9fa; border-radius: 12px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.05);';
+            imgWrapper.style.cssText = 'height: 240px; background: #f8f9fa; border-radius: 16px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden;';
             imgWrapper.onmouseenter = function() { 
-                this.style.transform = 'translateY(-4px)'; 
-                this.style.boxShadow = '0 8px 16px rgba(0,0,0,0.1)';
+                this.style.transform = 'translateY(-6px)'; 
+                this.style.boxShadow = '0 8px 24px rgba(12, 43, 68, 0.15)';
             };
             imgWrapper.onmouseleave = function() { 
                 this.style.transform = 'translateY(0)'; 
-                this.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+                this.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
             };
             imgWrapper.onclick = () => abrirImagen(fullUrl, index + 1);
             
-            // Overlay para efecto hover
+            // Overlay para efecto hover mejorado
             const overlay = document.createElement('div');
             overlay.className = 'position-absolute w-100 h-100 d-flex align-items-center justify-content-center';
-            overlay.style.cssText = 'top: 0; left: 0; background: rgba(0,0,0,0); transition: background 0.3s; pointer-events: none;';
-            overlay.onmouseenter = function() { this.style.background = 'rgba(0,0,0,0.1)'; };
-            overlay.onmouseleave = function() { this.style.background = 'rgba(0,0,0,0)'; };
+            overlay.style.cssText = 'top: 0; left: 0; background: linear-gradient(135deg, rgba(12, 43, 68, 0) 0%, rgba(0, 163, 108, 0) 100%); transition: all 0.3s ease; pointer-events: none;';
+            imgWrapper.onmouseenter = function() { 
+                overlay.style.background = 'linear-gradient(135deg, rgba(12, 43, 68, 0.7) 0%, rgba(0, 163, 108, 0.7) 100%)';
+                icon.style.opacity = '1';
+                icon.style.transform = 'scale(1.2)';
+            };
+            imgWrapper.onmouseleave = function() { 
+                overlay.style.background = 'linear-gradient(135deg, rgba(12, 43, 68, 0) 0%, rgba(0, 163, 108, 0) 100%)';
+                icon.style.opacity = '0';
+                icon.style.transform = 'scale(1)';
+            };
             
             const icon = document.createElement('i');
-            icon.className = 'fas fa-search-plus fa-lg text-white';
-            icon.style.cssText = 'opacity: 0; transition: opacity 0.3s;';
-            icon.onmouseenter = function() { this.style.opacity = '1'; };
-            icon.onmouseleave = function() { this.style.opacity = '0'; };
+            icon.className = 'fas fa-search-plus fa-2x text-white';
+            icon.style.cssText = 'opacity: 0; transition: all 0.3s ease; transform: scale(1);';
             
             overlay.appendChild(icon);
             
@@ -826,7 +1214,7 @@ function displayMegaEvento(mega) {
             seguimientoLinkEl.href = `/ong/mega-eventos/${megaEventoId}/seguimiento`;
         }
 
-        // Mapa - Usar geocodificación inversa si no hay coordenadas
+        // Mapa - Implementación mejorada igual a eventos/detalles
         const mapContainer = document.getElementById('map');
         if (mapContainer) {
             const inicializarMapa = async () => {
@@ -855,20 +1243,107 @@ function displayMegaEvento(mega) {
                     }
                 }
 
-                // Si tenemos coordenadas, mostrar el mapa
-                if (lat && lng) {
+                // Validar coordenadas antes de mostrar el mapa
+                if (lat && lng && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng))) {
+                    // Asegurar que el contenedor esté visible y tenga tamaño
                     mapContainer.style.display = 'block';
-                    const map = L.map('map').setView([lat, lng], 13);
+                    mapContainer.style.height = '350px';
+                    mapContainer.style.width = '100%';
+                    
+                    // Limpiar contenido previo
+                    mapContainer.innerHTML = '';
+                    
+                    // Esperar a que el DOM esté completamente listo
+                    setTimeout(() => {
+                        try {
+                            // Verificar que Leaflet esté disponible
+                            if (typeof L === 'undefined') {
+                                console.error('Leaflet no está cargado');
+                                mapContainer.innerHTML = '<div class="alert alert-warning p-3 m-0">Error: La librería de mapas no está cargada. Por favor, recarga la página.</div>';
+                                return;
+                            }
+                            
+                            // Limpiar cualquier mapa anterior
+                            if (window.megaEventoMapa) {
+                                try {
+                                    window.megaEventoMapa.remove();
+                                } catch (e) {
+                                    console.warn('Error al remover mapa anterior:', e);
+                                }
+                            }
+                            
+                            const latNum = parseFloat(lat);
+                            const lngNum = parseFloat(lng);
+                            
+                            // Inicializar el mapa con opciones mejoradas
+                            const map = L.map('map', {
+                                zoomControl: true,
+                                scrollWheelZoom: true,
+                                doubleClickZoom: true,
+                                boxZoom: true,
+                                keyboard: true,
+                                dragging: true,
+                                touchZoom: true
+                            }).setView([latNum, lngNum], 13);
+                            
+                            // Guardar referencia global
+                            window.megaEventoMapa = map;
+                            
+                            // Agregar capa de tiles con opciones mejoradas
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '© OpenStreetMap contributors'
+                                attribution: '© OpenStreetMap contributors',
+                                maxZoom: 19,
+                                minZoom: 3
                     }).addTo(map);
-                    L.marker([lat, lng]).addTo(map).bindPopup(direccionCompleta || 'Ubicación del mega evento');
+                            
+                            // Esperar a que los tiles se carguen
+                            map.whenReady(() => {
+                                // Agregar marcador con popup mejorado
+                                const marker = L.marker([latNum, lngNum]).addTo(map);
+                                const popupContent = `
+                                    <div style="padding: 0.5rem; min-width: 200px;">
+                                        <strong style="color: #0C2B44; font-size: 1rem; display: block; margin-bottom: 0.25rem;">${direccionCompleta || 'Ubicación del mega evento'}</strong>
+                                        ${mega.ciudad ? `<small style="color: #6c757d; display: block;">${mega.ciudad}</small>` : ''}
+                                    </div>
+                                `;
+                                marker.bindPopup(popupContent).openPopup();
+                                
+                                // Ajustar el mapa múltiples veces para asegurar renderizado completo
+                                setTimeout(() => {
+                                    map.invalidateSize();
+                                }, 100);
+                                
+                                setTimeout(() => {
+                                    map.invalidateSize();
+                                }, 300);
+                                
+                                setTimeout(() => {
+                                    map.invalidateSize();
+                                }, 500);
+                                
+                                // Forzar actualización después de un segundo
+                                setTimeout(() => {
+                                    map.invalidateSize();
+                                    map.setView([latNum, lngNum], map.getZoom());
+                                }, 1000);
+                            });
+                            
+                        } catch (error) {
+                            console.error('Error inicializando mapa:', error);
+                            mapContainer.innerHTML = `<div class="alert alert-danger p-3 m-0">Error al cargar el mapa: ${error.message}</div>`;
+                        }
+                    }, 500);
                 } else {
                     mapContainer.style.display = 'none';
                 }
             };
 
+            // Inicializar el mapa cuando el DOM esté listo
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', inicializarMapa);
+            } else {
             inicializarMapa();
+            }
         }
         
         // Guardar información del mega evento para compartir
@@ -917,7 +1392,7 @@ function configurarBotonesCompartir(megaEventoId, mega) {
         descripcion: mega.descripcion || '',
         url: typeof getPublicUrl !== 'undefined' 
             ? getPublicUrl(`/mega-evento/${megaEventoId}/qr`)
-            : `http://10.26.15.110:8000/mega-evento/${megaEventoId}/qr`
+            : `http://192.168.0.6:8000/mega-evento/${megaEventoId}/qr`
     };
 }
 
@@ -1318,34 +1793,44 @@ async function cargarReaccionesMegaEvento() {
 
             html += `
                 <div class="col-md-6 col-lg-4 mb-3 reaccion-card" style="animation-delay: ${index * 0.1}s;">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-3">
+                    <div class="card border-0 shadow-sm h-100" style="border-radius: 16px; transition: all 0.3s ease; overflow: hidden;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 24px rgba(12, 43, 68, 0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center mb-3" style="white-space: nowrap; overflow: hidden;">
+                                <div class="position-relative mr-3" style="flex-shrink: 0;">
                                 ${fotoPerfil ? `
-                                    <img src="${fotoPerfil}" alt="${reaccion.nombre}" class="rounded-circle mr-3" style="width: 50px; height: 50px; object-fit: cover; border: 3px solid #00A36C;">
+                                        <img src="${fotoPerfil}" alt="${reaccion.nombre}" class="rounded-circle" style="width: 70px; height: 70px; object-fit: cover; border: 3px solid #00A36C; box-shadow: 0 4px 12px rgba(0, 163, 108, 0.2); display: block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 70px; height: 70px; font-weight: 700; font-size: 1.5rem; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: 3px solid #00A36C; box-shadow: 0 4px 12px rgba(0, 163, 108, 0.2); position: absolute; top: 0; left: 0; display: none;">
+                                            ${inicialNombre}
+                                        </div>
                                 ` : `
-                                    <div class="rounded-circle d-flex align-items-center justify-content-center mr-3 bg-primary text-white" style="width: 50px; height: 50px; font-weight: 600; font-size: 1.2rem;">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 70px; height: 70px; font-weight: 700; font-size: 1.5rem; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: 3px solid #00A36C; box-shadow: 0 4px 12px rgba(0, 163, 108, 0.2);">
                                         ${inicialNombre}
                                     </div>
                                 `}
-                                <div class="flex-grow-1">
-                                    <div class="d-flex align-items-center mb-1">
-                                        <h6 class="mb-0 font-weight-bold text-dark">${reaccion.nombre || 'N/A'}</h6>
+                                </div>
+                                <div class="flex-grow-1" style="min-width: 0; overflow: hidden;">
+                                    <h6 class="mb-1" style="color: #2c3e50; font-weight: 600; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${reaccion.nombre || 'N/A'}</h6>
+                                    <div class="mb-2">
                                         ${tipoBadge}
                                     </div>
-                                    <small class="text-muted">
-                                        <i class="fas fa-envelope mr-1 text-info"></i> ${reaccion.correo || 'N/A'}
+                                    <small class="text-muted d-block" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                        <i class="fas fa-envelope mr-1" style="color: #0C2B44;"></i> ${reaccion.correo || 'N/A'}
                                     </small>
+                                    ${reaccion.telefono ? `
+                                        <small class="text-muted d-block" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            <i class="fas fa-phone mr-1" style="color: #0C2B44;"></i> ${reaccion.telefono}
+                                        </small>
+                                    ` : ''}
                                 </div>
-                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
-                                    <i class="fas fa-heart text-danger"></i>
                                 </div>
-                            </div>
-                            <div class="mt-3 pt-3 border-top">
+                            <div class="mt-3 pt-3 border-top d-flex align-items-center justify-content-between">
                                 <small class="text-muted">
-                                    <i class="fas fa-clock mr-1 text-secondary"></i> 
+                                    <i class="fas fa-clock mr-1" style="color: #6c757d;"></i> 
                                     ${fechaReaccion}
                                 </small>
+                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, rgba(220, 53, 69, 0.2) 100%) !important;">
+                                    <i class="fas fa-heart" style="color: #dc3545; font-size: 1.1rem;"></i>
+                                </div>
                             </div>
                         </div>
                     </div>

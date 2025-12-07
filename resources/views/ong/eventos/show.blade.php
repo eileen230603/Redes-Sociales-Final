@@ -1,20 +1,27 @@
-﻿@extends('layouts.adminlte')
+@extends('layouts.adminlte')
 
 @section('page_title', 'Detalle del Evento')
 
 @section('content_body')
 <input type="hidden" id="eventoId" value="{{ request()->id }}">
 <div class="container-fluid px-0">
-    <!-- Banner Superior con Imagen Principal -->
-    <div id="eventBanner" class="position-relative" style="height: 400px; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); overflow: hidden;">
-        <div id="bannerImage" class="w-100 h-100" style="background-size: cover; background-position: center; opacity: 0.3;"></div>
-        <div class="position-absolute" style="top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to bottom, rgba(12, 43, 68, 0.3) 0%, rgba(0, 163, 108, 0.6) 100%);"></div>
-        <div class="position-absolute" style="bottom: 0; left: 0; right: 0; padding: 2rem; color: white;">
+    <!-- Banner Superior con Imagen Principal - Mejorado -->
+    <div id="eventBanner" class="position-relative" style="height: 450px; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); overflow: hidden; border-radius: 0 0 24px 24px;">
+        <div id="bannerImage" class="w-100 h-100" style="background-size: cover; background-position: center; opacity: 0.25; transition: transform 0.5s ease;"></div>
+        <div class="position-absolute" style="top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to bottom, rgba(12, 43, 68, 0.4) 0%, rgba(0, 163, 108, 0.7) 100%);"></div>
+        <div class="position-absolute" style="bottom: 0; left: 0; right: 0; padding: 3rem 2rem; color: white;">
             <div class="container">
-                <h1 id="titulo" class="mb-2" style="font-size: 2.5rem; font-weight: 700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"></h1>
-                <div class="d-flex flex-wrap align-items-center" style="gap: 0.5rem;">
-                    <span id="tipoEventoBadge" class="badge badge-light" style="font-size: 0.9rem; padding: 0.5em 1em;"></span>
-                    <span id="estadoBadge" class="badge" style="font-size: 0.9rem; padding: 0.5em 1em;"></span>
+                <div class="d-flex align-items-center mb-3">
+                    <div class="mr-3" style="width: 64px; height: 64px; background: rgba(255,255,255,0.15); border-radius: 16px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); box-shadow: 0 4px 16px rgba(0,0,0,0.2);">
+                        <i class="fas fa-calendar-alt" style="font-size: 2rem;"></i>
+                    </div>
+                    <div style="flex: 1;">
+                        <h1 id="titulo" class="mb-2" style="font-size: 2.75rem; font-weight: 700; text-shadow: 2px 2px 8px rgba(0,0,0,0.5); letter-spacing: -0.5px; line-height: 1.2;"></h1>
+                        <div class="d-flex flex-wrap align-items-center" style="gap: 0.75rem;">
+                            <span id="tipoEventoBadge" class="badge" style="font-size: 0.95rem; padding: 0.6em 1.2em; background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); border-radius: 50px; font-weight: 500;"></span>
+                            <span id="estadoBadge" class="badge" style="font-size: 0.95rem; padding: 0.6em 1.2em; border-radius: 50px; font-weight: 500;"></span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -295,41 +302,44 @@
 
     <div class="container mt-4">
         <!-- Mensaje de Evento Finalizado -->
-        <div id="mensajeEventoFinalizado" class="alert alert-secondary mb-4" style="display: none;">
+        <div id="mensajeEventoFinalizado" class="alert alert-secondary mb-4" style="display: none; border-radius: 16px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
             <div class="d-flex align-items-center">
-                <i class="fas fa-info-circle mr-3 fa-2x"></i>
+                <div class="mr-3" style="width: 56px; height: 56px; background: linear-gradient(135deg, #6c757d 0%, #495057 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-info-circle fa-2x text-white"></i>
+                </div>
                 <div>
-                    <h5 class="mb-1 font-weight-bold">Este evento fue finalizado</h5>
-                    <p class="mb-0">
-                        Fecha de finalización: <span id="fechaFinalizacionMensaje" class="font-weight-bold"></span>
+                    <h5 class="mb-1 font-weight-bold" style="color: #2c3e50;">Este evento fue finalizado</h5>
+                    <p class="mb-0 text-muted">
+                        Fecha de finalización: <span id="fechaFinalizacionMensaje" class="font-weight-bold text-dark"></span>
                     </p>
-                    <p class="mb-0 mt-2 text-muted">
+                    <p class="mb-0 mt-2 text-muted" style="font-size: 0.9rem;">
                         Ya no es posible participar, reaccionar o compartir este evento. Solo puedes ver los detalles.
                     </p>
                 </div>
             </div>
         </div>
 
-        <!-- Botones de Acción (ONG) -->
-        <div class="d-flex justify-content-end mb-4 flex-wrap" style="gap: 0.5rem;">
-            <a href="/ong/eventos" class="btn btn-secondary">
+        <!-- Botones de Acción (ONG) - Mejorados -->
+        <div class="d-flex justify-content-end mb-4 flex-wrap" style="gap: 0.75rem;">
+            <a href="/ong/eventos" class="btn btn-outline-secondary" style="border-radius: 10px; padding: 0.6rem 1.5rem; font-weight: 500; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
                 <i class="fas fa-arrow-left mr-2"></i> Volver
             </a>
-            <a id="btnDashboard" href="#" class="btn btn-success" style="display: none;">
-                <i class="fas fa-chart-bar mr-2"></i> Dashboard del Evento
+            <a id="btnDashboard" href="#" class="btn btn-success" style="display: none; border-radius: 10px; padding: 0.6rem 1.5rem; font-weight: 600; box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);">
+                <i class="fas fa-chart-bar mr-2"></i> Dashboard
             </a>
-            <button id="btnControlAsistencia" class="btn btn-info" onclick="abrirGestionParticipantes()" style="display: none;">
-                <i class="fas fa-clipboard-check mr-2"></i> Control de Asistencias
+            <button id="btnControlAsistencia" class="btn btn-info" onclick="abrirGestionParticipantes()" style="display: none; border-radius: 10px; padding: 0.6rem 1.5rem; font-weight: 600; box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);">
+                <i class="fas fa-clipboard-check mr-2"></i> Control Asistencias
             </button>
-            <div class="btn btn-outline-danger" id="btnReacciones" style="cursor: default;">
+            <div class="btn btn-outline-danger d-flex align-items-center" id="btnReacciones" style="cursor: default; border-radius: 10px; padding: 0.6rem 1.5rem; font-weight: 500; box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);">
                 <i class="fas fa-heart mr-2"></i>
                 <span id="contadorReaccionesOng">0</span> reacciones
             </div>
-            <button class="btn btn-primary" id="btnCompartir">
-                <i class="fas fa-share-alt mr-2"></i> Compartir <span id="contadorCompartidos" class="badge badge-light ml-2">0</span>
+            <button class="btn btn-primary d-flex align-items-center" id="btnCompartir" style="border-radius: 10px; padding: 0.6rem 1.5rem; font-weight: 600; box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);">
+                <i class="fas fa-share-alt mr-2"></i> Compartir 
+                <span id="contadorCompartidos" class="badge badge-light ml-2" style="background: rgba(255,255,255,0.3); color: white;">0</span>
             </button>
-            <a id="btnEditar" href="#" class="btn btn-primary">
-                <i class="fas fa-edit mr-2"></i> Editar Evento
+            <a id="btnEditar" href="#" class="btn btn-primary" style="border-radius: 10px; padding: 0.6rem 1.5rem; font-weight: 600; box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);">
+                <i class="fas fa-edit mr-2"></i> Editar
             </a>
         </div>
 
@@ -337,78 +347,103 @@
             <!-- Columna Principal -->
             <div class="col-lg-8">
                 <!-- Descripción -->
-                <div class="card mb-4">
-                    <div class="card-header bg-white">
-                        <h5 class="card-title mb-0 text-dark">
-                            <i class="fas fa-align-left mr-2 text-primary"></i> Descripción
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="section-icon mr-3">
+                                <i class="fas fa-align-left"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem;">
+                                    Descripción
                         </h5>
                     </div>
-                    <div class="card-body">
-                        <p id="descripcion" class="mb-0 text-muted" style="line-height: 1.8;"></p>
+                        </div>
+                        <p id="descripcion" class="mb-0 text-muted" style="line-height: 1.8; font-size: 1rem; color: #495057;"></p>
                     </div>
                 </div>
 
                 <!-- Información del Evento -->
-                <div class="card mb-4">
-                    <div class="card-header bg-white">
-                        <h5 class="card-title mb-0 text-dark">
-                            <i class="fas fa-info-circle mr-2 text-info"></i> Información del Evento
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="section-icon mr-3">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem;">
+                                    Información del Evento
                         </h5>
+                                <p class="mb-0 text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">
+                                    Detalles importantes del evento
+                                </p>
                     </div>
-                    <div class="card-body">
+                        </div>
                         <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <div class="d-flex align-items-start">
-                                    <i class="fas fa-calendar mr-3 mt-1 text-info"></i>
-                                    <div>
-                                        <h6 class="mb-1 font-weight-bold text-dark">Fecha de Inicio</h6>
-                                        <p id="fecha_inicio" class="mb-0 text-muted"></p>
+                            <div class="col-md-6 mb-4">
+                                <div class="info-item">
+                                    <div class="info-icon">
+                                        <i class="fas fa-calendar-check"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <h6 class="info-label">Fecha de Inicio</h6>
+                                        <p id="fecha_inicio" class="info-value"></p>
+                                </div>
+                            </div>
+                                    </div>
+                            <div class="col-md-6 mb-4">
+                                <div class="info-item">
+                                    <div class="info-icon">
+                                        <i class="fas fa-calendar-times"></i>
+                                </div>
+                                    <div class="info-content">
+                                        <h6 class="info-label">Fecha de Fin</h6>
+                                        <p id="fecha_fin" class="info-value"></p>
+                            </div>
+                                    </div>
+                                </div>
+                            <div class="col-md-6 mb-4">
+                                <div class="info-item">
+                                    <div class="info-icon">
+                                        <i class="fas fa-clock"></i>
+                            </div>
+                                    <div class="info-content">
+                                        <h6 class="info-label">Límite de Inscripción</h6>
+                                        <p id="fecha_limite_inscripcion" class="info-value"></p>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <div class="d-flex align-items-start">
-                                    <i class="fas fa-calendar-check mr-3 mt-1 text-success"></i>
-                                    <div>
-                                        <h6 class="mb-1 font-weight-bold text-dark">Fecha de Fin</h6>
-                                        <p id="fecha_fin" class="mb-0 text-muted"></p>
+                            <div class="col-md-6 mb-4">
+                                <div class="info-item">
+                                    <div class="info-icon">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <h6 class="info-label">Capacidad Máxima</h6>
+                                        <p id="capacidad_maxima" class="info-value"></p>
+                                </div>
+                            </div>
+                            </div>
+                            <div class="col-md-6 mb-4" id="fechaFinalizacionContainer" style="display: none;">
+                                <div class="info-item">
+                                    <div class="info-icon">
+                                        <i class="fas fa-flag-checkered"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <h6 class="info-label">Fecha de Finalización</h6>
+                                        <p id="fecha_finalizacion" class="info-value"></p>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <div class="d-flex align-items-start">
-                                    <i class="fas fa-clock mr-3 mt-1 text-warning"></i>
-                                    <div>
-                                        <h6 class="mb-1 font-weight-bold text-dark">Límite de Inscripción</h6>
-                                        <p id="fecha_limite_inscripcion" class="mb-0 text-muted"></p>
+                            <div class="col-md-6 mb-4" id="creadorContainer">
+                                <div class="info-item">
+                                    <div class="info-icon">
+                                        <i class="fas fa-user-circle"></i>
                                     </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <div class="d-flex align-items-start">
-                                    <i class="fas fa-users mr-3 mt-1 text-primary"></i>
-                                    <div>
-                                        <h6 class="mb-1 font-weight-bold text-dark">Capacidad Máxima</h6>
-                                        <p id="capacidad_maxima" class="mb-0 text-muted"></p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-3" id="fechaFinalizacionContainer" style="display: none;">
-                                <div class="d-flex align-items-start">
-                                    <i class="fas fa-flag-checkered mr-3 mt-1 text-secondary"></i>
-                                    <div>
-                                        <h6 class="mb-1 font-weight-bold text-dark">Fecha de Finalización</h6>
-                                        <p id="fecha_finalizacion" class="mb-0 text-muted"></p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-3" id="creadorContainer">
-                                <div class="d-flex align-items-start">
-                                    <i class="fas fa-user-circle mr-3 mt-1 text-info"></i>
-                                    <div>
-                                        <h6 class="mb-1 font-weight-bold text-dark">Creado por</h6>
+                                    <div class="info-content">
+                                        <h6 class="info-label">Creado por</h6>
                                         <div id="creadorInfo" class="d-flex align-items-center">
-                                            <span id="creadorNombre" class="mb-0 text-muted"></span>
+                                            <span id="creadorNombre" class="info-value"></span>
                                         </div>
                                     </div>
                                 </div>
@@ -418,102 +453,148 @@
                 </div>
 
                 <!-- Ubicación -->
-                <div class="card mb-4">
-                    <div class="card-header bg-white">
-                        <h5 class="card-title mb-0 text-dark">
-                            <i class="fas fa-map-marker-alt mr-2 text-danger"></i> Ubicación
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="section-icon mr-3">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem;">
+                                    Ubicación
                         </h5>
+                                <p class="mb-0 text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">
+                                    Lugar donde se realizará el evento
+                                </p>
                     </div>
-                    <div class="card-body">
-                        <div class="row">
+                        </div>
+                        <div class="row mb-3">
                             <div class="col-md-6 mb-3">
-                                <h6 class="mb-1 font-weight-bold text-dark">Ciudad</h6>
-                                <p id="ciudad" class="mb-0 text-muted"></p>
+                                <div class="info-item">
+                                    <div class="info-icon">
+                                        <i class="fas fa-city"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <h6 class="info-label">Ciudad</h6>
+                                        <p id="ciudad" class="info-value"></p>
+                                    </div>
+                                </div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <h6 class="mb-1 font-weight-bold text-dark">Dirección</h6>
-                                <p id="direccion" class="mb-0 text-muted"></p>
+                                <div class="info-item">
+                                    <div class="info-icon">
+                                        <i class="fas fa-road"></i>
+                            </div>
+                                    <div class="info-content">
+                                        <h6 class="info-label">Dirección</h6>
+                                        <p id="direccion" class="info-value"></p>
+                        </div>
+                                </div>
                             </div>
                         </div>
-                        <div id="mapContainer" class="mt-3 rounded" style="height: 300px; overflow: hidden; display: none;">
+                        <div id="mapContainer" class="mt-3 rounded" style="height: 350px; overflow: hidden; display: none; border: 2px solid #f0f0f0; box-shadow: 0 2px 12px rgba(0,0,0,0.05);">
                             <!-- Mapa se cargará aquí -->
                         </div>
                     </div>
                 </div>
 
                 <!-- Galería de Imágenes -->
-                <div class="card mb-4">
-                    <div class="card-header bg-white">
-                        <h5 class="card-title mb-0 text-dark">
-                            <i class="fas fa-images mr-2 text-warning"></i> Galería de Imágenes
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="section-icon mr-3">
+                                <i class="fas fa-images"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem;">
+                                    Galería de Imágenes
                         </h5>
+                                <p class="mb-0 text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">
+                                    Imágenes promocionales del evento
+                                </p>
                     </div>
-                    <div class="card-body">
+                        </div>
                         <div id="imagenes">
                             <!-- Carrusel de Bootstrap -->
-                            <div id="carouselImagenes" class="carousel slide" data-ride="carousel" data-interval="3000" style="display: none;">
+                            <div id="carouselImagenes" class="carousel slide" data-ride="carousel" data-interval="3000" style="display: none; border-radius: 12px; overflow: hidden;">
                                 <div class="carousel-inner" id="carouselInner"></div>
                                 <a class="carousel-control-prev" href="#carouselImagenes" role="button" data-slide="prev" style="width: 5%;">
-                                    <span class="carousel-control-prev-icon" aria-hidden="true" style="background-color: rgba(0,0,0,0.5); border-radius: 50%; width: 40px; height: 40px;"></span>
+                                    <span class="carousel-control-prev-icon" aria-hidden="true" style="background-color: rgba(0,0,0,0.6); border-radius: 50%; width: 45px; height: 45px; backdrop-filter: blur(10px);"></span>
                                     <span class="sr-only">Anterior</span>
                                 </a>
                                 <a class="carousel-control-next" href="#carouselImagenes" role="button" data-slide="next" style="width: 5%;">
-                                    <span class="carousel-control-next-icon" aria-hidden="true" style="background-color: rgba(0,0,0,0.5); border-radius: 50%; width: 40px; height: 40px;"></span>
+                                    <span class="carousel-control-next-icon" aria-hidden="true" style="background-color: rgba(0,0,0,0.6); border-radius: 50%; width: 45px; height: 45px; backdrop-filter: blur(10px);"></span>
                                     <span class="sr-only">Siguiente</span>
                                 </a>
                                 <!-- Indicadores -->
                                 <ol class="carousel-indicators" id="carouselIndicators"></ol>
                             </div>
-                            <p id="sinImagenes" class="text-muted text-center" style="display: none;">No hay imágenes disponibles</p>
+                            <p id="sinImagenes" class="text-muted text-center py-4" style="display: none;">
+                                <i class="fas fa-image mr-2"></i> No hay imágenes disponibles
+                            </p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Reacciones (Favoritos) -->
-                <div class="card mb-4">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0 text-dark">
-                            <i class="fas fa-heart mr-2 text-danger"></i> Reacciones y Favoritos
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <div class="d-flex align-items-center">
+                                <div class="section-icon mr-3">
+                                    <i class="fas fa-heart"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem;">
+                                        Reacciones y Favoritos
                         </h5>
-                        <button class="btn btn-sm btn-secondary btn-actualizar-reacciones" onclick="cargarReacciones()">
+                                    <p class="mb-0 text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">
+                                        Usuarios que marcaron este evento como favorito
+                                    </p>
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary btn-actualizar-reacciones" onclick="cargarReacciones()" style="border-radius: 8px; padding: 0.4rem 1rem;">
                             <i class="fas fa-sync mr-1"></i> Actualizar
                         </button>
                     </div>
-                    <div class="card-body">
-                        <p class="mb-3 text-muted">
-                            Usuarios que han marcado este evento como favorito con un corazón.
-                        </p>
                         <div id="reaccionesContainer">
-                            <div class="text-center py-3">
-                                <div class="spinner-border text-primary" role="status">
+                            <div class="text-center py-4">
+                                <div class="spinner-border" role="status" style="color: #00A36C; width: 3rem; height: 3rem;">
                                     <span class="sr-only">Cargando...</span>
                                 </div>
-                                <p class="mt-2 text-muted">Cargando reacciones...</p>
+                                <p class="mt-3 text-muted">Cargando reacciones...</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Voluntarios y Participantes Inscritos -->
-                <div class="card mb-4">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0 text-dark">
-                            <i class="fas fa-users mr-2 text-success"></i> Voluntarios y Participantes Inscritos
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <div class="d-flex align-items-center">
+                                <div class="section-icon mr-3">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem;">
+                                        Participantes Inscritos
                         </h5>
-                        <button class="btn btn-sm btn-secondary btn-actualizar-participantes" onclick="cargarParticipantesCardONG()">
+                                    <p class="mb-0 text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">
+                                        Usuarios registrados y voluntarios
+                                    </p>
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary btn-actualizar-participantes" onclick="cargarParticipantesCardONG()" style="border-radius: 8px; padding: 0.4rem 1rem;">
                             <i class="fas fa-sync mr-1"></i> Actualizar
                         </button>
                     </div>
-                    <div class="card-body">
-                        <p class="mb-3 text-muted">
-                            Usuarios que se han inscrito en este evento. Incluye participantes registrados y voluntarios.
-                        </p>
                         <div id="participantesContainer">
-                            <div class="text-center py-3">
-                                <div class="spinner-border text-primary" role="status">
+                            <div class="text-center py-4">
+                                <div class="spinner-border" role="status" style="color: #00A36C; width: 3rem; height: 3rem;">
                                     <span class="sr-only">Cargando...</span>
                                 </div>
-                                <p class="mt-2 text-muted">Cargando participantes...</p>
+                                <p class="mt-3 text-muted">Cargando participantes...</p>
                             </div>
                         </div>
                     </div>
@@ -523,53 +604,76 @@
             <!-- Sidebar -->
             <div class="col-lg-4">
                 <!-- Información Rápida -->
-                <div class="card mb-4">
-                    <div class="card-header bg-primary">
-                        <h5 class="card-title mb-0 text-white">
-                            <i class="fas fa-info-circle mr-2"></i> Información Rápida
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; position: sticky; top: 20px;">
+                    <div class="card-body p-4" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border-radius: 16px 16px 0 0;">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="mr-3" style="width: 48px; height: 48px; background: rgba(255,255,255,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+                                <i class="fas fa-info-circle text-white" style="font-size: 1.25rem;"></i>
+                            </div>
+                            <h5 class="mb-0 text-white" style="font-weight: 700; font-size: 1.1rem;">
+                                Información Rápida
                         </h5>
                     </div>
-                    <div class="card-body">
-                        <div class="mb-3 pb-3 border-bottom">
-                            <small class="d-block mb-1 font-weight-bold text-dark">Estado</small>
-                            <span id="estadoSidebar" class="badge"></span>
                         </div>
-                        <div class="mb-3 pb-3 border-bottom">
-                            <small class="d-block mb-1 font-weight-bold text-dark">Tipo de Evento</small>
-                            <span id="tipoEventoSidebar" class="font-weight-bold text-dark"></span>
+                    <div class="card-body p-4">
+                        <div class="info-sidebar-item mb-3 pb-3" style="border-bottom: 1px solid #f0f0f0;">
+                            <small class="d-block mb-2" style="color: #6c757d; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                <i class="fas fa-flag mr-1"></i> Estado
+                            </small>
+                            <span id="estadoSidebar" class="badge" style="font-size: 0.9rem; padding: 0.5em 1em;"></span>
                         </div>
-                        <div class="mb-3 pb-3 border-bottom">
-                            <small class="d-block mb-1 font-weight-bold text-dark">Capacidad</small>
-                            <span id="capacidadSidebar" class="font-weight-bold text-dark"></span>
+                        <div class="info-sidebar-item mb-3 pb-3" style="border-bottom: 1px solid #f0f0f0;">
+                            <small class="d-block mb-2" style="color: #6c757d; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                <i class="fas fa-tag mr-1"></i> Tipo de Evento
+                            </small>
+                            <span id="tipoEventoSidebar" class="font-weight-bold text-dark" style="font-size: 1rem;"></span>
                         </div>
-                        <div id="inscripcionAbiertaContainer" class="mb-3">
-                            <small class="d-block mb-1 font-weight-bold text-dark">Inscripción</small>
-                            <span id="inscripcionAbierta" class="badge"></span>
+                        <div class="info-sidebar-item mb-3 pb-3" style="border-bottom: 1px solid #f0f0f0;">
+                            <small class="d-block mb-2" style="color: #6c757d; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                <i class="fas fa-users mr-1"></i> Capacidad
+                            </small>
+                            <span id="capacidadSidebar" class="font-weight-bold text-dark" style="font-size: 1rem;"></span>
+                        </div>
+                        <div id="inscripcionAbiertaContainer" class="info-sidebar-item mb-0">
+                            <small class="d-block mb-2" style="color: #6c757d; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                <i class="fas fa-user-check mr-1"></i> Inscripción
+                            </small>
+                            <span id="inscripcionAbierta" class="badge" style="font-size: 0.9rem; padding: 0.5em 1em;"></span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Patrocinadores -->
-                <div id="patrocinadoresCard" class="card mb-4" style="display: none;">
-                    <div class="card-header bg-success">
-                        <h5 class="card-title mb-0 text-white">
-                            <i class="fas fa-handshake mr-2"></i> Patrocinadores
+                <div id="patrocinadoresCard" class="card border-0 shadow-sm mb-4" style="display: none; border-radius: 16px; position: sticky; top: 400px;">
+                    <div class="card-body p-4" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); border-radius: 16px 16px 0 0;">
+                        <div class="d-flex align-items-center">
+                            <div class="mr-3" style="width: 48px; height: 48px; background: rgba(255,255,255,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+                                <i class="fas fa-handshake text-white" style="font-size: 1.25rem;"></i>
+                            </div>
+                            <h5 class="mb-0 text-white" style="font-weight: 700; font-size: 1.1rem;">
+                                Patrocinadores
                         </h5>
                     </div>
-                    <div class="card-body">
-                        <div id="patrocinadores" class="d-flex flex-wrap" style="gap: 0.5rem;"></div>
+                    </div>
+                    <div class="card-body p-4">
+                        <div id="patrocinadores" class="d-flex flex-wrap" style="gap: 0.75rem;"></div>
                     </div>
                 </div>
 
                 <!-- Invitados -->
-                <div id="invitadosCard" class="card mb-4" style="display: none;">
-                    <div class="card-header bg-info">
-                        <h5 class="card-title mb-0 text-white">
-                            <i class="fas fa-user-friends mr-2"></i> Invitados Especiales
+                <div id="invitadosCard" class="card border-0 shadow-sm mb-4" style="display: none; border-radius: 16px; position: sticky; top: 600px;">
+                    <div class="card-body p-4" style="background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%); border-radius: 16px 16px 0 0;">
+                        <div class="d-flex align-items-center">
+                            <div class="mr-3" style="width: 48px; height: 48px; background: rgba(255,255,255,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+                                <i class="fas fa-user-friends text-white" style="font-size: 1.25rem;"></i>
+                            </div>
+                            <h5 class="mb-0 text-white" style="font-weight: 700; font-size: 1.1rem;">
+                                Invitados Especiales
                         </h5>
                     </div>
-                    <div class="card-body">
-                        <div id="invitados" class="d-flex flex-wrap" style="gap: 0.5rem;"></div>
+                    </div>
+                    <div class="card-body p-4">
+                        <div id="invitados" class="d-flex flex-wrap" style="gap: 0.75rem;"></div>
                     </div>
                 </div>
             </div>
@@ -581,36 +685,194 @@
 @section('css')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
+    /* Variables de color */
+    :root {
+        --primary-color: #00A36C;
+        --primary-dark: #008a5a;
+        --dark-color: #0C2B44;
+        --border-color: #e9ecef;
+        --bg-light: #f8f9fa;
+        --shadow-sm: 0 2px 8px rgba(12, 43, 68, 0.08);
+        --shadow-md: 0 4px 16px rgba(12, 43, 68, 0.12);
+    }
+
+    body {
+        background-color: #f5f7fa;
+    }
+    
+    /* Banner mejorado */
+    #eventBanner {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        border-radius: 0 0 24px 24px;
+        overflow: hidden;
+    }
+
+    /* Iconos de sección - Con container y icono adentro */
+    .section-icon {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.25rem;
+        box-shadow: 0 4px 12px rgba(0, 163, 108, 0.2);
+        flex-shrink: 0;
+    }
+
+    /* Items de información */
+    .info-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+        border-left: 4px solid #00A36C;
+        transition: all 0.3s ease;
+    }
+
+    .info-item:hover {
+        background: #ffffff;
+        box-shadow: 0 4px 12px rgba(0, 163, 108, 0.1);
+        transform: translateX(4px);
+    }
+
+    .info-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #0C2B44;
+        font-size: 1.2rem;
+        margin-right: 1rem;
+        flex-shrink: 0;
+    }
+
+    .info-content {
+        flex: 1;
+    }
+
+    .info-label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .info-value {
+        font-size: 1rem;
+        color: #2c3e50;
+        font-weight: 500;
+        margin: 0;
+    }
+
+    /* Cards mejoradas */
     .card {
-        transition: transform 0.2s, box-shadow 0.2s;
+        transition: all 0.3s ease;
+        border: none !important;
     }
     
     .card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md) !important;
     }
     
-    #eventBanner {
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    
-    /* Estilos para galería de imágenes */
+    /* Estilos para galería de imágenes mejorados */
     .gallery-item {
         position: relative;
         overflow: hidden;
-        border-radius: 8px;
+        border-radius: 12px;
         cursor: pointer;
-        transition: transform 0.3s;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     
     .gallery-item:hover {
         transform: scale(1.05);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
     }
     
     .gallery-item img {
         width: 100%;
         height: 200px;
         object-fit: cover;
+    }
+
+    /* Carrusel mejorado */
+    #carouselImagenes {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+
+    #carouselImagenes .carousel-item img {
+        border-radius: 12px;
+    }
+
+    /* Badges mejorados */
+    .badge {
+        border-radius: 50px;
+        padding: 0.5em 1em;
+        font-weight: 500;
+        letter-spacing: 0.3px;
+    }
+
+    /* Botones mejorados */
+    .btn {
+        border-radius: 10px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        border: none;
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border: none;
+    }
+
+    .btn-info {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        border: none;
+    }
+
+    .btn-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+        border: none;
+    }
+
+    .btn-outline-danger {
+        border: 2px solid #dc3545;
+        color: #dc3545;
+    }
+
+    .btn-outline-danger:hover {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        border-color: #dc3545;
+        color: white;
+    }
+
+    .btn-outline-secondary {
+        border: 2px solid #6c757d;
+        color: #6c757d;
+    }
+
+    .btn-outline-secondary:hover {
+        background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+        border-color: #6c757d;
+        color: white;
     }
     
     /* Estilos para participantes */
@@ -661,19 +923,19 @@
     }
     
     /* Mejoras para cards de reacciones y participantes */
-    .card {
-        border: 1px solid #F5F5F5 !important;
-    }
-    
-    .card:hover {
-        border-color: #00A36C !important;
-    }
-    
-    /* Animación suave para las tarjetas de participantes */
     .participante-card {
         animation: fadeInUp 0.6s ease-out;
+        border-radius: 16px !important;
+        overflow: hidden;
+    }
+
+    .reaccion-card {
+        animation: fadeInUp 0.6s ease-out;
+        border-radius: 16px !important;
+        overflow: hidden;
     }
     
+    /* Animación suave para las tarjetas */
     @keyframes fadeInUp {
         from {
             opacity: 0;
@@ -682,6 +944,44 @@
         to {
             opacity: 1;
             transform: translateY(0);
+        }
+    }
+
+    /* Patrocinadores e invitados mejorados - Ya manejado en JavaScript */
+
+    /* Mapa mejorado */
+    #mapContainer {
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    #mapContainer:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1) !important;
+    }
+
+    /* Responsive */
+    @media (max-width: 991px) {
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+        }
+
+        .info-icon {
+            font-size: 1rem;
+        }
+
+        h5 {
+            font-size: 1rem !important;
+        }
+
+        #eventBanner {
+            height: 350px !important;
+        }
+
+        #eventBanner h1 {
+            font-size: 2rem !important;
         }
     }
 
@@ -736,6 +1036,64 @@
         color: #dc3545 !important;
     }
 
+    /* Estilos para prevenir renderizado vertical del texto en cards de reacciones */
+    #reaccionesContainer .reaccion-card .card-body {
+        display: flex;
+        flex-direction: column;
+    }
+
+    #reaccionesContainer .reaccion-card .d-flex {
+        flex-wrap: nowrap !important;
+        white-space: nowrap !important;
+    }
+
+    #reaccionesContainer .reaccion-card .flex-grow-1 {
+        min-width: 0;
+        overflow: hidden;
+        flex: 1 1 auto;
+    }
+
+    #reaccionesContainer .reaccion-card h6 {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        display: inline-block !important;
+        max-width: 100% !important;
+    }
+
+    #reaccionesContainer .reaccion-card .badge {
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+    }
+
+    #reaccionesContainer .reaccion-card .mb-2 {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    #reaccionesContainer .reaccion-card .mb-2 span {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        display: inline-block !important;
+    }
+
+    #reaccionesContainer .reaccion-card .rounded-circle {
+        flex-shrink: 0 !important;
+    }
+
+    /* Asegurar que el avatar solo se muestre una vez */
+    #reaccionesContainer .reaccion-card .position-relative img {
+        display: block !important;
+    }
+
+    #reaccionesContainer .reaccion-card .position-relative > div[style*="display: none"] {
+        display: none !important;
+    }
+
     /* Animación para el contador de reacciones */
     #contadorReaccionesOng {
         transition: all 0.3s ease;
@@ -774,7 +1132,7 @@
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs2@0.0.2/qrcode.min.js"></script>
 <script>
     // Definir PUBLIC_BASE_URL desde variable de entorno
-    window.PUBLIC_BASE_URL = "{{ env('PUBLIC_APP_URL', 'http://10.26.15.110:8000') }}";
+    window.PUBLIC_BASE_URL = "{{ env('PUBLIC_APP_URL', 'http://192.168.0.6:8000') }}";
     console.log("🌐 PUBLIC_BASE_URL desde .env:", window.PUBLIC_BASE_URL);
 </script>
 <script src="{{ asset('assets/js/config.js') }}"></script>
@@ -1052,6 +1410,49 @@ async function cargarControlAsistencia() {
     }
 }
 
+// Función auxiliar para formatear fechas desde PostgreSQL
+function formatearFechaInscripcion(fechaStr) {
+    if (!fechaStr || fechaStr === '—' || fechaStr === '-') return '—';
+    try {
+        // Patrón para formato PostgreSQL: "2025-01-15 14:30:00"
+        const match = fechaStr.match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/);
+        if (match) {
+            const [, year, month, day, hour, minute, second] = match;
+            const fechaLocal = new Date(
+                parseInt(year, 10),
+                parseInt(month, 10) - 1,
+                parseInt(day, 10),
+                parseInt(hour, 10),
+                parseInt(minute, 10),
+                parseInt(second || 0, 10)
+            );
+            if (!isNaN(fechaLocal.getTime())) {
+                return fechaLocal.toLocaleString('es-ES', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+        }
+        // Si no coincide, intentar parsear directamente
+        const fechaParseada = new Date(fechaStr);
+        if (!isNaN(fechaParseada.getTime())) {
+            return fechaParseada.toLocaleString('es-ES', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        return fechaStr; // Devolver original si no se puede parsear
+    } catch (error) {
+        return fechaStr; // Devolver original en caso de error
+    }
+}
+
 // Mostrar tabla de asistencia
 function mostrarTablaAsistencia(participantes) {
     const tbody = document.getElementById('tablaAsistencia');
@@ -1069,13 +1470,15 @@ function mostrarTablaAsistencia(participantes) {
     }
 
     participantes.forEach(participante => {
+        const fechaInscripcionFormateada = formatearFechaInscripcion(participante.fecha_inscripcion);
+        const fechaRegistroFormateada = formatearFechaInscripcion(participante.fecha_registro_asistencia);
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${participante.participante}</td>
-            <td>${participante.fecha_inscripcion}</td>
+            <td>${fechaInscripcionFormateada}</td>
             <td>${participante.estado_asistencia}</td>
             <td>${participante.validado_por || '—'}</td>
-            <td>${participante.fecha_registro_asistencia || '—'}</td>
+            <td>${fechaRegistroFormateada}</td>
             <td>${participante.observaciones || '—'}</td>
             <td>
                 <button class="btn btn-sm btn-primary" onclick="editarAsistencia(${participante.id}, '${participante.tipo}', '${participante.estado_asistencia_raw}')">
@@ -1229,14 +1632,16 @@ function mostrarTablaListaParticipantes(participantes) {
     }
 
     participantes.forEach((participante, index) => {
+        const fechaInscripcionFormateada = formatearFechaInscripcion(participante.fecha_inscripcion);
+        const fechaRegistroFormateada = formatearFechaInscripcion(participante.fecha_registro_asistencia);
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${index + 1}</td>
             <td>${participante.participante || '—'}</td>
             <td>${participante.email || '—'}</td>
             <td>${participante.telefono || '—'}</td>
-            <td>${participante.fecha_inscripcion || '—'}</td>
-            <td>${participante.fecha_registro_asistencia || '—'}</td>
+            <td>${fechaInscripcionFormateada}</td>
+            <td>${fechaRegistroFormateada}</td>
             <td>${participante.validado_por || '—'}</td>
             <td>${participante.modo_asistencia || '—'}</td>
         `;
@@ -1935,7 +2340,8 @@ function cargarComentarios() {
     let html = '';
     participantesConComentarios.forEach((p, index) => {
         const nombre = p.participante || 'Usuario desconocido';
-        const fechaCheckin = p.fecha_registro_asistencia || p.fecha_inscripcion || 'Fecha no disponible';
+        const fechaCheckinRaw = p.fecha_registro_asistencia || p.fecha_inscripcion;
+        const fechaCheckin = fechaCheckinRaw ? formatearFechaInscripcion(fechaCheckinRaw) : 'Fecha no disponible';
         
         const asistio = p.estado_asistencia === '✅ Asistió' || 
                        p.estado_asistencia_raw === 'asistido' || 

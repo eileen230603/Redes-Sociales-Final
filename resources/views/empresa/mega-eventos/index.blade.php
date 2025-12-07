@@ -190,10 +190,12 @@ async function cargarMegaEventos() {
             cardDiv.innerHTML = `
                 <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;">
                     ${imagenPrincipal 
-                        ? `<div class="position-relative" style="height: 200px; overflow: hidden; background: #f8f9fa;">
-                            <img src="${imagenPrincipal}" alt="${mega.titulo}" class="w-100 h-100" style="object-fit: cover;" 
-                                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'200\\'%3E%3Crect fill=\\'%23f8f9fa\\' width=\\'400\\' height=\\'200\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\' fill=\\'%23adb5bd\\' font-family=\\'Arial\\' font-size=\\'14\\'%3EImagen no disponible%3C/text%3E%3C/svg%3E'; this.style.objectFit='contain'; this.style.padding='20px';">
-                            <div class="position-absolute" style="top: 12px; left: 12px;">
+                        ? `<div class="position-relative" style="height: 200px; overflow: hidden; background: #f8f9fa; cursor: pointer;" onclick="window.location.href='/empresa/mega-eventos/${mega.mega_evento_id}/detalle'">
+                            <img src="${imagenPrincipal}" alt="${mega.titulo}" class="w-100 h-100" style="object-fit: cover; transition: transform 0.3s ease;" 
+                                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'200\\'%3E%3Crect fill=\\'%23f8f9fa\\' width=\\'400\\' height=\\'200\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\' fill=\\'%23adb5bd\\' font-family=\\'Arial\\' font-size=\\'14\\'%3EImagen no disponible%3C/text%3E%3C/svg%3E'; this.style.objectFit='contain'; this.style.padding='20px';"
+                                 onmouseenter="this.style.transform='scale(1.05)'" 
+                                 onmouseleave="this.style.transform='scale(1)'">
+                            <div class="position-absolute" style="top: 12px; left: 12px; pointer-events: none;">
                                 <span class="badge" style="background: rgba(255, 193, 7, 0.9); color: white; font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 500;"><i class="fas fa-star mr-1"></i>Mega Evento</span>
                             </div>
                            </div>`

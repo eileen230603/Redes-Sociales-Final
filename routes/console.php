@@ -7,3 +7,8 @@ Schedule::command('eventos:finalizar-vencidos')
     ->everyMinute()
     ->withoutOverlapping()
     ->runInBackground();
+
+Schedule::command('eventos:notificar-proximos')
+    ->everyFiveMinutes()
+    ->withoutOverlapping()
+    ->runInBackground();

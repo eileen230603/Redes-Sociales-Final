@@ -884,9 +884,45 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function crearCardEvento(e) {
-        const imagen = e.imagenes && e.imagenes.length > 0 
-            ? e.imagenes[0] 
-            : null;
+        // Función helper para construir URL de imagen
+        function buildImageUrl(imgUrl) {
+            if (!imgUrl || imgUrl.trim() === '') return null;
+            
+            // Si ya es una URL completa (http/https), retornarla tal cual
+            if (imgUrl.startsWith('http://') || imgUrl.startsWith('https://')) {
+                return imgUrl;
+            }
+            
+            // Si empieza con /storage/, agregar el dominio
+            if (imgUrl.startsWith('/storage/')) {
+                return `${window.location.origin}${imgUrl}`;
+            }
+            
+            // Si empieza con storage/, agregar /
+            if (imgUrl.startsWith('storage/')) {
+                return `${window.location.origin}/${imgUrl}`;
+            }
+            
+            // Por defecto, asumir que es relativa a storage
+            return `${window.location.origin}/storage/${imgUrl}`;
+        }
+        
+        // Procesar imágenes
+        let imagenes = [];
+        if (Array.isArray(e.imagenes) && e.imagenes.length > 0) {
+            imagenes = e.imagenes.filter(img => img && typeof img === 'string' && img.trim().length > 0);
+        } else if (typeof e.imagenes === 'string' && e.imagenes.trim()) {
+            try {
+                const parsed = JSON.parse(e.imagenes);
+                if (Array.isArray(parsed)) {
+                    imagenes = parsed.filter(img => img && typeof img === 'string' && img.trim().length > 0);
+                }
+            } catch (err) {
+                console.warn('Error parseando imágenes:', err);
+            }
+        }
+        
+        const imagen = imagenes.length > 0 ? buildImageUrl(imagenes[0]) : null;
         
         // Función helper para formatear fechas desde PostgreSQL sin conversión de zona horaria
         const formatearFechaPostgreSQL = (fechaStr) => {

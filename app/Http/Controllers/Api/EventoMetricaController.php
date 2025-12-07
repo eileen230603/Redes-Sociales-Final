@@ -239,9 +239,16 @@ class EventoMetricaController extends Controller
             ? round(($participantesAsistieron / $participantesAprobados) * 100, 2) 
             : 0;
         
+        // Engagement Rate: puede exceder 100% si hay múltiples compartidos por persona
+        // Limitamos al 100% para mantener consistencia visual
         $engagementRate = $totalParticipantes > 0 
             ? round((($totalReacciones + $totalCompartidos) / $totalParticipantes) * 100, 2) 
             : 0;
+        
+        // Limitar el Engagement Rate al 100% máximo
+        if ($engagementRate > 100) {
+            $engagementRate = 100;
+        }
 
         // === TIEMPO ===
         $diasDesdeCreacion = $evento->created_at->diffInDays(now());

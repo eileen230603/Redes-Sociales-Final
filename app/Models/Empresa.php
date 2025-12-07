@@ -38,10 +38,38 @@ class Empresa extends Model
     {
         if (!$this->foto_perfil) return null;
 
-        if (str_starts_with($this->foto_perfil, 'http')) {
+        // Si ya es una URL completa, retornarla
+        if (str_starts_with($this->foto_perfil, 'http://') || str_starts_with($this->foto_perfil, 'https://')) {
             return $this->foto_perfil;
         }
 
+        // Obtener la URL base desde PUBLIC_APP_URL, APP_URL o del request actual
+        $baseUrl = env('PUBLIC_APP_URL', env('APP_URL'));
+        
+        // Si no hay baseUrl configurada, intentar obtenerla del request actual
+        if (empty($baseUrl) && app()->runningInConsole() === false) {
+            try {
+                $request = request();
+                if ($request) {
+                    $baseUrl = $request->getSchemeAndHttpHost();
+                }
+            } catch (\Exception $e) {
+                // Si falla, usar asset()
+            }
+        }
+        
+        // Si aún no hay baseUrl, usar asset() como fallback
+        if (empty($baseUrl)) {
         return asset('storage/' . ltrim($this->foto_perfil, '/'));
+        }
+
+        // Normalizar la ruta
+        if (str_starts_with($this->foto_perfil, '/storage/')) {
+            return rtrim($baseUrl, '/') . $this->foto_perfil;
+        } elseif (str_starts_with($this->foto_perfil, 'storage/')) {
+            return rtrim($baseUrl, '/') . '/storage/' . ltrim($this->foto_perfil, 'storage/');
+        } else {
+            return rtrim($baseUrl, '/') . '/storage/' . ltrim($this->foto_perfil, '/');
+        }
     }
 }

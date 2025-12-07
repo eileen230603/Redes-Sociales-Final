@@ -26,6 +26,11 @@ class Ong extends Model
         'foto_perfil',
     ];
 
+    /**
+     * Los accessors que se incluirán automáticamente en la serialización JSON
+     */
+    protected $appends = ['foto_perfil_url'];
+
     public function usuario()
     {
         return $this->belongsTo(User::class, 'user_id', 'id_usuario');
@@ -38,10 +43,56 @@ class Ong extends Model
     {
         if (!$this->foto_perfil) return null;
 
-        if (str_starts_with($this->foto_perfil, 'http')) {
-            return $this->foto_perfil;
+        // Si ya es una URL completa, normalizarla
+        if (str_starts_with($this->foto_perfil, 'http://') || str_starts_with($this->foto_perfil, 'https://')) {
+            // Obtener la URL base actual
+            $baseUrl = env('PUBLIC_APP_URL', env('APP_URL'));
+            if (empty($baseUrl) && app()->runningInConsole() === false) {
+                try {
+                    $request = request();
+                    if ($request) {
+                        $baseUrl = $request->getSchemeAndHttpHost();
+                    }
+                } catch (\Exception $e) {
+                    // Si falla, usar el valor por defecto
+                }
+            }
+            if (empty($baseUrl)) {
+                $baseUrl = 'http://127.0.0.1:8000';
+            }
+            
+            // Reemplazar IPs antiguas con la URL actual
+            $fotoPerfil = str_replace('http://10.26.15.110:8000', $baseUrl, $this->foto_perfil);
+            $fotoPerfil = str_replace('https://10.26.15.110:8000', $baseUrl, $fotoPerfil);
+            $fotoPerfil = str_replace('http://192.168.0.6:8000', $baseUrl, $fotoPerfil);
+            $fotoPerfil = str_replace('https://192.168.0.6:8000', $baseUrl, $fotoPerfil);
+            
+            return $fotoPerfil;
         }
 
-        return asset('storage/' . ltrim($this->foto_perfil, '/'));
+        // Obtener la URL base
+        $baseUrl = env('PUBLIC_APP_URL', env('APP_URL'));
+        if (empty($baseUrl) && app()->runningInConsole() === false) {
+            try {
+                $request = request();
+                if ($request) {
+                    $baseUrl = $request->getSchemeAndHttpHost();
+                }
+            } catch (\Exception $e) {
+                // Si falla, usar el valor por defecto
+            }
+        }
+        if (empty($baseUrl)) {
+            $baseUrl = 'http://127.0.0.1:8000';
+        }
+
+        // Normalizar la ruta
+        if (str_starts_with($this->foto_perfil, '/storage/')) {
+            return rtrim($baseUrl, '/') . $this->foto_perfil;
+        } elseif (str_starts_with($this->foto_perfil, 'storage/')) {
+            return rtrim($baseUrl, '/') . '/storage/' . ltrim($this->foto_perfil, 'storage/');
+        }
+
+        return rtrim($baseUrl, '/') . '/storage/' . ltrim($this->foto_perfil, '/');
     }
 }

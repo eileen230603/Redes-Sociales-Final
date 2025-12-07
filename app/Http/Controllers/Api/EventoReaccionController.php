@@ -150,9 +150,11 @@ class EventoReaccionController extends Controller
                         return [
                             'id' => $reaccion->id,
                             'externo_id' => $reaccion->externo_id,
-                            'tipo' => 'registrado',
+                            'tipo' => 'externo',
+                            'tipo_usuario' => 'Externo',
                             'nombre' => $externo ? trim($externo->nombres . ' ' . ($externo->apellidos ?? '')) : $user->nombre_usuario,
                             'correo' => $externo ? $externo->email : $user->correo_electronico,
+                            'telefono' => $externo ? ($externo->phone_number ?? null) : null,
                             'fecha_reaccion' => $reaccion->created_at,
                             'foto_perfil' => $externo ? ($externo->foto_perfil_url ?? null) : ($user->foto_perfil_url ?? null)
                         ];
@@ -162,8 +164,10 @@ class EventoReaccionController extends Controller
                             'id' => $reaccion->id,
                             'externo_id' => null,
                             'tipo' => 'no_registrado',
+                            'tipo_usuario' => 'No Registrado',
                             'nombre' => trim(($reaccion->nombres ?? '') . ' ' . ($reaccion->apellidos ?? '')),
                             'correo' => $reaccion->email,
+                            'telefono' => $reaccion->telefono ?? null,
                             'fecha_reaccion' => $reaccion->created_at,
                             'foto_perfil' => null
                         ];

@@ -22,7 +22,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   result.innerHTML = "Verificando...";
 
   // Asegurar que API_BASE_URL esté definido
-  const apiUrl = window.API_BASE_URL || API_BASE_URL || "http://10.26.15.110:8000";
+  const apiUrl = window.API_BASE_URL || API_BASE_URL || "http://192.168.0.6:8000";
   
   // Debug: Verificar qué URL se está usando
   console.log("🔍 Intentando login con URL:", apiUrl);

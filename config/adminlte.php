@@ -204,7 +204,12 @@ return [
                     'icon' => 'fas fa-fw fa-chart-bar',
                 ],
                 [
-                    'text' => 'Historial de eventos',
+                    'text' => 'Eventos en curso',
+                    'url'  => '/ong/eventos/en-curso',
+                    'icon' => 'fas fa-fw fa-play-circle',
+                ],
+                [
+                    'text' => 'Eventos finalizados',
                     'url'  => '/ong/eventos/historial',
                     'icon' => 'fas fa-fw fa-history',
                 ],

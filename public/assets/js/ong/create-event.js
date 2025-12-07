@@ -114,31 +114,93 @@ async function loadPatrocinadores() {
         data.empresas.forEach(emp => {
             const col = document.createElement('div');
             col.className = 'col-md-4 col-sm-6 mb-3';
+            const inicial = (emp.nombre || 'E').charAt(0).toUpperCase();
+            
+            // Determinar qué avatar mostrar
+            let avatarHTML = '';
+            if (emp.foto_perfil) {
+                // Si hay foto_perfil, mostrar solo la imagen (el fallback solo aparece si la imagen falla)
+                avatarHTML = `
+                    <div class="position-relative d-inline-block mr-3" style="width: 50px; height: 50px;">
+                        <img src="${emp.foto_perfil}" alt="${emp.nombre}" class="rounded-circle patrocinador-avatar-img" 
+                             style="width: 50px; height: 50px; object-fit: cover; border: 2px solid #E9ECEF; transition: all 0.3s; position: absolute; top: 0; left: 0; z-index: 2;"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="rounded-circle bg-gradient-primary text-white d-flex align-items-center justify-content-center patrocinador-fallback" 
+                             style="width: 50px; height: 50px; font-weight: 600; font-size: 1.1rem; display: none; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); position: absolute; top: 0; left: 0; z-index: 1;">
+                            ${inicial}
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Si no hay foto_perfil, mostrar solo el círculo con inicial
+                avatarHTML = `
+                    <div class="rounded-circle bg-gradient-primary text-white d-flex align-items-center justify-content-center mr-3" 
+                         style="width: 50px; height: 50px; font-weight: 600; font-size: 1.1rem; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%);">
+                        ${inicial}
+                    </div>
+                `;
+            }
+            
             col.innerHTML = `
-                <div class="card border" style="border-radius: 8px; transition: all 0.2s;">
+                <div class="card border patrocinador-card" style="border-radius: 12px; transition: all 0.3s ease; border: 2px solid #E9ECEF; cursor: pointer; overflow: hidden;" 
+                     onmouseover="this.style.borderColor='#00A36C'; this.style.boxShadow='0 4px 12px rgba(0,163,108,0.15)';" 
+                     onmouseout="this.style.borderColor='#E9ECEF'; this.style.boxShadow='none';"
+                     onclick="document.getElementById('patrocinador_${emp.id}').click();">
                     <div class="card-body p-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="patrocinadores[]" value="${emp.id}" id="patrocinador_${emp.id}">
-                            <label class="form-check-label d-flex align-items-center" for="patrocinador_${emp.id}" style="cursor: pointer; width: 100%;">
-                                ${emp.foto_perfil 
-                                    ? `<img src="${emp.foto_perfil}" alt="${emp.nombre}" class="rounded-circle mr-2" style="width: 40px; height: 40px; object-fit: cover;">`
-                                    : `<div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mr-2" style="width: 40px; height: 40px; font-weight: 600;">${(emp.nombre || 'E').charAt(0).toUpperCase()}</div>`
-                                }
+                        <div class="form-check m-0">
+                            <input class="form-check-input" type="checkbox" name="patrocinadores[]" value="${emp.id}" id="patrocinador_${emp.id}" 
+                                   onchange="this.closest('.patrocinador-card').style.borderColor = this.checked ? '#00A36C' : '#E9ECEF'; this.closest('.patrocinador-card').style.background = this.checked ? '#F0FDF4' : 'white';">
+                            <label class="form-check-label d-flex align-items-center m-0" for="patrocinador_${emp.id}" style="cursor: pointer; width: 100%;">
+                                ${avatarHTML}
                                 <div class="flex-grow-1">
-                                    <strong style="font-size: 0.95rem; color: #2c3e50;">${emp.nombre || 'Sin nombre'}</strong>
-                                    ${emp.NIT ? `<br><small class="text-muted">NIT: ${emp.NIT}</small>` : ''}
+                                    <strong style="font-size: 0.95rem; color: #0C2B44; font-weight: 600; display: block; margin-bottom: 2px;">${emp.nombre || 'Sin nombre'}</strong>
+                                    ${emp.NIT ? `<small class="text-muted" style="font-size: 0.8rem;">NIT: ${emp.NIT}</small>` : ''}
+                                    ${emp.descripcion ? `<small class="text-muted d-block mt-1" style="font-size: 0.75rem; line-height: 1.3;">${emp.descripcion.substring(0, 50)}${emp.descripcion.length > 50 ? '...' : ''}</small>` : ''}
                                 </div>
                             </label>
                         </div>
                     </div>
                 </div>
             `;
+            
+            // Asegurar que solo se muestre un avatar (ocultar el fallback si la imagen carga correctamente)
+            if (emp.foto_perfil) {
+                setTimeout(() => {
+                    const avatarImg = col.querySelector('.patrocinador-avatar-img');
+                    const fallbackDiv = col.querySelector('.patrocinador-fallback');
+                    if (avatarImg && fallbackDiv) {
+                        // Si la imagen ya está cargada, ocultar el fallback
+                        if (avatarImg.complete && avatarImg.naturalHeight !== 0 && avatarImg.naturalWidth !== 0) {
+                            fallbackDiv.style.display = 'none';
+                        }
+                        // Cuando la imagen cargue, ocultar el fallback
+                        avatarImg.addEventListener('load', () => {
+                            fallbackDiv.style.display = 'none';
+                        });
+                    }
+                }, 50);
+            }
             box.appendChild(col);
         });
 
     } catch (error) {
         console.error("Error cargando patrocinadores:", error);
-        box.innerHTML = `<div class="col-12"><div class="alert alert-danger">Error al cargar empresas: ${error.message}</div></div>`;
+        let mensajeError = "Error al cargar empresas";
+        if (error.message.includes("Failed to fetch") || error.message.includes("ERR_ADDRESS_UNREACHABLE") || error.message.includes("ERR_CONNECTION_TIMED_OUT")) {
+            mensajeError = "No se pudo conectar con el servidor. Verifica que el servidor esté corriendo y que tengas conexión a internet.";
+        } else {
+            mensajeError = error.message || "Error desconocido";
+        }
+        box.innerHTML = `<div class="col-12">
+            <div class="alert alert-warning" style="border-radius: 8px; border-left: 4px solid #ffc107;">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                <strong>Error de conexión</strong><br>
+                <small>${mensajeError}</small><br>
+                <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="loadPatrocinadores()">
+                    <i class="fas fa-redo mr-1"></i> Reintentar
+                </button>
+            </div>
+        </div>`;
     }
 }
 
@@ -256,7 +318,22 @@ async function loadInvitados() {
 
     } catch (error) {
         console.error('Error cargando invitados:', error);
-        box.innerHTML = "<p class='text-danger'>Error cargando invitados: " + error.message + "</p>";
+        let mensajeError = "Error al cargar invitados";
+        if (error.message.includes("Failed to fetch") || error.message.includes("ERR_ADDRESS_UNREACHABLE") || error.message.includes("ERR_CONNECTION_TIMED_OUT")) {
+            mensajeError = "No se pudo conectar con el servidor. Verifica que el servidor esté corriendo.";
+        } else {
+            mensajeError = error.message || "Error desconocido";
+        }
+        box.innerHTML = `<div class="col-12">
+            <div class="alert alert-warning" style="border-radius: 8px; border-left: 4px solid #ffc107;">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                <strong>Error de conexión</strong><br>
+                <small>${mensajeError}</small><br>
+                <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="loadInvitados()">
+                    <i class="fas fa-redo mr-1"></i> Reintentar
+                </button>
+            </div>
+        </div>`;
     }
 }
 
@@ -265,44 +342,41 @@ document.addEventListener("DOMContentLoaded", () => {
     loadEmpresasColaboradoras();
     loadInvitados();
     
-    // Validar capacidad máxima en tiempo real (solo números - estricto)
+    // Control de capacidad máxima con botones +/-
     const capacidadInput = document.getElementById("capacidadMaxima");
-    if (capacidadInput) {
+    const btnIncrementar = document.getElementById("btnIncrementarCapacidad");
+    const btnDecrementar = document.getElementById("btnDecrementarCapacidad");
+    
+    if (capacidadInput && btnIncrementar && btnDecrementar) {
+        // Botón incrementar
+        btnIncrementar.addEventListener("click", function() {
+            let value = parseInt(capacidadInput.value) || 0;
+            value++;
+            capacidadInput.value = value;
+            capacidadInput.dispatchEvent(new Event('input'));
+        });
+        
+        // Botón decrementar
+        btnDecrementar.addEventListener("click", function() {
+            let value = parseInt(capacidadInput.value) || 0;
+            if (value > 0) {
+                value--;
+                capacidadInput.value = value;
+                capacidadInput.dispatchEvent(new Event('input'));
+            }
+        });
+        
+        // Validar entrada manual
         capacidadInput.addEventListener("input", function(e) {
-            // Remover cualquier carácter que no sea número (0-9)
-            // Esto incluye letras, vocales, símbolos, espacios, etc.
-            let value = this.value.replace(/[^0-9]/g, '');
-            if (this.value !== value) {
-                this.value = value;
-                mostrarNotificacion("warning", "Carácter inválido", "Solo se permiten números (0-9). No se permiten letras, vocales, símbolos ni espacios.");
-            }
+            let value = parseInt(this.value) || 0;
+            if (value < 0) value = 0;
+            this.value = value;
         });
         
-        capacidadInput.addEventListener("keypress", function(e) {
-            // Prevenir la entrada de caracteres que no sean números
-            const char = String.fromCharCode(e.which);
-            if (!/[0-9]/.test(char)) {
-                e.preventDefault();
-                mostrarNotificacion("warning", "Carácter inválido", "Solo se permiten números (0-9) en este campo");
-            }
-        });
-        
-        capacidadInput.addEventListener("paste", function(e) {
-            e.preventDefault();
-            const paste = (e.clipboardData || window.clipboardData).getData('text');
-            // Filtrar solo números
-            const numbersOnly = paste.replace(/[^0-9]/g, '');
-            if (numbersOnly !== paste) {
-                mostrarNotificacion("warning", "Contenido inválido", "Solo se permiten números (0-9). Se han eliminado letras, vocales, símbolos y espacios.");
-            }
-            this.value = numbersOnly;
-        });
-        
-        // Prevenir espacios con la tecla espacio
+        // Prevenir valores negativos
         capacidadInput.addEventListener("keydown", function(e) {
-            if (e.key === ' ' || e.key === 'Spacebar') {
+            if (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '+' || e.key === '.') {
                 e.preventDefault();
-                mostrarNotificacion("warning", "Carácter inválido", "No se permiten espacios en este campo");
             }
         });
     }
@@ -598,23 +672,18 @@ async function submitEventForm(e) {
         }
     }
 
-    // Validar capacidad máxima (solo números - estricto)
-    const capacidadMaxima = document.getElementById("capacidadMaxima").value.trim();
-    if (capacidadMaxima) {
-        // Verificar que solo contenga números (sin letras, vocales, símbolos, espacios)
-        // Regex estricto: solo dígitos del 0-9
-        if (!/^\d+$/.test(capacidadMaxima)) {
-            mostrarNotificacion("error", "Valor inválido", "La capacidad máxima debe ser un número válido. No se permiten letras, vocales, símbolos ni espacios. Solo números (0-9).");
-            document.getElementById("capacidadMaxima").focus();
-            document.getElementById("capacidadMaxima").value = "";
-            return;
-        }
-        // Verificar que sea mayor a 0
+    // Validar capacidad máxima (opcional, pero si se ingresa debe ser válido)
+    const capacidadMaximaInput = document.getElementById("capacidadMaxima");
+    const capacidadMaxima = capacidadMaximaInput ? capacidadMaximaInput.value.trim() : "";
+    if (capacidadMaxima && capacidadMaxima !== "0") {
         const capacidadNum = parseInt(capacidadMaxima, 10);
+        // Verificar que sea un número válido y mayor a 0
         if (isNaN(capacidadNum) || capacidadNum < 1) {
             mostrarNotificacion("error", "Valor inválido", "La capacidad máxima debe ser un número mayor a 0");
-            document.getElementById("capacidadMaxima").focus();
-            document.getElementById("capacidadMaxima").value = "";
+            if (capacidadMaximaInput) {
+                capacidadMaximaInput.focus();
+                capacidadMaximaInput.value = "0";
+            }
             return;
         }
     }
@@ -635,9 +704,12 @@ async function submitEventForm(e) {
     fd.append("lng", lng);
 
     // Capacidad máxima (solo números válidos)
-    const capacidadMaximaValue = document.getElementById("capacidadMaxima").value.trim();
-    if (capacidadMaximaValue && /^\d+$/.test(capacidadMaximaValue)) {
-        fd.append("capacidad_maxima", parseInt(capacidadMaximaValue, 10));
+    const capacidadMaximaValue = document.getElementById("capacidadMaxima") ? document.getElementById("capacidadMaxima").value.trim() : "";
+    if (capacidadMaximaValue) {
+        const capacidadNum = parseInt(capacidadMaximaValue, 10);
+        if (!isNaN(capacidadNum) && capacidadNum > 0) {
+            fd.append("capacidad_maxima", capacidadNum);
+        }
     }
     fd.append("estado", estado);
     fd.append("ciudad", ciudadDetectada || "");
@@ -677,6 +749,12 @@ async function submitEventForm(e) {
         fd.append("imagenes_urls", JSON.stringify(urlImages));
     }
 
+    // Mostrar indicador de carga
+    const submitBtn = document.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Creando evento...';
+
     try {
         const res = await fetch(`${API_BASE_URL}/api/eventos`, {
             method: "POST",
@@ -685,6 +763,10 @@ async function submitEventForm(e) {
         });
 
         const data = await res.json();
+        
+        // Restaurar botón
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
 
         if (!res.ok || !data.success) {
             // Si hay errores de validación, mostrarlos
@@ -713,6 +795,9 @@ async function submitEventForm(e) {
             
             mostrarNotificacion("error", "Error al crear evento", mensajeError);
             console.error("Error completo:", data);
+            // Restaurar botón en caso de error
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
             return;
         }
 
@@ -771,14 +856,17 @@ async function submitEventForm(e) {
         mostrarNotificacion("success", "¡Éxito!", "Evento creado correctamente");
         }
         
-        // Redirigir después de 2 segundos
-        setTimeout(() => {
-            window.location.href = "/ong/eventos";
-        }, 2000);
+        // Redirigir inmediatamente (sin delay)
+        window.location.href = "/ong/eventos";
 
     } catch (e) {
         mostrarNotificacion("error", "Error de servidor", "No se pudo conectar con el servidor");
         console.error(e);
+        // Restaurar botón en caso de error
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+        }
     }
 }
 

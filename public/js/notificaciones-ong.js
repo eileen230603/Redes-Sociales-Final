@@ -314,7 +314,11 @@
                 console.warn('⚠️ Respuesta inválida del servidor:', data);
             }
         } catch (error) {
-            console.error('❌ Error actualizando contador:', error);
+            // Solo mostrar error si no es un error de conexión (para evitar spam en consola)
+            if (error.message && !error.message.includes('Failed to fetch') && !error.message.includes('ERR_ADDRESS_UNREACHABLE') && !error.message.includes('ERR_CONNECTION_TIMED_OUT')) {
+                console.error('❌ Error actualizando contador:', error);
+            }
+            // Silenciar errores de conexión para evitar spam en consola
         }
     }
     

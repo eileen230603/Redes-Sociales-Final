@@ -237,7 +237,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 creadorHtml = `
                     <img src="${e.creador.foto_perfil}" alt="${e.creador.nombre}" 
                          class="rounded-circle" 
-                         style="width: 32px; height: 32px; object-fit: cover; border: 2px solid #667eea;">
+                         style="width: 32px; height: 32px; object-fit: cover; border: 2px solid #00A36C;">
                     <span style="color: #495057; font-weight: 500;">${e.creador.nombre}</span>
                     <span class="badge badge-info" style="font-size: 0.75rem; padding: 0.25em 0.5em;">${e.creador.tipo}</span>
                 `;
@@ -263,14 +263,66 @@ document.addEventListener("DOMContentLoaded", async () => {
         document.getElementById('direccion').textContent = e.direccion || 'No especificada';
 
         // Mapa (si hay coordenadas)
-        if (e.lat && e.lng) {
             const mapContainer = document.getElementById('mapContainer');
+        if (mapContainer) {
+            if (e.lat && e.lng && !isNaN(parseFloat(e.lat)) && !isNaN(parseFloat(e.lng))) {
             mapContainer.style.display = 'block';
-            const map = L.map('mapContainer').setView([e.lat, e.lng], 13);
+                
+                // Esperar un momento para que el contenedor esté visible antes de inicializar el mapa
+                setTimeout(() => {
+                    try {
+                        // Verificar que Leaflet esté disponible
+                        if (typeof L === 'undefined') {
+                            console.error('Leaflet no está cargado');
+                            mapContainer.innerHTML = '<div class="alert alert-warning p-3 m-0">Error: La librería de mapas no está cargada. Por favor, recarga la página.</div>';
+                            return;
+                        }
+                        
+                        // Limpiar cualquier mapa anterior
+                        if (window.eventoMapa) {
+                            window.eventoMapa.remove();
+                        }
+                        
+                        const lat = parseFloat(e.lat);
+                        const lng = parseFloat(e.lng);
+                        
+                        // Inicializar el mapa
+                        const map = L.map('mapContainer', {
+                            zoomControl: true,
+                            scrollWheelZoom: true
+                        }).setView([lat, lng], 13);
+                        
+                        // Guardar referencia global
+                        window.eventoMapa = map;
+                        
+                        // Agregar capa de tiles
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
+                            attribution: '© OpenStreetMap contributors',
+                            maxZoom: 19
             }).addTo(map);
-            L.marker([e.lat, e.lng]).addTo(map).bindPopup(e.direccion || e.ciudad || 'Ubicación del evento');
+                        
+                        // Agregar marcador
+                        const marker = L.marker([lat, lng]).addTo(map);
+                        const popupContent = `
+                            <div style="padding: 0.5rem; min-width: 200px;">
+                                <strong style="color: #0C2B44; font-size: 1rem; display: block; margin-bottom: 0.25rem;">${e.direccion || e.ubicacion || 'Ubicación del evento'}</strong>
+                                ${e.ciudad ? `<small style="color: #6c757d; display: block;">${e.ciudad}</small>` : ''}
+                            </div>
+                        `;
+                        marker.bindPopup(popupContent).openPopup();
+                        
+                        // Ajustar el mapa después de que se renderice
+                        setTimeout(() => {
+                            map.invalidateSize();
+                        }, 200);
+                    } catch (error) {
+                        console.error('Error inicializando mapa:', error);
+                        mapContainer.innerHTML = `<div class="alert alert-danger p-3 m-0">Error al cargar el mapa: ${error.message}</div>`;
+                    }
+                }, 300);
+            } else {
+                mapContainer.style.display = 'none';
+            }
         }
 
         // Sidebar
@@ -291,7 +343,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             inscripcionAbierta.textContent = 'Cerrada';
         }
 
-        // Patrocinadores
+        // Patrocinadores - Diseño mejorado con avatares
         if (e.patrocinadores && Array.isArray(e.patrocinadores) && e.patrocinadores.length > 0) {
             const patrocinadoresCard = document.getElementById('patrocinadoresCard');
             patrocinadoresCard.style.display = 'block';
@@ -299,24 +351,45 @@ document.addEventListener("DOMContentLoaded", async () => {
             patrocinadoresDiv.innerHTML = '';
             e.patrocinadores.forEach(pat => {
                 const nombre = typeof pat === 'object' ? (pat.nombre || 'N/A') : pat;
-                const avatar = typeof pat === 'object' ? (pat.avatar || null) : null;
+                const fotoPerfil = typeof pat === 'object' ? (pat.foto_perfil || null) : null;
                 const inicial = nombre.charAt(0).toUpperCase();
                 
                 const item = document.createElement('div');
-                item.className = 'd-flex align-items-center mb-2 mr-3';
-                item.style.cssText = 'background: #f8f9fa; padding: 0.5rem 0.75rem; border-radius: 8px; border-left: 3px solid #007bff;';
+                item.className = 'd-flex align-items-center mb-3';
+                item.style.cssText = 'background: white; padding: 1rem; border-radius: 12px; border: 1px solid #e9ecef; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.3s ease; width: 100%;';
+                item.onmouseover = function() {
+                    this.style.transform = 'translateY(-2px)';
+                    this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.12)';
+                };
+                item.onmouseout = function() {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+                };
                 
-                if (avatar) {
+                if (fotoPerfil) {
                     item.innerHTML = `
-                        <img src="${avatar}" alt="${nombre}" class="rounded-circle mr-2" style="width: 35px; height: 35px; object-fit: cover; border: 2px solid #007bff;">
-                        <span style="font-weight: 500; color: #2c3e50;">${nombre}</span>
+                        <img src="${fotoPerfil}" alt="${nombre}" 
+                             class="rounded-circle mr-3" 
+                             style="width: 60px; height: 60px; object-fit: cover; border: 3px solid #00A36C; box-shadow: 0 4px 12px rgba(0, 163, 108, 0.2); flex-shrink: 0;">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0" style="color: #2c3e50; font-weight: 600; font-size: 1rem;">${nombre}</h6>
+                            <small style="color: #6c757d; font-size: 0.85rem;">
+                                <i class="fas fa-handshake mr-1" style="color: #00A36C;"></i> Patrocinador
+                            </small>
+                        </div>
                     `;
                 } else {
                     item.innerHTML = `
-                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mr-2" style="width: 35px; height: 35px; font-weight: 600; font-size: 0.9rem;">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center mr-3" 
+                             style="width: 60px; height: 60px; font-weight: 700; font-size: 1.5rem; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: 3px solid #00A36C; box-shadow: 0 4px 12px rgba(0, 163, 108, 0.2); flex-shrink: 0;">
                             ${inicial}
                         </div>
-                        <span style="font-weight: 500; color: #2c3e50;">${nombre}</span>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0" style="color: #2c3e50; font-weight: 600; font-size: 1rem;">${nombre}</h6>
+                            <small style="color: #6c757d; font-size: 0.85rem;">
+                                <i class="fas fa-handshake mr-1" style="color: #00A36C;"></i> Patrocinador
+                            </small>
+                        </div>
                     `;
                 }
                 patrocinadoresDiv.appendChild(item);
@@ -429,7 +502,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         configurarBotonesBanner(id, e);
 
         // Iniciar auto-refresco de reacciones para usuarios externos
-        iniciarAutoRefrescoReacciones(id);
+        // Auto-refresco deshabilitado - las reacciones se actualizan solo manualmente
 
         // Botones de acción
     const btnP = document.getElementById("btnParticipar");
@@ -893,7 +966,7 @@ async function configurarBotonesBanner(eventoId, evento) {
         id: eventoId,
         titulo: evento.titulo || 'Evento',
         descripcion: evento.descripcion || '',
-        url: `http://10.26.15.110:8000/evento/${eventoId}/qr`,
+        url: `http://192.168.0.6:8000/evento/${eventoId}/qr`,
         finalizado: eventoFinalizado
     };
 }
@@ -983,7 +1056,7 @@ async function copiarEnlace() {
     // Usar la URL pública con IP para que cualquier usuario en la misma red pueda acceder
     const url = typeof getPublicUrl !== 'undefined' 
         ? getPublicUrl(`/evento/${evento.id}/qr`)
-        : `http://10.26.15.110:8000/evento/${evento.id}/qr`;
+        : `http://192.168.0.6:8000/evento/${evento.id}/qr`;
     
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url).then(() => {
@@ -1090,7 +1163,7 @@ async function mostrarQR() {
     // URL pública con IP para acceso mediante QR (accesible desde otros dispositivos en la misma red)
     const qrUrl = typeof getPublicUrl !== 'undefined' 
         ? getPublicUrl(`/evento/${evento.id}/qr`)
-        : `http://10.26.15.110:8000/evento/${evento.id}/qr`;
+        : `http://192.168.0.6:8000/evento/${evento.id}/qr`;
     
     // Limpiar contenido anterior
     qrcodeDiv.innerHTML = '';
@@ -1127,7 +1200,7 @@ function generarQRCode(qrUrl, qrcodeDiv) {
             width: 250,
             margin: 2,
             color: {
-                dark: '#667eea',
+                dark: '#00A36C',
                 light: '#FFFFFF'
             },
             errorCorrectionLevel: 'M'
@@ -1153,52 +1226,14 @@ function generarQRCode(qrUrl, qrcodeDiv) {
 // Función alternativa usando API de QR
 function generarQRConAPI(qrUrl, qrcodeDiv) {
     // Usar API pública de QR code como alternativa
-    const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrUrl)}&bgcolor=FFFFFF&color=667eea`;
+    const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrUrl)}&bgcolor=FFFFFF&color=00A36C`;
     qrcodeDiv.innerHTML = `<img src="${apiUrl}" alt="QR Code" style="display: block; margin: 0 auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onerror="this.parentElement.innerHTML='<div class=\'alert alert-danger\'><i class=\'fas fa-exclamation-triangle mr-2\'></i>Error al generar QR. Por favor, intenta nuevamente.</div>'">`;
 }
 
 // Auto-refresco de reacciones para usuarios externos
-let refrescoReaccionesIntervalExterno = null;
-
-function iniciarAutoRefrescoReacciones(eventoId) {
-    try {
-        if (refrescoReaccionesIntervalExterno) {
-            clearInterval(refrescoReaccionesIntervalExterno);
-        }
-
-        // Cada 10 segundos actualiza el contador de reacciones
-        refrescoReaccionesIntervalExterno = setInterval(async () => {
-            try {
-                const contador = document.getElementById('contadorReacciones');
-                if (!contador) return;
-
-                const res = await fetch(`${API_BASE_URL}/api/reacciones/evento/${eventoId}/total`, {
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
-
-                const data = await res.json();
-                if (data.success) {
-                    const nuevoTotal = data.total_reacciones || 0;
-                    const totalAnterior = parseInt(contador.textContent) || 0;
-                    
-                    if (nuevoTotal !== totalAnterior) {
-                        contador.textContent = nuevoTotal;
-                        // Animación suave cuando cambia
-                        contador.style.transition = 'all 0.3s ease';
-                        contador.style.transform = 'scale(1.2)';
-                        setTimeout(() => {
-                            contador.style.transform = 'scale(1)';
-                        }, 300);
-                    }
-                }
-            } catch (err) {
-                console.warn('Error en auto-refresco de reacciones:', err);
-            }
-        }, 10000); // Cada 10 segundos
-    } catch (error) {
-        console.warn('Error iniciando auto-refresco de reacciones:', error);
-    }
-}
+// ==============================
+// Auto-refresco de reacciones (Externo) - DESHABILITADO
+// ==============================
+// El auto-refresco ha sido deshabilitado para mejorar el rendimiento
+// Las reacciones se actualizan solo cuando el usuario interactúa con el botón
 

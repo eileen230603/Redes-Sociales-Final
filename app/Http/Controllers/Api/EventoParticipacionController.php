@@ -196,6 +196,36 @@ class EventoParticipacionController extends Controller
                         }
                     }
                     
+                    // Formatear fecha de inscripción correctamente desde PostgreSQL
+                    // Obtener la fecha directamente desde la base de datos en formato timestamp sin zona horaria
+                    // PostgreSQL devuelve timestamps en la zona horaria del servidor
+                    $fechaInscripcion = null;
+                    if ($row->fecha_inscripcion) {
+                        // Si es un string, parsearlo como Carbon
+                        if (is_string($row->fecha_inscripcion)) {
+                            try {
+                                $fechaInscripcion = \Carbon\Carbon::parse($row->fecha_inscripcion);
+                                // Convertir a la zona horaria de la aplicación (configurada en config/app.php)
+                                // Si está en UTC, convertir a la zona horaria local de Bolivia (America/La_Paz)
+                                $fechaInscripcion = $fechaInscripcion->setTimezone('America/La_Paz');
+                                // Formatear como string ISO 8601 para que JavaScript lo parsee correctamente
+                                $fechaInscripcion = $fechaInscripcion->format('Y-m-d H:i:s');
+                            } catch (\Exception $e) {
+                                // Si falla el parseo, usar el valor original
+                                $fechaInscripcion = $row->fecha_inscripcion;
+                            }
+                        } else {
+                            // Si ya es un objeto Carbon o DateTime
+                            try {
+                                $fechaInscripcion = \Carbon\Carbon::instance($row->fecha_inscripcion);
+                                $fechaInscripcion = $fechaInscripcion->setTimezone('America/La_Paz');
+                                $fechaInscripcion = $fechaInscripcion->format('Y-m-d H:i:s');
+                            } catch (\Exception $e) {
+                                $fechaInscripcion = $row->fecha_inscripcion;
+                            }
+                        }
+                    }
+                    
                     return [
                         'id' => $row->id,
                         'tipo' => 'registrado',
@@ -204,7 +234,7 @@ class EventoParticipacionController extends Controller
                         'nombre' => $nombre,
                         'correo' => $correo,
                         'telefono' => $telefono,
-                        'fecha_inscripcion' => $row->fecha_inscripcion,
+                        'fecha_inscripcion' => $fechaInscripcion,
                         'estado' => $row->estado ?? 'pendiente',
                         'asistio' => (bool) $row->asistio,
                         'puntos' => $row->puntos ?? 0,
@@ -235,6 +265,28 @@ class EventoParticipacionController extends Controller
                 )
                 ->get()
                 ->map(function($row) {
+                    // Formatear fecha de inscripción correctamente desde PostgreSQL
+                    $fechaInscripcion = null;
+                    if ($row->fecha_inscripcion) {
+                        if (is_string($row->fecha_inscripcion)) {
+                            try {
+                                $fechaInscripcion = \Carbon\Carbon::parse($row->fecha_inscripcion);
+                                $fechaInscripcion = $fechaInscripcion->setTimezone('America/La_Paz');
+                                $fechaInscripcion = $fechaInscripcion->format('Y-m-d H:i:s');
+                            } catch (\Exception $e) {
+                                $fechaInscripcion = $row->fecha_inscripcion;
+                            }
+                        } else {
+                            try {
+                                $fechaInscripcion = \Carbon\Carbon::instance($row->fecha_inscripcion);
+                                $fechaInscripcion = $fechaInscripcion->setTimezone('America/La_Paz');
+                                $fechaInscripcion = $fechaInscripcion->format('Y-m-d H:i:s');
+                            } catch (\Exception $e) {
+                                $fechaInscripcion = $row->fecha_inscripcion;
+                            }
+                        }
+                    }
+                    
                     return [
                         'id' => $row->id,
                         'tipo' => 'no_registrado',
@@ -242,7 +294,7 @@ class EventoParticipacionController extends Controller
                         'nombre' => trim(($row->nombres ?? '') . ' ' . ($row->apellidos ?? '')),
                         'correo' => $row->email ?? 'No disponible',
                         'telefono' => $row->telefono ?? 'No disponible',
-                        'fecha_inscripcion' => $row->fecha_inscripcion,
+                        'fecha_inscripcion' => $fechaInscripcion,
                         'estado' => $row->estado ?? 'pendiente',
                         'asistio' => (bool) $row->asistio,
                         'ticket_codigo' => null,
@@ -2038,6 +2090,87 @@ class EventoParticipacionController extends Controller
             return response()->json([
                 "success" => false,
                 "error" => "Error al verificar ticket: " . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Registrar descarga del QR del ticket (solo una vez por ticket)
+     */
+    public function registrarDescargaQR(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'ticket_codigo' => 'required|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Debe proporcionar un código de ticket válido"
+                ], 422);
+            }
+
+            $externoId = $request->user()->id_usuario;
+            $ticketCodigo = trim($request->input('ticket_codigo'));
+
+            // Buscar participación por código de ticket
+            $participacion = EventoParticipacion::where('ticket_codigo', $ticketCodigo)
+                ->orWhereRaw('LOWER(ticket_codigo) = LOWER(?)', [$ticketCodigo])
+                ->first();
+
+            if (!$participacion) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Código de ticket inválido. Verifique que el código sea correcto."
+                ], 404);
+            }
+
+            // Verificar que el ticket pertenece al usuario autenticado
+            if ($participacion->externo_id != $externoId) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Este código de ticket no está asociado a tu cuenta. Solo puedes descargar tus propios tickets."
+                ], 403);
+            }
+
+            // Verificar que la participación esté aprobada
+            if ($participacion->estado !== 'aprobada') {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Tu participación en este evento aún no ha sido aprobada."
+                ], 400);
+            }
+
+            // Verificar si ya se descargó el QR anteriormente
+            if ($participacion->qr_descargado_at) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "El QR de este ticket ya fue descargado anteriormente. Solo se permite una descarga por ticket.",
+                    "fecha_descarga_anterior" => $participacion->qr_descargado_at->format('d/m/Y H:i:s'),
+                    "ya_descargado" => true
+                ], 409);
+            }
+
+            // Registrar la descarga del QR
+            $participacion->update([
+                'qr_descargado_at' => now(),
+            ]);
+
+            return response()->json([
+                "success" => true,
+                "message" => "Descarga de QR autorizada",
+                "data" => [
+                    'ticket_codigo' => $participacion->ticket_codigo,
+                    'fecha_descarga' => $participacion->qr_descargado_at->format('d/m/Y H:i:s'),
+                ]
+            ]);
+
+        } catch (\Throwable $e) {
+            \Log::error('Error registrando descarga de QR: ' . $e->getMessage());
+            return response()->json([
+                "success" => false,
+                "error" => "Error al registrar descarga: " . $e->getMessage()
             ], 500);
         }
     }
