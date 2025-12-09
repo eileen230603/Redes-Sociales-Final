@@ -11,7 +11,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Habilitar CORS para API y storage
+        // Habilitar CORS para API y storage - DEBE estar primero
         $middleware->api(prepend: [
             \Illuminate\Http\Middleware\HandleCors::class,
         ]);
@@ -19,6 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // También aplicar CORS a rutas web para storage
         $middleware->web(prepend: [
             \Illuminate\Http\Middleware\HandleCors::class,
+        ]);
+        
+        // Permitir CORS globalmente
+        $middleware->validateCsrfTokens(except: [
+            'api/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

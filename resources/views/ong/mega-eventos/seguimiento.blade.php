@@ -27,6 +27,7 @@
                         <a href="#" id="volverLink" class="btn btn-sm btn-secondary mr-2">
                             <i class="fas fa-arrow-left mr-1"></i> Volver
                         </a>
+                        </a>
                         <button id="btnExportarReporte" class="btn btn-sm btn-success">
                             <i class="fas fa-file-export mr-1"></i> Exportar Reporte
                         </button>
@@ -676,7 +677,23 @@ async function cargarParticipantes(estado = 'todos', buscar = '') {
                 minute: '2-digit'
             });
 
-            const nombreCompleto = `${p.nombres || ''} ${p.apellidos || ''}`.trim() || p.nombre_usuario || 'Sin nombre';
+            // Priorizar nombre_completo, luego construir desde nombres/apellidos
+            let nombreCompleto = p.nombre_completo || p.participante;
+            
+            // Si no hay nombre_completo, intentar construir desde nombres y apellidos
+            if (!nombreCompleto || nombreCompleto === 'Sin nombre' || nombreCompleto.length <= 2) {
+                const nombres = p.nombres || '';
+                const apellidos = p.apellidos || '';
+                const nombreConstruido = (nombres + ' ' + apellidos).trim();
+                nombreCompleto = nombreConstruido || p.nombre_usuario || 'Usuario';
+            }
+            
+            // Si aún es muy corto o solo tiene una letra, usar nombre_usuario
+            if (nombreCompleto.length <= 2 && p.nombre_usuario && p.nombre_usuario.length > 2) {
+                nombreCompleto = p.nombre_usuario;
+            }
+            
+            const fotoPerfil = p.foto_perfil || p.avatar || null;
             // El estado puede venir como 'estado' o 'estado_participacion' dependiendo del tipo
             const estado = p.estado || p.estado_participacion || 'pendiente';
             const estadoClass = estado === 'aprobada' ? 'badge-aprobada' : 
@@ -693,8 +710,17 @@ async function cargarParticipantes(estado = 'todos', buscar = '') {
                 <tr>
                     <td style="padding: 1rem;">
                         <div class="d-flex align-items-center">
-                            <div class="mr-2" style="width: 40px; height: 40px; border-radius: 50%; background: #F5F5F5; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                                ${p.foto_perfil ? `<img src="${p.foto_perfil}" alt="${nombreCompleto}" style="width: 100%; height: 100%; object-fit: cover;">` : `<i class="fas fa-user text-muted"></i>`}
+                            <div class="mr-2 position-relative" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                ${fotoPerfil ? `
+                                    <img src="${fotoPerfil}" alt="${nombreCompleto}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div style="width: 100%; height: 100%; display: none; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1rem;">
+                                        ${nombreCompleto.charAt(0).toUpperCase()}
+                                    </div>
+                                ` : `
+                                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1rem;">
+                                        ${nombreCompleto.charAt(0).toUpperCase()}
+                                    </div>
+                                `}
                             </div>
                             <div>
                                 <strong class="text-dark">${nombreCompleto}</strong>

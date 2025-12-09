@@ -828,13 +828,16 @@ class EventoParticipacionController extends Controller
             $ongId = $evento->ong_id ?? null;
             if (!$ongId) return;
 
+            $nombreCompleto = trim($participacion->nombres . ' ' . ($participacion->apellidos ?? ''));
+
             Notificacion::create([
-                'usuario_id' => $ongId,
-                'tipo' => 'participacion_publica',
-                'titulo' => 'Nueva participación (Usuario no registrado)',
-                'mensaje' => "{$participacion->nombres} {$participacion->apellidos} quiere participar en el evento: {$evento->titulo}",
+                'ong_id' => $ongId,
                 'evento_id' => $evento->id,
-                'leida' => false,
+                'externo_id' => null, // Usuario no registrado
+                'tipo' => 'participacion_publica',
+                'titulo' => 'Nueva participación en tu evento',
+                'mensaje' => "{$nombreCompleto} (usuario no registrado) se inscribió al evento \"{$evento->titulo}\"",
+                'leida' => false
             ]);
         } catch (\Throwable $e) {
             \Log::error('Error creando notificación de participación pública: ' . $e->getMessage());
@@ -962,12 +965,28 @@ class EventoParticipacionController extends Controller
                 ], 404);
             }
 
-            // Verificar que el evento esté "En curso" (activo)
-            if ($evento->estado_dinamico !== 'activo') {
+            // Validar que el evento esté en curso (fecha_inicio <= ahora <= fecha_fin + 30 minutos)
+            $ahora = now();
+            $fechaInicio = $evento->fecha_inicio ? \Carbon\Carbon::parse($evento->fecha_inicio) : null;
+            $fechaFin = $evento->fecha_fin ? \Carbon\Carbon::parse($evento->fecha_fin) : null;
+            
+            // El evento debe haber iniciado
+            if (!$fechaInicio || $ahora->lessThan($fechaInicio)) {
                 return response()->json([
                     "success" => false,
-                    "error" => "Solo puedes marcar asistencia cuando el evento está en curso"
+                    "error" => "Este evento aún no ha comenzado. Solo puedes registrar asistencia durante el evento o hasta 30 minutos después de finalizar."
                 ], 400);
+            }
+            
+            // El evento no debe haber finalizado hace más de 30 minutos (si tiene fecha_fin)
+            if ($fechaFin && $ahora->greaterThan($fechaFin)) {
+                $minutosDesdeFinalizacion = $ahora->diffInMinutes($fechaFin);
+                if ($minutosDesdeFinalizacion > 30) {
+                    return response()->json([
+                        "success" => false,
+                        "error" => "El plazo de 30 minutos para registrar asistencia ha expirado. Este evento finalizó hace más de 30 minutos."
+                    ], 400);
+                }
             }
 
             // Verificar que el usuario esté inscrito
@@ -1016,7 +1035,7 @@ class EventoParticipacionController extends Controller
                 "data" => [
                     'evento_id' => $evento->id,
                     'evento_titulo' => $evento->titulo,
-                    'fecha_registro' => $participacion->checkin_at,
+                    'fecha_registro' => $participacion->checkin_at ? $participacion->checkin_at->setTimezone(config('app.timezone'))->format('d/m/Y H:i') : null,
                     'estado_asistencia' => $participacion->estado_asistencia,
                 ]
             ]);
@@ -1140,15 +1159,15 @@ class EventoParticipacionController extends Controller
                         'participante' => $externo ? trim($externo->nombres . ' ' . ($externo->apellidos ?? '')) : $user->nombre_usuario,
                         'email' => $externo ? ($externo->email ?? $user->correo_electronico) : $user->correo_electronico,
                         'telefono' => $externo ? ($externo->phone_number ?? '—') : '—',
-                        'fecha_inscripcion' => $participacion->created_at->format('d/m/Y - H:i'),
+                        'fecha_inscripcion' => $participacion->created_at->setTimezone(config('app.timezone'))->format('d/m/Y - H:i'),
                         'estado_asistencia' => $estadoAsistencia,
                         'estado_asistencia_raw' => $participacion->estado_asistencia,
                         'validado_por' => $validadoPor,
                         'observaciones' => $participacion->observaciones ?? '-',
                         'comentario' => $participacion->comentario ?? '-', // Comentario de registro
                         'comentario_asistencia' => $participacion->comentario_asistencia ?? '-', // Comentario al marcar asistencia
-                        'fecha_registro_asistencia' => $participacion->checkin_at ? $participacion->checkin_at->format('d/m/Y H:i') : null,
-                        'fecha_modificacion' => $participacion->fecha_modificacion ? $participacion->fecha_modificacion->format('d/m/Y H:i') : null,
+                        'fecha_registro_asistencia' => $participacion->checkin_at ? $participacion->checkin_at->setTimezone(config('app.timezone'))->format('d/m/Y H:i') : null,
+                        'fecha_modificacion' => $participacion->fecha_modificacion ? $participacion->fecha_modificacion->setTimezone(config('app.timezone'))->format('d/m/Y H:i') : null,
                         'usuario_modifico' => $participacion->usuarioModifico ? $participacion->usuarioModifico->nombre_usuario : null,
                         'ip_registro' => $participacion->ip_registro,
                         'modo_asistencia' => $participacion->modo_asistencia,
@@ -1175,7 +1194,7 @@ class EventoParticipacionController extends Controller
                             $validadoPor = 'ONG';
                         }
                         // Usar updated_at como fecha de validación si asistio es true
-                        $fechaRegistroAsistencia = $participacion->updated_at ? $participacion->updated_at->format('d/m/Y H:i') : null;
+                        $fechaRegistroAsistencia = $participacion->updated_at ? $participacion->updated_at->setTimezone(config('app.timezone'))->format('d/m/Y H:i') : null;
                     }
                     
                     return [
@@ -1185,7 +1204,7 @@ class EventoParticipacionController extends Controller
                         'participante' => trim($participacion->nombres . ' ' . ($participacion->apellidos ?? '')),
                         'email' => $participacion->email ?? '—',
                         'telefono' => $participacion->telefono ?? '—',
-                        'fecha_inscripcion' => $participacion->created_at->format('d/m/Y - H:i'),
+                        'fecha_inscripcion' => $participacion->created_at->setTimezone(config('app.timezone'))->format('d/m/Y - H:i'),
                         'estado_asistencia' => $estadoAsistencia,
                         'estado_asistencia_raw' => $participacion->asistio ? 'asistido' : 'no_asistido',
                         'validado_por' => $validadoPor,
@@ -1369,7 +1388,7 @@ class EventoParticipacionController extends Controller
 
                     return [
                         'participante' => $externo ? trim($externo->nombres . ' ' . ($externo->apellidos ?? '')) : $user->nombre_usuario,
-                        'fecha_inscripcion' => $participacion->created_at->format('d/m/Y - H:i'),
+                        'fecha_inscripcion' => $participacion->created_at->setTimezone(config('app.timezone'))->format('d/m/Y - H:i'),
                         'estado_asistencia' => $estadoAsistencia,
                         'validado_por' => $validadoPor ?? '—',
                         'observaciones' => $participacion->observaciones ?? '—',
@@ -1384,7 +1403,7 @@ class EventoParticipacionController extends Controller
                     
                     return [
                         'participante' => trim($participacion->nombres . ' ' . ($participacion->apellidos ?? '')),
-                        'fecha_inscripcion' => $participacion->created_at->format('d/m/Y - H:i'),
+                        'fecha_inscripcion' => $participacion->created_at->setTimezone(config('app.timezone'))->format('d/m/Y - H:i'),
                         'estado_asistencia' => $estadoAsistencia,
                         'validado_por' => $participacion->asistio ? 'ONG' : '—',
                         'observaciones' => '—',
@@ -1687,19 +1706,19 @@ class EventoParticipacionController extends Controller
             }
 
             // Verificar si el evento permite registro de asistencia
-            // Permitir si está activo O si terminó hace menos de 24 horas
+            // Permitir si está activo O si terminó hace menos de 30 minutos
             $ahora = now();
             $fechaFin = $evento->fecha_fin ? \Carbon\Carbon::parse($evento->fecha_fin) : null;
             $eventoTerminado = $fechaFin && $ahora->greaterThan($fechaFin);
-            $horasDesdeFinalizacion = $eventoTerminado && $fechaFin ? $ahora->diffInHours($fechaFin) : 0;
-            $dentroDe24Horas = $horasDesdeFinalizacion <= 24;
+            $minutosDesdeFinalizacion = $eventoTerminado && $fechaFin ? $ahora->diffInMinutes($fechaFin) : 0;
+            $dentroDe30Minutos = $minutosDesdeFinalizacion <= 30;
             
-            $puedeRegistrarAsistencia = ($evento->estado_dinamico === 'activo') || ($eventoTerminado && $dentroDe24Horas);
+            $puedeRegistrarAsistencia = ($evento->estado_dinamico === 'activo') || ($eventoTerminado && $dentroDe30Minutos);
             
             if (!$puedeRegistrarAsistencia) {
-                $mensaje = $eventoTerminado && !$dentroDe24Horas 
-                    ? "El plazo de 24 horas para registrar asistencia ha expirado. Este evento finalizó hace más de 24 horas."
-                    : "Este evento aún no ha comenzado. Solo puedes validar asistencia durante el evento o hasta 24 horas después de finalizar.";
+                $mensaje = $eventoTerminado && !$dentroDe30Minutos 
+                    ? "El plazo de 30 minutos para registrar asistencia ha expirado. Este evento finalizó hace más de 30 minutos."
+                    : "Este evento aún no ha comenzado. Solo puedes validar asistencia durante el evento o hasta 30 minutos después de finalizar.";
                     
                 return response()->json([
                     "success" => false,
@@ -1773,11 +1792,19 @@ class EventoParticipacionController extends Controller
                 ], 404);
             }
 
-            // Verificar que el ticket pertenece al usuario autenticado
+            // CRÍTICO: Verificar que el ticket pertenece al usuario autenticado
+            // Esto previene que alguien use el código QR de otra persona
             if ($participacion->externo_id != $externoId) {
+                \Log::warning('Intento de usar ticket de otro usuario', [
+                    'ticket_codigo' => substr($ticketCodigo, 0, 20) . '...',
+                    'usuario_intento' => $externoId,
+                    'usuario_real' => $participacion->externo_id,
+                    'evento_id' => $participacion->evento_id
+                ]);
+                
                 return response()->json([
                     "success" => false,
-                    "error" => "Este código de ticket no está asociado a tu cuenta. Solo puedes validar tus propios tickets."
+                    "error" => "Este código de ticket no corresponde a tu inscripción. Cada código QR es único y personal. Solo puedes usar tu propio código."
                 ], 403);
             }
 
@@ -1785,7 +1812,7 @@ class EventoParticipacionController extends Controller
             if ($participacion->estado !== 'aprobada') {
                 return response()->json([
                     "success" => false,
-                    "error" => "Tu participación en este evento aún no ha sido aprobada."
+                    "error" => "Tu participación en este evento aún no ha sido aprobada. Solo puedes validar asistencia si tu inscripción fue aprobada previamente."
                 ], 400);
             }
 
@@ -1798,32 +1825,46 @@ class EventoParticipacionController extends Controller
                 ], 404);
             }
 
-            // Verificar si el evento permite registro de asistencia (hasta 24 horas después de finalizar)
+            // Validar que el evento esté en curso (fecha_inicio <= ahora <= fecha_fin + 30 minutos)
             $ahora = now();
+            $fechaInicio = $evento->fecha_inicio ? \Carbon\Carbon::parse($evento->fecha_inicio) : null;
             $fechaFin = $evento->fecha_fin ? \Carbon\Carbon::parse($evento->fecha_fin) : null;
-            $eventoTerminado = $fechaFin && $ahora->greaterThan($fechaFin);
-            $horasDesdeFinalizacion = $eventoTerminado && $fechaFin ? $ahora->diffInHours($fechaFin) : 0;
-            $dentroDe24Horas = $horasDesdeFinalizacion <= 24;
             
-            $puedeRegistrarAsistencia = ($evento->estado_dinamico === 'activo') || ($eventoTerminado && $dentroDe24Horas);
-            
-            if (!$puedeRegistrarAsistencia) {
-                $mensaje = $eventoTerminado && !$dentroDe24Horas 
-                    ? "El plazo de 24 horas para registrar asistencia ha expirado. Este evento finalizó hace más de 24 horas."
-                    : "Este evento aún no ha comenzado. Solo puedes validar asistencia durante el evento o hasta 24 horas después de finalizar.";
-                    
+            // El evento debe haber iniciado
+            if (!$fechaInicio || $ahora->lessThan($fechaInicio)) {
                 return response()->json([
                     "success" => false,
-                    "error" => $mensaje
+                    "error" => "Este evento aún no ha comenzado. Solo puedes validar asistencia durante el evento o hasta 30 minutos después de finalizar."
+                ], 400);
+            }
+            
+            // El evento no debe haber finalizado hace más de 30 minutos (si tiene fecha_fin)
+            if ($fechaFin && $ahora->greaterThan($fechaFin)) {
+                $minutosDesdeFinalizacion = $ahora->diffInMinutes($fechaFin);
+                if ($minutosDesdeFinalizacion > 30) {
+                    return response()->json([
+                        "success" => false,
+                        "error" => "El plazo de 30 minutos para registrar asistencia ha expirado. Este evento finalizó hace más de 30 minutos."
+                    ], 400);
+                }
+            }
+            
+            // Verificar que el evento esté publicado y activo
+            if ($evento->estado !== 'publicado' && $evento->estado_dinamico !== 'activo') {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Este evento no está disponible para validar asistencia en este momento."
                 ], 400);
             }
 
-            // Verificar que no haya sido usado previamente
+            // Verificar que el código no haya sido usado previamente
+            // Cada código es único e irrepetible - no se puede usar dos veces
             if ($participacion->estado_asistencia === 'asistido' && $participacion->checkin_at) {
                 return response()->json([
                     "success" => false,
-                    "error" => "Este código de ticket ya fue utilizado. No se puede reutilizar para validar asistencia.",
-                    "fecha_uso_anterior" => $participacion->checkin_at->format('d/m/Y H:i')
+                    "error" => "Este código de ticket ya fue utilizado para registrar tu asistencia. Cada código solo puede usarse una vez.",
+                    "fecha_uso_anterior" => $participacion->checkin_at->format('d/m/Y H:i'),
+                    "ya_registrado" => true
                 ], 409);
             }
 
@@ -1858,8 +1899,10 @@ class EventoParticipacionController extends Controller
                 "data" => [
                     'evento_id' => $evento->id,
                     'evento_titulo' => $evento->titulo,
-                    'fecha_registro' => $participacion->checkin_at->format('d/m/Y H:i'),
+                    'fecha_registro' => $participacion->checkin_at->setTimezone(config('app.timezone'))->format('d/m/Y H:i'),
                     'estado_asistencia' => $participacion->estado_asistencia,
+                    'redirigir' => true, // Indicar que debe redirigir
+                    'url_redireccion' => "/externo/eventos/{$evento->id}/detalle"
                 ]
             ]);
 
@@ -1897,16 +1940,25 @@ class EventoParticipacionController extends Controller
             $ticketCodigo = trim($request->input('ticket_codigo'));
 
             // Buscar participación no registrada por código de ticket y nombre
-            $participacion = EventoParticipanteNoRegistrado::where('ticket_codigo', $ticketCodigo)
-                ->orWhereRaw('LOWER(ticket_codigo) = LOWER(?)', [$ticketCodigo])
-                ->where('nombres', $nombres)
-                ->where('apellidos', $apellidos)
-                ->first();
+            // CRÍTICO: Validar que el código pertenece al nombre correcto
+            $participacion = EventoParticipanteNoRegistrado::where(function($query) use ($ticketCodigo) {
+                $query->where('ticket_codigo', $ticketCodigo)
+                      ->orWhereRaw('LOWER(ticket_codigo) = LOWER(?)', [$ticketCodigo]);
+            })
+            ->where('nombres', $nombres)
+            ->where('apellidos', $apellidos)
+            ->first();
 
             if (!$participacion) {
+                \Log::warning('Intento de usar ticket no registrado con datos incorrectos', [
+                    'ticket_codigo' => substr($ticketCodigo, 0, 20) . '...',
+                    'nombres_intento' => $nombres,
+                    'apellidos_intento' => $apellidos
+                ]);
+                
                 return response()->json([
                     "success" => false,
-                    "error" => "No se encontró una participación con esos datos. Verifica que el nombre y código de ticket sean correctos."
+                    "error" => "No se encontró una participación con esos datos. El código de ticket debe corresponder al nombre completo del participante. Verifica que el nombre y código de ticket sean correctos."
                 ], 404);
             }
 
@@ -1914,7 +1966,7 @@ class EventoParticipacionController extends Controller
             if ($participacion->estado !== 'aprobada') {
                 return response()->json([
                     "success" => false,
-                    "error" => "Tu participación en este evento aún no ha sido aprobada."
+                    "error" => "Tu participación en este evento aún no ha sido aprobada. Solo puedes validar asistencia si tu inscripción fue aprobada previamente."
                 ], 400);
             }
 
@@ -1927,23 +1979,35 @@ class EventoParticipacionController extends Controller
                 ], 404);
             }
 
-            // Verificar si el evento permite registro de asistencia (hasta 24 horas después de finalizar)
+            // Validar que el evento esté en curso (fecha_inicio <= ahora <= fecha_fin + 30 minutos)
             $ahora = now();
+            $fechaInicio = $evento->fecha_inicio ? \Carbon\Carbon::parse($evento->fecha_inicio) : null;
             $fechaFin = $evento->fecha_fin ? \Carbon\Carbon::parse($evento->fecha_fin) : null;
-            $eventoTerminado = $fechaFin && $ahora->greaterThan($fechaFin);
-            $horasDesdeFinalizacion = $eventoTerminado && $fechaFin ? $ahora->diffInHours($fechaFin) : 0;
-            $dentroDe24Horas = $horasDesdeFinalizacion <= 24;
             
-            $puedeRegistrarAsistencia = ($evento->estado_dinamico === 'activo') || ($eventoTerminado && $dentroDe24Horas);
-            
-            if (!$puedeRegistrarAsistencia) {
-                $mensaje = $eventoTerminado && !$dentroDe24Horas 
-                    ? "El plazo de 24 horas para registrar asistencia ha expirado. Este evento finalizó hace más de 24 horas."
-                    : "Este evento aún no ha comenzado. Solo puedes validar asistencia durante el evento o hasta 24 horas después de finalizar.";
-                    
+            // El evento debe haber iniciado
+            if (!$fechaInicio || $ahora->lessThan($fechaInicio)) {
                 return response()->json([
                     "success" => false,
-                    "error" => $mensaje
+                    "error" => "Este evento aún no ha comenzado. Solo puedes validar asistencia durante el evento o hasta 30 minutos después de finalizar."
+                ], 400);
+            }
+            
+            // El evento no debe haber finalizado hace más de 30 minutos (si tiene fecha_fin)
+            if ($fechaFin && $ahora->greaterThan($fechaFin)) {
+                $minutosDesdeFinalizacion = $ahora->diffInMinutes($fechaFin);
+                if ($minutosDesdeFinalizacion > 30) {
+                    return response()->json([
+                        "success" => false,
+                        "error" => "El plazo de 30 minutos para registrar asistencia ha expirado. Este evento finalizó hace más de 30 minutos."
+                    ], 400);
+                }
+            }
+            
+            // Verificar que el evento esté publicado y activo
+            if ($evento->estado !== 'publicado' && $evento->estado_dinamico !== 'activo') {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Este evento no está disponible para validar asistencia en este momento."
                 ], 400);
             }
 
@@ -1980,6 +2044,71 @@ class EventoParticipacionController extends Controller
             return response()->json([
                 "success" => false,
                 "error" => "Error al validar asistencia: " . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener eventos que inician en 5 minutos (para alertas)
+     */
+    public function alertas5Minutos(Request $request)
+    {
+        try {
+            $externoId = $request->user()->id_usuario;
+            $ahora = now();
+            $en5Minutos = $ahora->copy()->addMinutes(5);
+            $en6Minutos = $ahora->copy()->addMinutes(6);
+
+            // Obtener eventos en los que está inscrito y que inician entre ahora y 6 minutos
+            $participaciones = EventoParticipacion::where('externo_id', $externoId)
+                ->where('estado', 'aprobada')
+                ->where(function($query) {
+                    $query->whereNull('estado_asistencia')
+                          ->orWhere('estado_asistencia', '!=', 'asistido');
+                })
+                ->with(['evento' => function($query) {
+                    $query->select('id', 'titulo', 'fecha_inicio', 'fecha_fin');
+                }])
+                ->get()
+                ->filter(function($participacion) use ($ahora, $en5Minutos, $en6Minutos) {
+                    if (!$participacion->evento || !$participacion->evento->fecha_inicio) {
+                        return false;
+                    }
+                    
+                    $fechaInicio = \Carbon\Carbon::parse($participacion->evento->fecha_inicio);
+                    
+                    // El evento debe iniciar entre ahora y 6 minutos (para dar un margen)
+                    return $fechaInicio->greaterThanOrEqualTo($ahora) && 
+                           $fechaInicio->lessThanOrEqualTo($en6Minutos);
+                })
+                ->map(function($participacion) {
+                    $fechaInicio = \Carbon\Carbon::parse($participacion->evento->fecha_inicio);
+                    $ahora = now();
+                    $minutosRestantes = $ahora->diffInMinutes($fechaInicio, false);
+                    
+                    return [
+                        'evento_id' => $participacion->evento_id,
+                        'evento_titulo' => $participacion->evento->titulo,
+                        'fecha_inicio' => $participacion->evento->fecha_inicio,
+                        'minutos_restantes' => max(0, $minutosRestantes),
+                    ];
+                })
+                ->filter(function($evento) {
+                    // Solo eventos que inician en exactamente 5 minutos o menos
+                    return $evento['minutos_restantes'] <= 5 && $evento['minutos_restantes'] >= 0;
+                })
+                ->values();
+
+            return response()->json([
+                "success" => true,
+                "eventos" => $participaciones
+            ]);
+
+        } catch (\Throwable $e) {
+            \Log::error('Error obteniendo alertas de 5 minutos: ' . $e->getMessage());
+            return response()->json([
+                "success" => false,
+                "error" => "Error al obtener alertas: " . $e->getMessage()
             ], 500);
         }
     }
@@ -2041,23 +2170,32 @@ class EventoParticipacionController extends Controller
                 ], 404);
             }
 
-            // Verificar si el evento permite registro de asistencia (hasta 24 horas después de finalizar)
+            // Validar que el evento esté en curso (fecha_inicio <= ahora <= fecha_fin)
             $ahora = now();
+            $fechaInicio = $evento->fecha_inicio ? \Carbon\Carbon::parse($evento->fecha_inicio) : null;
             $fechaFin = $evento->fecha_fin ? \Carbon\Carbon::parse($evento->fecha_fin) : null;
-            $eventoTerminado = $fechaFin && $ahora->greaterThan($fechaFin);
-            $horasDesdeFinalizacion = $eventoTerminado && $fechaFin ? $ahora->diffInHours($fechaFin) : 0;
-            $dentroDe24Horas = $horasDesdeFinalizacion <= 24;
             
-            $puedeRegistrarAsistencia = ($evento->estado_dinamico === 'activo') || ($eventoTerminado && $dentroDe24Horas);
-            
-            if (!$puedeRegistrarAsistencia) {
-                $mensaje = $eventoTerminado && !$dentroDe24Horas 
-                    ? "El plazo de 24 horas para registrar asistencia ha expirado. Este evento finalizó hace más de 24 horas."
-                    : "Este evento aún no ha comenzado. Solo puedes validar asistencia durante el evento o hasta 24 horas después de finalizar.";
-                    
+            // El evento debe haber iniciado
+            if (!$fechaInicio || $ahora->lessThan($fechaInicio)) {
                 return response()->json([
                     "success" => false,
-                    "error" => $mensaje
+                    "error" => "Este evento aún no ha comenzado. Solo puedes validar asistencia cuando el evento esté en curso."
+                ], 400);
+            }
+            
+            // El evento no debe haber finalizado (si tiene fecha_fin)
+            if ($fechaFin && $ahora->greaterThan($fechaFin)) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Este evento ya finalizó. Solo puedes validar asistencia durante el evento."
+                ], 400);
+            }
+            
+            // Verificar que el evento esté publicado y activo
+            if ($evento->estado !== 'publicado' && $evento->estado_dinamico !== 'activo') {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Este evento no está disponible para validar asistencia en este momento."
                 ], 400);
             }
 
@@ -2153,16 +2291,43 @@ class EventoParticipacionController extends Controller
             }
 
             // Registrar la descarga del QR
-            $participacion->update([
-                'qr_descargado_at' => now(),
-            ]);
+            // Verificar si la columna existe antes de actualizar
+            try {
+                $participacion->update([
+                    'qr_descargado_at' => now(),
+                ]);
+            } catch (\Exception $e) {
+                // Si la columna no existe, intentar agregarla directamente
+                if (strpos($e->getMessage(), 'qr_descargado_at') !== false || strpos($e->getMessage(), 'no existe la columna') !== false) {
+                    \Log::warning('Columna qr_descargado_at no existe, intentando agregarla...');
+                    try {
+                        \DB::statement('ALTER TABLE evento_participaciones ADD COLUMN IF NOT EXISTS qr_descargado_at TIMESTAMP NULL');
+                        // Reintentar la actualización
+                        $participacion->update([
+                            'qr_descargado_at' => now(),
+                        ]);
+                    } catch (\Exception $e2) {
+                        \Log::error('Error agregando columna qr_descargado_at: ' . $e2->getMessage());
+                        return response()->json([
+                            "success" => false,
+                            "error" => "Error al registrar descarga. Por favor, contacte al administrador.",
+                            "detalle" => "La columna qr_descargado_at no existe en la base de datos. Ejecute la migración: php artisan migrate"
+                        ], 500);
+                    }
+                } else {
+                    throw $e;
+                }
+            }
+
+            // Recargar el modelo para obtener el valor actualizado
+            $participacion->refresh();
 
             return response()->json([
                 "success" => true,
                 "message" => "Descarga de QR autorizada",
                 "data" => [
                     'ticket_codigo' => $participacion->ticket_codigo,
-                    'fecha_descarga' => $participacion->qr_descargado_at->format('d/m/Y H:i:s'),
+                    'fecha_descarga' => $participacion->qr_descargado_at ? $participacion->qr_descargado_at->format('d/m/Y H:i:s') : now()->format('d/m/Y H:i:s'),
                 ]
             ]);
 

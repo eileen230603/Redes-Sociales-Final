@@ -238,7 +238,9 @@ class EventoReaccionController extends Controller
                     'total_reacciones' => EventoReaccion::where('evento_id', $eventoId)->count()
                 ]);
             } else {
-                // Crear reacción
+                // TRANSACCIÓN: Crear reacción + notificación
+                DB::transaction(function () use ($eventoId, $nombres, $apellidos, $email, $evento) {
+                    // 1. Crear reacción
                 $reaccion = EventoReaccion::create([
                     'evento_id' => $eventoId,
                     'externo_id' => null,
@@ -246,13 +248,16 @@ class EventoReaccionController extends Controller
                     'apellidos' => $apellidos,
                     'email' => $email,
                 ]);
+                    
+                    // 2. Crear notificación para la ONG
+                    $this->crearNotificacionReaccionPublica($evento, $nombres, $apellidos);
+                });
 
                 // Contar TODAS las reacciones (registradas y no registradas)
                 $totalReacciones = EventoReaccion::where('evento_id', $eventoId)->count();
 
                 \Log::info('Reacción pública creada:', [
                     'evento_id' => $eventoId,
-                    'reaccion_id' => $reaccion->id,
                     'nombres' => $nombres,
                     'apellidos' => $apellidos,
                     'total_reacciones' => $totalReacciones
@@ -301,6 +306,30 @@ class EventoReaccionController extends Controller
         } catch (\Throwable $e) {
             // Log error pero no fallar la reacción
             \Log::error('Error creando notificación de reacción: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Crear notificación para la ONG cuando un usuario no registrado reacciona
+     */
+    private function crearNotificacionReaccionPublica(Evento $evento, $nombres, $apellidos)
+    {
+        try {
+            $nombreCompleto = trim($nombres . ' ' . ($apellidos ?? ''));
+
+            Notificacion::create([
+                'ong_id' => $evento->ong_id,
+                'evento_id' => $evento->id,
+                'externo_id' => null, // Usuario no registrado
+                'tipo' => 'reaccion_publica',
+                'titulo' => 'Nueva reacción en tu evento',
+                'mensaje' => "{$nombreCompleto} (usuario no registrado) reaccionó con un corazón al evento \"{$evento->titulo}\"",
+                'leida' => false
+            ]);
+
+        } catch (\Throwable $e) {
+            // Log error pero no fallar la reacción
+            \Log::error('Error creando notificación de reacción pública: ' . $e->getMessage());
         }
     }
 

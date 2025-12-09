@@ -67,14 +67,6 @@ async function cargarMegaEventos() {
     const token = localStorage.getItem("token");
     const cont = document.getElementById("listaMegaEventos");
 
-    if (!token) {
-        cont.innerHTML = `<div class="alert alert-warning">
-            <p>Debes iniciar sesión para ver los mega eventos.</p>
-            <a href="/login" class="btn btn-primary">Iniciar sesión</a>
-        </div>`;
-        return;
-    }
-
     cont.innerHTML = '<div class="col-12 text-center py-3"><div class="spinner-border text-primary" role="status"><span class="sr-only">Cargando...</span></div><p class="mt-2 text-muted">Cargando mega eventos...</p></div>';
 
     try {
@@ -88,13 +80,18 @@ async function cargarMegaEventos() {
 
         const url = `${API_BASE_URL}/api/mega-eventos/publicos${params.toString() ? '?' + params.toString() : ''}`;
 
+        // Headers opcionales - incluir token solo si existe
+        const headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        };
+        if (token) {
+            headers["Authorization"] = `Bearer ${token}`;
+        }
+
         const res = await fetch(url, {
             method: 'GET',
-            headers: { 
-                "Authorization": `Bearer ${token}`,
-                "Accept": "application/json",
-                "Content-Type": "application/json"
-            }
+            headers: headers
         });
 
         if (!res.ok) {

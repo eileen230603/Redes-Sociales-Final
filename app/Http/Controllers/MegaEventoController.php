@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use App\Models\MegaEvento;
 use App\Models\Notificacion;
+use App\Models\Ong;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class MegaEventoController extends Controller
 {
@@ -156,52 +158,338 @@ class MegaEventoController extends Controller
                 return response()->json([
                     'success' => false,
                     'error' => 'Usuario no autenticado'
-                ], 401);
+                ], 401)->header('Access-Control-Allow-Origin', '*')
+                  ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                  ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
             }
 
             // Filtrar solo los mega eventos de la ONG autenticada
             $ongIdAutenticada = (int) $usuarioAutenticado->id_usuario;
             
-            $query = MegaEvento::with('ongPrincipal')
-                ->where('ong_organizadora_principal', $ongIdAutenticada);
+            \Log::info('Mega Evento Index - Iniciando', [
+                'ong_id' => $ongIdAutenticada,
+                'request_params' => $request->all()
+            ]);
+            
+            // Construir query directamente con DB::table para evitar problemas con accessors
+            $ahora = now();
+            $query = DB::table('mega_eventos')
+                ->where('ong_organizadora_principal', $ongIdAutenticada)
+                // Excluir mega eventos finalizados por defecto (a menos que se pida explícitamente)
+                ->where(function($q) use ($ahora, $request) {
+                    // Si se solicita explícitamente ver finalizados, incluirlos
+                    if ($request->has('estado') && $request->estado === 'finalizado') {
+                        $q->whereNotNull('fecha_fin')
+                          ->where('fecha_fin', '<', $ahora);
+                    } else {
+                        // Por defecto, excluir los que ya finalizaron
+                        $q->where(function($subQ) use ($ahora) {
+                            $subQ->whereNull('fecha_fin')
+                                 ->orWhere('fecha_fin', '>=', $ahora);
+                        });
+                    }
+                });
             
             // Filtro por categoría
             if ($request->has('categoria') && $request->categoria !== '' && $request->categoria !== 'todos') {
                 $query->where('categoria', $request->categoria);
             }
             
-            // Filtro por estado
-            if ($request->has('estado') && $request->estado !== '' && $request->estado !== 'todos') {
+            // Filtro por estado (solo si no es 'finalizado' que ya se maneja arriba)
+            if ($request->has('estado') && $request->estado !== '' && $request->estado !== 'todos' && $request->estado !== 'finalizado') {
                 $query->where('estado', $request->estado);
             }
             
             // Búsqueda por título o descripción
             if ($request->has('buscar') && $request->buscar !== '') {
-                $buscar = $request->buscar;
-                $query->where(function($q) use ($buscar) {
-                    $q->where('titulo', 'ilike', "%{$buscar}%")
-                      ->orWhere('descripcion', 'ilike', "%{$buscar}%");
+                $buscar = trim($request->buscar);
+                $buscarLower = '%' . strtolower($buscar) . '%';
+                // Construir búsqueda con whereRaw para evitar problemas con closures en DB::table()
+                $query->where(function($q) use ($buscarLower) {
+                    $q->whereRaw('LOWER(COALESCE(titulo::text, \'\')) LIKE ?', [$buscarLower])
+                      ->orWhereRaw('LOWER(COALESCE(descripcion::text, \'\')) LIKE ?', [$buscarLower]);
                 });
             }
             
-            $megaEventos = $query->orderByDesc('mega_evento_id')->get();
-            
-            // Procesar imágenes para cada mega evento (el accessor del modelo ya genera URLs completas)
-            foreach ($megaEventos as $mega) {
-                // El accessor del modelo ya convierte las imágenes a URLs completas
-                $mega->makeVisible('imagenes');
+            // Obtener resultados
+            try {
+                $megaEventos = $query->orderByDesc('mega_evento_id')->get();
+                \Log::info('Mega Evento Index - Consulta exitosa', [
+                    'count' => $megaEventos->count()
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('Error en consulta DB: ' . $e->getMessage(), [
+                    'trace' => $e->getTraceAsString()
+                ]);
+                throw $e;
             }
+            
+            // Procesar cada mega evento de forma segura
+            $megaEventosArray = [];
+            foreach ($megaEventos as $mega) {
+                try {
+                    // Obtener datos directamente de la base de datos
+                    // Helper para formatear fechas de forma segura
+                    $formatDate = function($date) {
+                        if (!$date) return null;
+                        try {
+                            if (is_string($date)) {
+                                return Carbon::parse($date)->format('Y-m-d H:i:s');
+                            } elseif ($date instanceof \DateTime) {
+                                return $date->format('Y-m-d H:i:s');
+                            }
+                            return $date;
+                        } catch (\Exception $e) {
+                            \Log::warning('Error formateando fecha: ' . $e->getMessage());
+                            return is_string($date) ? $date : null;
+                        }
+                    };
+                    
+                    $megaData = [
+                        'mega_evento_id' => (int) ($mega->mega_evento_id ?? 0),
+                        'titulo' => $mega->titulo ?? '',
+                        'descripcion' => $mega->descripcion ?? null,
+                        'fecha_inicio' => $formatDate($mega->fecha_inicio ?? null),
+                        'fecha_fin' => $formatDate($mega->fecha_fin ?? null),
+                        'ubicacion' => $mega->ubicacion ?? null,
+                        'lat' => isset($mega->lat) && $mega->lat !== null ? (float) $mega->lat : null,
+                        'lng' => isset($mega->lng) && $mega->lng !== null ? (float) $mega->lng : null,
+                        'categoria' => $mega->categoria ?? 'social',
+                        'estado' => $mega->estado ?? 'planificacion',
+                        'es_publico' => (bool) ($mega->es_publico ?? false),
+                        'activo' => (bool) ($mega->activo ?? true),
+                        'fecha_creacion' => $formatDate($mega->fecha_creacion ?? null),
+                        'fecha_actualizacion' => $formatDate($mega->fecha_actualizacion ?? null),
+                        'ong_organizadora_principal' => isset($mega->ong_organizadora_principal) ? (int) $mega->ong_organizadora_principal : null,
+                    ];
+                    
+                    // Procesar capacidad_maxima
+                    $capacidadMaxima = $mega->capacidad_maxima ?? null;
+                    if ($capacidadMaxima !== null && is_numeric($capacidadMaxima)) {
+                        $megaData['capacidad_maxima'] = (int) $capacidadMaxima;
+                    } else {
+                        $megaData['capacidad_maxima'] = null;
+                    }
+                    
+                    // Procesar imágenes - MEJORADO
+                    $imagenesRaw = $mega->imagenes ?? null;
+                    $imagenes = [];
+                    
+                    if ($imagenesRaw) {
+                        // Decodificar si es string JSON
+                        if (is_string($imagenesRaw)) {
+                            $imagenesRaw = json_decode($imagenesRaw, true) ?: [];
+                        }
+                        if (!is_array($imagenesRaw)) {
+                            $imagenesRaw = [];
+                        }
+                        
+                        // Obtener base URL del request o configuración
+                        $baseUrl = $request->getSchemeAndHttpHost() ?: env('APP_URL', 'http://10.26.0.215:8000');
+                        
+                        foreach ($imagenesRaw as $img) {
+                            if (empty($img) || !is_string($img)) continue;
+                            
+                            $img = trim($img);
+                            // Filtrar rutas inválidas (solo si no es URL completa)
+                            $esUrlCompleta = strpos($img, 'http://') === 0 || strpos($img, 'https://') === 0;
+                            if (!$esUrlCompleta && (stripos($img, 'wp-content') !== false || 
+                                stripos($img, 'resizer/') !== false || 
+                                stripos($img, '/resizer/') !== false)) {
+                                continue;
+                            }
+                            
+                            // Si ya es URL completa, reemplazar IPs antiguas y usar directamente
+                            if (strpos($img, 'http://') === 0 || strpos($img, 'https://') === 0) {
+                                // Reemplazar IPs antiguas explícitamente
+                                $img = str_replace('http://127.0.0.1:8000', $baseUrl, $img);
+                                $img = str_replace('https://127.0.0.1:8000', $baseUrl, $img);
+                                $img = str_replace('http://192.168.0.6:8000', $baseUrl, $img);
+                                $img = str_replace('https://192.168.0.6:8000', $baseUrl, $img);
+                                $img = str_replace('http://10.26.15.110:8000', $baseUrl, $img);
+                                $img = str_replace('https://10.26.15.110:8000', $baseUrl, $img);
+                                
+                                // Si es una URL externa de internet, mantenerla
+                                $parsedUrl = parse_url($img);
+                                $currentHost = parse_url($baseUrl, PHP_URL_HOST);
+                                
+                                if (isset($parsedUrl['host']) && $parsedUrl['host'] !== $currentHost) {
+                                    // Si no es localhost ni IP local, es URL externa - mantenerla
+                                    if ($parsedUrl['host'] !== 'localhost' && 
+                                        $parsedUrl['host'] !== '127.0.0.1' && 
+                                        strpos($parsedUrl['host'], '192.168.') !== 0 &&
+                                        strpos($parsedUrl['host'], '10.26.') !== 0) {
+                                        $imagenes[] = $img;
+                                        continue;
+                                    }
+                                    
+                                    // Es IP local antigua, actualizar host
+                                    $parsedUrl['scheme'] = parse_url($baseUrl, PHP_URL_SCHEME) ?? 'http';
+                                    $parsedUrl['host'] = $currentHost;
+                                    $parsedUrl['port'] = parse_url($baseUrl, PHP_URL_PORT);
+                                    
+                                    $img = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] 
+                                        . (isset($parsedUrl['port']) ? ':' . $parsedUrl['port'] : '') 
+                                        . ($parsedUrl['path'] ?? '');
+                                }
+                                
+                                $imagenes[] = $img;
+                                continue;
+                            }
+                            
+                            // Función helper para obtener la ruta de storage
+                            $getStoragePath = function($image) {
+                                // Si empieza con /storage/, extraer la parte después
+                                if (strpos($image, '/storage/') === 0) {
+                                    return ltrim(str_replace('/storage/', '', $image), '/');
+                                }
+                                // Si empieza con storage/, quitar el prefijo
+                                if (strpos($image, 'storage/') === 0) {
+                                    return ltrim(str_replace('storage/', '', $image), '/');
+                                }
+                                // Si es ruta relativa, retornarla
+                                return ltrim($image, '/');
+                            };
+                            
+                            $storagePath = $getStoragePath($img);
+                            
+                            // Verificar si el archivo existe en storage
+                            $existe = Storage::disk('public')->exists($storagePath);
+                            
+                            // Construir URL completa para rutas de storage
+                            $urlCompleta = rtrim($baseUrl, '/') . '/storage/' . $storagePath;
+                            
+                            // Solo agregar si el archivo existe O si parece ser una ruta válida de mega_eventos
+                            if ($existe || (strpos($storagePath, 'mega_eventos/') === 0 && preg_match('/\.(jpg|jpeg|png|gif|webp|svg)$/i', $storagePath))) {
+                                $imagenes[] = $urlCompleta;
+                                
+                                if (!$existe) {
+                                    \Log::warning('Imagen agregada sin verificación de existencia', [
+                                        'storage_path' => $storagePath,
+                                        'url' => $urlCompleta,
+                                        'mega_evento_id' => $mega->mega_evento_id ?? 'N/A'
+                                    ]);
+                                }
+                            } else {
+                                \Log::debug('Imagen omitida - no existe en storage', [
+                                    'storage_path' => $storagePath,
+                                    'mega_evento_id' => $mega->mega_evento_id ?? 'N/A'
+                                ]);
+                            }
+                        }
+                    }
+                    
+                    // Filtrar duplicados y valores nulos
+                    $megaData['imagenes'] = array_values(array_unique(array_filter($imagenes)));
+                    
+                    // Log para depuración
+                    if (count($megaData['imagenes']) > 0) {
+                        \Log::info('Imágenes procesadas para mega evento', [
+                            'mega_evento_id' => $mega->mega_evento_id ?? 'N/A',
+                            'total' => count($megaData['imagenes']),
+                            'imagenes' => $megaData['imagenes']
+                        ]);
+                    }
+                    
+                    // Cargar ONG organizadora de forma segura usando DB::table para evitar problemas
+                    try {
+                        if ($mega->ong_organizadora_principal) {
+                            $ongData = DB::table('ongs')
+                                ->join('usuarios', 'ongs.user_id', '=', 'usuarios.id_usuario')
+                                ->where('ongs.user_id', $mega->ong_organizadora_principal)
+                                ->select(
+                                    'ongs.user_id',
+                                    'ongs.nombre_ong',
+                                    'ongs.foto_perfil as ong_foto_perfil',
+                                    'usuarios.nombre_usuario',
+                                    'usuarios.foto_perfil as usuario_foto_perfil'
+                                )
+                                ->first();
+                            
+                            if ($ongData) {
+                                // Obtener foto_perfil sin usar el accessor (priorizar foto de ONG, luego de usuario)
+                                $fotoPerfil = $ongData->ong_foto_perfil ?? $ongData->usuario_foto_perfil ?? null;
+                                $fotoPerfilUrl = null;
+                                if ($fotoPerfil) {
+                                    if (strpos($fotoPerfil, 'http://') === 0 || strpos($fotoPerfil, 'https://') === 0) {
+                                        $fotoPerfilUrl = $fotoPerfil;
+                                    } else {
+                                        // Usar el origen de la petición
+                                        $origin = $request->header('Origin') 
+                                            ?? $request->getSchemeAndHttpHost() 
+                                            ?? env('PUBLIC_APP_URL', env('APP_URL', 'http://10.26.0.215:8000'));
+                                        $fotoPerfilUrl = rtrim($origin, '/') . '/storage/' . ltrim($fotoPerfil, '/');
+                                    }
+                                }
+                                
+                                $megaData['ong_principal'] = [
+                                    'user_id' => $ongData->user_id,
+                                    'nombre_ong' => $ongData->nombre_ong ?? '',
+                                    'nombre_usuario' => $ongData->nombre_usuario ?? '',
+                                    'nombre' => $ongData->nombre_ong ?? $ongData->nombre_usuario ?? 'ONG',
+                                    'foto_perfil_url' => $fotoPerfilUrl,
+                                    'avatar' => $fotoPerfilUrl // Alias para compatibilidad
+                                ];
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        \Log::warning('Error al cargar ONG: ' . $e->getMessage());
+                        // Continuar sin la ONG si hay error
+                    }
+                    
+                    $megaEventosArray[] = $megaData;
+                } catch (\Exception $e) {
+                    \Log::error('Error al procesar mega evento: ' . $e->getMessage(), [
+                        'mega_evento_id' => $mega->mega_evento_id ?? 'unknown',
+                        'trace' => $e->getTraceAsString()
+                    ]);
+                    // Continuar con el siguiente si hay error
+                    continue;
+                }
+            }
+            
+            \Log::info('Mega Evento Index - Completado', [
+                'count' => count($megaEventosArray)
+            ]);
             
             return response()->json([
                 'success' => true,
-                'mega_eventos' => $megaEventos,
-                'count' => $megaEventos->count()
-            ]);
+                'mega_eventos' => $megaEventosArray,
+                'count' => count($megaEventosArray)
+            ])->header('Access-Control-Allow-Origin', '*')
+              ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+              ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         } catch (\Throwable $e) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Error al obtener mega eventos: ' . $e->getMessage()
-            ], 500);
+            \Log::error('Mega Evento Index - Error completo', [
+                'error_message' => $e->getMessage(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine(),
+                'error_trace' => $e->getTraceAsString(),
+                'error_class' => get_class($e)
+            ]);
+            
+            // Asegurar que siempre se devuelva una respuesta con headers CORS
+            try {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Error al obtener mega eventos: ' . $e->getMessage(),
+                    'error_details' => config('app.debug') ? [
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
+                        'trace' => $e->getTraceAsString(),
+                        'class' => get_class($e)
+                    ] : null
+                ], 500)->header('Access-Control-Allow-Origin', '*')
+                  ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                  ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+            } catch (\Exception $responseError) {
+                // Si falla la respuesta JSON, devolver respuesta simple
+                \Log::error('Error al crear respuesta de error: ' . $responseError->getMessage());
+                return response('Error interno del servidor', 500)
+                    ->header('Access-Control-Allow-Origin', '*')
+                    ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                    ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+            }
         }
     }
 
@@ -255,7 +543,9 @@ class MegaEventoController extends Controller
                 'categoria' => $data['categoria'] ?? 'social',
                 'estado' => $data['estado'] ?? 'planificacion',
                 'ong_organizadora_principal' => $data['ong_organizadora_principal'],
-                'capacidad_maxima' => $data['capacidad_maxima'] ?? null,
+                'capacidad_maxima' => isset($data['capacidad_maxima']) && $data['capacidad_maxima'] !== '' && is_numeric($data['capacidad_maxima']) && (int)$data['capacidad_maxima'] > 0 
+                    ? (int) $data['capacidad_maxima'] 
+                    : null,
                 'es_publico' => $data['es_publico'] ?? false,
                 'activo' => $data['activo'] ?? true,
                 'imagenes' => [], // Inicializar vacío
@@ -269,6 +559,56 @@ class MegaEventoController extends Controller
                 $megaEvento->imagenes = $imagenes;
                 $megaEvento->fecha_actualizacion = now();
                 $megaEvento->save();
+            }
+
+            // Procesar patrocinadores
+            $patrocinadoresIds = [];
+            if ($request->has('patrocinadores')) {
+                $patrocinadoresRaw = $request->input('patrocinadores');
+                if (is_string($patrocinadoresRaw)) {
+                    $patrocinadoresIds = json_decode($patrocinadoresRaw, true) ?? [];
+                } elseif (is_array($patrocinadoresRaw)) {
+                    $patrocinadoresIds = $patrocinadoresRaw;
+                }
+            }
+
+            // Guardar patrocinadores en la tabla mega_evento_patrocinadores
+            if (!empty($patrocinadoresIds) && is_array($patrocinadoresIds)) {
+                foreach ($patrocinadoresIds as $empresaId) {
+                    try {
+                        $empresaId = (int) $empresaId;
+                        // Verificar que la empresa existe
+                        $empresa = \App\Models\Empresa::where('user_id', $empresaId)->first();
+                        if (!$empresa) {
+                            \Log::warning("Empresa con user_id {$empresaId} no encontrada al crear patrocinador para mega evento {$megaEvento->mega_evento_id}");
+                            continue;
+                        }
+
+                        // Verificar si ya existe
+                        $existe = DB::table('mega_evento_patrocinadores')
+                            ->where('mega_evento_id', $megaEvento->mega_evento_id)
+                            ->where('empresa_id', $empresaId)
+                            ->exists();
+
+                        if (!$existe) {
+                            DB::table('mega_evento_patrocinadores')->insert([
+                                'mega_evento_id' => $megaEvento->mega_evento_id,
+                                'empresa_id' => $empresaId,
+                                'tipo_patrocinio' => null,
+                                'monto_contribucion' => null,
+                                'tipo_contribucion' => null,
+                                'descripcion_contribucion' => null,
+                                'fecha_compromiso' => now(),
+                                'estado_compromiso' => 'confirmado',
+                                'activo' => true,
+                            ]);
+                            \Log::info("Patrocinador {$empresaId} agregado a mega evento {$megaEvento->mega_evento_id}");
+                        }
+                    } catch (\Throwable $e) {
+                        \Log::error("Error agregando patrocinador {$empresaId} al mega evento {$megaEvento->mega_evento_id}: " . $e->getMessage());
+                        // Continuar con los demás patrocinadores aunque uno falle
+                    }
+                }
             }
 
             return response()->json([
@@ -308,8 +648,247 @@ class MegaEventoController extends Controller
                 ], 404);
             }
 
-            // El accessor del modelo ya genera URLs completas
+            // Obtener imágenes directamente desde PostgreSQL
+            $imagenesRaw = $megaEvento->getRawOriginal('imagenes');
+            
+            \Log::info('Mega Evento Show - Imágenes desde PostgreSQL', [
+                'mega_evento_id' => $id,
+                'imagenes_raw_type' => gettype($imagenesRaw),
+                'imagenes_raw' => $imagenesRaw
+            ]);
+            
+            // Procesar imágenes desde PostgreSQL JSON
+            $imagenesProcesadas = [];
+            if ($imagenesRaw) {
+                // Si es string JSON (como viene de PostgreSQL), decodificarlo
+                if (is_string($imagenesRaw)) {
+                    $imagenesDecoded = json_decode($imagenesRaw, true);
+                    if (is_array($imagenesDecoded)) {
+                        $imagenesProcesadas = $imagenesDecoded;
+                    } elseif (json_last_error() === JSON_ERROR_NONE && $imagenesDecoded !== null) {
+                        // Si es un solo valor, convertirlo a array
+                        $imagenesProcesadas = [$imagenesDecoded];
+                    }
+                } elseif (is_array($imagenesRaw)) {
+                    $imagenesProcesadas = $imagenesRaw;
+                }
+            }
+            
+            \Log::info('Mega Evento Show - Imágenes decodificadas', [
+                'mega_evento_id' => $id,
+                'imagenes_procesadas_count' => count($imagenesProcesadas),
+                'imagenes_procesadas' => $imagenesProcesadas
+            ]);
+            
+            // Procesar cada imagen para construir URLs completas
+            $baseUrl = request()->getSchemeAndHttpHost() ?? env('PUBLIC_APP_URL', env('APP_URL', 'http://10.26.0.215:8000'));
+            
+            $imagenesFinales = [];
+            foreach ($imagenesProcesadas as $img) {
+                if (empty($img) || !is_string($img)) continue;
+                
+                // Verificar si es URL completa antes de filtrar
+                $esUrlCompleta = strpos($img, 'http://') === 0 || strpos($img, 'https://') === 0;
+                
+                // Filtrar rutas inválidas (solo si no es URL completa)
+                if (!$esUrlCompleta) {
+                    if (strpos($img, '/templates/') !== false || 
+                        strpos($img, '/cache/') !== false || 
+                        strpos($img, '/yootheme/') !== false ||
+                        strpos($img, '/resizer/') !== false ||
+                        strpos($img, '/wp-content/') !== false ||
+                        strpos($img, 'templates/') !== false || 
+                        strpos($img, 'cache/') !== false || 
+                        strpos($img, 'yootheme/') !== false ||
+                        strpos($img, 'resizer/') !== false ||
+                        strpos($img, 'wp-content/') !== false) {
+                        continue;
+                    }
+                }
+                
+                // Si ya es URL completa, mantenerla (pero actualizar host si es necesario)
+                if ($esUrlCompleta) {
+                    // Reemplazar IPs antiguas explícitamente
+                    $img = str_replace('http://127.0.0.1:8000', $baseUrl, $img);
+                    $img = str_replace('https://127.0.0.1:8000', $baseUrl, $img);
+                    $img = str_replace('http://192.168.0.6:8000', $baseUrl, $img);
+                    $img = str_replace('https://192.168.0.6:8000', $baseUrl, $img);
+                    $img = str_replace('http://10.26.15.110:8000', $baseUrl, $img);
+                    $img = str_replace('https://10.26.15.110:8000', $baseUrl, $img);
+                    
+                    // Actualizar host si es diferente (solo para IPs locales antiguas)
+                    $parsedUrl = parse_url($img);
+                    $currentHost = parse_url($baseUrl, PHP_URL_HOST);
+                    
+                    if (isset($parsedUrl['host']) && $parsedUrl['host'] !== $currentHost) {
+                        // Solo actualizar si es una IP local antigua
+                        $hostsAntiguos = ['127.0.0.1', '10.26.0.215'];
+                        if (in_array($parsedUrl['host'], $hostsAntiguos) || 
+                            strpos($parsedUrl['host'], 'localhost') !== false) {
+                            $parsedUrl['scheme'] = parse_url($baseUrl, PHP_URL_SCHEME) ?? 'http';
+                            $parsedUrl['host'] = $currentHost;
+                            $parsedUrl['port'] = parse_url($baseUrl, PHP_URL_PORT);
+                            
+                            $img = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] 
+                                . (isset($parsedUrl['port']) ? ':' . $parsedUrl['port'] : '') 
+                                . ($parsedUrl['path'] ?? '');
+                        }
+                    }
+                    $imagenesFinales[] = $img;
+                } elseif (str_starts_with($img, '/storage/')) {
+                    // Verificar si es una ruta externa mal formateada
+                    $rutasExternas = ['/storage/resizer/', '/storage/wp-content/', '/storage/templates/', 
+                                     '/storage/cache/', '/storage/yootheme/'];
+                    $esRutaExterna = false;
+                    foreach ($rutasExternas as $ruta) {
+                        if (stripos($img, $ruta) === 0) {
+                            $esRutaExterna = true;
+                            break;
+                        }
+                    }
+                    
+                    if ($esRutaExterna) {
+                        // Es una ruta externa mal formateada, omitirla
+                        \Log::warning('Ruta externa mal formateada detectada en mega evento', [
+                            'mega_evento_id' => $id,
+                            'ruta' => $img
+                        ]);
+                        continue;
+                    }
+                    
+                    // Ruta relativa con /storage/
+                    $imagenesFinales[] = rtrim($baseUrl, '/') . $img;
+                } elseif (str_starts_with($img, 'storage/')) {
+                    // Verificar si es una ruta externa mal formateada
+                    $rutasExternas = ['storage/resizer/', 'storage/wp-content/', 'storage/templates/', 
+                                     'storage/cache/', 'storage/yootheme/'];
+                    $esRutaExterna = false;
+                    foreach ($rutasExternas as $ruta) {
+                        if (stripos($img, $ruta) === 0) {
+                            $esRutaExterna = true;
+                            break;
+                        }
+                    }
+                    
+                    if ($esRutaExterna) {
+                        // Es una ruta externa mal formateada, omitirla
+                        \Log::warning('Ruta externa mal formateada detectada en mega evento', [
+                            'mega_evento_id' => $id,
+                            'ruta' => $img
+                        ]);
+                        continue;
+                    }
+                    
+                    // Ruta relativa con storage/
+                    $imagenesFinales[] = rtrim($baseUrl, '/') . '/' . $img;
+                } else {
+                    // Verificar si es una ruta externa sin prefijo
+                    $rutasExternas = ['resizer/', 'wp-content/', 'templates/', 'cache/', 'yootheme/'];
+                    $esRutaExterna = false;
+                    foreach ($rutasExternas as $ruta) {
+                        if (stripos($img, $ruta) !== false) {
+                            $esRutaExterna = true;
+                            break;
+                        }
+                    }
+                    
+                    if ($esRutaExterna) {
+                        // Es una ruta externa, omitirla
+                        \Log::warning('Ruta externa detectada en mega evento (sin URL completa)', [
+                            'mega_evento_id' => $id,
+                            'ruta' => $img
+                        ]);
+                        continue;
+                    }
+                    
+                    // Ruta relativa sin prefijo
+                    $imagenesFinales[] = rtrim($baseUrl, '/') . '/storage/' . ltrim($img, '/');
+                }
+            }
+            
+            \Log::info('Mega Evento Show - Imágenes finales procesadas', [
+                'mega_evento_id' => $id,
+                'imagenes_finales_count' => count($imagenesFinales),
+                'imagenes_finales' => $imagenesFinales
+            ]);
+            
+            // Asignar las imágenes procesadas directamente como array
+            // Esto asegura que se serialicen como array en JSON, no como string
+            $megaEvento->setAttribute('imagenes', $imagenesFinales);
             $megaEvento->makeVisible('imagenes');
+            
+            // Asegurar que capacidad_maxima esté visible y se devuelva correctamente
+            $megaEvento->makeVisible('capacidad_maxima');
+            
+            // Obtener el valor crudo de capacidad_maxima para asegurar que se devuelva correctamente
+            $capacidadMaxima = $megaEvento->getRawOriginal('capacidad_maxima');
+            // Si es null, mantenerlo como null; si es numérico, convertirlo a int
+            if ($capacidadMaxima !== null && is_numeric($capacidadMaxima)) {
+                $megaEvento->capacidad_maxima = (int) $capacidadMaxima;
+            } else {
+                $megaEvento->capacidad_maxima = null;
+            }
+
+            // Obtener patrocinadores (empresas que patrocinan este mega evento)
+            $patrocinadores = DB::table('mega_evento_patrocinadores as mep')
+                ->join('empresas as e', 'mep.empresa_id', '=', 'e.user_id')
+                ->join('usuarios as u', 'e.user_id', '=', 'u.id_usuario')
+                ->where('mep.mega_evento_id', $id)
+                ->where('mep.activo', true)
+                ->select(
+                    'e.user_id as id',
+                    'e.nombre_empresa as nombre',
+                    'e.NIT',
+                    'e.descripcion',
+                    'u.foto_perfil',
+                    'mep.tipo_patrocinio',
+                    'mep.monto_contribucion',
+                    'mep.tipo_contribucion',
+                    'mep.estado_compromiso'
+                )
+                ->get()
+                ->map(function($pat) use ($id) {
+                    $fotoPerfil = null;
+                    if ($pat->foto_perfil) {
+                        $fotoPerfil = $pat->foto_perfil;
+                        
+                        // Filtrar rutas inválidas
+                        if (strpos($fotoPerfil, '/templates/') !== false || 
+                            strpos($fotoPerfil, '/cache/') !== false || 
+                            strpos($fotoPerfil, '/yootheme/') !== false) {
+                            $fotoPerfil = null;
+                        } else {
+                            // Construir URL completa si no lo es
+                            if (!str_starts_with($fotoPerfil, 'http://') && !str_starts_with($fotoPerfil, 'https://')) {
+                                $baseUrl = request()->getSchemeAndHttpHost() ?? env('PUBLIC_APP_URL', env('APP_URL', 'http://10.26.0.215:8000'));
+                                
+                                // Si ya empieza con /storage/, solo agregar el dominio
+                                if (str_starts_with($fotoPerfil, '/storage/')) {
+                                    $fotoPerfil = rtrim($baseUrl, '/') . $fotoPerfil;
+                                } elseif (str_starts_with($fotoPerfil, 'storage/')) {
+                                    $fotoPerfil = rtrim($baseUrl, '/') . '/' . $fotoPerfil;
+                                } else {
+                                    // Si es una ruta relativa, agregar /storage/
+                                    $fotoPerfil = rtrim($baseUrl, '/') . '/storage/' . ltrim($fotoPerfil, '/');
+                                }
+                            }
+                        }
+                    }
+                    
+                    return [
+                        'id' => $pat->id,
+                        'nombre' => $pat->nombre,
+                        'NIT' => $pat->NIT,
+                        'descripcion' => $pat->descripcion,
+                        'foto_perfil' => $fotoPerfil,
+                        'tipo_patrocinio' => $pat->tipo_patrocinio,
+                        'monto_contribucion' => $pat->monto_contribucion,
+                        'tipo_contribucion' => $pat->tipo_contribucion,
+                        'estado_compromiso' => $pat->estado_compromiso,
+                    ];
+                });
+            
+            $megaEvento->patrocinadores = $patrocinadores;
 
             // Asegurar que la relación ongPrincipal incluya el accessor foto_perfil_url
             if ($megaEvento->ongPrincipal) {
@@ -343,9 +922,25 @@ class MegaEventoController extends Controller
                 ->where('activo', true)
                 ->count();
 
+            // Preparar el mega evento para la respuesta JSON
+            // Convertir a array y asegurar que las imágenes sean un array
+            $megaEventoArray = $megaEvento->toArray();
+            
+            // Asegurar que las imágenes sean un array, no un string JSON
+            // Forzar que las imágenes procesadas se asignen directamente como array
+            $megaEventoArray['imagenes'] = $imagenesFinales;
+            
+            \Log::info('Mega Evento Show - Respuesta JSON final', [
+                'mega_evento_id' => $id,
+                'imagenes_count' => count($imagenesFinales),
+                'imagenes_type' => gettype($megaEventoArray['imagenes']),
+                'imagenes_is_array' => is_array($megaEventoArray['imagenes']),
+                'imagenes_sample' => count($imagenesFinales) > 0 ? $imagenesFinales[0] : null
+            ]);
+            
             return response()->json([
                 'success' => true,
-                'mega_evento' => $megaEvento
+                'mega_evento' => $megaEventoArray
             ]);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
@@ -375,6 +970,11 @@ class MegaEventoController extends Controller
                 ], 404);
             }
 
+            // Si no viene ong_organizadora_principal, usar el que ya tiene el mega evento
+            if (!$request->has('ong_organizadora_principal') && $megaEvento->ong_organizadora_principal) {
+                $request->merge(['ong_organizadora_principal' => $megaEvento->ong_organizadora_principal]);
+            }
+
             $validator = Validator::make($request->all(), [
                 'titulo' => 'sometimes|required|string|max:200',
                 'descripcion' => 'nullable|string',
@@ -385,7 +985,7 @@ class MegaEventoController extends Controller
                 'lng' => 'nullable|numeric|between:-180,180',
                 'categoria' => 'nullable|string|max:50',
                 'estado' => 'nullable|string|max:20|in:planificacion,activo,en_curso,finalizado,cancelado',
-                'ong_organizadora_principal' => 'sometimes|required|integer|exists:ongs,user_id',
+                'ong_organizadora_principal' => 'sometimes|integer|exists:ongs,user_id',
                 'capacidad_maxima' => 'nullable|integer|min:1',
                 'es_publico' => 'nullable|boolean',
                 'activo' => 'nullable|boolean',
@@ -401,8 +1001,125 @@ class MegaEventoController extends Controller
                 ], 422);
             }
 
-            $data = $request->all();
+            // Obtener todos los campos del request
+            // FormData siempre envía los campos, aunque estén vacíos
+            $requestData = $request->all();
+            
+            // Extraer solo los campos que necesitamos
+            // IMPORTANTE: Siempre incluir los campos que vienen del request, incluso si están vacíos
+            $data = [];
+            $camposPermitidos = [
+                'titulo', 'descripcion', 'fecha_inicio', 'fecha_fin',
+                'ubicacion', 'lat', 'lng', 'categoria', 'estado',
+                'es_publico', 'activo', 'ong_organizadora_principal', 'capacidad_maxima'
+            ];
+            
+            foreach ($camposPermitidos as $campo) {
+                // FormData siempre envía los campos, así que siempre los incluimos si están presentes
+                if ($request->has($campo)) {
+                    $value = $request->input($campo);
+                    // Incluir el campo incluso si está vacío (para poder establecer null)
+                    $data[$campo] = $value;
+                }
+            }
+            
+            // Asegurar que fecha_actualizacion siempre se actualice
             $data['fecha_actualizacion'] = now();
+            
+            // Log para depuración - mostrar TODOS los datos recibidos
+            \Log::info('Mega Evento Update - Request recibido', [
+                'mega_evento_id' => $id,
+                'campos_recibidos' => array_keys($data),
+                'data_values' => $data,
+                'request_all_keys' => array_keys($requestData),
+                'request_all_values' => $requestData,
+                'request_method' => $request->method(),
+                'request_content_type' => $request->header('Content-Type'),
+                'has_titulo' => $request->has('titulo'),
+                'titulo_value' => $request->input('titulo'),
+                'has_descripcion' => $request->has('descripcion'),
+                'descripcion_value' => $request->input('descripcion'),
+                'has_capacidad_maxima' => $request->has('capacidad_maxima'),
+                'capacidad_maxima_value' => $request->input('capacidad_maxima')
+            ]);
+
+            // Normalizar valores booleanos para PostgreSQL
+            if (isset($data['es_publico'])) {
+                $esPublicoValue = $data['es_publico'];
+                if (is_string($esPublicoValue)) {
+                    $data['es_publico'] = in_array(strtolower($esPublicoValue), ['1', 'true', 'yes', 'on']);
+                } else {
+                    $data['es_publico'] = filter_var($esPublicoValue, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
+                }
+            }
+            if (isset($data['activo'])) {
+                $activoValue = $data['activo'];
+                if (is_string($activoValue)) {
+                    $data['activo'] = in_array(strtolower($activoValue), ['1', 'true', 'yes', 'on']);
+                } else {
+                    $data['activo'] = filter_var($activoValue, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
+                }
+            }
+            
+            // Normalizar coordenadas
+            if (isset($data['lat']) && $data['lat'] !== '' && $data['lat'] !== null) {
+                $data['lat'] = is_numeric($data['lat']) ? (float) $data['lat'] : null;
+            }
+            if (isset($data['lng']) && $data['lng'] !== '' && $data['lng'] !== null) {
+                $data['lng'] = is_numeric($data['lng']) ? (float) $data['lng'] : null;
+            }
+
+            // Normalizar valores numéricos - Capacidad máxima
+            // Verificar si el campo existe en el array de datos (FormData siempre envía el campo, aunque esté vacío)
+            if (array_key_exists('capacidad_maxima', $data)) {
+                $capacidadValue = $data['capacidad_maxima'];
+                if ($capacidadValue === '' || $capacidadValue === null || $capacidadValue === 'null' || (is_string($capacidadValue) && trim($capacidadValue) === '')) {
+                    $data['capacidad_maxima'] = null;
+                } elseif (is_numeric($capacidadValue) && (int)$capacidadValue > 0) {
+                    $data['capacidad_maxima'] = (int) $capacidadValue;
+                } else {
+                    $data['capacidad_maxima'] = null;
+                }
+            } else {
+                // Si no viene el campo, mantener el valor existente
+                $data['capacidad_maxima'] = $megaEvento->capacidad_maxima;
+            }
+            
+            // Normalizar coordenadas - asegurar que se guarden correctamente
+            if (isset($data['lat'])) {
+                if ($data['lat'] === '' || $data['lat'] === null) {
+                    $data['lat'] = null;
+                } elseif (is_numeric($data['lat'])) {
+                    $data['lat'] = (float) $data['lat'];
+                } else {
+                    $data['lat'] = null;
+                }
+            }
+            
+            if (isset($data['lng'])) {
+                if ($data['lng'] === '' || $data['lng'] === null) {
+                    $data['lng'] = null;
+                } elseif (is_numeric($data['lng'])) {
+                    $data['lng'] = (float) $data['lng'];
+                } else {
+                    $data['lng'] = null;
+                }
+            }
+            
+            // Asegurar que ubicación se guarde correctamente
+            if (isset($data['ubicacion']) && is_string($data['ubicacion']) && trim($data['ubicacion']) === '') {
+                $data['ubicacion'] = null;
+            }
+            
+            // Asegurar que descripción se guarde correctamente
+            if (isset($data['descripcion']) && is_string($data['descripcion']) && trim($data['descripcion']) === '') {
+                $data['descripcion'] = null;
+            }
+            
+            // Asegurar que categoría se guarde correctamente
+            if (isset($data['categoria']) && is_string($data['categoria']) && trim($data['categoria']) === '') {
+                $data['categoria'] = null;
+            }
 
             // Detectar si se está finalizando el mega evento (para notificación)
             $estadoAnterior = $megaEvento->estado;
@@ -437,7 +1154,7 @@ class MegaEventoController extends Controller
                         
                         // Si el host no es localhost ni el dominio actual, es URL de internet
                         if (!empty($host) && 
-                            !in_array($host, ['localhost', '127.0.0.1', '192.168.0.6']) && 
+                            !in_array($host, ['localhost', '127.0.0.1', '10.26.0.215']) && 
                             $host !== $appHost &&
                             strpos($host, $appHost) === false &&
                             strpos($appHost, $host) === false) {
@@ -465,45 +1182,362 @@ class MegaEventoController extends Controller
             ]);
             
             // TRANSACCIÓN: Procesar imágenes + actualizar mega evento + notificación si se finaliza
-            DB::transaction(function () use ($megaEvento, $data, $imagenesActuales, $nuevasImagenes, $seEstaFinalizando) {
+            DB::transaction(function () use ($megaEvento, &$data, $imagenesActuales, $nuevasImagenes, $seEstaFinalizando, $id) {
+                // Recargar el mega evento dentro de la transacción para asegurar datos frescos
+                $megaEvento = MegaEvento::findOrFail($id);
                 // 1. Combinar imágenes existentes con nuevas
-            $imagenesActuales = array_merge($imagenesActuales, $nuevasImagenes);
-            
+                $imagenesCombinadas = array_merge($imagenesActuales, $nuevasImagenes);
+                
                 // 2. Eliminar duplicados y valores nulos, reindexar array
-            $data['imagenes'] = array_values(array_unique(array_filter($imagenesActuales)));
-            
-                // 3. Asegurar que lat y lng se guarden correctamente
-            if (isset($data['lat']) && $data['lat'] === '') {
-                $data['lat'] = null;
-            }
-            if (isset($data['lng']) && $data['lng'] === '') {
-                $data['lng'] = null;
-            }
+                $imagenesFinales = array_values(array_unique(array_filter($imagenesCombinadas, function($img) {
+                    return !empty($img) && is_string($img);
+                })));
+                
+                // 3. Preparar array de datos para actualizar - SIEMPRE incluir todos los campos
+                $updateData = [];
+                
+                // IMPORTANTE: FormData siempre envía los campos, aunque estén vacíos
+                // Por lo tanto, siempre debemos usar los valores del request si están presentes
+                
+                // TÍTULO - SIEMPRE actualizar si viene del request
+                if (isset($data['titulo'])) {
+                    $updateData['titulo'] = trim($data['titulo']) !== '' ? trim($data['titulo']) : $megaEvento->titulo;
+                } else {
+                    $updateData['titulo'] = $megaEvento->titulo;
+                }
+                
+                // DESCRIPCIÓN
+                if (isset($data['descripcion'])) {
+                    $descripcionValue = trim($data['descripcion']);
+                    $updateData['descripcion'] = $descripcionValue === '' ? null : $descripcionValue;
+                } else {
+                    $updateData['descripcion'] = $megaEvento->descripcion;
+                }
+                
+                // FECHAS - convertir strings a formato de base de datos
+                if (isset($data['fecha_inicio']) && $data['fecha_inicio'] !== null && $data['fecha_inicio'] !== '') {
+                    try {
+                        if (is_string($data['fecha_inicio'])) {
+                            $updateData['fecha_inicio'] = Carbon::parse($data['fecha_inicio'])->format('Y-m-d H:i:s');
+                        } elseif ($data['fecha_inicio'] instanceof Carbon || $data['fecha_inicio'] instanceof \DateTime) {
+                            $updateData['fecha_inicio'] = $data['fecha_inicio']->format('Y-m-d H:i:s');
+                        } else {
+                            $updateData['fecha_inicio'] = $data['fecha_inicio'];
+                        }
+                    } catch (\Exception $e) {
+                        \Log::error('Error parseando fecha_inicio: ' . $e->getMessage());
+                        $updateData['fecha_inicio'] = $megaEvento->fecha_inicio instanceof Carbon 
+                            ? $megaEvento->fecha_inicio->format('Y-m-d H:i:s')
+                            : $megaEvento->fecha_inicio;
+                    }
+                } else {
+                    $updateData['fecha_inicio'] = $megaEvento->fecha_inicio instanceof Carbon 
+                        ? $megaEvento->fecha_inicio->format('Y-m-d H:i:s')
+                        : $megaEvento->fecha_inicio;
+                }
+                
+                if (isset($data['fecha_fin']) && $data['fecha_fin'] !== null && $data['fecha_fin'] !== '') {
+                    try {
+                        if (is_string($data['fecha_fin'])) {
+                            $updateData['fecha_fin'] = Carbon::parse($data['fecha_fin'])->format('Y-m-d H:i:s');
+                        } elseif ($data['fecha_fin'] instanceof Carbon || $data['fecha_fin'] instanceof \DateTime) {
+                            $updateData['fecha_fin'] = $data['fecha_fin']->format('Y-m-d H:i:s');
+                        } else {
+                            $updateData['fecha_fin'] = $data['fecha_fin'];
+                        }
+                    } catch (\Exception $e) {
+                        \Log::error('Error parseando fecha_fin: ' . $e->getMessage());
+                        $updateData['fecha_fin'] = $megaEvento->fecha_fin instanceof Carbon 
+                            ? $megaEvento->fecha_fin->format('Y-m-d H:i:s')
+                            : $megaEvento->fecha_fin;
+                    }
+                } else {
+                    $updateData['fecha_fin'] = $megaEvento->fecha_fin instanceof Carbon 
+                        ? $megaEvento->fecha_fin->format('Y-m-d H:i:s')
+                        : $megaEvento->fecha_fin;
+                }
+                
+                // UBICACIÓN
+                if (isset($data['ubicacion'])) {
+                    $updateData['ubicacion'] = trim($data['ubicacion']) === '' ? null : trim($data['ubicacion']);
+                } else {
+                    $updateData['ubicacion'] = $megaEvento->ubicacion;
+                }
+                
+                // Coordenadas - convertir a decimal si es necesario
+                if (isset($data['lat'])) {
+                    if ($data['lat'] === '' || $data['lat'] === null) {
+                        $updateData['lat'] = null;
+                    } else {
+                        $updateData['lat'] = is_numeric($data['lat']) ? (float) $data['lat'] : null;
+                    }
+                } else {
+                    $updateData['lat'] = $megaEvento->lat;
+                }
+                
+                if (isset($data['lng'])) {
+                    if ($data['lng'] === '' || $data['lng'] === null) {
+                        $updateData['lng'] = null;
+                    } else {
+                        $updateData['lng'] = is_numeric($data['lng']) ? (float) $data['lng'] : null;
+                    }
+                } else {
+                    $updateData['lng'] = $megaEvento->lng;
+                }
+                
+                // CATEGORÍA
+                if (isset($data['categoria'])) {
+                    $updateData['categoria'] = trim($data['categoria']) === '' ? null : trim($data['categoria']);
+                } else {
+                    $updateData['categoria'] = $megaEvento->categoria;
+                }
+                
+                // ESTADO
+                if (isset($data['estado']) && $data['estado'] !== null && $data['estado'] !== '') {
+                    $updateData['estado'] = $data['estado'];
+                } else {
+                    $updateData['estado'] = $megaEvento->estado;
+                }
+                
+                // CAPACIDAD MÁXIMA - usar el valor normalizado del request
+                if (isset($data['capacidad_maxima'])) {
+                    $updateData['capacidad_maxima'] = $data['capacidad_maxima']; // Ya está normalizado (null o int)
+                } else {
+                    $updateData['capacidad_maxima'] = $megaEvento->capacidad_maxima;
+                }
+                
+                // ES PÚBLICO
+                if (isset($data['es_publico'])) {
+                    $updateData['es_publico'] = $data['es_publico']; // Ya está normalizado (bool)
+                } else {
+                    $updateData['es_publico'] = $megaEvento->es_publico;
+                }
+                
+                // ACTIVO
+                if (isset($data['activo'])) {
+                    $updateData['activo'] = $data['activo']; // Ya está normalizado (bool)
+                } else {
+                    $updateData['activo'] = $megaEvento->activo;
+                }
+                
+                // Imágenes - siempre actualizar
+                $updateData['imagenes'] = json_encode($imagenesFinales);
+                
+                // Fecha de actualización - siempre actualizar
+                $updateData['fecha_actualizacion'] = now()->format('Y-m-d H:i:s');
+                
+                // ONG organizadora principal (si viene, actualizarla)
+                if (isset($data['ong_organizadora_principal']) && !empty($data['ong_organizadora_principal'])) {
+                    $updateData['ong_organizadora_principal'] = $data['ong_organizadora_principal'];
+                }
 
-                // 4. Actualizar mega evento
-            $megaEvento->update($data);
+                // 4. Log de datos que se van a guardar (para depuración)
+                \Log::info('Mega Evento Update - Datos a guardar en DB', [
+                    'mega_evento_id' => $megaEvento->mega_evento_id,
+                    'campos' => array_keys($updateData),
+                    'updateData' => $updateData,
+                    'data_original' => $data
+                ]);
 
-                // 5. Si se está finalizando el mega evento, crear notificación para la ONG
-            if ($seEstaFinalizando && $megaEvento->ong_organizadora_principal) {
-                try {
-                    Notificacion::create([
-                        'ong_id' => $megaEvento->ong_organizadora_principal,
-                        'evento_id' => null, // Para mega eventos no usamos evento_id
-                        'externo_id' => null,
-                        'tipo' => 'mega_evento_finalizado',
-                        'titulo' => 'Mega evento finalizado',
-                        'mensaje' => "Tu mega evento '{$megaEvento->titulo}' ha sido marcado como finalizado. Ya no está disponible para nuevas participaciones o interacciones.",
-                        'leida' => false,
+                // 5. Preparar datos finales para la base de datos
+                // Asegurar que los valores estén en el formato correcto para PostgreSQL
+                $dbUpdateData = [];
+                foreach ($updateData as $key => $value) {
+                    // Convertir booleanos a true/false explícitos
+                    if (is_bool($value)) {
+                        $dbUpdateData[$key] = $value;
+                    } 
+                    // Mantener null como null
+                    elseif ($value === null) {
+                        $dbUpdateData[$key] = null;
+                    }
+                    // Convertir strings 'true'/'false'/'1'/'0' a booleanos para campos booleanos
+                    elseif (in_array($key, ['es_publico', 'activo']) && is_string($value)) {
+                        $dbUpdateData[$key] = in_array(strtolower($value), ['1', 'true', 'yes', 'on']);
+                    }
+                    // Mantener el resto de valores como están (ya están formateados)
+                    else {
+                        $dbUpdateData[$key] = $value;
+                    }
+                }
+                
+                \Log::info('Mega Evento Update - Datos finales para DB', [
+                    'mega_evento_id' => $megaEvento->mega_evento_id,
+                    'db_update_data' => $dbUpdateData,
+                    'keys_count' => count($dbUpdateData),
+                    'titulo' => $dbUpdateData['titulo'] ?? 'not_set',
+                    'estado' => $dbUpdateData['estado'] ?? 'not_set',
+                    'capacidad_maxima' => $dbUpdateData['capacidad_maxima'] ?? 'not_set'
+                ]);
+                
+                // 6. Actualizar usando Eloquent directamente (más confiable)
+                // Recargar el modelo primero para asegurar que tenemos los datos más recientes
+                $megaEvento->refresh();
+                
+                // Actualizar campo por campo usando Eloquent
+                foreach ($dbUpdateData as $key => $value) {
+                    $megaEvento->$key = $value;
+                }
+                
+                $saved = $megaEvento->save();
+                
+                \Log::info('Mega Evento Update - Resultado de Eloquent save', [
+                    'saved' => $saved,
+                    'wasChanged' => $megaEvento->wasChanged(),
+                    'getChanges' => $megaEvento->getChanges(),
+                    'mega_evento_id' => $megaEvento->mega_evento_id,
+                    'update_data_count' => count($dbUpdateData)
+                ]);
+                
+                if (!$saved) {
+                    \Log::error('Mega Evento Update - ERROR CRÍTICO: No se pudo guardar con Eloquent', [
+                        'mega_evento_id' => $megaEvento->mega_evento_id,
+                        'update_data' => $dbUpdateData,
+                        'model_errors' => $megaEvento->getErrors() ?? 'none'
                     ]);
-                } catch (\Throwable $e) {
-                    \Log::error('Error al crear notificación de mega evento finalizado: ' . $e->getMessage());
+                    
+                    // Intentar con DB::table como fallback
+                    $affectedRows = DB::table('mega_eventos')
+                        ->where('mega_evento_id', $megaEvento->mega_evento_id)
+                        ->update($dbUpdateData);
+                    
+                    if ($affectedRows === 0) {
+                        throw new \Exception('No se pudieron actualizar los datos del mega evento en la base de datos');
+                    }
+                    
+                    \Log::info('Mega Evento Update - ✅ Actualización exitosa con DB::table (fallback)', [
+                        'affected_rows' => $affectedRows
+                    ]);
+                } else {
+                    \Log::info('Mega Evento Update - ✅ Actualización exitosa con Eloquent', [
+                        'changes' => $megaEvento->getChanges()
+                    ]);
+                }
+                
+                // 6. Verificar que se guardó correctamente consultando directamente la BD
+                $megaEventoVerificado = DB::table('mega_eventos')
+                    ->where('mega_evento_id', $megaEvento->mega_evento_id)
+                    ->first();
+                
+                if (!$megaEventoVerificado) {
+                    \Log::error('Mega Evento Update - ERROR: No se encontró el mega evento después de actualizar');
+                    throw new \Exception('Error al verificar la actualización del mega evento');
+                }
+                
+                \Log::info('Mega Evento Update - Verificación desde BD', [
+                    'mega_evento_id' => $megaEvento->mega_evento_id,
+                    'titulo_bd' => $megaEventoVerificado->titulo ?? 'not_found',
+                    'estado_bd' => $megaEventoVerificado->estado ?? 'not_found',
+                    'capacidad_maxima_bd' => $megaEventoVerificado->capacidad_maxima ?? 'not_found',
+                    'descripcion_bd' => $megaEventoVerificado->descripcion ?? 'not_found',
+                    'categoria_bd' => $megaEventoVerificado->categoria ?? 'not_found',
+                    'ubicacion_bd' => $megaEventoVerificado->ubicacion ?? 'not_found',
+                    'fecha_actualizacion_bd' => $megaEventoVerificado->fecha_actualizacion ?? 'not_found'
+                ]);
+
+                // 7. Si se está finalizando el mega evento, crear notificación para la ONG
+                if ($seEstaFinalizando && $megaEvento->ong_organizadora_principal) {
+                    try {
+                        Notificacion::create([
+                            'ong_id' => $megaEvento->ong_organizadora_principal,
+                            'evento_id' => null, // Para mega eventos no usamos evento_id
+                            'externo_id' => null,
+                            'tipo' => 'mega_evento_finalizado',
+                            'titulo' => 'Mega evento finalizado',
+                            'mensaje' => "Tu mega evento '{$updateData['titulo']}' ha sido marcado como finalizado. Ya no está disponible para nuevas participaciones o interacciones.",
+                            'leida' => false,
+                        ]);
+                    } catch (\Throwable $e) {
+                        \Log::error('Error al crear notificación de mega evento finalizado: ' . $e->getMessage());
+                    }
+                }
+            }, 5); // Reintentar hasta 5 veces en caso de deadlock
+            
+            // Procesar patrocinadores si vienen en el request
+            $patrocinadoresIds = [];
+            if ($request->has('patrocinadores')) {
+                $patrocinadoresRaw = $request->input('patrocinadores');
+                if (is_string($patrocinadoresRaw)) {
+                    $patrocinadoresIds = json_decode($patrocinadoresRaw, true) ?? [];
+                } elseif (is_array($patrocinadoresRaw)) {
+                    $patrocinadoresIds = $patrocinadoresRaw;
                 }
             }
-            });
+
+            // Si vienen patrocinadores, actualizar la tabla mega_evento_patrocinadores
+            if (!empty($patrocinadoresIds) && is_array($patrocinadoresIds)) {
+                // Eliminar patrocinadores existentes que no están en la nueva lista
+                DB::table('mega_evento_patrocinadores')
+                    ->where('mega_evento_id', $id)
+                    ->whereNotIn('empresa_id', $patrocinadoresIds)
+                    ->update(['activo' => false]);
+
+                // Agregar nuevos patrocinadores o reactivar los existentes
+                foreach ($patrocinadoresIds as $empresaId) {
+                    try {
+                        $empresaId = (int) $empresaId;
+                        // Verificar que la empresa existe
+                        $empresa = \App\Models\Empresa::where('user_id', $empresaId)->first();
+                        if (!$empresa) {
+                            \Log::warning("Empresa con user_id {$empresaId} no encontrada al actualizar patrocinador para mega evento {$id}");
+                            continue;
+                        }
+
+                        // Verificar si ya existe
+                        $existe = DB::table('mega_evento_patrocinadores')
+                            ->where('mega_evento_id', $id)
+                            ->where('empresa_id', $empresaId)
+                            ->exists();
+
+                        if ($existe) {
+                            // Reactivar si estaba desactivado
+                            DB::table('mega_evento_patrocinadores')
+                                ->where('mega_evento_id', $id)
+                                ->where('empresa_id', $empresaId)
+                                ->update(['activo' => true]);
+                        } else {
+                            // Crear nuevo registro
+                            DB::table('mega_evento_patrocinadores')->insert([
+                                'mega_evento_id' => $id,
+                                'empresa_id' => $empresaId,
+                                'tipo_patrocinio' => null,
+                                'monto_contribucion' => null,
+                                'tipo_contribucion' => null,
+                                'descripcion_contribucion' => null,
+                                'fecha_compromiso' => now(),
+                                'estado_compromiso' => 'confirmado',
+                                'activo' => true,
+                            ]);
+                        }
+                        \Log::info("Patrocinador {$empresaId} actualizado/agregado a mega evento {$id}");
+                    } catch (\Throwable $e) {
+                        \Log::error("Error actualizando patrocinador {$empresaId} al mega evento {$id}: " . $e->getMessage());
+                        // Continuar con los demás patrocinadores aunque uno falle
+                    }
+                }
+            }
             
-            // Forzar refresh para obtener las imágenes procesadas
-            $megaEvento->refresh();
+            // Forzar refresh desde la base de datos para obtener los datos más recientes
+            $megaEvento = MegaEvento::with('ongPrincipal')->findOrFail($id);
             $megaEvento->makeVisible('imagenes');
+            $megaEvento->makeVisible('capacidad_maxima');
+            
+            // Asegurar que capacidad_maxima se devuelva correctamente
+            $capacidadMaxima = $megaEvento->getRawOriginal('capacidad_maxima');
+            if ($capacidadMaxima !== null && is_numeric($capacidadMaxima)) {
+                $megaEvento->capacidad_maxima = (int) $capacidadMaxima;
+            } else {
+                $megaEvento->capacidad_maxima = null;
+            }
+            
+            \Log::info('Mega Evento Update - Datos finales devueltos', [
+                'mega_evento_id' => $megaEvento->mega_evento_id,
+                'titulo' => $megaEvento->titulo,
+                'estado' => $megaEvento->estado,
+                'capacidad_maxima' => $megaEvento->capacidad_maxima,
+                'descripcion' => $megaEvento->descripcion,
+                'categoria' => $megaEvento->categoria
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -512,9 +1546,22 @@ class MegaEventoController extends Controller
             ]);
 
         } catch (\Throwable $e) {
+            \Log::error('Mega Evento Update - Error completo', [
+                'mega_evento_id' => $id,
+                'error_message' => $e->getMessage(),
+                'error_trace' => $e->getTraceAsString(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine()
+            ]);
+            
             return response()->json([
                 'success' => false,
-                'error' => 'Error al actualizar mega evento: ' . $e->getMessage()
+                'error' => 'Error al actualizar mega evento: ' . $e->getMessage(),
+                'error_details' => config('app.debug') ? [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ] : null
             ], 500);
         }
     }
@@ -696,13 +1743,17 @@ class MegaEventoController extends Controller
 
             // TRANSACCIÓN: Insertar participación + crear notificación
             DB::transaction(function () use ($megaEventoId, $integranteExterno, $megaEvento, $externoId) {
-                // 1. Crear participación
+                // 1. Crear participación con ticket único
             DB::table('mega_evento_participantes_externos')->insert([
                 'mega_evento_id' => $megaEventoId,
                 'integrante_externo_id' => $integranteExterno->user_id,
                 'estado_participacion' => 'aprobada', // Aprobación automática
                 'fecha_registro' => now(),
-                'activo' => true
+                'activo' => true,
+                // Generar código de ticket único para control de asistencia
+                'ticket_codigo' => \Illuminate\Support\Str::uuid()->toString(),
+                // Estado de asistencia por defecto
+                'estado_asistencia' => 'no_asistido',
             ]);
 
                 // 2. Crear notificación para la ONG
@@ -718,6 +1769,45 @@ class MegaEventoController extends Controller
             return response()->json([
                 'success' => false,
                 'error' => 'Error al participar en mega evento: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Cancelar participación en un mega evento (Usuario Externo)
+     */
+    public function cancelarParticipacion(Request $request, $megaEventoId)
+    {
+        try {
+            $externoId = $request->user()->id_usuario;
+            
+            // Buscar participación del usuario en este mega evento
+            $participacion = DB::table('mega_evento_participantes_externos')
+                ->where('mega_evento_id', $megaEventoId)
+                ->where('externo_id', $externoId)
+                ->first();
+            
+            if (!$participacion) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "No estás inscrito en este mega evento"
+                ], 404);
+            }
+            
+            // Eliminar participación
+            DB::table('mega_evento_participantes_externos')
+                ->where('mega_evento_id', $megaEventoId)
+                ->where('externo_id', $externoId)
+                ->delete();
+            
+            return response()->json([
+                "success" => true,
+                "message" => "Participación cancelada exitosamente"
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                "success" => false,
+                "error" => "Error al cancelar participación: " . $e->getMessage()
             ], 500);
         }
     }
@@ -916,12 +2006,16 @@ class MegaEventoController extends Controller
             $ongId = $megaEvento->ong_organizadora_principal ?? null;
             if (!$ongId) return;
 
+            $nombreCompleto = trim($participacion->nombres . ' ' . ($participacion->apellidos ?? ''));
+
             \App\Models\Notificacion::create([
-                'usuario_id' => $ongId,
-                'tipo' => 'participacion_publica',
-                'titulo' => 'Nueva participación (Usuario no registrado)',
-                'mensaje' => "{$participacion->nombres} {$participacion->apellidos} quiere participar en el mega evento: {$megaEvento->titulo}",
-                'leida' => false,
+                'ong_id' => $ongId,
+                'evento_id' => null, // Los mega eventos no tienen evento_id
+                'externo_id' => null, // Usuario no registrado
+                'tipo' => 'participacion_mega_evento_publica',
+                'titulo' => 'Nueva participación en tu mega evento',
+                'mensaje' => "{$nombreCompleto} (usuario no registrado) se inscribió al mega evento \"{$megaEvento->titulo}\"",
+                'leida' => false
             ]);
         } catch (\Throwable $e) {
             \Log::error('Error creando notificación de participación pública de mega evento: ' . $e->getMessage());
@@ -948,7 +2042,7 @@ class MegaEventoController extends Controller
                 ->join('mega_eventos as me', 'mep.mega_evento_id', '=', 'me.mega_evento_id')
                 ->where('mep.integrante_externo_id', $integranteExterno->user_id)
                 ->where('mep.activo', true)
-                ->select('me.*', 'mep.estado_participacion', 'mep.fecha_registro', 'mep.tipo_participacion')
+                ->select('me.*', 'mep.estado_participacion', 'mep.fecha_registro', 'mep.tipo_participacion', 'mep.ticket_codigo', 'mep.estado_asistencia', 'mep.asistio', 'mep.checkin_at')
                 ->orderByDesc('mep.fecha_registro')
                 ->get();
 
@@ -957,6 +2051,22 @@ class MegaEventoController extends Controller
                 $mega = MegaEvento::find($participacion->mega_evento_id);
                 if ($mega) {
                     $mega->makeVisible('imagenes');
+                    
+                    // Si no tiene ticket_codigo, generarlo automáticamente (para usuarios que se inscribieron antes)
+                    $ticketCodigo = $participacion->ticket_codigo;
+                    if (!$ticketCodigo && $participacion->estado_participacion === 'aprobada') {
+                        try {
+                            $nuevoTicket = \Illuminate\Support\Str::uuid()->toString();
+                            DB::table('mega_evento_participantes_externos')
+                                ->where('mega_evento_id', $participacion->mega_evento_id)
+                                ->where('integrante_externo_id', $integranteExterno->user_id)
+                                ->update(['ticket_codigo' => $nuevoTicket]);
+                            $ticketCodigo = $nuevoTicket;
+                        } catch (\Exception $e) {
+                            \Log::warning('Error generando ticket para mega evento: ' . $e->getMessage());
+                        }
+                    }
+                    
                     $megaEventos[] = [
                         'mega_evento_id' => $mega->mega_evento_id,
                         'titulo' => $mega->titulo,
@@ -969,6 +2079,10 @@ class MegaEventoController extends Controller
                         'estado_participacion' => $participacion->estado_participacion,
                         'fecha_registro' => $participacion->fecha_registro,
                         'tipo_participacion' => $participacion->tipo_participacion,
+                        'ticket_codigo' => $ticketCodigo,
+                        'estado_asistencia' => $participacion->estado_asistencia ?? 'no_asistido',
+                        'asistio' => $participacion->asistio ?? false,
+                        'checkin_at' => $participacion->checkin_at,
                         'ong' => $mega->ongPrincipal ? [
                             'nombre' => $mega->ongPrincipal->nombre_ong,
                             'foto_perfil' => $mega->ongPrincipal->foto_perfil_url ?? null
@@ -996,9 +2110,24 @@ class MegaEventoController extends Controller
     public function publicos(Request $request)
     {
         try {
+            // Headers CORS para todas las respuestas
+            $corsHeaders = [
+                'Access-Control-Allow-Origin' => '*',
+                'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS',
+                'Access-Control-Allow-Headers' => 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
+                'Access-Control-Max-Age' => '86400',
+            ];
+            
+            $ahora = now();
+            
             $query = MegaEvento::with('ongPrincipal')
                 ->where('es_publico', true)
-                ->where('activo', true);
+                ->where('activo', true)
+                // Excluir mega eventos que ya finalizaron (fecha_fin < ahora)
+                ->where(function($q) use ($ahora) {
+                    $q->whereNull('fecha_fin')
+                      ->orWhere('fecha_fin', '>=', $ahora);
+                });
             
             // Filtro por categoría
             if ($request->has('categoria') && $request->categoria !== '' && $request->categoria !== 'todos') {
@@ -1016,19 +2145,218 @@ class MegaEventoController extends Controller
             
             $megaEventos = $query->orderByDesc('fecha_inicio')->get();
             
+            // Obtener el origen de la petición para generar URLs correctas
+            $origin = $request->header('Origin') 
+                ?? $request->getSchemeAndHttpHost() 
+                ?? env('PUBLIC_APP_URL', env('APP_URL', 'http://10.26.0.215:8000'));
+            
+            // Procesar imágenes para usar URLs completas
             foreach ($megaEventos as $mega) {
                 $mega->makeVisible('imagenes');
+                
+                // Procesar imágenes para asegurar URLs completas
+                if ($mega->imagenes && is_array($mega->imagenes)) {
+                    $imagenesProcesadas = [];
+                    foreach ($mega->imagenes as $imagen) {
+                        if (empty($imagen) || !is_string($imagen)) continue;
+                        
+                        if (strpos($imagen, 'http://') === 0 || strpos($imagen, 'https://') === 0) {
+                            // Si ya es una URL completa, verificar si necesita actualización
+                            $parsedUrl = parse_url($imagen);
+                            if (isset($parsedUrl['host']) && $parsedUrl['host'] !== parse_url($origin, PHP_URL_HOST)) {
+                                // Reemplazar el host si es diferente
+                                $parsedUrl['scheme'] = parse_url($origin, PHP_URL_SCHEME) ?? 'http';
+                                $parsedUrl['host'] = parse_url($origin, PHP_URL_HOST);
+                                $parsedUrl['port'] = parse_url($origin, PHP_URL_PORT);
+                                $imagen = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] 
+                                    . (isset($parsedUrl['port']) ? ':' . $parsedUrl['port'] : '') 
+                                    . ($parsedUrl['path'] ?? '');
+                            }
+                            $imagenesProcesadas[] = $imagen;
+                        } elseif (strpos($imagen, '/storage/') === 0) {
+                            // Ruta relativa - construir URL con el origen actual
+                            $imagenesProcesadas[] = rtrim($origin, '/') . $imagen;
+                        } else {
+                            // Ruta sin prefijo - agregar /storage/
+                            $imagenesProcesadas[] = rtrim($origin, '/') . '/storage/' . ltrim($imagen, '/');
+                        }
+                    }
+                    $mega->imagenes = $imagenesProcesadas;
+                }
             }
             
             return response()->json([
                 'success' => true,
                 'mega_eventos' => $megaEventos,
                 'count' => $megaEventos->count()
-            ]);
+            ], 200, $corsHeaders);
         } catch (\Throwable $e) {
+            \Log::error('Error en publicos: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return response()->json([
                 'success' => false,
                 'error' => 'Error al obtener mega eventos públicos: ' . $e->getMessage()
+            ], 500, [
+                'Access-Control-Allow-Origin' => '*',
+                'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS',
+                'Access-Control-Allow-Headers' => 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
+                'Access-Control-Max-Age' => '86400',
+            ]);
+        }
+    }
+
+    /**
+     * Obtener mega eventos en curso (para ONG)
+     */
+    public function enCurso(Request $request)
+    {
+        try {
+            $usuarioAutenticado = $request->user();
+            
+            if (!$usuarioAutenticado) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Usuario no autenticado'
+                ], 401);
+            }
+
+            $ongIdAutenticada = (int) $usuarioAutenticado->id_usuario;
+            $ahora = now();
+            
+            $query = DB::table('mega_eventos')
+                ->where('ong_organizadora_principal', $ongIdAutenticada)
+                ->where('activo', true)
+                // Mega eventos que están por iniciar o en curso
+                ->where(function($q) use ($ahora) {
+                    $q->whereNull('fecha_fin')
+                      ->orWhere('fecha_fin', '>=', $ahora);
+                })
+                // Que ya hayan iniciado o estén por iniciar
+                ->where(function($q) use ($ahora) {
+                    $q->whereNull('fecha_inicio')
+                      ->orWhere('fecha_inicio', '<=', $ahora->copy()->addHours(24)); // Incluir los que inician en las próximas 24 horas
+                });
+            
+            // Filtro por categoría
+            if ($request->has('categoria') && $request->categoria !== '' && $request->categoria !== 'todos') {
+                $query->where('categoria', $request->categoria);
+            }
+            
+            // Búsqueda por título o descripción
+            if ($request->has('buscar') && $request->buscar !== '') {
+                $buscar = trim($request->buscar);
+                $buscarLower = '%' . strtolower($buscar) . '%';
+                $query->where(function($q) use ($buscarLower) {
+                    $q->whereRaw('LOWER(COALESCE(titulo::text, \'\')) LIKE ?', [$buscarLower])
+                      ->orWhereRaw('LOWER(COALESCE(descripcion::text, \'\')) LIKE ?', [$buscarLower]);
+                });
+            }
+            
+            $megaEventos = $query->orderBy('fecha_inicio', 'asc')->get();
+            
+            // Procesar resultados
+            $megaEventosArray = [];
+            foreach ($megaEventos as $mega) {
+                $megaData = [
+                    'mega_evento_id' => (int) ($mega->mega_evento_id ?? 0),
+                    'titulo' => $mega->titulo ?? '',
+                    'descripcion' => $mega->descripcion ?? null,
+                    'fecha_inicio' => $mega->fecha_inicio ? Carbon::parse($mega->fecha_inicio)->format('Y-m-d H:i:s') : null,
+                    'fecha_fin' => $mega->fecha_fin ? Carbon::parse($mega->fecha_fin)->format('Y-m-d H:i:s') : null,
+                    'categoria' => $mega->categoria ?? 'social',
+                    'estado' => $mega->estado ?? 'planificacion',
+                    'imagenes' => $mega->imagenes ? (is_string($mega->imagenes) ? json_decode($mega->imagenes, true) : $mega->imagenes) : []
+                ];
+                $megaEventosArray[] = $megaData;
+            }
+            
+            return response()->json([
+                'success' => true,
+                'mega_eventos' => $megaEventosArray,
+                'count' => count($megaEventosArray)
+            ]);
+            
+        } catch (\Throwable $e) {
+            \Log::error('Error en enCurso mega eventos: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al obtener mega eventos en curso: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener mega eventos finalizados (para ONG)
+     */
+    public function finalizados(Request $request)
+    {
+        try {
+            $usuarioAutenticado = $request->user();
+            
+            if (!$usuarioAutenticado) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Usuario no autenticado'
+                ], 401);
+            }
+
+            $ongIdAutenticada = (int) $usuarioAutenticado->id_usuario;
+            $ahora = now();
+            
+            $query = DB::table('mega_eventos')
+                ->where('ong_organizadora_principal', $ongIdAutenticada)
+                // Mega eventos que ya finalizaron
+                ->where(function($q) use ($ahora) {
+                    $q->whereNotNull('fecha_fin')
+                      ->where('fecha_fin', '<', $ahora);
+                });
+            
+            // Filtro por categoría
+            if ($request->has('categoria') && $request->categoria !== '' && $request->categoria !== 'todos') {
+                $query->where('categoria', $request->categoria);
+            }
+            
+            // Búsqueda por título o descripción
+            if ($request->has('buscar') && $request->buscar !== '') {
+                $buscar = trim($request->buscar);
+                $buscarLower = '%' . strtolower($buscar) . '%';
+                $query->where(function($q) use ($buscarLower) {
+                    $q->whereRaw('LOWER(COALESCE(titulo::text, \'\')) LIKE ?', [$buscarLower])
+                      ->orWhereRaw('LOWER(COALESCE(descripcion::text, \'\')) LIKE ?', [$buscarLower]);
+                });
+            }
+            
+            $megaEventos = $query->orderBy('fecha_fin', 'desc')->get();
+            
+            // Procesar resultados
+            $megaEventosArray = [];
+            foreach ($megaEventos as $mega) {
+                $megaData = [
+                    'mega_evento_id' => (int) ($mega->mega_evento_id ?? 0),
+                    'titulo' => $mega->titulo ?? '',
+                    'descripcion' => $mega->descripcion ?? null,
+                    'fecha_inicio' => $mega->fecha_inicio ? Carbon::parse($mega->fecha_inicio)->format('Y-m-d H:i:s') : null,
+                    'fecha_fin' => $mega->fecha_fin ? Carbon::parse($mega->fecha_fin)->format('Y-m-d H:i:s') : null,
+                    'categoria' => $mega->categoria ?? 'social',
+                    'estado' => $mega->estado ?? 'finalizado',
+                    'imagenes' => $mega->imagenes ? (is_string($mega->imagenes) ? json_decode($mega->imagenes, true) : $mega->imagenes) : []
+                ];
+                $megaEventosArray[] = $megaData;
+            }
+            
+            return response()->json([
+                'success' => true,
+                'mega_eventos' => $megaEventosArray,
+                'count' => count($megaEventosArray)
+            ]);
+            
+        } catch (\Throwable $e) {
+            \Log::error('Error en finalizados mega eventos: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al obtener mega eventos finalizados: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -1051,7 +2379,7 @@ class MegaEventoController extends Controller
                 'ong_id' => $megaEvento->ong_organizadora_principal,
                 'evento_id' => null, // Los mega eventos no tienen evento_id
                 'externo_id' => $externoId,
-                'tipo' => 'participacion',
+                'tipo' => 'participacion_mega_evento',
                 'titulo' => 'Nueva participación en tu mega evento',
                 'mensaje' => "{$nombreUsuario} se inscribió al mega evento \"{$megaEvento->titulo}\"",
                 'leida' => false
@@ -1597,7 +2925,47 @@ class MegaEventoController extends Controller
                 });
             }
 
-            $participantesRegistrados = $queryRegistrados->get();
+            $participantesRegistrados = $queryRegistrados->get()
+                ->map(function($participante) {
+                    // Construir nombre completo desde nombres y apellidos
+                    $nombres = trim($participante->nombres ?? '');
+                    $apellidos = trim($participante->apellidos ?? '');
+                    $nombreCompleto = trim($nombres . ' ' . $apellidos);
+                    
+                    // Si no hay nombre completo, usar nombre_usuario como fallback
+                    $nombreFinal = !empty($nombreCompleto) ? $nombreCompleto : ($participante->nombre_usuario ?? 'Usuario');
+                    
+                    // Si el nombre_usuario es muy corto (como "U"), intentar usar nombres o email
+                    if (strlen($nombreFinal) <= 2 && !empty($nombres)) {
+                        $nombreFinal = $nombres;
+                    }
+                    
+                    // Obtener avatar/foto de perfil
+                    $fotoPerfil = null;
+                    if ($participante->foto_perfil) {
+                        $fotoPerfil = $participante->foto_perfil;
+                        if (!str_starts_with($fotoPerfil, 'http')) {
+                            $fotoPerfil = asset('storage/' . $fotoPerfil);
+                        }
+                    }
+                    
+                    return [
+                        'id' => $participante->id,
+                        'integrante_externo_id' => $participante->integrante_externo_id,
+                        'fecha_registro' => $participante->fecha_registro,
+                        'estado' => $participante->estado,
+                        'estado_participacion' => $participante->estado,
+                        'nombres' => $nombres,
+                        'apellidos' => $apellidos,
+                        'nombre_completo' => $nombreFinal,
+                        'nombre_usuario' => $participante->nombre_usuario ?? 'Usuario',
+                        'email' => $participante->email ?? '—',
+                        'telefono' => $participante->telefono ?? '—',
+                        'foto_perfil' => $fotoPerfil,
+                        'avatar' => $fotoPerfil, // Alias para compatibilidad
+                        'tipo' => 'registrado'
+                    ];
+                });
 
             // Obtener participantes no registrados
             $queryNoRegistrados = \App\Models\MegaEventoParticipanteNoRegistrado::where('mega_evento_id', $id)
@@ -1629,7 +2997,33 @@ class MegaEventoController extends Controller
                 });
             }
 
-            $participantesNoRegistrados = $queryNoRegistrados->get();
+            $participantesNoRegistrados = $queryNoRegistrados->get()
+                ->map(function($participante) {
+                    // Construir nombre completo desde nombres y apellidos
+                    $nombres = trim($participante->nombres ?? '');
+                    $apellidos = trim($participante->apellidos ?? '');
+                    $nombreCompleto = trim($nombres . ' ' . $apellidos);
+                    
+                    // Si no hay nombre completo, usar "Usuario" como fallback
+                    $nombreFinal = !empty($nombreCompleto) ? $nombreCompleto : 'Usuario';
+                    
+                    return [
+                        'id' => $participante->id,
+                        'integrante_externo_id' => null,
+                        'fecha_registro' => $participante->fecha_registro,
+                        'estado' => $participante->estado,
+                        'estado_participacion' => $participante->estado,
+                        'nombres' => $nombres,
+                        'apellidos' => $apellidos,
+                        'nombre_completo' => $nombreFinal,
+                        'nombre_usuario' => null,
+                        'email' => $participante->email ?? '—',
+                        'telefono' => $participante->telefono ?? '—',
+                        'foto_perfil' => null,
+                        'avatar' => null,
+                        'tipo' => 'no_registrado'
+                    ];
+                });
 
             // Combinar ambos tipos de participantes
             $participantes = $participantesRegistrados->concat($participantesNoRegistrados)
@@ -2416,4 +3810,978 @@ Reporte generado el ' . date('d/m/Y H:i:s') . ' | Mega Evento ID: ' . $megaEvent
         
         return $html;
     }
+
+    /**
+     * Obtener control de asistencia completo para ONG
+     */
+    public function controlAsistencia(Request $request, $id)
+    {
+        try {
+            $ongId = $request->user()->id_usuario;
+            
+            $megaEvento = MegaEvento::find($id);
+            if (!$megaEvento) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Mega evento no encontrado"
+                ], 404);
+            }
+
+            // Verificar que el usuario autenticado es la ONG propietaria
+            if ($megaEvento->ong_organizadora_principal != $ongId) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "No tienes permiso para ver el control de asistencia de este mega evento"
+                ], 403);
+            }
+
+            // Verificar qué columnas existen en la tabla
+            $columnas = [];
+            try {
+                $columnasExistentes = DB::select("
+                    SELECT column_name 
+                    FROM information_schema.columns 
+                    WHERE table_name = 'mega_evento_participantes_externos'
+                ");
+                $columnas = array_map(function($col) { return $col->column_name; }, $columnasExistentes);
+            } catch (\Exception $e) {
+                // Si falla la consulta, asumir que las columnas no existen
+                \Log::warning('Error verificando columnas de mega_evento_participantes_externos: ' . $e->getMessage());
+            }
+            
+            $tieneAsistio = in_array('asistio', $columnas);
+            $tieneEstadoAsistencia = in_array('estado_asistencia', $columnas);
+            $tieneModoAsistencia = in_array('modo_asistencia', $columnas);
+            $tieneCheckinAt = in_array('checkin_at', $columnas);
+            $tieneObservaciones = in_array('observaciones', $columnas);
+            $tieneComentarioAsistencia = in_array('comentario_asistencia', $columnas);
+            $tieneIpRegistro = in_array('ip_registro', $columnas);
+            $tieneTicketCodigo = in_array('ticket_codigo', $columnas);
+            $tieneRegistradoPor = in_array('registrado_por', $columnas);
+
+            // Construir SELECT dinámicamente
+            $selects = [
+                DB::raw("(mep.mega_evento_id::text || '-' || mep.integrante_externo_id::text) as id"),
+                'mep.integrante_externo_id',
+                    'ie.nombres',
+                    'ie.apellidos',
+                    'ie.email',
+                    'ie.phone_number as telefono',
+                'u.nombre_usuario',
+                'u.foto_perfil',
+                'mep.fecha_registro',
+            ];
+            
+            if ($tieneAsistio) {
+                $selects[] = 'mep.asistio';
+                    } else {
+                $selects[] = DB::raw("false as asistio");
+                    }
+                    
+            if ($tieneEstadoAsistencia) {
+                $selects[] = 'mep.estado_asistencia';
+            } else {
+                $selects[] = DB::raw("'no_asistido' as estado_asistencia");
+            }
+            
+            if ($tieneModoAsistencia) {
+                $selects[] = 'mep.modo_asistencia';
+            } else {
+                $selects[] = DB::raw("NULL as modo_asistencia");
+                        }
+            
+            if ($tieneCheckinAt) {
+                $selects[] = 'mep.checkin_at';
+            } else {
+                $selects[] = DB::raw("NULL as checkin_at");
+            }
+            
+            if ($tieneObservaciones) {
+                $selects[] = 'mep.observaciones';
+            } else {
+                $selects[] = DB::raw("NULL as observaciones");
+            }
+            
+            if ($tieneComentarioAsistencia) {
+                $selects[] = 'mep.comentario_asistencia';
+            } else {
+                $selects[] = DB::raw("NULL as comentario_asistencia");
+            }
+            
+            if ($tieneIpRegistro) {
+                $selects[] = 'mep.ip_registro';
+                        } else {
+                $selects[] = DB::raw("NULL as ip_registro");
+            }
+            
+            if ($tieneTicketCodigo) {
+                $selects[] = 'mep.ticket_codigo';
+            } else {
+                $selects[] = DB::raw("NULL as ticket_codigo");
+            }
+            
+            if ($tieneRegistradoPor) {
+                $selects[] = 'rp.nombre_usuario as registrado_por_nombre';
+            } else {
+                $selects[] = DB::raw("NULL as registrado_por_nombre");
+            }
+            
+            $selects[] = DB::raw("'registrado' as tipo");
+
+            // Obtener participantes registrados
+            $query = DB::table('mega_evento_participantes_externos as mep')
+                ->join('integrantes_externos as ie', 'mep.integrante_externo_id', '=', 'ie.user_id')
+                ->join('usuarios as u', 'ie.user_id', '=', 'u.id_usuario');
+            
+            if ($tieneRegistradoPor) {
+                $query->leftJoin('usuarios as rp', 'mep.registrado_por', '=', 'rp.id_usuario');
+            }
+            
+            $participantesRegistrados = $query
+                ->where('mep.mega_evento_id', $id)
+                ->where('mep.activo', true)
+                ->where('mep.estado_participacion', 'aprobada')
+                ->select($selects)
+                ->get()
+                ->map(function($participacion) {
+                    // Construir nombre completo desde nombres y apellidos
+                    $nombres = trim($participacion->nombres ?? '');
+                    $apellidos = trim($participacion->apellidos ?? '');
+                    $nombreCompleto = trim($nombres . ' ' . $apellidos);
+                    
+                    // Si no hay nombre completo, usar nombre_usuario como fallback
+                    $nombreFinal = !empty($nombreCompleto) ? $nombreCompleto : ($participacion->nombre_usuario ?? 'Usuario');
+                    
+                    // Si el nombre_usuario es muy corto (como "U"), intentar usar nombres o email
+                    if (strlen($nombreFinal) <= 2 && !empty($nombres)) {
+                        $nombreFinal = $nombres;
+                    }
+                    
+                    // Estado de asistencia formateado
+                    $asistio = isset($participacion->asistio) ? (bool)$participacion->asistio : false;
+                    $estadoAsistenciaRaw = $participacion->estado_asistencia ?? ($asistio ? 'asistido' : 'no_asistido');
+                    $estadoAsistencia = ($estadoAsistenciaRaw === 'asistido' || $asistio) ? '✅ Asistió' : '❌ No asistió';
+
+                    // Obtener avatar/foto de perfil
+                    $fotoPerfil = null;
+                    if ($participacion->foto_perfil) {
+                        $fotoPerfil = $participacion->foto_perfil;
+                        if (!str_starts_with($fotoPerfil, 'http')) {
+                            $fotoPerfil = asset('storage/' . $fotoPerfil);
+                        }
+                    }
+                    
+                    return [
+                        'id' => $participacion->id,
+                        'tipo' => 'registrado',
+                        'participante' => $nombreFinal,
+                        'nombre_completo' => $nombreFinal,
+                        'nombre_usuario' => $participacion->nombre_usuario ?? 'Usuario',
+                        'nombres' => $nombres,
+                        'apellidos' => $apellidos,
+                        'email' => $participacion->email ?? '—',
+                        'telefono' => $participacion->telefono ?? '—',
+                        'fecha_inscripcion' => $participacion->fecha_registro ? \Carbon\Carbon::parse($participacion->fecha_registro)->setTimezone(config('app.timezone'))->format('d/m/Y - H:i') : '—',
+                        'estado_asistencia' => $estadoAsistencia,
+                        'estado_asistencia_raw' => $estadoAsistenciaRaw,
+                        'validado_por' => $participacion->registrado_por_nombre ?? '—',
+                        'observaciones' => $participacion->observaciones ?? '-',
+                        'comentario_asistencia' => $participacion->comentario_asistencia ?? '-',
+                        'fecha_registro_asistencia' => ($participacion->checkin_at) ? \Carbon\Carbon::parse($participacion->checkin_at)->setTimezone(config('app.timezone'))->format('d/m/Y H:i') : null,
+                        'modo_asistencia' => $participacion->modo_asistencia ?? null,
+                        'asistio' => $asistio,
+                        'ticket_codigo' => $participacion->ticket_codigo ?? null,
+                        'foto_perfil' => $fotoPerfil,
+                        'avatar' => $fotoPerfil // Alias para compatibilidad
+                    ];
+                });
+
+            // Obtener participantes no registrados
+            $participantesNoRegistrados = \App\Models\MegaEventoParticipanteNoRegistrado::where('mega_evento_id', $id)
+                ->where('estado', '!=', 'rechazada')
+                ->get()
+                ->map(function($participacion) {
+                    // Manejar campos que pueden no existir
+                    $asistio = isset($participacion->asistio) ? (bool)$participacion->asistio : false;
+                    $estadoAsistenciaRaw = $participacion->estado_asistencia ?? ($asistio ? 'asistido' : 'no_asistido');
+                    $estadoAsistencia = ($asistio || $estadoAsistenciaRaw === 'asistido') ? '✅ Asistió' : '❌ No asistió';
+                    
+                    return [
+                        'id' => $participacion->id,
+                        'tipo' => 'voluntario',
+                        'tipo_usuario' => 'Voluntario',
+                        'participante' => trim($participacion->nombres . ' ' . ($participacion->apellidos ?? '')),
+                        'email' => $participacion->email ?? '—',
+                        'telefono' => $participacion->telefono ?? '—',
+                        'fecha_inscripcion' => $participacion->created_at ? \Carbon\Carbon::parse($participacion->created_at)->setTimezone(config('app.timezone'))->format('d/m/Y - H:i') : '—',
+                        'estado_asistencia' => $estadoAsistencia,
+                        'estado_asistencia_raw' => $estadoAsistenciaRaw,
+                        'validado_por' => '—',
+                        'observaciones' => (isset($participacion->observaciones) && $participacion->observaciones) ? $participacion->observaciones : '-',
+                        'comentario_asistencia' => (isset($participacion->comentario_asistencia) && $participacion->comentario_asistencia) ? $participacion->comentario_asistencia : '-',
+                        'fecha_registro_asistencia' => (isset($participacion->checkin_at) && $participacion->checkin_at) ? \Carbon\Carbon::parse($participacion->checkin_at)->setTimezone(config('app.timezone'))->format('d/m/Y H:i') : null,
+                        'modo_asistencia' => isset($participacion->modo_asistencia) ? $participacion->modo_asistencia : null,
+                        'asistio' => $asistio,
+                        'ticket_codigo' => isset($participacion->ticket_codigo) ? $participacion->ticket_codigo : null,
+                        'foto_perfil' => null
+                    ];
+                });
+
+            // Combinar ambos tipos
+            $participantes = $participantesRegistrados->concat($participantesNoRegistrados);
+
+            return response()->json([
+                "success" => true,
+                "mega_evento" => [
+                    'id' => $megaEvento->mega_evento_id,
+                    'titulo' => $megaEvento->titulo,
+                    'estado' => $megaEvento->estado,
+                ],
+                "participantes" => $participantes,
+                "total" => $participantes->count(),
+                "asistieron" => $participantes->where('estado_asistencia_raw', 'asistido')->count(),
+                "no_asistieron" => $participantes->where('estado_asistencia_raw', 'no_asistido')->count(),
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                "success" => false,
+                "error" => "Error al obtener control de asistencia: " . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Modificar estado de asistencia por ONG
+     */
+    public function modificarAsistencia(Request $request, $participacionId, $tipo = 'registrado')
+    {
+        try {
+            $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+                'estado_asistencia' => 'required|string|in:asistido,no_asistido',
+                'observaciones' => 'nullable|string|max:500',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Datos inválidos",
+                    "details" => $validator->errors(),
+                ], 422);
+            }
+
+            $ongId = $request->user()->id_usuario;
+            
+            // Buscar según el tipo
+            if ($tipo === 'registrado') {
+                // Parsear el ID compuesto (mega_evento_id-integrante_externo_id)
+                $ids = explode('-', $participacionId);
+                if (count($ids) !== 2) {
+                    return response()->json([
+                        "success" => false,
+                        "error" => "ID de participación inválido"
+                    ], 400);
+                }
+                
+                $megaEventoId = $ids[0];
+                $integranteExternoId = $ids[1];
+                
+                $participacion = DB::table('mega_evento_participantes_externos')
+                    ->where('mega_evento_id', $megaEventoId)
+                    ->where('integrante_externo_id', $integranteExternoId)
+                    ->first();
+                
+                if (!$participacion) {
+                    return response()->json([
+                        "success" => false,
+                        "error" => "Participación no encontrada"
+                    ], 404);
+                }
+                
+                // Verificar que el mega evento pertenece a la ONG
+                $megaEvento = MegaEvento::find($megaEventoId);
+                if (!$megaEvento || $megaEvento->ong_organizadora_principal != $ongId) {
+                    return response()->json([
+                        "success" => false,
+                        "error" => "No tienes permiso para modificar esta asistencia"
+                    ], 403);
+                }
+                
+                $estadoAsistencia = $request->input('estado_asistencia');
+                $observaciones = $request->input('observaciones');
+                
+                $updateData = [
+                    'estado_asistencia' => $estadoAsistencia,
+                    'asistio' => ($estadoAsistencia === 'asistido'),
+                    'observaciones' => $observaciones,
+                    'registrado_por' => $ongId,
+                ];
+                
+                if ($estadoAsistencia === 'asistido' && !$participacion->checkin_at) {
+                    $updateData['checkin_at'] = now();
+                } elseif ($estadoAsistencia === 'no_asistido') {
+                    $updateData['checkin_at'] = null;
+                }
+                
+                DB::table('mega_evento_participantes_externos')
+                    ->where('mega_evento_id', $megaEventoId)
+                    ->where('integrante_externo_id', $integranteExternoId)
+                    ->update($updateData);
+                    
+                        } else {
+                // Participante no registrado
+                $participacion = \App\Models\MegaEventoParticipanteNoRegistrado::find($participacionId);
+                
+                if (!$participacion) {
+                    return response()->json([
+                        "success" => false,
+                        "error" => "Participación no encontrada"
+                    ], 404);
+                }
+                
+                // Verificar que el mega evento pertenece a la ONG
+                $megaEvento = MegaEvento::find($participacion->mega_evento_id);
+                if (!$megaEvento || $megaEvento->ong_organizadora_principal != $ongId) {
+                    return response()->json([
+                        "success" => false,
+                        "error" => "No tienes permiso para modificar esta asistencia"
+                    ], 403);
+                }
+                
+                $estadoAsistencia = $request->input('estado_asistencia');
+                $observaciones = $request->input('observaciones');
+                
+                $participacion->estado_asistencia = $estadoAsistencia;
+                $participacion->asistio = ($estadoAsistencia === 'asistido');
+                $participacion->observaciones = $observaciones;
+                $participacion->registrado_por = $ongId;
+                
+                if ($estadoAsistencia === 'asistido' && !$participacion->checkin_at) {
+                    $participacion->checkin_at = now();
+                } elseif ($estadoAsistencia === 'no_asistido') {
+                    $participacion->checkin_at = null;
+                            }
+                
+                $participacion->save();
+            }
+
+            return response()->json([
+                "success" => true,
+                "message" => "Asistencia modificada correctamente"
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                "success" => false,
+                "error" => "Error al modificar asistencia: " . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Registrar asistencia por ticket o manualmente
+     */
+    public function registrarAsistencia(Request $request, $megaEventoId)
+    {
+        try {
+            $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+                'ticket_codigo' => 'nullable|string|max:100',
+                'participacion_id' => 'nullable|integer',
+                'tipo' => 'required|string|in:registrado,no_registrado',
+                'observaciones' => 'nullable|string|max:500',
+                'modo_asistencia' => 'nullable|string|in:QR,Manual,Online,Confirmacion',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Datos inválidos",
+                    "details" => $validator->errors(),
+                ], 422);
+            }
+
+            $ongId = $request->user()->id_usuario;
+            
+            $megaEvento = MegaEvento::find($megaEventoId);
+            if (!$megaEvento) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Mega evento no encontrado"
+                ], 404);
+            }
+
+            // Verificar permisos
+            if ($megaEvento->ong_organizadora_principal != $ongId) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "No tienes permiso para registrar asistencia en este mega evento"
+                ], 403);
+            }
+
+            $ticketCodigo = $request->input('ticket_codigo');
+            $participacionId = $request->input('participacion_id');
+            $tipo = $request->input('tipo');
+            $observaciones = $request->input('observaciones');
+            $modoAsistencia = $request->input('modo_asistencia', 'Manual');
+
+            if ($tipo === 'registrado') {
+                // Buscar por ticket o por ID
+                if ($ticketCodigo) {
+                    $participacion = DB::table('mega_evento_participantes_externos')
+                        ->where('mega_evento_id', $megaEventoId)
+                        ->where('ticket_codigo', $ticketCodigo)
+                        ->first();
+                } elseif ($participacionId) {
+                    $ids = explode('-', $participacionId);
+                    if (count($ids) === 2) {
+                        $participacion = DB::table('mega_evento_participantes_externos')
+                            ->where('mega_evento_id', $ids[0])
+                            ->where('integrante_externo_id', $ids[1])
+                            ->first();
+                    }
+                }
+
+                if (!$participacion) {
+                    return response()->json([
+                        "success" => false,
+                        "error" => "Participación no encontrada"
+                    ], 404);
+                }
+
+                // Verificar que esté aprobada
+                if ($participacion->estado_participacion !== 'aprobada') {
+                    return response()->json([
+                        "success" => false,
+                        "error" => "La participación debe estar aprobada para registrar asistencia"
+                    ], 400);
+                }
+
+                // Verificar que no haya marcado asistencia previamente
+                if ($participacion->asistio && empty($observaciones)) {
+                    return response()->json([
+                        "success" => false,
+                        "error" => "Este participante ya tiene asistencia registrada"
+                    ], 409);
+                }
+
+                $updateData = [
+                    'asistio' => true,
+                    'estado_asistencia' => 'asistido',
+                    'modo_asistencia' => $modoAsistencia,
+                    'observaciones' => $observaciones,
+                    'registrado_por' => $ongId,
+                    'checkin_at' => now(),
+                    'ip_registro' => $request->ip(),
+                ];
+
+                if (!$participacion->ticket_codigo && $ticketCodigo) {
+                    $updateData['ticket_codigo'] = $ticketCodigo;
+                }
+
+                DB::table('mega_evento_participantes_externos')
+                    ->where('mega_evento_id', $participacion->mega_evento_id)
+                    ->where('integrante_externo_id', $participacion->integrante_externo_id)
+                    ->update($updateData);
+
+            } else {
+                // Participante no registrado
+                if ($ticketCodigo) {
+                    $participacion = \App\Models\MegaEventoParticipanteNoRegistrado::where('mega_evento_id', $megaEventoId)
+                        ->where('ticket_codigo', $ticketCodigo)
+                        ->first();
+                } elseif ($participacionId) {
+                    $participacion = \App\Models\MegaEventoParticipanteNoRegistrado::find($participacionId);
+                }
+
+                if (!$participacion) {
+            return response()->json([
+                        "success" => false,
+                        "error" => "Participación no encontrada"
+                    ], 404);
+                }
+
+                // Verificar que esté aprobada
+                if ($participacion->estado !== 'aprobada') {
+                    return response()->json([
+                        "success" => false,
+                        "error" => "La participación debe estar aprobada para registrar asistencia"
+                    ], 400);
+                }
+
+                // Verificar que no haya marcado asistencia previamente
+                if ($participacion->asistio && empty($observaciones)) {
+                    return response()->json([
+                        "success" => false,
+                        "error" => "Este participante ya tiene asistencia registrada"
+                    ], 409);
+                }
+
+                $participacion->asistio = true;
+                $participacion->estado_asistencia = 'asistido';
+                $participacion->modo_asistencia = $modoAsistencia;
+                $participacion->observaciones = $observaciones;
+                $participacion->registrado_por = $ongId;
+                $participacion->checkin_at = now();
+                $participacion->ip_registro = $request->ip();
+
+                if (!$participacion->ticket_codigo && $ticketCodigo) {
+                    $participacion->ticket_codigo = $ticketCodigo;
+                }
+
+                $participacion->save();
+            }
+
+            return response()->json([
+                "success" => true,
+                "message" => "Asistencia registrada correctamente"
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                "success" => false,
+                "error" => "Error al registrar asistencia: " . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Usuario externo: marcar su propia asistencia en mega evento
+     */
+    public function marcarAsistenciaUsuario(Request $request, $megaEventoId)
+    {
+        try {
+            $externoId = $request->user()->id_usuario;
+            
+            $megaEvento = MegaEvento::find($megaEventoId);
+            if (!$megaEvento) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Mega evento no encontrado"
+                ], 404);
+            }
+
+            // Validar que el mega evento esté en curso (fecha_inicio <= ahora <= fecha_fin)
+            $ahora = now();
+            $fechaInicio = $megaEvento->fecha_inicio ? \Carbon\Carbon::parse($megaEvento->fecha_inicio) : null;
+            $fechaFin = $megaEvento->fecha_fin ? \Carbon\Carbon::parse($megaEvento->fecha_fin) : null;
+            
+            // El evento debe haber iniciado
+            if (!$fechaInicio || $ahora->lessThan($fechaInicio)) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Este mega evento aún no ha comenzado. Solo puedes registrar asistencia cuando el evento esté en curso."
+                ], 400);
+            }
+            
+            // El evento no debe haber finalizado (si tiene fecha_fin)
+            if ($fechaFin && $ahora->greaterThan($fechaFin)) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Este mega evento ya finalizó. Solo puedes registrar asistencia durante el evento."
+                ], 400);
+            }
+
+            // CRÍTICO: El usuario externo solo puede registrar su propia asistencia
+            // Buscar la participación del usuario autenticado (no por ticket, solo por su ID)
+            // El integrante_externo_id en la tabla mega_evento_participantes_externos
+            // hace referencia a user_id de integrantes_externos, que es igual a id_usuario de usuarios
+            
+            // Primero intentar buscar directamente por externoId (que es id_usuario)
+            $participacion = DB::table('mega_evento_participantes_externos')
+                ->where('mega_evento_id', $megaEventoId)
+                ->where('integrante_externo_id', $externoId) // SOLO busca por el ID del usuario autenticado
+                ->where('activo', true)
+                ->first();
+            
+            // Si no se encuentra, verificar si existe IntegranteExterno y buscar
+            if (!$participacion) {
+                $integranteExterno = \App\Models\IntegranteExterno::where('user_id', $externoId)->first();
+                if ($integranteExterno) {
+                    // Buscar usando el user_id del IntegranteExterno (que debería ser igual a externoId)
+                    $participacion = DB::table('mega_evento_participantes_externos')
+                        ->where('mega_evento_id', $megaEventoId)
+                        ->where('integrante_externo_id', $integranteExterno->user_id) // SOLO busca por el ID del usuario autenticado
+                        ->where('activo', true)
+                        ->first();
+                }
+            }
+
+            if (!$participacion) {
+                // Log detallado para debug
+                $todasLasParticipaciones = DB::table('mega_evento_participantes_externos')
+                    ->where('mega_evento_id', $megaEventoId)
+                    ->get(['integrante_externo_id', 'activo', 'estado_participacion']);
+                
+                \Log::warning('Usuario no encontrado en mega evento', [
+                    'externo_id' => $externoId,
+                    'mega_evento_id' => $megaEventoId,
+                    'tiene_integrante_externo' => \App\Models\IntegranteExterno::where('user_id', $externoId)->exists(),
+                    'participaciones_existentes' => $todasLasParticipaciones->toArray(),
+                    'total_participaciones' => $todasLasParticipaciones->count()
+                ]);
+                
+                return response()->json([
+                    "success" => false,
+                    "error" => "No estás inscrito en este mega evento. Por favor, verifica que tu inscripción haya sido aprobada."
+                ], 404);
+            }
+
+            // Verificar que la participación esté aprobada
+            if ($participacion->estado_participacion !== 'aprobada') {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Tu participación en este mega evento aún no ha sido aprobada. Solo puedes registrar asistencia si tu inscripción fue aprobada previamente."
+                ], 400);
+            }
+
+            // Verificar que no haya marcado asistencia previamente
+            if ($participacion->asistio && $participacion->estado_asistencia === 'asistido') {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Ya marcaste tu asistencia para este mega evento"
+                ], 409);
+            }
+            
+            // VALIDACIÓN CRÍTICA: Asegurar que el usuario solo puede registrar su propia asistencia
+            // No se permite usar tickets/QR de otros usuarios - solo se busca por integrante_externo_id del usuario autenticado
+            // Esta validación ya está garantizada porque solo buscamos por externoId, no por ticket_codigo
+
+            // Obtener IP del usuario
+            $ipRegistro = $request->ip();
+            
+            // Obtener el integrante_externo_id de la participación encontrada
+            $integranteExternoId = is_object($participacion) 
+                ? ($participacion->integrante_externo_id ?? $externoId)
+                : (is_array($participacion) ? ($participacion['integrante_externo_id'] ?? $externoId) : $externoId);
+            
+            // La tabla tiene clave primaria compuesta, así que usamos ambos campos para actualizar
+            DB::table('mega_evento_participantes_externos')
+                ->where('mega_evento_id', $megaEventoId)
+                ->where('integrante_externo_id', $integranteExternoId)
+                ->update([
+                    'asistio' => true,
+                    'estado_asistencia' => 'asistido',
+                    'modo_asistencia' => 'Confirmacion',
+                    'checkin_at' => now(),
+                    'ip_registro' => $ipRegistro,
+                    'registrado_por' => $externoId, // El usuario se auto-registra
+                ]);
+
+            return response()->json([
+                "success" => true,
+                "message" => "¡Gracias por participar! Tu asistencia fue registrada correctamente.",
+                "data" => [
+                    'mega_evento_id' => $megaEvento->id,
+                    'mega_evento_titulo' => $megaEvento->titulo,
+                    'fecha_registro' => now()->setTimezone(config('app.timezone'))->format('d/m/Y H:i'),
+                    'estado_asistencia' => 'asistido',
+                ]
+            ]);
+
+        } catch (\Throwable $e) {
+            \Log::error('Error marcando asistencia usuario en mega evento: ' . $e->getMessage());
+            return response()->json([
+                "success" => false,
+                "error" => "Error al marcar asistencia: " . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Enviar notificaciones automáticas 5 minutos antes del inicio del mega evento
+     * Este método debe ser llamado por un comando programado (Laravel Scheduler)
+     */
+    public function enviarNotificaciones5Minutos()
+    {
+        try {
+            $ahora = now();
+            $en5Minutos = $ahora->copy()->addMinutes(5);
+            $en6Minutos = $ahora->copy()->addMinutes(6);
+            
+            // Obtener mega eventos que inician entre 5 y 6 minutos desde ahora
+            $megaEventos = DB::table('mega_eventos')
+                ->where('activo', true)
+                ->whereNotNull('fecha_inicio')
+                ->whereBetween('fecha_inicio', [$en5Minutos->format('Y-m-d H:i:s'), $en6Minutos->format('Y-m-d H:i:s')])
+                ->get();
+            
+            $notificacionesEnviadas = 0;
+            
+            foreach ($megaEventos as $megaEvento) {
+                try {
+                    $megaEventoModel = MegaEvento::find($megaEvento->mega_evento_id);
+                    if (!$megaEventoModel) continue;
+                    
+                    // Obtener todos los participantes aprobados
+                    $participantes = DB::table('mega_evento_participantes_externos')
+                        ->where('mega_evento_id', $megaEvento->mega_evento_id)
+                        ->where('estado_participacion', 'aprobada')
+                        ->where('activo', true)
+                        ->get();
+                    
+                    // Enviar notificación a cada participante
+                    foreach ($participantes as $participante) {
+                        // Verificar si ya se envió la notificación (evitar duplicados)
+                        $notificacionExistente = DB::table('notificaciones')
+                            ->where('externo_id', $participante->integrante_externo_id)
+                            ->where('tipo', 'alerta_mega_evento_5min')
+                            ->whereRaw("mensaje LIKE ?", ["%mega evento \"{$megaEvento->titulo}\"%"])
+                            ->where('created_at', '>=', $ahora->copy()->subMinutes(10))
+                            ->exists();
+                        
+                        if (!$notificacionExistente) {
+                            Notificacion::create([
+                                'ong_id' => $megaEvento->ong_organizadora_principal,
+                                'evento_id' => null,
+                                'externo_id' => $participante->integrante_externo_id,
+                                'tipo' => 'alerta_mega_evento_5min',
+                                'titulo' => '¡Mega Evento por comenzar!',
+                                'mensaje' => "El mega evento \"{$megaEvento->titulo}\" iniciará en 5 minutos. ¡Prepárate!",
+                                'leida' => false
+                            ]);
+                            $notificacionesEnviadas++;
+                        }
+                    }
+                    
+                    // Obtener patrocinadores (empresas que patrocinan este mega evento)
+                    $patrocinadores = DB::table('mega_evento_patrocinadores')
+                        ->where('mega_evento_id', $megaEvento->mega_evento_id)
+                        ->where('activo', true)
+                        ->get();
+                    
+                    // Enviar notificación a cada patrocinador
+                    foreach ($patrocinadores as $patrocinador) {
+                        $empresa = \App\Models\Empresa::find($patrocinador->empresa_id);
+                        if ($empresa && $empresa->user_id) {
+                            // Verificar si ya se envió la notificación
+                            $notificacionExistente = DB::table('notificaciones')
+                                ->where('empresa_id', $empresa->empresa_id)
+                                ->where('tipo', 'alerta_mega_evento_5min')
+                                ->whereRaw("mensaje LIKE ?", ["%mega evento \"{$megaEvento->titulo}\"%"])
+                                ->where('created_at', '>=', $ahora->copy()->subMinutes(10))
+                                ->exists();
+                            
+                            if (!$notificacionExistente) {
+                                Notificacion::create([
+                                    'ong_id' => $megaEvento->ong_organizadora_principal,
+                                    'evento_id' => null,
+                                    'empresa_id' => $empresa->empresa_id,
+                                    'tipo' => 'alerta_mega_evento_5min',
+                                    'titulo' => '¡Mega Evento por comenzar!',
+                                    'mensaje' => "El mega evento \"{$megaEvento->titulo}\" que patrocinas iniciará en 5 minutos.",
+                                    'leida' => false
+                                ]);
+                                $notificacionesEnviadas++;
+                            }
+                        }
+                    }
+                    
+                } catch (\Throwable $e) {
+                    \Log::error("Error enviando notificaciones para mega evento {$megaEvento->mega_evento_id}: " . $e->getMessage());
+                }
+            }
+            
+            \Log::info("Notificaciones de mega eventos enviadas", [
+                'mega_eventos_procesados' => $megaEventos->count(),
+                'notificaciones_enviadas' => $notificacionesEnviadas
+            ]);
+            
+            return $notificacionesEnviadas;
+            
+        } catch (\Throwable $e) {
+            \Log::error('Error en enviarNotificaciones5Minutos: ' . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * Obtener mega eventos que inician en 5 minutos (para alertas)
+     */
+    public function alertas5Minutos(Request $request)
+    {
+        try {
+            $externoId = $request->user()->id_usuario;
+            $ahora = now();
+            $en5Minutos = $ahora->copy()->addMinutes(5);
+            $en6Minutos = $ahora->copy()->addMinutes(6);
+
+            // Obtener integrante externo
+            $integranteExterno = \App\Models\IntegranteExterno::where('user_id', $externoId)->first();
+            if (!$integranteExterno) {
+                return response()->json([
+                    "success" => true,
+                    "mega_eventos" => []
+                ]);
+            }
+
+            // Obtener mega eventos en los que está inscrito y que inician entre ahora y 6 minutos
+            $participaciones = DB::table('mega_evento_participantes_externos as mep')
+                ->join('mega_eventos as me', 'mep.mega_evento_id', '=', 'me.mega_evento_id')
+                ->where('mep.integrante_externo_id', $integranteExterno->user_id)
+                ->where('mep.estado_participacion', 'aprobada')
+                ->where('mep.activo', true)
+                ->where(function($query) {
+                    $query->whereNull('mep.asistio')
+                          ->orWhere('mep.asistio', false)
+                          ->orWhere('mep.estado_asistencia', '!=', 'asistido');
+                })
+                ->select('me.mega_evento_id', 'me.titulo', 'me.fecha_inicio', 'me.fecha_fin')
+                ->get()
+                ->filter(function($participacion) use ($ahora, $en5Minutos, $en6Minutos) {
+                    if (!$participacion->fecha_inicio) {
+                        return false;
+                    }
+                    
+                    $fechaInicio = \Carbon\Carbon::parse($participacion->fecha_inicio);
+                    
+                    // El mega evento debe iniciar entre ahora y 6 minutos
+                    return $fechaInicio->greaterThanOrEqualTo($ahora) && 
+                           $fechaInicio->lessThanOrEqualTo($en6Minutos);
+                })
+                ->map(function($participacion) {
+                    $fechaInicio = \Carbon\Carbon::parse($participacion->fecha_inicio);
+                    $ahora = now();
+                    $minutosRestantes = $ahora->diffInMinutes($fechaInicio, false);
+                    
+                    return [
+                        'mega_evento_id' => $participacion->mega_evento_id,
+                        'titulo' => $participacion->titulo,
+                        'fecha_inicio' => $participacion->fecha_inicio,
+                        'minutos_restantes' => max(0, $minutosRestantes),
+                    ];
+                })
+                ->filter(function($megaEvento) {
+                    // Solo mega eventos que inician en exactamente 5 minutos o menos
+                    return $megaEvento['minutos_restantes'] <= 5 && $megaEvento['minutos_restantes'] >= 0;
+                })
+                ->values();
+
+            return response()->json([
+                "success" => true,
+                "mega_eventos" => $participaciones
+            ]);
+
+        } catch (\Throwable $e) {
+            \Log::error('Error obteniendo alertas de 5 minutos para mega eventos: ' . $e->getMessage());
+            return response()->json([
+                "success" => false,
+                "error" => "Error al obtener alertas: " . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Registrar descarga del QR del ticket de mega evento (solo una vez por ticket)
+     */
+    public function registrarDescargaQR(Request $request)
+    {
+        try {
+            $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+                'ticket_codigo' => 'required|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Debe proporcionar un código de ticket válido"
+                ], 422);
+            }
+
+            $externoId = $request->user()->id_usuario;
+            $ticketCodigo = trim($request->input('ticket_codigo'));
+
+            // Buscar participación por código de ticket en mega eventos
+            $participacion = DB::table('mega_evento_participantes_externos')
+                ->where('ticket_codigo', $ticketCodigo)
+                ->orWhereRaw('LOWER(ticket_codigo) = LOWER(?)', [$ticketCodigo])
+                ->first();
+
+            if (!$participacion) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Código de ticket inválido. Verifique que el código sea correcto."
+                ], 404);
+            }
+
+            // Verificar que el ticket pertenece al usuario autenticado
+            if ($participacion->integrante_externo_id != $externoId) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Este código de ticket no está asociado a tu cuenta. Solo puedes descargar tus propios tickets."
+                ], 403);
+            }
+
+            // Verificar que la participación esté aprobada
+            if ($participacion->estado_participacion !== 'aprobada') {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Tu participación en este mega evento aún no ha sido aprobada."
+                ], 400);
+            }
+
+            // Verificar si ya se descargó el QR anteriormente
+            if ($participacion->qr_descargado_at) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "El QR de este ticket ya fue descargado anteriormente. Solo se permite una descarga por ticket.",
+                    "fecha_descarga_anterior" => \Carbon\Carbon::parse($participacion->qr_descargado_at)->format('d/m/Y H:i:s'),
+                    "ya_descargado" => true
+                ], 409);
+            }
+
+            // Registrar la descarga del QR
+            try {
+                DB::table('mega_evento_participantes_externos')
+                    ->where('ticket_codigo', $ticketCodigo)
+                    ->update([
+                        'qr_descargado_at' => now(),
+                    ]);
+            } catch (\Exception $e) {
+                // Si la columna no existe, intentar agregarla directamente
+                if (strpos($e->getMessage(), 'qr_descargado_at') !== false || strpos($e->getMessage(), 'no existe la columna') !== false) {
+                    \Log::warning('Columna qr_descargado_at no existe en mega eventos, intentando agregarla...');
+                    try {
+                        DB::statement('ALTER TABLE mega_evento_participantes_externos ADD COLUMN IF NOT EXISTS qr_descargado_at TIMESTAMP NULL');
+                        // Reintentar la actualización
+                        DB::table('mega_evento_participantes_externos')
+                            ->where('ticket_codigo', $ticketCodigo)
+                            ->update([
+                                'qr_descargado_at' => now(),
+                            ]);
+                    } catch (\Exception $e2) {
+                        \Log::error('Error agregando columna qr_descargado_at a mega eventos: ' . $e2->getMessage());
+                        return response()->json([
+                            "success" => false,
+                            "error" => "Error al registrar descarga. Por favor, contacte al administrador.",
+                            "detalle" => "La columna qr_descargado_at no existe en la base de datos. Ejecute la migración: php artisan migrate"
+                        ], 500);
+                    }
+                } else {
+                    throw $e;
+                }
+            }
+
+            // Obtener la participación actualizada
+            $participacionActualizada = DB::table('mega_evento_participantes_externos')
+                ->where('ticket_codigo', $ticketCodigo)
+                ->first();
+
+            return response()->json([
+                "success" => true,
+                "message" => "Descarga de QR autorizada",
+                "data" => [
+                    'ticket_codigo' => $participacionActualizada->ticket_codigo,
+                    'fecha_descarga' => $participacionActualizada->qr_descargado_at ? \Carbon\Carbon::parse($participacionActualizada->qr_descargado_at)->format('d/m/Y H:i:s') : now()->format('d/m/Y H:i:s'),
+                ]
+            ]);
+
+        } catch (\Throwable $e) {
+            \Log::error('Error registrando descarga de QR de mega evento: ' . $e->getMessage());
+            return response()->json([
+                "success" => false,
+                "error" => "Error al registrar descarga: " . $e->getMessage()
+            ], 500);
+        }
+    }
+
 }

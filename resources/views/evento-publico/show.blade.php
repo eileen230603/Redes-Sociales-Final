@@ -478,33 +478,23 @@
                     @endif
                 </div>
 
-                <!-- Sidebar - Formulario de Participación -->
+                <!-- Sidebar - Botón de Participación -->
                 <div class="col-lg-4">
                     <div class="card mb-4" style="position: sticky; top: 20px;">
                         <div class="card-body p-4">
                             <h5 class="mb-4" style="color: #2c3e50; font-weight: 600;">
                                 <i class="fas fa-user-plus mr-2 text-primary"></i> Participar en este Evento
                             </h5>
-                            <!-- Mensaje si ya está participando -->
-                            <div id="mensajeYaParticipa" class="alert alert-info" style="display: none;">
+                            <!-- Mensaje informativo -->
+                            <div class="alert alert-info mb-3" style="border-radius: 10px;">
                                 <i class="fas fa-info-circle mr-2"></i>
-                                <strong>¡Ya estás participando en este evento!</strong>
-                                <p class="mb-0 mt-2" style="font-size: 0.9rem;">Tu participación está registrada y será revisada por los organizadores.</p>
+                                <strong>¿Quieres participar?</strong>
+                                <p class="mb-0 mt-2" style="font-size: 0.9rem;">Debes tener una cuenta de Usuario Externo para inscribirte en este evento.</p>
                             </div>
-                            <!-- Formulario de participación -->
-                            <form id="formParticipar">
-                                <div class="form-group mb-3">
-                                    <label for="nombres" style="color: #495057; font-weight: 600;">Nombres <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="nombres" name="nombres" required placeholder="Ingresa tus nombres">
-                                </div>
-                                <div class="form-group mb-3">
-                                    <label for="apellidos" style="color: #495057; font-weight: 600;">Apellidos <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="apellidos" name="apellidos" required placeholder="Ingresa tus apellidos">
-                                </div>
-                                <button type="submit" class="btn btn-participar w-100">
+                            <!-- Botón de Participar -->
+                            <button type="button" class="btn btn-participar w-100" id="btnParticiparPublico">
                                     <i class="fas fa-check-circle mr-2"></i> Participar
                                 </button>
-                            </form>
                             <div id="mensajeParticipacion" class="mt-3" style="display: none;"></div>
                         </div>
                     </div>
@@ -594,8 +584,8 @@
         const eventoId = {{ $eventoId }};
         const API_BASE_URL = '{{ url("/") }}';
         const PUBLIC_BASE_URL = typeof getPublicUrl !== 'undefined' 
-            ? (window.PUBLIC_BASE_URL || 'http://192.168.0.6:8000')
-            : 'http://192.168.0.6:8000';
+            ? (window.PUBLIC_BASE_URL || 'http://10.26.0.215:8000')
+            : 'http://10.26.0.215:8000';
         
         // Almacenar datos del evento para compartir
         window.eventoParaCompartir = {
@@ -710,37 +700,46 @@
             }
         }
         
-        // Toggle reacción (público - con nombres y apellidos del formulario)
+        // Toggle reacción (público - solo si está autenticado)
         async function toggleReaccionPublico() {
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                // No está autenticado - redirigir a login
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Inicia sesión',
+                        text: 'Debes iniciar sesión para reaccionar a este evento.',
+                        confirmButtonText: 'Ir a Login',
+                        cancelButtonText: 'Cancelar',
+                        showCancelButton: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '/login';
+                        }
+                    });
+                } else {
+                    alert('Debes iniciar sesión para reaccionar');
+                    window.location.href = '/login';
+                }
+                return;
+            }
+            
             const btnReaccionar = document.getElementById('btnReaccionarPublico');
             const iconoCorazon = document.getElementById('iconoCorazonPublico');
             const textoReaccion = document.getElementById('textoReaccionPublico');
             const contadorReacciones = document.getElementById('contadorReaccionesPublico');
-            
-            // Obtener nombres y apellidos del formulario
-            const nombres = document.getElementById('nombres')?.value || '';
-            const apellidos = document.getElementById('apellidos')?.value || '';
-            const email = document.getElementById('email')?.value || '';
-            
-            if (!nombres || !apellidos) {
-                alert('Por favor, completa tu nombre y apellido para reaccionar');
-                return;
-            }
-            
             const estaReaccionado = btnReaccionar.classList.contains('btn-danger');
             
             try {
-                const res = await fetch(`${API_BASE_URL}/api/reacciones/evento/${eventoId}/reaccionar-publico`, {
+                const res = await fetch(`${API_BASE_URL}/api/reacciones/evento/${eventoId}/toggle`, {
                     method: 'POST',
                     headers: {
+                        'Authorization': `Bearer ${token}`,
                         'Accept': 'application/json',
                         'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        nombres: nombres,
-                        apellidos: apellidos,
-                        email: email || null
-                    })
+                    }
                 });
                 
                 const data = await res.json();
@@ -942,143 +941,82 @@
         @endif
 
         // Función para verificar si ya participa
-        async function verificarParticipacion(nombres, apellidos) {
+        // Función verificarParticipacion eliminada - ya no se necesita
+
+        // Código de verificación de participación eliminado - ya no se necesita formulario público
+
+        // Botón de Participar - Redirige a registro o login
+        document.getElementById('btnParticiparPublico').addEventListener('click', function() {
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                // No está autenticado - redirigir a registro con eventoId
+                const eventoId = {{ $eventoId }};
+                window.location.href = `/register-externo?eventoId=${eventoId}`;
+                    } else {
+                // Está autenticado - verificar si es usuario externo y si ya está inscrito
+                verificarYParticipar();
+            }
+        });
+        
+        // Verificar si el usuario autenticado ya está participando o inscribirlo
+        async function verificarYParticipar() {
+            const token = localStorage.getItem('token');
+            const eventoId = {{ $eventoId }};
+            
             try {
-                const response = await fetch(`${API_BASE_URL}/api/eventos/${eventoId}/verificar-participacion-publica`, {
-                    method: 'POST',
+                // Verificar si ya está inscrito
+                const resVerificar = await fetch(`${API_BASE_URL}/api/participaciones/mis-eventos`, {
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
                         'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ nombres, apellidos })
+                    }
                 });
-
-                const data = await response.json();
-                return data.success && data.ya_participa;
-            } catch (error) {
-                console.error('Error verificando participación:', error);
-                return false;
-            }
-        }
-
-        // Verificar participación cuando se ingresan datos
-        let verificacionTimeout;
-        document.getElementById('nombres').addEventListener('input', function() {
-            clearTimeout(verificacionTimeout);
-            const nombres = this.value.trim();
-            const apellidos = document.getElementById('apellidos').value.trim();
+                
+                const dataVerificar = await resVerificar.json();
             
-            if (nombres && apellidos) {
-                verificacionTimeout = setTimeout(async () => {
-                    const yaParticipa = await verificarParticipacion(nombres, apellidos);
-                    const mensajeYaParticipa = document.getElementById('mensajeYaParticipa');
-                    const formParticipar = document.getElementById('formParticipar');
+                if (dataVerificar.success && dataVerificar.eventos) {
+                    const yaInscrito = dataVerificar.eventos.some(e => e.id === eventoId);
                     
-                    if (yaParticipa) {
-                        mensajeYaParticipa.style.display = 'block';
-                        formParticipar.style.display = 'none';
-                    } else {
-                        mensajeYaParticipa.style.display = 'none';
-                        formParticipar.style.display = 'block';
-                    }
-                }, 500);
-            }
-        });
-
-        document.getElementById('apellidos').addEventListener('input', function() {
-            clearTimeout(verificacionTimeout);
-            const nombres = document.getElementById('nombres').value.trim();
-            const apellidos = this.value.trim();
-            
-            if (nombres && apellidos) {
-                verificacionTimeout = setTimeout(async () => {
-                    const yaParticipa = await verificarParticipacion(nombres, apellidos);
-                    const mensajeYaParticipa = document.getElementById('mensajeYaParticipa');
-                    const formParticipar = document.getElementById('formParticipar');
-                    
-                    if (yaParticipa) {
-                        mensajeYaParticipa.style.display = 'block';
-                        formParticipar.style.display = 'none';
-                    } else {
-                        mensajeYaParticipa.style.display = 'none';
-                        formParticipar.style.display = 'block';
-                    }
-                }, 500);
-            }
-        });
-
-        // Formulario de participación
-        document.getElementById('formParticipar').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const nombres = document.getElementById('nombres').value.trim();
-            const apellidos = document.getElementById('apellidos').value.trim();
-            const mensajeDiv = document.getElementById('mensajeParticipacion');
-            
-            if (!nombres || !apellidos) {
-                mensajeDiv.innerHTML = '<div class="alert alert-danger">Por favor completa todos los campos requeridos</div>';
-                mensajeDiv.style.display = 'block';
-                return;
-            }
-
-            // Verificar nuevamente antes de enviar
-            const yaParticipa = await verificarParticipacion(nombres, apellidos);
-            if (yaParticipa) {
+                    if (yaInscrito) {
                 Swal.fire({
                     icon: 'info',
                     title: 'Ya estás participando',
-                    text: 'Ya estás registrado en este evento. Tu participación está siendo revisada.',
+                            text: 'Ya estás inscrito en este evento.',
                     confirmButtonText: 'Aceptar'
                 });
-                document.getElementById('mensajeYaParticipa').style.display = 'block';
-                this.style.display = 'none';
                 return;
+                    }
             }
 
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/eventos/${eventoId}/participar-publico`, {
+                // Si no está inscrito, inscribirlo
+                const resInscribir = await fetch(`${API_BASE_URL}/api/participaciones/inscribir`, {
                     method: 'POST',
                     headers: {
+                        'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
-                    body: JSON.stringify({
-                        nombres: nombres,
-                        apellidos: apellidos
-                    })
+                    body: JSON.stringify({ evento_id: eventoId })
                 });
 
-                const data = await response.json();
+                const dataInscribir = await resInscribir.json();
 
-                if (data.success) {
+                if (dataInscribir.success) {
                     Swal.fire({
                         icon: 'success',
-                        title: '¡Participación exitosa!',
-                        text: data.message || 'Te has registrado correctamente en el evento',
+                        title: '¡Inscripción exitosa!',
+                        text: 'Te has inscrito correctamente en el evento.',
                         confirmButtonText: 'Aceptar'
                     }).then(() => {
-                        document.getElementById('formParticipar').style.display = 'none';
-                        document.getElementById('mensajeYaParticipa').style.display = 'block';
-                        mensajeDiv.style.display = 'none';
-                    });
-                } else {
-                    if (data.error && data.error.includes('Ya estás inscrito')) {
-                        Swal.fire({
-                            icon: 'info',
-                            title: 'Ya estás participando',
-                            text: 'Ya estás registrado en este evento. Tu participación está siendo revisada.',
-                            confirmButtonText: 'Aceptar'
-                        }).then(() => {
-                            document.getElementById('formParticipar').style.display = 'none';
-                            document.getElementById('mensajeYaParticipa').style.display = 'block';
+                        location.reload();
                         });
                     } else {
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: data.error || 'Error al registrar tu participación'
+                        text: dataInscribir.error || 'Error al inscribirte en el evento'
                         });
-                    }
                 }
             } catch (error) {
                 console.error('Error:', error);
@@ -1088,7 +1026,7 @@
                     text: 'No se pudo conectar con el servidor. Por favor, intenta nuevamente.'
                 });
             }
-        });
+        }
         
         // (Implementaciones duplicadas de cargarReaccionesPublico y toggleReaccionPublico eliminadas)
         

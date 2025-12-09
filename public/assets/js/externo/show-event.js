@@ -5,6 +5,9 @@
 document.addEventListener("DOMContentLoaded", async () => {
     const id = document.getElementById("eventoId")?.value || window.location.pathname.split("/")[3];
     const token = localStorage.getItem("token");
+    
+    // Guardar el ID del evento en una variable global para uso posterior
+    window.eventoIdActual = id;
 
     try {
     const res = await fetch(`${API_BASE_URL}/api/eventos/detalle/${id}`, {
@@ -489,7 +492,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (sinImagenes) sinImagenes.style.display = 'block';
         }
 
-        // Verificar si ya está inscrito
+        // Verificar si ya está inscrito ANTES de mostrar cualquier botón
+        // Esto evita que aparezcan botones incorrectos por un segundo
         await verificarInscripcion(id);
 
         // Verificar y cargar estado de reacción (incluye contador de reacciones)
@@ -549,29 +553,41 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const data = await res.json();
         if (data.success) {
+            // Ocultar botón Participar de forma inmediata
             btnP.classList.add("d-none");
+            btnP.style.display = 'none';
+            btnP.style.visibility = 'hidden';
+            
+            // Mostrar botón Cancelar de forma inmediata
             btnC.classList.remove("d-none");
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Inscripción exitosa!',
-                        text: 'Tu participación ha sido registrada y aprobada automáticamente',
-                        timer: 3000,
-                        showConfirmButton: false
-                    });
-                } else {
-            alert("Inscripción exitosa");
-                }
+            btnC.style.display = '';
+            btnC.style.visibility = 'visible';
+            btnC.style.removeProperty('display');
+            btnC.style.removeProperty('visibility');
+            
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Inscripción exitosa!',
+                    text: 'Tu participación ha sido registrada y aprobada automáticamente',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
             } else {
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.error || "Error al inscribirse"
-                    });
+                alert("Inscripción exitosa");
+            }
+            // Verificar nuevamente para actualizar estado de asistencia
+            await verificarInscripcion(id);
         } else {
-            alert(data.error || "Error al inscribirse");
-                }
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.error || "Error al inscribirse"
+                });
+            } else {
+                alert(data.error || "Error al inscribirse");
+            }
         }
     };
 
@@ -636,6 +652,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 // Verificar si el usuario ya está inscrito
 async function verificarInscripcion(eventoId) {
     const token = localStorage.getItem("token");
+    if (!token) {
+        console.log('⚠️ No hay token, no se puede verificar inscripción');
+        return;
+    }
+    
+    // Verificar que los botones existan en el DOM primero
+    const btnParticipar = document.getElementById("btnParticipar");
+    const btnCancelar = document.getElementById("btnCancelar");
+    
+    if (!btnParticipar || !btnCancelar) {
+        console.warn('⚠️ Botones no encontrados en el DOM, reintentando en 500ms...');
+        setTimeout(() => verificarInscripcion(eventoId), 500);
+        return;
+    }
+    
     try {
         // Obtener información del evento para verificar estado
         const eventoRes = await fetch(`${API_BASE_URL}/api/eventos/detalle/${eventoId}`, {
@@ -655,13 +686,52 @@ async function verificarInscripcion(eventoId) {
             }
         });
         const data = await res.json();
-        if (data.success && data.eventos) {
-            const participacion = data.eventos.find(p => p.evento_id == eventoId);
+        
+        if (data.success && data.eventos && Array.isArray(data.eventos)) {
+            // Convertir ambos a número para comparación estricta
+            const eventoIdNum = parseInt(eventoId, 10);
+            
+            // Buscar participación - verificar tanto evento_id como id
+            const participacion = data.eventos.find(p => {
+                const pEventoId = parseInt(p.evento_id || p.id || p.evento?.id, 10);
+                return !isNaN(pEventoId) && pEventoId === eventoIdNum;
+            });
+            
             const estaInscrito = !!participacion;
             
+            console.log('🔍 Verificando inscripción:', {
+                eventoId: eventoId,
+                eventoIdNum: eventoIdNum,
+                totalEventos: data.eventos.length,
+                eventosIds: data.eventos.slice(0, 5).map(e => ({ 
+                    evento_id: e.evento_id, 
+                    id: e.id,
+                    evento: e.evento?.id,
+                    tipo_evento_id: typeof e.evento_id,
+                    tipo_id: typeof e.id
+                })),
+                participacionEncontrada: participacion ? {
+                    evento_id: participacion.evento_id,
+                    id: participacion.id,
+                    estado: participacion.estado
+                } : null,
+                estaInscrito: estaInscrito
+            });
+            
             if (estaInscrito) {
-                document.getElementById("btnParticipar").classList.add("d-none");
-                document.getElementById("btnCancelar").classList.remove("d-none");
+                // Ocultar botón Participar de forma forzada
+                btnParticipar.classList.add("d-none");
+                btnParticipar.style.display = 'none';
+                btnParticipar.style.visibility = 'hidden';
+                
+                // Mostrar botón Cancelar de forma inmediata
+                btnCancelar.classList.remove("d-none");
+                btnCancelar.style.display = '';
+                btnCancelar.style.visibility = 'visible';
+                btnCancelar.style.removeProperty('display');
+                btnCancelar.style.removeProperty('visibility');
+                
+                console.log('✅ Usuario inscrito - Botón Participar ocultado, botón Cancelar mostrado');
                 
                 // Verificar si el evento está en curso (activo) para mostrar botón de registrar asistencia
                 const btnRegistrarAsistencia = document.getElementById("btnRegistrarAsistencia");
@@ -718,20 +788,20 @@ async function verificarInscripcion(eventoId) {
                     // Verificar si el evento ya terminó
                     const eventoTerminado = fechaFin && ahora > fechaFin;
                     
-                    // Calcular si han pasado menos de 24 horas desde que terminó el evento
-                    let dentroDe24Horas = false;
-                    let horasDesdeFinalizacion = 0;
+                    // Calcular si han pasado menos de 30 minutos desde que terminó el evento
+                    let dentroDe30Minutos = false;
+                    let minutosDesdeFinalizacion = 0;
                     
                     if (eventoTerminado && fechaFin) {
                         const diferenciaMs = ahora - fechaFin;
-                        horasDesdeFinalizacion = diferenciaMs / (1000 * 60 * 60); // Convertir a horas
-                        dentroDe24Horas = horasDesdeFinalizacion <= 24;
+                        minutosDesdeFinalizacion = diferenciaMs / (1000 * 60); // Convertir a minutos
+                        dentroDe30Minutos = minutosDesdeFinalizacion <= 30;
                     }
                     
                     // El evento permite registro de asistencia si:
                     // 1. No ha terminado, O
-                    // 2. Terminó hace menos de 24 horas
-                    const puedeRegistrarAsistencia = !eventoTerminado || dentroDe24Horas;
+                    // 2. Terminó hace menos de 30 minutos
+                    const puedeRegistrarAsistencia = !eventoTerminado || dentroDe30Minutos;
                     
                     // También verificar si ya marcó asistencia
                     const yaMarcado = participacion.estado_asistencia === 'asistido' || participacion.asistio === true;
@@ -742,8 +812,8 @@ async function verificarInscripcion(eventoId) {
                         fechaFin: fechaFin,
                         ahora: ahora,
                         eventoTerminado: eventoTerminado,
-                        horasDesdeFinalizacion: horasDesdeFinalizacion.toFixed(2),
-                        dentroDe24Horas: dentroDe24Horas,
+                        minutosDesdeFinalizacion: minutosDesdeFinalizacion.toFixed(2),
+                        dentroDe30Minutos: dentroDe30Minutos,
                         puedeRegistrarAsistencia: puedeRegistrarAsistencia,
                         yaMarcado: yaMarcado,
                         mostrarBoton: puedeRegistrarAsistencia && !yaMarcado
@@ -754,33 +824,66 @@ async function verificarInscripcion(eventoId) {
                         btnRegistrarAsistencia.classList.remove("d-none");
                         
                         // Si el evento ya terminó, mostrar mensaje informativo
-                        if (eventoTerminado && dentroDe24Horas) {
-                            const horasRestantes = (24 - horasDesdeFinalizacion).toFixed(1);
-                            console.log(`✅ Mostrando botón de registrar asistencia (evento terminó, quedan ${horasRestantes} horas para registrar)`);
+                        if (eventoTerminado && dentroDe30Minutos) {
+                            const minutosRestantes = (30 - minutosDesdeFinalizacion).toFixed(0);
+                            console.log(`✅ Mostrando botón de registrar asistencia (evento terminó, quedan ${minutosRestantes} minutos para registrar)`);
                         } else {
                             console.log('✅ Mostrando botón de registrar asistencia');
                         }
                     } else {
                         btnRegistrarAsistencia.classList.add("d-none");
-                        if (eventoTerminado && !dentroDe24Horas) {
-                            console.log('❌ Ocultando botón: han pasado más de 24 horas desde que terminó el evento');
+                        if (eventoTerminado && !dentroDe30Minutos) {
+                            console.log('❌ Ocultando botón: han pasado más de 30 minutos desde que terminó el evento');
                         } else if (yaMarcado) {
                             console.log('❌ Ocultando botón: ya marcó asistencia');
                         }
                     }
                 }
             } else {
-                document.getElementById("btnParticipar").classList.remove("d-none");
-                document.getElementById("btnCancelar").classList.add("d-none");
+                // Usuario NO está inscrito
+                // Ocultar botón Cancelar primero
+                btnCancelar.classList.add("d-none");
+                btnCancelar.style.display = 'none';
+                btnCancelar.style.visibility = 'hidden';
+                
+                // Mostrar botón Participar de forma inmediata
+                btnParticipar.classList.remove("d-none");
+                btnParticipar.style.display = '';
+                btnParticipar.style.visibility = 'visible';
+                btnParticipar.style.removeProperty('display');
+                btnParticipar.style.removeProperty('visibility');
+                
                 const btnRegistrarAsistencia = document.getElementById("btnRegistrarAsistencia");
                 if (btnRegistrarAsistencia) {
                     btnRegistrarAsistencia.classList.add("d-none");
+                    btnRegistrarAsistencia.style.display = 'none';
                 }
-                console.log('ℹ️ Usuario no inscrito, ocultando botón de registrar asistencia');
+                console.log('ℹ️ Usuario no inscrito - Botón Participar visible, botón Cancelar oculto');
             }
+        } else {
+            // Si no hay eventos o la respuesta no fue exitosa
+            console.warn('⚠️ No se pudieron obtener las participaciones o la respuesta no fue exitosa:', {
+                success: data.success,
+                eventos: data.eventos ? data.eventos.length : 0,
+                error: data.error
+            });
+            // Por defecto, mostrar botón de participar
+            btnParticipar.classList.remove("d-none");
+            btnParticipar.style.display = '';
+            btnCancelar.classList.add("d-none");
+            btnCancelar.style.display = 'none';
         }
     } catch (error) {
-        console.warn('Error verificando inscripción:', error);
+        console.error('❌ Error verificando inscripción:', error);
+        // En caso de error, por defecto mostrar botón de participar
+        if (btnParticipar) {
+            btnParticipar.classList.remove("d-none");
+            btnParticipar.style.display = '';
+        }
+        if (btnCancelar) {
+            btnCancelar.classList.add("d-none");
+            btnCancelar.style.display = 'none';
+        }
     }
 }
 
@@ -966,7 +1069,7 @@ async function configurarBotonesBanner(eventoId, evento) {
         id: eventoId,
         titulo: evento.titulo || 'Evento',
         descripcion: evento.descripcion || '',
-        url: `http://192.168.0.6:8000/evento/${eventoId}/qr`,
+        url: `http://10.26.0.215:8000/evento/${eventoId}/qr`,
         finalizado: eventoFinalizado
     };
 }
@@ -1056,7 +1159,7 @@ async function copiarEnlace() {
     // Usar la URL pública con IP para que cualquier usuario en la misma red pueda acceder
     const url = typeof getPublicUrl !== 'undefined' 
         ? getPublicUrl(`/evento/${evento.id}/qr`)
-        : `http://192.168.0.6:8000/evento/${evento.id}/qr`;
+        : `http://10.26.0.215:8000/evento/${evento.id}/qr`;
     
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url).then(() => {
@@ -1163,7 +1266,7 @@ async function mostrarQR() {
     // URL pública con IP para acceso mediante QR (accesible desde otros dispositivos en la misma red)
     const qrUrl = typeof getPublicUrl !== 'undefined' 
         ? getPublicUrl(`/evento/${evento.id}/qr`)
-        : `http://192.168.0.6:8000/evento/${evento.id}/qr`;
+        : `http://10.26.0.215:8000/evento/${evento.id}/qr`;
     
     // Limpiar contenido anterior
     qrcodeDiv.innerHTML = '';

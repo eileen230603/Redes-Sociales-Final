@@ -347,7 +347,7 @@ async function cargarEventosEmpresa() {
                     ${imagenPrincipal 
                         ? `<a href="/empresa/eventos/${e.id}/detalle" style="text-decoration: none; display: block;">
                             <div class="position-relative" style="height: 200px; overflow: hidden; background: #f8f9fa; cursor: pointer;">
-                                <img src="${imagenPrincipal}" alt="${e.titulo}" class="w-100 h-100" style="object-fit: cover; transition: transform 0.3s;" 
+                                <img src="${imagenPrincipal}" alt="${e.titulo || 'Evento'}" class="w-100 h-100" style="object-fit: cover; transition: transform 0.3s;" 
                                  onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'200\\'%3E%3Crect fill=\\'%23f8f9fa\\' width=\\'400\\' height=\\'200\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\' fill=\\'%23adb5bd\\' font-family=\\'Arial\\' font-size=\\'14\\'%3EImagen no disponible%3C/text%3E%3C/svg%3E'; this.style.objectFit='contain'; this.style.padding='20px';">
                             ${fechaOverlay}
                             <div class="position-absolute" style="top: 12px; right: 12px; z-index: 10; pointer-events: none;">

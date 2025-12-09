@@ -298,12 +298,23 @@ class DashboardOngController extends Controller
                     return $group->pluck('externo_id')->unique()->count();
                 });
 
-            // Mega eventos por mes (últimos 5 meses)
+            // Mega eventos por mes (últimos 12 meses)
             $megaEventosPorMes = MegaEvento::where('ong_organizadora_principal', $ongId)
-                ->where('fecha_inicio', '>=', now()->subMonths(5))
+                ->where('fecha_inicio', '>=', now()->subMonths(12))
                 ->get()
                 ->groupBy(function($megaEvento) {
                     return $megaEvento->fecha_inicio->format('M');
+                })
+                ->map(function($group) {
+                    return $group->count();
+                });
+
+            // Reacciones por mes (últimos 12 meses)
+            $reaccionesPorMes = EventoReaccion::whereIn('evento_id', $eventosIds)
+                ->where('created_at', '>=', now()->subMonths(12))
+                ->get()
+                ->groupBy(function($reaccion) {
+                    return $reaccion->created_at->format('M');
                 })
                 ->map(function($group) {
                     return $group->count();
@@ -352,6 +363,7 @@ class DashboardOngController extends Controller
                     'eventos_por_mes' => $eventosPorMes,
                     'voluntarios_por_mes' => $voluntariosPorMes,
                     'mega_eventos_por_mes' => $megaEventosPorMes,
+                    'reacciones_por_mes' => $reaccionesPorMes,
                 ]
             ]);
 

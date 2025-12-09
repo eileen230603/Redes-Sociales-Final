@@ -222,6 +222,130 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Participantes Inscritos -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; animation: fadeInUp 0.9s ease-out;">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <div class="d-flex align-items-center">
+                                <div class="section-icon mr-3">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem;">
+                                        Participantes Inscritos
+                                    </h5>
+                                    <p class="mb-0 text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">
+                                        Usuarios registrados y voluntarios
+                                    </p>
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary btn-actualizar-participantes" onclick="cargarParticipantesCardMegaEvento()" style="border-radius: 8px; padding: 0.4rem 1rem;">
+                                <i class="fas fa-sync mr-1"></i> Actualizar
+                            </button>
+                        </div>
+                        <div id="participantesContainer">
+                            <div class="text-center py-4">
+                                <div class="spinner-border" role="status" style="color: #00A36C; width: 3rem; height: 3rem;">
+                                    <span class="sr-only">Cargando...</span>
+                                </div>
+                                <p class="mt-3 text-muted">Cargando participantes...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Control de Asistencias -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; animation: fadeInUp 1s ease-out;">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <div class="d-flex align-items-center">
+                                <div class="section-icon mr-3">
+                                    <i class="fas fa-clipboard-check"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem;">
+                                        Control de Asistencias
+                                    </h5>
+                                    <p class="mb-0 text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">
+                                        Registra y gestiona las asistencias de los participantes
+                                    </p>
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="cargarListaAsistenciaMegaEvento()" style="border-radius: 8px; padding: 0.4rem 1rem;">
+                                <i class="fas fa-sync mr-1"></i> Actualizar
+                            </button>
+                        </div>
+
+                        <!-- Estadísticas -->
+                        <div class="row mb-4">
+                            <div class="col-md-4 mb-3">
+                                <div class="card border-0" style="background: linear-gradient(135deg, #0C2B44 0%, #1a4a6b 100%); border-radius: 12px; padding: 1.25rem; box-shadow: 0 4px 12px rgba(12, 43, 68, 0.2);">
+                                    <div class="d-flex align-items-center">
+                                        <div class="mr-3" style="width: 50px; height: 50px; background: rgba(255,255,255,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-users text-white" style="font-size: 1.5rem;"></i>
+                                        </div>
+                                        <div>
+                                            <p class="mb-0 text-white" style="font-size: 0.85rem; opacity: 0.9;">Total Inscritos</p>
+                                            <h3 class="mb-0 text-white" id="totalInscritosMegaEvento" style="font-weight: 700;">0</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card border-0" style="background: linear-gradient(135deg, #00A36C 0%, #008a5a 100%); border-radius: 12px; padding: 1.25rem; box-shadow: 0 4px 12px rgba(0, 163, 108, 0.2);">
+                                    <div class="d-flex align-items-center">
+                                        <div class="mr-3" style="width: 50px; height: 50px; background: rgba(255,255,255,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-check-circle text-white" style="font-size: 1.5rem;"></i>
+                                        </div>
+                                        <div>
+                                            <p class="mb-0 text-white" style="font-size: 0.85rem; opacity: 0.9;">Asistieron</p>
+                                            <h3 class="mb-0 text-white" id="totalAsistieronMegaEvento" style="font-weight: 700;">0</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card border-0" style="background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%); border-radius: 12px; padding: 1.25rem; box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);">
+                                    <div class="d-flex align-items-center">
+                                        <div class="mr-3" style="width: 50px; height: 50px; background: rgba(255,255,255,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-clock text-white" style="font-size: 1.5rem;"></i>
+                                        </div>
+                                        <div>
+                                            <p class="mb-0 text-white" style="font-size: 0.85rem; opacity: 0.9;">Pendientes</p>
+                                            <h3 class="mb-0 text-white" id="totalPendientesMegaEvento" style="font-weight: 700;">0</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Información sobre registro de asistencia -->
+                        <div class="alert alert-info mb-4" style="background: linear-gradient(135deg, rgba(23, 162, 184, 0.1) 0%, rgba(23, 162, 184, 0.05) 100%); border-left: 4px solid #17a2b8; border-radius: 12px; padding: 1.25rem;">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-info-circle mr-3 mt-1" style="font-size: 1.5rem; color: #17a2b8;"></i>
+                                <div>
+                                    <h6 class="mb-2" style="font-weight: 700; color: #0C2B44;">
+                                        <i class="fas fa-user-check mr-2" style="color: #17a2b8;"></i>Registro de Asistencia
+                                    </h6>
+                                    <p class="mb-0" style="color: #0C2B44; line-height: 1.6;">
+                                        Los participantes deben registrar su propia asistencia desde su cuenta. Aquí puedes visualizar quién ha asistido y quién está pendiente.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lista de asistencias -->
+                        <div id="listaAsistenciaMegaEventoContainer">
+                            <div class="text-center py-4">
+                                <div class="spinner-border" role="status" style="color: #00A36C; width: 3rem; height: 3rem;">
+                                    <span class="sr-only">Cargando...</span>
+                                </div>
+                                <p class="mt-3 text-muted">Cargando lista de asistencia...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Sidebar - Información Adicional -->
@@ -239,13 +363,13 @@
                                 </h5>
                     </div>
                 </div>
-                        <div class="info-item">
-                            <div id="ongAvatarContainer" class="mr-3" style="flex-shrink: 0; position: relative;">
+                        <div class="info-item d-flex align-items-center">
+                            <div id="ongAvatarContainer" class="mr-3" style="flex-shrink: 0;">
                                 <!-- Avatar se cargará aquí dinámicamente -->
-                    </div>
-                            <div class="info-content">
-                                <p id="ong_organizadora" class="info-value" style="font-size: 1rem; font-weight: 500;">-</p>
-                        </div>
+                            </div>
+                            <div class="info-content flex-grow-1">
+                                <p id="ong_organizadora" class="info-value mb-0" style="font-size: 1rem; font-weight: 500;">-</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -314,6 +438,28 @@
                                 <h6 class="info-label" style="font-size: 0.85rem; font-weight: 600; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Visibilidad</h6>
                                 <div id="es_publico" class="info-value" style="font-size: 1rem; font-weight: 500;">-</div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Patrocinadores -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; animation: fadeInUp 0.8s ease-out; display: none;" id="patrocinadoresCard">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="section-icon mr-3">
+                                <i class="fas fa-handshake"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem;">
+                                    Patrocinadores
+                                </h5>
+                                <p class="mb-0 text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">
+                                    Empresas que patrocinan este mega evento
+                                </p>
+                            </div>
+                        </div>
+                        <div id="patrocinadores">
+                            <!-- Se llenará dinámicamente -->
                         </div>
                     </div>
                 </div>
@@ -624,21 +770,199 @@
 <script>
 // Función helper para construir URL de imagen
 function buildImageUrl(imgUrl) {
-    if (!imgUrl || imgUrl.trim() === '') return null;
+    // Validar que imgUrl sea un string válido
+    if (!imgUrl) return null;
     
+    // Si es un array u objeto, retornar null (no debería pasar)
+    if (typeof imgUrl !== 'string') {
+        console.warn('buildImageUrl recibió un valor no string:', typeof imgUrl, imgUrl);
+        return null;
+    }
+    
+    // Limpiar espacios en blanco
+    imgUrl = imgUrl.trim();
+    if (imgUrl === '') return null;
+    
+    // CASO ESPECIAL: Detectar URLs malformadas como /storage/["http://..."]
+    // Este patrón ocurre cuando se concatena /storage/ con un array JSON
+    const storageJsonPattern = /\/storage\/\[(.*?)\]$/;
+    const storageJsonMatch = imgUrl.match(storageJsonPattern);
+    if (storageJsonMatch) {
+        console.warn('buildImageUrl: Detectada URL malformada con /storage/[...], extrayendo JSON:', imgUrl.substring(0, 150));
+        try {
+            const jsonStr = '[' + storageJsonMatch[1] + ']';
+            const parsed = JSON.parse(jsonStr);
+            if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === 'string') {
+                // Usar el primer elemento del array parseado
+                imgUrl = parsed[0].trim();
+                if (imgUrl === '') return null;
+            } else {
+                console.warn('buildImageUrl: JSON extraído no es un array válido');
+                return null;
+            }
+        } catch (e) {
+            console.warn('buildImageUrl: Error al parsear JSON de URL malformada:', e);
+            return null;
+        }
+    }
+    
+    // Si parece ser un array JSON serializado, intentar parsearlo y tomar el primer elemento
+    if (imgUrl.startsWith('[') && imgUrl.endsWith(']')) {
+        try {
+            const parsed = JSON.parse(imgUrl);
+            if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === 'string') {
+                imgUrl = parsed[0].trim();
+                if (imgUrl === '') return null;
+                // Validar que el resultado parseado no sea otro array JSON
+                if (imgUrl.startsWith('[') && imgUrl.endsWith(']')) {
+                    console.warn('buildImageUrl: El elemento parseado es otro array JSON, rechazando');
+                    return null;
+                }
+            } else {
+                console.warn('buildImageUrl: JSON parseado no es un array válido:', parsed);
+                return null;
+            }
+        } catch (e) {
+            console.warn('buildImageUrl: Error al parsear JSON:', e);
+            return null;
+        }
+    }
+    
+    // Validación adicional: asegurar que imgUrl no contenga arrays JSON después del procesamiento
+    if (imgUrl.includes('[') || imgUrl.includes(']')) {
+        console.warn('buildImageUrl: URL contiene caracteres de array JSON después del procesamiento:', imgUrl);
+        return null;
+    }
+    
+    // Filtrar rutas inválidas (como templates/yootheme, resizer, wp-content, etc.)
+    // PERO solo si NO es una URL completa de internet
+    const esUrlCompleta = imgUrl.startsWith('http://') || imgUrl.startsWith('https://');
+    const rutasInvalidas = ['/templates/', '/cache/', '/yootheme/', '/resizer/', '/wp-content/', 
+                            'templates/', 'cache/', 'yootheme/', 'resizer/', 'wp-content/'];
+    
+    // Solo filtrar si NO es una URL completa de internet
+    if (!esUrlCompleta) {
+        const esRutaInvalida = rutasInvalidas.some(ruta => imgUrl.toLowerCase().includes(ruta.toLowerCase()));
+        if (esRutaInvalida) {
+            console.warn('Ruta de imagen inválida filtrada:', imgUrl);
+            return null;
+        }
+    }
+    
+    // Si ya es una URL completa, reemplazar IPs antiguas y retornarla
     if (imgUrl.startsWith('http://') || imgUrl.startsWith('https://')) {
-        return imgUrl;
+        // Reemplazar IPs antiguas
+        imgUrl = imgUrl.replace(/http:\/\/127\.0\.0\.1:8000/g, 'http://10.26.0.215:8000');
+        imgUrl = imgUrl.replace(/https:\/\/127\.0\.0\.1:8000/g, 'https://10.26.0.215:8000');
+        imgUrl = imgUrl.replace(/http:\/\/192\.168\.0\.6:8000/g, 'http://10.26.0.215:8000');
+        imgUrl = imgUrl.replace(/https:\/\/192\.168\.0\.6:8000/g, 'https://10.26.0.215:8000');
+        imgUrl = imgUrl.replace(/http:\/\/10\.26\.15\.110:8000/g, 'http://10.26.0.215:8000');
+        imgUrl = imgUrl.replace(/https:\/\/10\.26\.15\.110:8000/g, 'https://10.26.0.215:8000');
+        
+        // Validar que la URL completa no contenga arrays JSON
+        if (!imgUrl.includes('[') && !imgUrl.includes(']')) {
+            // Si es una URL externa, usar el proxy
+            try {
+                const url = new URL(imgUrl);
+                const currentHost = window.location.hostname;
+                const currentPort = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
+                const imageHost = url.hostname;
+                const imagePort = url.port || (url.protocol === 'https:' ? '443' : '80');
+                
+                if (imageHost !== currentHost || imagePort !== currentPort) {
+                    const baseUrl = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) 
+                        ? API_BASE_URL 
+                        : window.location.origin;
+                    const correctedBaseUrl = baseUrl.replace(/127\.0\.0\.1:8000/g, '10.26.0.215:8000')
+                                                     .replace(/192\.168\.0\.6:8000/g, '10.26.0.215:8000')
+                                                     .replace(/10\.26\.15\.110:8000/g, '10.26.0.215:8000');
+                    return `${correctedBaseUrl}/api/image-proxy?url=${encodeURIComponent(imgUrl)}`;
+                }
+            } catch (e) {
+                // Si no se puede parsear, retornar la URL original
+            }
+            
+            return imgUrl;
+        } else {
+            console.warn('buildImageUrl: URL completa contiene arrays JSON:', imgUrl);
+            return null;
+        }
     }
     
+    // Si empieza con /storage/, verificar si es una ruta externa mal formateada
     if (imgUrl.startsWith('/storage/')) {
-        return `${window.location.origin}${imgUrl}`;
+        // Detectar si es una ruta externa que fue mal formateada (como /storage/resizer/ o /storage/wp-content/)
+        const rutasExternas = ['/storage/resizer/', '/storage/wp-content/', '/storage/templates/', 
+                               '/storage/cache/', '/storage/yootheme/'];
+        const esRutaExterna = rutasExternas.some(ruta => imgUrl.toLowerCase().startsWith(ruta.toLowerCase()));
+        
+        if (esRutaExterna) {
+            // Es una ruta externa mal formateada, extraer la parte después de /storage/
+            const rutaExterna = imgUrl.replace(/^\/storage\//, '');
+            // Intentar construir la URL externa original (esto es una aproximación)
+            // En realidad, estas rutas deberían estar guardadas como URLs completas en la BD
+            console.warn('buildImageUrl: Ruta externa mal formateada detectada:', imgUrl);
+            return null; // Rechazar estas rutas ya que no podemos determinar la URL externa completa
+        }
+        
+        const baseUrl = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) 
+            ? API_BASE_URL 
+            : window.location.origin;
+        const correctedBaseUrl = baseUrl.replace(/127\.0\.0\.1:8000/g, '10.26.0.215:8000')
+                                         .replace(/192\.168\.0\.6:8000/g, '10.26.0.215:8000')
+                                         .replace(/10\.26\.15\.110:8000/g, '10.26.0.215:8000');
+        const finalUrl = `${correctedBaseUrl}${imgUrl}`;
+        // Validar que la URL final no contenga arrays JSON
+        if (!finalUrl.includes('[') && !finalUrl.includes(']')) {
+            return finalUrl;
+        } else {
+            console.warn('buildImageUrl: URL construida contiene arrays JSON:', finalUrl);
+            return null;
+        }
     }
     
+    // Si empieza con storage/, agregar /
     if (imgUrl.startsWith('storage/')) {
-        return `${window.location.origin}/${imgUrl}`;
+        const baseUrl = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) 
+            ? API_BASE_URL 
+            : window.location.origin;
+        const correctedBaseUrl = baseUrl.replace(/127\.0\.0\.1:8000/g, '10.26.0.215:8000')
+                                         .replace(/192\.168\.0\.6:8000/g, '10.26.0.215:8000')
+                                         .replace(/10\.26\.15\.110:8000/g, '10.26.0.215:8000');
+        const finalUrl = `${correctedBaseUrl}/${imgUrl}`;
+        // Validar que la URL final no contenga arrays JSON
+        if (!finalUrl.includes('[') && !finalUrl.includes(']')) {
+            return finalUrl;
+        } else {
+            console.warn('buildImageUrl: URL construida contiene arrays JSON:', finalUrl);
+            return null;
+        }
     }
     
-    return `${window.location.origin}/storage/${imgUrl}`;
+    // Solo procesar si parece ser una ruta de imagen válida
+    const extensionesValidas = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+    const tieneExtensionValida = extensionesValidas.some(ext => imgUrl.toLowerCase().includes(ext.toLowerCase()));
+    
+    if (tieneExtensionValida) {
+        const baseUrl = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) 
+            ? API_BASE_URL 
+            : window.location.origin;
+        const correctedBaseUrl = baseUrl.replace(/127\.0\.0\.1:8000/g, '10.26.0.215:8000')
+                                         .replace(/192\.168\.0\.6:8000/g, '10.26.0.215:8000')
+                                         .replace(/10\.26\.15\.110:8000/g, '10.26.0.215:8000');
+        const finalUrl = `${correctedBaseUrl}/storage/${imgUrl.replace(/^\//, '')}`;
+        // Validar que la URL final no contenga arrays JSON
+        if (!finalUrl.includes('[') && !finalUrl.includes(']')) {
+            return finalUrl;
+        } else {
+            console.warn('buildImageUrl: URL construida contiene arrays JSON:', finalUrl);
+            return null;
+        }
+    }
+    
+    // Si no tiene extensión válida, retornar null
+    console.warn('Ruta de imagen sin extensión válida:', imgUrl);
+    return null;
 }
 
 let megaEventoId = null;
@@ -736,7 +1060,6 @@ async function loadMegaEvento() {
         }
 
         const mega = data.mega_evento;
-        console.log('Mega evento recibido:', mega);
         
         try {
             displayMegaEvento(mega);
@@ -750,6 +1073,10 @@ async function loadMegaEvento() {
             // Cargar reacciones
             verificarReaccionMegaEvento();
             cargarReaccionesMegaEvento();
+            // Cargar participantes
+            cargarParticipantesCardMegaEvento();
+            // Mostrar patrocinadores
+            mostrarPatrocinadoresMegaEvento(mega);
             // Iniciar actualización en tiempo real
             iniciarActualizacionTiempoRealMegaEvento();
             console.log('Mega evento mostrado correctamente');
@@ -775,25 +1102,107 @@ async function loadMegaEvento() {
 }
 
 function displayMegaEvento(mega) {
-    console.log('Iniciando displayMegaEvento con:', mega);
     
     try {
-        // Helper para construir URL de imagen
-        function buildImageUrl(imgUrl) {
-            if (!imgUrl || imgUrl.trim() === '') return null;
-            if (imgUrl.startsWith('http://') || imgUrl.startsWith('https://')) return imgUrl;
-            if (imgUrl.startsWith('/storage/')) return `${window.location.origin}${imgUrl}`;
-            if (imgUrl.startsWith('storage/')) return `${window.location.origin}/${imgUrl}`;
-            return `${window.location.origin}/storage/${imgUrl}`;
-        }
+        // Helper para construir URL de imagen (usar la función global buildImageUrl)
+        // Ya no es necesario definir una función local, se usa la global
 
         // Banner con imagen principal
         const banner = document.getElementById('eventBanner');
         const bannerImage = document.getElementById('bannerImage');
-        if (bannerImage && mega.imagenes && Array.isArray(mega.imagenes) && mega.imagenes.length > 0) {
-            const primeraImagen = buildImageUrl(mega.imagenes[0]);
-            if (primeraImagen) {
-                bannerImage.style.backgroundImage = `url(${primeraImagen})`;
+        if (bannerImage && mega.imagenes) {
+            // Usar la misma función de parseo que para las imágenes principales
+            function parsearImagenesBanner(imagenesInput) {
+                if (!imagenesInput) return [];
+                if (Array.isArray(imagenesInput)) {
+                    return imagenesInput;
+                }
+                if (typeof imagenesInput === 'string') {
+                    const trimmed = imagenesInput.trim();
+                    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+                        try {
+                            const parsed = JSON.parse(trimmed);
+                            return Array.isArray(parsed) ? parsed : [];
+                        } catch (e) {
+                            return [];
+                        }
+                    }
+                    return [trimmed];
+                }
+                return [];
+            }
+            
+            // Función recursiva para extraer URLs válidas (misma que la principal)
+            function extraerUrlsValidasBanner(input) {
+                const urls = [];
+                if (!input) return urls;
+                
+                if (Array.isArray(input)) {
+                    input.forEach(item => {
+                        urls.push(...extraerUrlsValidasBanner(item));
+                    });
+                    return urls;
+                }
+                
+                if (typeof input === 'string') {
+                    const trimmed = input.trim();
+                    if (trimmed === '') return urls;
+                    
+                    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+                        try {
+                            const parsed = JSON.parse(trimmed);
+                            return extraerUrlsValidasBanner(parsed);
+                        } catch (e) {
+                            return urls;
+                        }
+                    }
+                    
+                    // Caso especial: /storage/["http://..."]
+                    if (trimmed.includes('[') || trimmed.includes(']')) {
+                        const storageJsonMatch = trimmed.match(/\/storage\/\[(.*?)\]$/);
+                        if (storageJsonMatch) {
+                            try {
+                                const jsonStr = '[' + storageJsonMatch[1] + ']';
+                                const parsed = JSON.parse(jsonStr);
+                                return extraerUrlsValidasBanner(parsed);
+                            } catch (e) {
+                                return urls;
+                            }
+                        }
+                        
+                        // Intentar extraer JSON de cualquier parte
+                        try {
+                            const jsonMatch = trimmed.match(/\[.*?\]/);
+                            if (jsonMatch) {
+                                const parsed = JSON.parse(jsonMatch[0]);
+                                return extraerUrlsValidasBanner(parsed);
+                            }
+                        } catch (e) {
+                            return urls;
+                        }
+                        return urls;
+                    }
+                    
+                    // Filtrar rutas inválidas
+                    const rutasInvalidas = ['/templates/', '/cache/', '/yootheme/', 'templates/', 'cache/', 'yootheme/'];
+                    if (!rutasInvalidas.some(ruta => trimmed.toLowerCase().includes(ruta.toLowerCase()))) {
+                        urls.push(trimmed);
+                    }
+                }
+                
+                return urls;
+            }
+            
+            // Parsear y extraer URLs válidas
+            const imagenesParseadasBanner = parsearImagenesBanner(mega.imagenes);
+            const urlsValidasBanner = extraerUrlsValidasBanner(imagenesParseadasBanner);
+            
+            // Usar la primera URL válida para el banner
+            if (urlsValidasBanner.length > 0) {
+                const primeraImagen = buildImageUrl(urlsValidasBanner[0]);
+                if (primeraImagen && typeof primeraImagen === 'string' && !primeraImagen.includes('[') && !primeraImagen.includes(']')) {
+                    bannerImage.style.backgroundImage = `url(${primeraImagen})`;
+                }
             }
         }
 
@@ -944,20 +1353,27 @@ function displayMegaEvento(mega) {
             `;
         }
 
-        // Capacidad
+        // Capacidad máxima - mostrar correctamente
         const capacidadEl = document.getElementById('capacidad_maxima');
         if (capacidadEl) {
-            capacidadEl.textContent = mega.capacidad_maxima 
-                ? `${mega.capacidad_maxima} personas` 
-                : 'Sin límite';
+            // Obtener el valor crudo si está disponible, o usar el valor normalizado
+            const capacidadValue = mega.capacidad_maxima;
+            if (capacidadValue !== null && capacidadValue !== undefined && capacidadValue !== '' && !isNaN(capacidadValue) && parseInt(capacidadValue) > 0) {
+                const capacidadNum = parseInt(capacidadValue);
+                capacidadEl.textContent = `${capacidadNum} personas`;
+                capacidadEl.style.fontWeight = '600';
+                capacidadEl.style.color = '#0C2B44';
+            } else {
+                capacidadEl.textContent = 'Sin límite de capacidad';
+                capacidadEl.style.fontStyle = 'italic';
+                capacidadEl.style.color = '#6c757d';
+            }
         }
 
         // ONG Organizadora - Con avatar
         const ongEl = document.getElementById('ong_organizadora');
         const ongAvatarContainer = document.getElementById('ongAvatarContainer');
         if (ongEl && ongAvatarContainer) {
-            console.log('Mega evento completo:', mega);
-            console.log('Mega evento ONG data:', mega.ong_principal, mega.ongPrincipal);
             
             // Intentar obtener la información de la ONG de diferentes formas
             let ong = null;
@@ -983,57 +1399,34 @@ function displayMegaEvento(mega) {
                     const avatarUrl = buildImageUrl(fotoPerfil);
                     console.log('Avatar URL normalizada:', avatarUrl);
                     
-                    // Crear contenedor con posición relativa para el fallback
+                    // Crear contenedor limpio sin fallback verde
                     ongAvatarContainer.innerHTML = '';
-                    ongAvatarContainer.style.position = 'relative';
                     
-                    // Crear fallback primero (para que esté detrás)
-                    const fallback = document.createElement('div');
-                    fallback.className = 'rounded-circle d-flex align-items-center justify-content-center';
-                    fallback.style.cssText = 'width: 70px; height: 70px; font-weight: 700; font-size: 1.5rem; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: 3px solid #00A36C; box-shadow: 0 4px 12px rgba(0, 163, 108, 0.2); position: absolute; top: 0; left: 0; z-index: 1; display: none;';
-                    const inicial = nombreOng && nombreOng !== '-' ? nombreOng.charAt(0).toUpperCase() : '?';
-                    fallback.textContent = inicial;
-                    ongAvatarContainer.appendChild(fallback);
-                    
-                    // Crear imagen
+                    // Crear imagen sin fallback verde
                     const img = document.createElement('img');
                     img.src = avatarUrl;
                     img.alt = nombreOng;
                     img.className = 'rounded-circle';
-                    img.style.cssText = 'width: 70px; height: 70px; object-fit: cover; border: 3px solid #00A36C; box-shadow: 0 4px 12px rgba(0, 163, 108, 0.2); display: block; position: relative; z-index: 2;';
+                    img.style.cssText = 'width: 70px; height: 70px; object-fit: cover; border: 2px solid #e9ecef; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: block;';
                     
                     img.onerror = function() {
                         console.error('Error cargando avatar de ONG:', avatarUrl);
-                        console.error('URL intentada:', this.src);
                         this.style.display = 'none';
-                        fallback.style.display = 'flex';
                     };
                     
                     img.onload = function() {
                         console.log('Avatar de ONG cargado correctamente:', avatarUrl);
-                        fallback.style.display = 'none';
                     };
                     
                     ongAvatarContainer.appendChild(img);
-            } else {
-                    console.log('No hay foto_perfil disponible, mostrando inicial');
-                    const inicial = nombreOng && nombreOng !== '-' ? nombreOng.charAt(0).toUpperCase() : '?';
-                    ongAvatarContainer.innerHTML = `
-                        <div class="rounded-circle d-flex align-items-center justify-content-center" 
-                             style="width: 70px; height: 70px; font-weight: 700; font-size: 1.5rem; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: 3px solid #00A36C; box-shadow: 0 4px 12px rgba(0, 163, 108, 0.2);">
-                            ${inicial}
-                        </div>
-                    `;
+                } else {
+                    console.log('No hay foto_perfil disponible');
+                    ongAvatarContainer.innerHTML = '';
                 }
             } else {
                 console.warn('No se encontró información de la ONG organizadora');
                 ongEl.textContent = '-';
-                ongAvatarContainer.innerHTML = `
-                    <div class="rounded-circle d-flex align-items-center justify-content-center" 
-                         style="width: 70px; height: 70px; font-weight: 700; font-size: 1.5rem; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: 3px solid #00A36C; box-shadow: 0 4px 12px rgba(0, 163, 108, 0.2);">
-                        ?
-                    </div>
-                `;
+                ongAvatarContainer.innerHTML = '';
             }
         } else {
             console.error('Elementos del DOM no encontrados:', { ongEl, ongAvatarContainer });
@@ -1090,7 +1483,117 @@ function displayMegaEvento(mega) {
     }
 
         // Imágenes (el modelo ya devuelve URLs completas)
-        const imagenes = Array.isArray(mega.imagenes) ? mega.imagenes.filter(img => img && img.trim() !== '') : [];
+        
+        // Asegurar que las imágenes sean un array
+        let imagenes = [];
+        
+        // Función helper para parsear imágenes
+        function parsearImagenes(imagenesInput) {
+            if (!imagenesInput) return [];
+            
+            // Si ya es un array, usarlo directamente
+            if (Array.isArray(imagenesInput)) {
+                return imagenesInput;
+            }
+            
+            // Si es string, intentar parsearlo como JSON
+            if (typeof imagenesInput === 'string') {
+                // Verificar si parece ser un JSON array
+                const trimmed = imagenesInput.trim();
+                if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+                    try {
+                        const parsed = JSON.parse(trimmed);
+                        if (Array.isArray(parsed)) {
+                            return parsed;
+                        }
+                    } catch (e) {
+                        console.error('Error parseando imágenes como JSON:', e);
+                    }
+                }
+                // Si no es JSON válido, tratarlo como un solo string
+                return [trimmed];
+            }
+            
+            return [];
+        }
+        
+        // Parsear las imágenes
+        const imagenesParseadas = parsearImagenes(mega.imagenes);
+        
+        // Función recursiva para extraer URLs válidas de cualquier estructura
+        function extraerUrlsValidas(input) {
+            const urls = [];
+            
+            if (!input) return urls;
+            
+            // Si es un array, procesar cada elemento
+            if (Array.isArray(input)) {
+                input.forEach(item => {
+                    urls.push(...extraerUrlsValidas(item));
+                });
+                return urls;
+            }
+            
+            // Si es un string
+            if (typeof input === 'string') {
+                const trimmed = input.trim();
+                if (trimmed === '') return urls;
+                
+                // Si parece ser un JSON array, parsearlo recursivamente
+                if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+                    try {
+                        const parsed = JSON.parse(trimmed);
+                        return extraerUrlsValidas(parsed);
+                    } catch (e) {
+                        console.warn('Error parseando JSON recursivo:', e);
+                        return urls;
+                    }
+                }
+                
+                // Validar que no contenga arrays JSON
+                if (trimmed.includes('[') || trimmed.includes(']')) {
+                    // Caso especial: si la URL contiene /storage/["http://..."] extraer solo el JSON
+                    const storageJsonMatch = trimmed.match(/\/storage\/\[(.*?)\]$/);
+                    if (storageJsonMatch) {
+                        try {
+                            const jsonStr = '[' + storageJsonMatch[1] + ']';
+                            const parsed = JSON.parse(jsonStr);
+                            return extraerUrlsValidas(parsed);
+                        } catch (e) {
+                            // Silenciar el error, ya que se está manejando
+                        }
+                    }
+                    
+                    // Intentar extraer URLs del string si contiene JSON en cualquier parte
+                    try {
+                        // Buscar el primer array JSON en el string
+                        const jsonMatch = trimmed.match(/\[.*?\]/);
+                        if (jsonMatch) {
+                            const parsed = JSON.parse(jsonMatch[0]);
+                            return extraerUrlsValidas(parsed);
+                        }
+                    } catch (e) {
+                        // Silenciar el error, ya que se está manejando
+                    }
+                    return urls; // Rechazar si contiene arrays JSON y no se pudo parsear
+                }
+                
+                // Filtrar rutas inválidas
+                const rutasInvalidas = ['/templates/', '/cache/', '/yootheme/', 'templates/', 'cache/', 'yootheme/'];
+                if (!rutasInvalidas.some(ruta => trimmed.toLowerCase().includes(ruta.toLowerCase()))) {
+                    urls.push(trimmed);
+                }
+            }
+            
+            return urls;
+        }
+        
+        // Extraer todas las URLs válidas usando la función recursiva
+        imagenes = extraerUrlsValidas(imagenesParseadas);
+        
+        // Eliminar duplicados
+        imagenes = [...new Set(imagenes)];
+        
         const imagenesContainer = document.getElementById('imagenesContainer');
         const imagenesCount = document.getElementById('imagenesCount');
         
@@ -1116,11 +1619,73 @@ function displayMegaEvento(mega) {
         `;
     } else {
         imagenesContainer.innerHTML = '';
-        imagenes.forEach((imgUrl, index) => {
-            if (!imgUrl || imgUrl.trim() === '') return;
+        imagenes.forEach((imgUrlOriginal, index) => {
+            if (!imgUrlOriginal || typeof imgUrlOriginal !== 'string' || imgUrlOriginal.trim() === '') {
+                console.warn('Imagen inválida en índice', index, ':', imgUrlOriginal);
+                return;
+            }
             
-            // Construir URL correcta usando buildImageUrl
-            const fullUrl = buildImageUrl(imgUrl);
+            let imgUrl = imgUrlOriginal.trim();
+            
+            // Verificar que no sea un JSON string completo (seguridad adicional)
+            if (imgUrl.startsWith('[') && imgUrl.endsWith(']')) {
+                console.warn('Imagen parece ser un JSON array completo, intentando parsear:', imgUrl.substring(0, 100));
+                try {
+                    const parsed = JSON.parse(imgUrl);
+                    if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === 'string') {
+                        // Usar el primer elemento del array
+                        imgUrl = parsed[0].trim();
+                        if (!imgUrl) {
+                            console.warn('Array JSON parseado pero primer elemento vacío');
+                            return;
+                        }
+                    } else {
+                        console.warn('Array JSON parseado pero no válido');
+                        return;
+                    }
+                } catch (e) {
+                    console.warn('Error parseando JSON de imagen:', e);
+                    return;
+                }
+            }
+            
+            // Validar que imgUrl sea un string válido después del procesamiento
+            if (typeof imgUrl !== 'string' || imgUrl.trim() === '') {
+                console.warn('Imagen procesada inválida:', imgUrl);
+                return;
+            }
+            
+            // Filtrar rutas inválidas (solo para rutas locales, no URLs completas)
+            const esUrlCompleta = imgUrl.startsWith('http://') || imgUrl.startsWith('https://');
+            const rutasInvalidas = ['/templates/', '/cache/', '/yootheme/', '/resizer/', '/wp-content/',
+                                    'templates/', 'cache/', 'yootheme/', 'resizer/', 'wp-content/'];
+            
+            // Solo filtrar si NO es una URL completa de internet
+            if (!esUrlCompleta) {
+                const esRutaInvalida = rutasInvalidas.some(ruta => imgUrl.toLowerCase().includes(ruta.toLowerCase()));
+                if (esRutaInvalida) {
+                    console.warn('Ruta de imagen inválida filtrada:', imgUrl);
+                    return; // Saltar esta imagen
+                }
+            }
+            
+            // Guardar el valor limpio para usar en el manejo de errores
+            const imgUrlLimpio = imgUrl;
+            
+            // Usar buildImageUrl para procesar y validar la URL
+            // buildImageUrl maneja arrays JSON, URLs completas, y rutas relativas
+            const fullUrl = buildImageUrl(imgUrlLimpio);
+            
+            if (!fullUrl) {
+                console.warn('No se pudo construir URL para imagen:', imgUrlLimpio);
+                return; // Saltar esta imagen si no se puede construir la URL
+            }
+            
+            // Validar que fullUrl sea una URL válida (no contenga arrays JSON)
+            if (typeof fullUrl !== 'string' || fullUrl.includes('[') || fullUrl.includes(']')) {
+                console.error('URL construida inválida (contiene JSON):', fullUrl);
+                return;
+            }
 
             // Crear elementos con diseño minimalista mejorado
             const colDiv = document.createElement('div');
@@ -1172,20 +1737,70 @@ function displayMegaEvento(mega) {
                 console.error('Error cargando imagen:', fullUrl);
                 this.onerror = null;
                 
-                // Intentar con diferentes formatos de URL
+                // Validar que imgUrlLimpio sea un string válido (no un array JSON)
+                if (!imgUrlLimpio || typeof imgUrlLimpio !== 'string' || imgUrlLimpio.includes('[') || imgUrlLimpio.includes(']')) {
+                    console.error('URL limpia inválida, usando placeholder:', imgUrlLimpio);
+                    this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="220"%3E%3Crect fill="%23f8f9fa" width="400" height="220"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23adb5bd" font-family="Arial" font-size="14"%3EImagen no disponible%3C/text%3E%3C/svg%3E';
+                    this.style.objectFit = 'contain';
+                    this.style.padding = '20px';
+                    return;
+                }
+                
+                // Intentar con diferentes formatos de URL usando solo imgUrlLimpio
+                // Primero, reemplazar IPs antiguas si es una URL completa
+                let imgUrlProcessed = imgUrlLimpio;
+                if (imgUrlProcessed.startsWith('http://') || imgUrlProcessed.startsWith('https://')) {
+                    imgUrlProcessed = imgUrlProcessed.replace(/http:\/\/127\.0\.0\.1:8000/g, 'http://10.26.0.215:8000');
+                    imgUrlProcessed = imgUrlProcessed.replace(/https:\/\/127\.0\.0\.1:8000/g, 'https://10.26.0.215:8000');
+                    imgUrlProcessed = imgUrlProcessed.replace(/http:\/\/192\.168\.0\.6:8000/g, 'http://10.26.0.215:8000');
+                    imgUrlProcessed = imgUrlProcessed.replace(/https:\/\/192\.168\.0\.6:8000/g, 'https://10.26.0.215:8000');
+                    imgUrlProcessed = imgUrlProcessed.replace(/http:\/\/10\.26\.15\.110:8000/g, 'http://10.26.0.215:8000');
+                    imgUrlProcessed = imgUrlProcessed.replace(/https:\/\/10\.26\.15\.110:8000/g, 'https://10.26.0.215:8000');
+                }
+                
+                const baseUrl = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) 
+                    ? API_BASE_URL 
+                    : window.location.origin;
+                const correctedBaseUrl = baseUrl.replace(/127\.0\.0\.1:8000/g, '10.26.0.215:8000')
+                                                 .replace(/192\.168\.0\.6:8000/g, '10.26.0.215:8000')
+                                                 .replace(/10\.26\.15\.110:8000/g, '10.26.0.215:8000');
+                
                 const altUrls = [
-                    imgUrl.startsWith('/storage/') ? `${window.location.origin}${imgUrl}` : null,
-                    imgUrl.startsWith('storage/') ? `${window.location.origin}/${imgUrl}` : null,
-                    `${window.location.origin}/storage/${imgUrl}`,
-                    `${API_BASE_URL}${imgUrl.startsWith('/') ? imgUrl : '/' + imgUrl}`
-                ].filter(url => url && url !== fullUrl);
+                    // Si ya es URL completa, usarla directamente (después de reemplazar IPs)
+                    (imgUrlProcessed.startsWith('http://') || imgUrlProcessed.startsWith('https://')) ? imgUrlProcessed : null,
+                    // Si empieza con /storage/, construir URL completa
+                    imgUrlProcessed.startsWith('/storage/') ? `${correctedBaseUrl}${imgUrlProcessed}` : null,
+                    // Si empieza con storage/, construir URL completa
+                    imgUrlProcessed.startsWith('storage/') ? `${correctedBaseUrl}/${imgUrlProcessed}` : null,
+                    // Si es una ruta relativa sin prefijo, agregar /storage/
+                    (!imgUrlProcessed.startsWith('http://') && !imgUrlProcessed.startsWith('https://') && 
+                     !imgUrlProcessed.startsWith('/storage/') && !imgUrlProcessed.startsWith('storage/')) 
+                        ? `${correctedBaseUrl}/storage/${imgUrlProcessed.replace(/^\//, '')}` : null
+                ].filter(url => {
+                    // Filtrar URLs inválidas que contengan arrays JSON o que sean iguales a la URL que falló
+                    return url && 
+                           typeof url === 'string' && 
+                           url !== fullUrl && 
+                           !url.includes('[') && 
+                           !url.includes(']') &&
+                           !url.includes('/storage/http://') && // Evitar URLs dobles
+                           !url.includes('/storage/https://') && // Evitar URLs dobles
+                           url.trim() !== '';
+                });
                 
                 let attemptIndex = 0;
                 const tryNextUrl = () => {
                     if (attemptIndex < altUrls.length) {
-                        this.src = altUrls[attemptIndex];
-                        attemptIndex++;
-                        this.onerror = tryNextUrl;
+                        const nextUrl = altUrls[attemptIndex];
+                        // Validar que la URL no contenga arrays JSON antes de intentar cargarla
+                        if (nextUrl && typeof nextUrl === 'string' && !nextUrl.includes('[') && !nextUrl.includes(']')) {
+                            this.src = nextUrl;
+                            attemptIndex++;
+                            this.onerror = tryNextUrl;
+                        } else {
+                            attemptIndex++;
+                            tryNextUrl();
+                        }
                     } else {
                         // Si todas fallan, usar placeholder SVG
                         this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="220"%3E%3Crect fill="%23f8f9fa" width="400" height="220"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23adb5bd" font-family="Arial" font-size="14"%3EImagen no disponible%3C/text%3E%3C/svg%3E';
@@ -1392,7 +2007,7 @@ function configurarBotonesCompartir(megaEventoId, mega) {
         descripcion: mega.descripcion || '',
         url: typeof getPublicUrl !== 'undefined' 
             ? getPublicUrl(`/mega-evento/${megaEventoId}/qr`)
-            : `http://192.168.0.6:8000/mega-evento/${megaEventoId}/qr`
+            : `http://10.26.0.215:8000/mega-evento/${megaEventoId}/qr`
     };
 }
 
@@ -1850,6 +2465,221 @@ async function cargarReaccionesMegaEvento() {
     }
 }
 
+// Mostrar patrocinadores del mega evento
+function mostrarPatrocinadoresMegaEvento(mega) {
+    const patrocinadoresCard = document.getElementById('patrocinadoresCard');
+    const patrocinadoresDiv = document.getElementById('patrocinadores');
+    
+    if (!patrocinadoresCard || !patrocinadoresDiv) return;
+    
+    // Helper para construir URL de imagen (usar la función global)
+    // Esta función local ya no es necesaria, se usa la global
+    
+    if (mega.patrocinadores && Array.isArray(mega.patrocinadores) && mega.patrocinadores.length > 0) {
+        patrocinadoresCard.style.display = 'block';
+        patrocinadoresDiv.innerHTML = '';
+        
+        mega.patrocinadores.forEach(pat => {
+            const nombre = pat.nombre || 'Sin nombre';
+            // El backend ya devuelve la URL completa, usar directamente
+            const fotoPerfil = pat.foto_perfil || null;
+            
+            const patrocinadorDiv = document.createElement('div');
+            patrocinadorDiv.className = 'mb-3 pb-3';
+            patrocinadorDiv.style.cssText = 'border-bottom: 1px solid #e9ecef; transition: all 0.3s ease;';
+            patrocinadorDiv.onmouseenter = function() {
+                this.style.backgroundColor = '#f8f9fa';
+                this.style.borderRadius = '8px';
+                this.style.padding = '0.5rem';
+                this.style.marginLeft = '-0.5rem';
+                this.style.marginRight = '-0.5rem';
+            };
+            patrocinadorDiv.onmouseleave = function() {
+                this.style.backgroundColor = 'transparent';
+                this.style.borderRadius = '0';
+                this.style.padding = '0';
+                this.style.marginLeft = '0';
+                this.style.marginRight = '0';
+            };
+            
+            patrocinadorDiv.innerHTML = `
+                <div class="d-flex align-items-center">
+                    ${fotoPerfil ? `
+                        <div class="mr-3" style="flex-shrink: 0;">
+                            <img src="${fotoPerfil}" alt="${nombre}" class="rounded-circle" 
+                                 style="width: 50px; height: 50px; object-fit: cover; border: 2px solid #e9ecef; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
+                                 onerror="this.style.display='none';">
+                        </div>
+                    ` : ''}
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1" style="font-weight: 700; color: #0C2B44; font-size: 0.95rem; margin-bottom: 0.25rem;">${nombre}</h6>
+                        ${pat.NIT ? `<small class="text-muted d-block" style="font-size: 0.8rem; margin-bottom: 0.25rem;">NIT: ${pat.NIT}</small>` : ''}
+                        ${pat.estado_compromiso ? `<span class="badge badge-success" style="font-size: 0.7rem; background: #00A36C; padding: 0.25em 0.5em;">${pat.estado_compromiso}</span>` : ''}
+                    </div>
+                </div>
+            `;
+            
+            patrocinadoresDiv.appendChild(patrocinadorDiv);
+        });
+    } else {
+        patrocinadoresCard.style.display = 'none';
+    }
+}
+
+// Cargar lista de participantes inscritos
+async function cargarParticipantesCardMegaEvento() {
+    const container = document.getElementById('participantesContainer');
+    if (!container) return;
+
+    const token = localStorage.getItem('token');
+
+    try {
+        container.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border" role="status" style="color: #00A36C; width: 3rem; height: 3rem;">
+                    <span class="sr-only">Cargando...</span>
+                </div>
+                <p class="mt-3" style="color: #333333; font-weight: 500;">Cargando participantes...</p>
+            </div>
+        `;
+
+        const res = await fetch(`${API_BASE_URL}/api/mega-eventos/${megaEventoId}/participantes`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            }
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+            container.innerHTML = `
+                <div class="alert" style="background: #fff3cd; border: 1px solid #ffc107; color: #856404; border-radius: 8px; padding: 1rem;">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    ${data.error || 'Error al cargar participantes'}
+                </div>
+            `;
+            return;
+        }
+
+        if (!data.participantes || data.participantes.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-3x mb-3 text-muted" style="opacity: 0.3;"></i>
+                    <p class="mb-0 text-muted">Aún no hay participantes inscritos en este mega evento</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Helper para construir URL de imagen (usar la función global buildImageUrl)
+        // Ya no es necesario definir una función local, se usa la global
+
+        let html = '<div class="row">';
+        data.participantes.forEach((participante, index) => {
+            const fechaRegistro = new Date(participante.fecha_registro).toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            // Priorizar nombre_completo, luego construir desde nombres/apellidos
+            let nombreCompleto = participante.nombre_completo || participante.participante;
+            
+            // Si no hay nombre_completo, intentar construir desde nombres y apellidos
+            if (!nombreCompleto || nombreCompleto === 'N/A' || nombreCompleto.length <= 2) {
+                const nombres = participante.nombres || '';
+                const apellidos = participante.apellidos || '';
+                const nombreConstruido = (nombres + ' ' + apellidos).trim();
+                nombreCompleto = nombreConstruido || participante.nombre_usuario || 'Usuario';
+            }
+            
+            // Si aún es muy corto o solo tiene una letra, usar nombre_usuario
+            if (nombreCompleto.length <= 2 && participante.nombre_usuario && participante.nombre_usuario.length > 2) {
+                nombreCompleto = participante.nombre_usuario;
+            }
+            
+            const fotoPerfil = participante.foto_perfil || participante.avatar;
+            const fotoPerfilUrl = fotoPerfil ? buildImageUrl(fotoPerfil) : null;
+            const inicialNombre = nombreCompleto !== 'N/A' && nombreCompleto !== 'Usuario' ? nombreCompleto.charAt(0).toUpperCase() : '?';
+            
+            // Badge de estado
+            let estadoBadge = '';
+            const estado = participante.estado || 'pendiente';
+            if (estado === 'aprobada' || estado === 'aprobado') {
+                estadoBadge = '<span class="badge badge-success">Aprobado</span>';
+            } else if (estado === 'rechazada' || estado === 'rechazado') {
+                estadoBadge = '<span class="badge badge-danger">Rechazado</span>';
+            } else {
+                estadoBadge = '<span class="badge badge-warning">Pendiente</span>';
+            }
+
+            const tipoBadge = participante.tipo === 'registrado' 
+                ? '<span class="badge badge-info">Registrado</span>'
+                : '<span class="badge badge-secondary">No registrado</span>';
+
+            html += `
+                <div class="col-md-6 col-lg-4 mb-3 participante-card" style="animation-delay: ${index * 0.1}s;">
+                    <div class="card border-0 shadow-sm h-100" style="border-radius: 16px; transition: all 0.3s ease; overflow: hidden;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 24px rgba(12, 43, 68, 0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center mb-3" style="white-space: nowrap; overflow: hidden;">
+                                <div class="position-relative mr-3" style="flex-shrink: 0;">
+                                ${fotoPerfil ? `
+                                        <img src="${fotoPerfil}" alt="${nombreCompleto}" class="rounded-circle" style="width: 70px; height: 70px; object-fit: cover; border: 3px solid #00A36C; box-shadow: 0 4px 12px rgba(0, 163, 108, 0.2); display: block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 70px; height: 70px; font-weight: 700; font-size: 1.5rem; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: 3px solid #00A36C; box-shadow: 0 4px 12px rgba(0, 163, 108, 0.2); position: absolute; top: 0; left: 0; display: none;">
+                                            ${inicialNombre}
+                                        </div>
+                                ` : `
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 70px; height: 70px; font-weight: 700; font-size: 1.5rem; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: 3px solid #00A36C; box-shadow: 0 4px 12px rgba(0, 163, 108, 0.2);">
+                                        ${inicialNombre}
+                                    </div>
+                                `}
+                                </div>
+                                <div class="flex-grow-1" style="min-width: 0; overflow: hidden;">
+                                    <h6 class="mb-1" style="color: #2c3e50; font-weight: 600; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${nombreCompleto}</h6>
+                                    <div class="mb-2 d-flex flex-wrap" style="gap: 0.25rem;">
+                                        ${tipoBadge}
+                                        ${estadoBadge}
+                                    </div>
+                                    <small class="text-muted d-block" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                        <i class="fas fa-envelope mr-1" style="color: #0C2B44;"></i> ${participante.email || 'N/A'}
+                                    </small>
+                                    ${participante.telefono ? `
+                                        <small class="text-muted d-block" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            <i class="fas fa-phone mr-1" style="color: #0C2B44;"></i> ${participante.telefono}
+                                        </small>
+                                    ` : ''}
+                                </div>
+                                </div>
+                            <div class="mt-3 pt-3 border-top d-flex align-items-center justify-content-between">
+                                <small class="text-muted">
+                                    <i class="fas fa-clock mr-1" style="color: #6c757d;"></i> 
+                                    ${fechaRegistro}
+                                </small>
+                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: linear-gradient(135deg, rgba(0, 163, 108, 0.1) 0%, rgba(0, 163, 108, 0.2) 100%) !important;">
+                                    <i class="fas fa-user-check" style="color: #00A36C; font-size: 1.1rem;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    } catch (error) {
+        console.error('Error cargando participantes:', error);
+        container.innerHTML = `
+            <div class="alert alert-danger" style="background: #f8d7da; border: 1px solid #dc3545; color: #721c24; border-radius: 8px; padding: 1rem;">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                Error de conexión al cargar participantes
+            </div>
+        `;
+    }
+}
+
 // Actualizar contadores en tiempo real
 let intervaloContadoresMegaEvento = null;
 function iniciarActualizacionTiempoRealMegaEvento() {
@@ -1934,5 +2764,14 @@ window.addEventListener('beforeunload', function() {
     transition: transform 0.5s ease;
 }
 </style>
+<script src="{{ asset('assets/js/ong/asistencia-mega-eventos-functions.js') }}"></script>
+<script>
+    // Cargar lista de asistencia al cargar la página
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            cargarListaAsistenciaMegaEvento();
+        }, 1000);
+    });
+</script>
 @endpush
 

@@ -190,13 +190,13 @@ return [
         ],
         [
             'text' => 'Eventos',
-            'url'  => '/eventos',
+            'url'  => '#',
             'icon' => 'fas fa-fw fa-calendar-alt',
             'submenu' => [
                 [
                     'text' => 'Lista de Eventos',
                     'url'  => '/ong/eventos',
-                    'icon' => 'fas fa-fw fa-list',
+                    'icon' => 'fas fa-fw fa-list-ul',
                 ],
                 [
                     'text' => 'Dashboard de Eventos',
@@ -222,7 +222,7 @@ return [
         ],
         [
             'text' => 'Mega Eventos',
-            'url'  => '/mega-eventos',
+            'url'  => '#',
             'icon' => 'fas fa-fw fa-calendar-check',
             'submenu' => [
                 [
@@ -231,7 +231,12 @@ return [
                     'icon' => 'fas fa-fw fa-list',
                 ],
                 [
-                    'text' => 'Historial de mega eventos',
+                    'text' => 'Mega eventos en curso',
+                    'url'  => '/ong/mega-eventos/en-curso',
+                    'icon' => 'fas fa-fw fa-play-circle',
+                ],
+                [
+                    'text' => 'Mega eventos finalizados',
                     'url'  => '/ong/mega-eventos/historial',
                     'icon' => 'fas fa-fw fa-history',
                 ],
@@ -269,6 +274,7 @@ return [
         ],
         [
             'text' => 'Configuraciones',
+            'url'  => '#',
             'icon' => 'fas fa-fw fa-cogs',
             'submenu' => [
                 [
@@ -291,9 +297,13 @@ return [
         ],
         [
             'text' => 'Cerrar sesión',
-            'url'  => '/logout',
+            'url'  => '#',
             'icon' => 'fas fa-fw fa-sign-out-alt',
             'label_color' => 'danger',
+            'attributes' => [
+                'onclick' => 'event.preventDefault(); event.stopPropagation(); cerrarSesion(event); return false;',
+                'class' => 'logout-link'
+            ],
         ],
     ],
 

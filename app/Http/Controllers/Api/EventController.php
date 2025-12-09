@@ -55,14 +55,14 @@ class EventController extends Controller
                 }
             }
             if (empty($baseUrl)) {
-                $baseUrl = 'http://127.0.0.1:8000';
+                $baseUrl = 'http://10.26.0.215:8000';
             }
             
             // Reemplazar IPs antiguas con la URL actual
-            $avatar = str_replace('http://10.26.15.110:8000', $baseUrl, $avatar);
-            $avatar = str_replace('https://10.26.15.110:8000', $baseUrl, $avatar);
-            $avatar = str_replace('http://192.168.0.6:8000', $baseUrl, $avatar);
-            $avatar = str_replace('https://192.168.0.6:8000', $baseUrl, $avatar);
+            $avatar = str_replace('http://10.26.0.215:8000', $baseUrl, $avatar);
+            $avatar = str_replace('https://10.26.0.215:8000', $baseUrl, $avatar);
+            $avatar = str_replace('http://10.26.0.215:8000', $baseUrl, $avatar);
+            $avatar = str_replace('https://10.26.0.215:8000', $baseUrl, $avatar);
             
             return $avatar;
         }
@@ -80,7 +80,7 @@ class EventController extends Controller
             }
         }
         if (empty($baseUrl)) {
-            $baseUrl = 'http://127.0.0.1:8000';
+            $baseUrl = 'http://10.26.0.215:8000';
         }
         
         // Normalizar la ruta
@@ -546,22 +546,88 @@ class EventController extends Controller
             
             $query = Evento::where('estado', 'publicado');
             
-            // Excluir eventos finalizados
-            $query->where(function($q) {
-                $q->where('estado', '!=', 'finalizado')
-                  ->orWhereNull('fecha_finalizacion')
-                  ->orWhere('fecha_finalizacion', '>', now());
-            });
-            
             // Si el usuario está autenticado, excluir eventos en los que ya participa
             if ($request->user()) {
                 $userId = $request->user()->id_usuario;
+                $user = $request->user();
+                
+                // Si es usuario externo, excluir eventos donde ya participa
+                if ($user->esIntegranteExterno()) {
                 $eventosParticipando = EventoParticipacion::where('externo_id', $userId)
                     ->pluck('evento_id')
                     ->toArray();
                 
                 if (!empty($eventosParticipando)) {
                     $query->whereNotIn('id', $eventosParticipando);
+                    }
+                }
+                
+                // Si es empresa, excluir eventos donde ya es patrocinadora o colaboradora
+                if ($user->esEmpresa()) {
+                    // Obtener eventos donde la empresa ya participa (como patrocinadora o colaboradora)
+                    $eventosPatrocinando = EventoEmpresaParticipacion::where('empresa_id', $userId)
+                        ->where('activo', true)
+                        ->pluck('evento_id')
+                        ->toArray();
+                    
+                    \Log::info("Eventos donde empresa {$userId} participa (tabla): " . count($eventosPatrocinando));
+                    
+                    // También verificar eventos donde la empresa está en el campo JSON patrocinadores
+                    // Obtener todos los eventos publicados y verificar manualmente el JSON
+                    try {
+                        $eventosConPatrocinadorJSON = Evento::where('estado', 'publicado')
+                            ->whereNotNull('patrocinadores')
+                            ->get()
+                            ->filter(function($evento) use ($userId) {
+                                // Usar getRawOriginal para obtener el valor crudo antes de que Laravel lo procese
+                                $patrocinadoresRaw = $evento->getRawOriginal('patrocinadores');
+                                
+                                if (empty($patrocinadoresRaw)) {
+                                    return false;
+                                }
+                                
+                                // Convertir a array si es string JSON
+                                $patrocinadores = $this->safeArray($patrocinadoresRaw);
+                                
+                                if (empty($patrocinadores) || !is_array($patrocinadores)) {
+                                    return false;
+                                }
+                                
+                                // Verificar si el ID está en el array (como número o string)
+                                $encontrado = false;
+                                foreach ($patrocinadores as $p) {
+                                    if (is_numeric($p)) {
+                                        if ((int)$p === (int)$userId) {
+                                            $encontrado = true;
+                                            break;
+                                        }
+                                    } elseif (is_string($p)) {
+                                        if (trim($p) === (string)$userId || (int)trim($p) === (int)$userId) {
+                                            $encontrado = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                
+                                return $encontrado;
+                            })
+                            ->pluck('id')
+                            ->toArray();
+                        
+                        \Log::info("Eventos donde empresa {$userId} patrocina (JSON): " . count($eventosConPatrocinadorJSON));
+                    } catch (\Throwable $e) {
+                        \Log::error("Error verificando patrocinadores en JSON: " . $e->getMessage());
+                        $eventosConPatrocinadorJSON = [];
+                    }
+                    
+                    // Combinar ambos arrays y eliminar duplicados
+                    $eventosExcluir = array_unique(array_merge($eventosPatrocinando, $eventosConPatrocinadorJSON));
+                    
+                    \Log::info("Total eventos a excluir para empresa {$userId}: " . count($eventosExcluir));
+                    
+                    if (!empty($eventosExcluir)) {
+                        $query->whereNotIn('id', $eventosExcluir);
+                    }
                 }
             }
             
@@ -582,8 +648,9 @@ class EventController extends Controller
             
             $eventos = $query->orderBy('fecha_inicio', 'asc')->get();
 
-            \Log::info("Eventos publicados encontrados: " . $eventos->count());
+            \Log::info("Eventos publicados encontrados antes de filtrar finalizados: " . $eventos->count());
 
+            // Transformar eventos y calcular estado dinámico
             $eventos->transform(function ($e) {
                 $e->patrocinadores = $this->enriquecerPatrocinadores($this->safeArray($e->patrocinadores), $e->id);
                 $e->auspiciadores = $this->enriquecerAuspiciadores($this->safeArray($e->auspiciadores ?? []));
@@ -595,6 +662,13 @@ class EventController extends Controller
                 $e->estado_dinamico = $e->estado_dinamico;
                 return $e;
             });
+            
+            // Filtrar eventos finalizados basándose en estado_dinamico
+            $eventos = $eventos->filter(function($e) {
+                return $e->estado_dinamico !== 'finalizado';
+            })->values();
+
+            \Log::info("Eventos publicados encontrados después de filtrar finalizados: " . $eventos->count());
 
             return response()->json([
                 'success' => true,
@@ -1481,7 +1555,7 @@ class EventController extends Controller
                     // Construir URL completa de la foto de perfil
                     $fotoPerfil = null;
                     if ($empresa->foto_perfil) {
-                        $baseUrl = env('PUBLIC_APP_URL', env('APP_URL', 'http://192.168.0.6:8000'));
+                        $baseUrl = env('PUBLIC_APP_URL', env('APP_URL', 'http://10.26.0.215:8000'));
                         if (strpos($empresa->foto_perfil, 'http://') === 0 || strpos($empresa->foto_perfil, 'https://') === 0) {
                             $fotoPerfil = $empresa->foto_perfil;
                         } else {
@@ -1588,9 +1662,57 @@ class EventController extends Controller
             // Agregar la empresa a los patrocinadores
             $patrocinadores[] = $empresaIdStr;
             
+            // Usar transacción para asegurar consistencia
+            DB::transaction(function () use ($evento, $patrocinadores, $empresaId) {
+                // 1. Actualizar campo JSON de patrocinadores
             $evento->update([
                 "patrocinadores" => $patrocinadores
             ]);
+
+                // 2. Crear registro en la tabla de participaciones si no existe
+                $existeParticipacion = EventoEmpresaParticipacion::where('evento_id', $evento->id)
+                    ->where('empresa_id', $empresaId)
+                    ->exists();
+
+                if (!$existeParticipacion) {
+                    try {
+                        EventoEmpresaParticipacion::create([
+                            'evento_id' => $evento->id,
+                            'empresa_id' => $empresaId,
+                            'estado' => 'asignada', // Estado inicial cuando se auto-asigna como patrocinador
+                            'activo' => true,
+                            'tipo_colaboracion' => 'Patrocinador',
+                        ]);
+                        \Log::info("Registro de patrocinador creado en tabla para empresa {$empresaId} en evento {$evento->id}");
+                    } catch (\Throwable $e) {
+                        \Log::error("Error al crear registro de patrocinador en tabla: " . $e->getMessage());
+                        // No fallar la transacción si esto falla, el campo JSON ya está actualizado
+                    }
+                }
+            });
+
+            // Obtener información de la empresa
+            $empresa = Empresa::where('user_id', $empresaId)->first();
+            $nombreEmpresa = $empresa ? $empresa->nombre_empresa : 'Una empresa';
+
+            // Crear notificación para la ONG del evento
+            if ($evento->ong_id) {
+                try {
+                    Notificacion::create([
+                        'ong_id' => $evento->ong_id,
+                        'evento_id' => $evento->id,
+                        'externo_id' => null,
+                        'tipo' => 'nuevo_patrocinador',
+                        'titulo' => 'Nuevo Patrocinador',
+                        'mensaje' => "{$nombreEmpresa} ha decidido patrocinar tu evento \"{$evento->titulo}\". ¡Gracias por el apoyo!",
+                        'leida' => false
+                    ]);
+                    \Log::info("Notificación de patrocinador creada para ONG {$evento->ong_id} sobre evento {$evento->id}");
+                } catch (\Throwable $e) {
+                    \Log::error("Error al crear notificación de patrocinador: " . $e->getMessage());
+                    // No fallar la operación si la notificación falla
+                }
+            }
 
             return response()->json([
                 "success" => true,

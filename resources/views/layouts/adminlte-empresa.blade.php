@@ -176,14 +176,18 @@
                       style="font-size: 1rem; display: {{ $foto ? 'none' : 'flex' }}; align-items: center; justify-content: center; width: 40px; height: 40px; margin: 0; padding: 0; border-radius: 50%;">{{ $inicial }}</span>
             </div>
             
-            {{-- Nombre + etiqueta --}}
+            {{-- Nombre + rol --}}
             <div class="d-flex flex-column mr-3" style="max-width: 200px; min-width: 120px; flex-grow: 1;">
                 <span id="headerNombreEmpresa"
                       style="font-size: 0.9rem; color: #2c3e50; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">
                     {{ $nombreUsuario }}
                 </span>
-                @if($empresa)
-                    <small style="font-size: 0.75rem; color: #8c9aa8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">
+                @if($user && $user->tipo_usuario)
+                    <small id="headerRolEmpresa" style="font-size: 0.75rem; color: #8c9aa8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">
+                        {{ $user->tipo_usuario }}
+                    </small>
+                @elseif($empresa)
+                    <small id="headerRolEmpresa" style="font-size: 0.75rem; color: #8c9aa8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">
                         Empresa
                     </small>
                 @endif
@@ -325,6 +329,65 @@
         letter-spacing: 1px !important;
         padding: 1rem 1.25rem 0.5rem !important;
         margin-top: 0.5rem !important;
+    }
+    
+    /* Bloque de usuario en el sidebar */
+    #bloqueUsuarioSidebarEmpresa {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        padding: 1rem 1.25rem !important;
+        margin: 0.75rem 0 !important;
+    }
+    
+    #bloqueUsuarioSidebarEmpresa .image {
+        width: 40px !important;
+        height: 40px !important;
+        border-radius: 50% !important;
+        overflow: hidden !important;
+        background: rgba(0, 163, 108, 0.2) !important;
+        flex-shrink: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin-right: 0.75rem !important;
+    }
+    
+    #bloqueUsuarioSidebarEmpresa .info a {
+        color: white !important;
+        text-decoration: none !important;
+        font-weight: 600 !important;
+        font-size: 0.9rem !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        line-height: 1.3 !important;
+        transition: color 0.3s ease !important;
+    }
+    
+    #bloqueUsuarioSidebarEmpresa .info a:hover {
+        color: #00A36C !important;
+    }
+    
+    #bloqueUsuarioSidebarEmpresa .info span {
+        color: rgba(255, 255, 255, 0.7) !important;
+        font-size: 0.75rem !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        line-height: 1.2 !important;
+        margin-top: 2px !important;
+    }
+    
+    #sidebarAvatarEmpresa {
+        width: 40px !important;
+        height: 40px !important;
+        object-fit: cover !important;
+        border-radius: 50% !important;
+    }
+    
+    #sidebarAvatarInicialEmpresa {
+        font-size: 1.1rem !important;
+        font-weight: 600 !important;
+        color: #00A36C !important;
     }
     
     /* Content Header */
@@ -618,6 +681,174 @@ async function cerrarSesion(event) {
 window.cerrarSesion = cerrarSesion;
 
 // ================================
+// Función para crear e insertar el bloque de usuario en el sidebar
+// ================================
+function crearBloqueUsuarioSidebarEmpresa() {
+    const sidebar = document.querySelector('.main-sidebar .sidebar');
+    if (!sidebar) {
+        setTimeout(crearBloqueUsuarioSidebarEmpresa, 300);
+        return;
+    }
+    
+    // Verificar si ya existe
+    if (document.getElementById('bloqueUsuarioSidebarEmpresa')) {
+        return;
+    }
+    
+    @php
+        $user = Auth::user();
+        $empresa = optional($user)->empresa;
+        
+        $nombreUsuario = 'Usuario';
+        if ($empresa) {
+            $nombreUsuario = trim($empresa->nombre_empresa ?? '') ?: ($user->nombre_usuario ?? ($user->name ?? 'Usuario'));
+        } else {
+            $nombreUsuario = $user->nombre_usuario ?? ($user->name ?? 'Usuario');
+        }
+        
+        $rolUsuario = $user->tipo_usuario ?? ($empresa ? 'Empresa' : 'Usuario');
+    @endphp
+    
+    // Buscar el brand-link (logo) o el primer nav-header
+    const brandLink = sidebar.querySelector('.brand-link');
+    const navSidebar = sidebar.querySelector('.nav-sidebar');
+    
+    if (!navSidebar) {
+        setTimeout(crearBloqueUsuarioSidebarEmpresa, 300);
+        return;
+    }
+    
+    // Crear el bloque de usuario
+    const bloqueUsuario = document.createElement('div');
+    bloqueUsuario.id = 'bloqueUsuarioSidebarEmpresa';
+    bloqueUsuario.className = 'user-panel mt-3 pb-3 mb-3 d-flex';
+    bloqueUsuario.style.cssText = 'border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 1rem 1.25rem; margin: 0.75rem 0;';
+    
+    bloqueUsuario.innerHTML = `
+        <div class="image" style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: rgba(0, 163, 108, 0.2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-right: 0.75rem;">
+            <img id="sidebarAvatarEmpresa" src="" alt="Foto perfil" style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%; display: none;">
+            <span id="sidebarAvatarInicialEmpresa" style="font-size: 1.1rem; font-weight: 600; color: #00A36C;">{{ mb_substr(trim($nombreUsuario), 0, 1, 'UTF-8') }}</span>
+        </div>
+        <div class="info d-flex flex-column" style="flex: 1; min-width: 0;">
+            <a href="/perfil/empresa" class="d-block" style="color: white; text-decoration: none; font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3;">
+                <span id="sidebarNombreEmpresa">{{ $nombreUsuario }}</span>
+            </a>
+            <span id="sidebarRolEmpresa" style="color: rgba(255, 255, 255, 0.7); font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; margin-top: 2px;">{{ $rolUsuario }}</span>
+        </div>
+    `;
+    
+    // Insertar después del brand-link o antes del nav-sidebar
+    if (brandLink && brandLink.nextSibling) {
+        sidebar.insertBefore(bloqueUsuario, brandLink.nextSibling);
+    } else if (navSidebar) {
+        sidebar.insertBefore(bloqueUsuario, navSidebar);
+    } else {
+        sidebar.appendChild(bloqueUsuario);
+    }
+    
+    // Actualizar desde la API
+    setTimeout(actualizarSidebarUsuarioEmpresa, 500);
+}
+
+// ================================
+// Actualizar información del usuario en el sidebar
+// ================================
+async function actualizarSidebarUsuarioEmpresa() {
+    try {
+        const nombreSpan = document.getElementById('sidebarNombreEmpresa');
+        const rolSpan = document.getElementById('sidebarRolEmpresa');
+        const avatarImg = document.getElementById('sidebarAvatarEmpresa');
+        const inicialSpan = document.getElementById('sidebarAvatarInicialEmpresa');
+        
+        if (!nombreSpan || !rolSpan) return;
+        
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        
+        let API_BASE_URL = window.location.origin;
+        if (typeof window !== 'undefined' && window.API_BASE_URL) {
+            API_BASE_URL = window.API_BASE_URL;
+        }
+        
+        const res = await fetch(`${API_BASE_URL}/api/perfil`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            },
+            cache: 'no-store'
+        });
+        
+        const data = await res.json();
+        if (!data || data.success === false) {
+            return;
+        }
+        
+        // Obtener nombre
+        let nombre = null;
+        if (data.data && data.data.empresa) {
+            nombre = data.data.empresa.nombre_empresa || null;
+        }
+        if (!nombre && data.data && data.data.nombre_usuario) {
+            nombre = data.data.nombre_usuario;
+        }
+        
+        // Obtener rol
+        let rol = null;
+        if (data.data && data.data.tipo_usuario) {
+            rol = data.data.tipo_usuario;
+        } else if (data.data && data.data.empresa) {
+            rol = 'Empresa';
+        } else {
+            rol = 'Usuario';
+        }
+        
+        // Obtener foto
+        const foto = (data.data && data.data.empresa && data.data.empresa.foto_perfil) 
+            || (data.data && data.data.foto_perfil) 
+            || null;
+        
+        // Actualizar nombre
+        if (nombre && nombreSpan) {
+            nombreSpan.textContent = nombre;
+        }
+        
+        // Actualizar rol
+        if (rol && rolSpan) {
+            rolSpan.textContent = rol;
+        }
+        
+        // Actualizar avatar
+        if (avatarImg && inicialSpan) {
+            if (foto && foto.trim() !== '') {
+                avatarImg.src = foto;
+                avatarImg.onerror = function() {
+                    avatarImg.style.display = 'none';
+                    inicialSpan.style.display = 'flex';
+                    if (nombre) {
+                        inicialSpan.textContent = nombre.charAt(0).toUpperCase();
+                    }
+                };
+                avatarImg.onload = function() {
+                    avatarImg.style.display = 'block';
+                    inicialSpan.style.display = 'none';
+                };
+                avatarImg.style.display = 'block';
+                inicialSpan.style.display = 'none';
+            } else {
+                avatarImg.style.display = 'none';
+                inicialSpan.style.display = 'flex';
+                if (nombre) {
+                    inicialSpan.textContent = nombre.charAt(0).toUpperCase();
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('⚠️ Error actualizando sidebar usuario Empresa:', e);
+    }
+}
+
+// ================================
 // Función para crear e insertar el bloque de avatar y nombre en el navbar
 // ================================
 function crearBloqueUsuarioEmpresa() {
@@ -698,11 +929,12 @@ function crearBloqueUsuarioEmpresa() {
                       style="font-size: 0.9rem; color: #2c3e50; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">
                     {{ $nombreUsuario }}
                 </span>
-                @if($empresa)
-                    <small style="font-size: 0.75rem; color: #8c9aa8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">
-                        Empresa
+                @php
+                    $rolUsuario = $user->tipo_usuario ?? ($empresa ? 'Empresa' : 'Usuario');
+                @endphp
+                <small id="headerRolEmpresa" style="font-size: 0.75rem; color: #8c9aa8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">
+                    {{ $rolUsuario }}
                     </small>
-                @endif
             </div>
             <div class="dropdown" style="flex-shrink: 0;">
                 <a class="text-muted" href="#" role="button" id="dropdownPerfilEmpresa"
@@ -745,6 +977,7 @@ function crearBloqueUsuarioEmpresa() {
 async function actualizarHeaderEmpresa() {
     try {
         const nombreSpan = document.getElementById('headerNombreEmpresa');
+        const rolSpan = document.getElementById('headerRolEmpresa');
         const avatarImg = document.getElementById('headerAvatarEmpresa');
         const inicialSpan = document.getElementById('headerAvatarInicialEmpresa');
 
@@ -782,6 +1015,16 @@ async function actualizarHeaderEmpresa() {
             nombre = data.data.nombre_usuario;
         }
 
+        // Obtener rol: tipo_usuario del usuario
+        let rol = null;
+        if (data.data && data.data.tipo_usuario) {
+            rol = data.data.tipo_usuario;
+        } else if (data.data && data.data.empresa) {
+            rol = 'Empresa';
+        } else {
+            rol = 'Usuario';
+        }
+
         // Obtener foto: prioridad empresa > usuario
         const foto = (data.data && data.data.empresa && data.data.empresa.foto_perfil) 
             || (data.data && data.data.foto_perfil) 
@@ -790,6 +1033,11 @@ async function actualizarHeaderEmpresa() {
         // Actualizar nombre
         if (nombre && nombreSpan) {
             nombreSpan.textContent = nombre;
+        }
+
+        // Actualizar rol
+        if (rol && rolSpan) {
+            rolSpan.textContent = rol;
         }
 
         // Actualizar avatar - asegurar círculo perfecto
@@ -855,16 +1103,21 @@ if (document.readyState === 'loading') {
         setTimeout(inicializarHeaderEmpresa, 300);
         setTimeout(crearBloqueUsuarioEmpresa, 1000);
         setTimeout(actualizarHeaderEmpresa, 2000);
+        setTimeout(crearBloqueUsuarioSidebarEmpresa, 500);
+        setTimeout(actualizarSidebarUsuarioEmpresa, 1500);
     });
 } else {
     setTimeout(inicializarHeaderEmpresa, 300);
     setTimeout(crearBloqueUsuarioEmpresa, 1000);
     setTimeout(actualizarHeaderEmpresa, 2000);
+    setTimeout(crearBloqueUsuarioSidebarEmpresa, 500);
+    setTimeout(actualizarSidebarUsuarioEmpresa, 1500);
 }
 
 // También actualizar cuando la página recupera el foco
 window.addEventListener('focus', () => {
     setTimeout(actualizarHeaderEmpresa, 500);
+    setTimeout(actualizarSidebarUsuarioEmpresa, 500);
 });
 
 // Observer para detectar cuando el navbar se agregue al DOM
@@ -892,7 +1145,24 @@ if (document.body) {
 window.addEventListener('load', () => {
     setTimeout(crearBloqueUsuarioEmpresa, 1000);
     setTimeout(crearBloqueUsuarioEmpresa, 2000);
+    setTimeout(crearBloqueUsuarioSidebarEmpresa, 1000);
+    setTimeout(crearBloqueUsuarioSidebarEmpresa, 2000);
 });
+
+// Observer para detectar cuando el sidebar se agregue al DOM
+const observerSidebarEmpresa = new MutationObserver((mutations) => {
+    const sidebar = document.querySelector('.main-sidebar .sidebar');
+    if (sidebar && !document.getElementById('bloqueUsuarioSidebarEmpresa')) {
+        crearBloqueUsuarioSidebarEmpresa();
+    }
+});
+
+if (document.body) {
+    observerSidebarEmpresa.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+}
 
 // ===============================
 // 🔔 SISTEMA DE NOTIFICACIONES PARA EMPRESA
@@ -1062,9 +1332,6 @@ function inicializarNotificacionesEmpresa() {
     });
     
     window.addEventListener('focus', actualizarContadorNotificacionesEmpresa);
-</script>
-{{-- Script de alertas para eventos próximos --}}
-<script src="{{ asset('assets/js/ong/alertas-eventos-proximos.js') }}"></script>
 }
 
 // Ejecutar cuando el DOM esté listo
@@ -1079,5 +1346,7 @@ setTimeout(inicializarNotificacionesEmpresa, 2000);
 // Hacer la función disponible globalmente
 window.actualizarContadorNotificacionesEmpresa = actualizarContadorNotificacionesEmpresa;
 </script>
+{{-- Script de alertas para eventos próximos --}}
+<script src="{{ asset('assets/js/ong/alertas-eventos-proximos.js') }}"></script>
 @endpush
 

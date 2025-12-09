@@ -532,6 +532,61 @@ async function cargarMisParticipaciones() {
                                         </div>
                                     </div>
                                 ` : ''}
+                                
+                                <!-- Separador visual -->
+                                <div style="margin: 1.5rem 0; border-top: 1px solid #e5e7eb;"></div>
+                                
+                                <!-- Botón de Registrar Asistencia (si el evento está en curso y no ha marcado asistencia) -->
+                                ${(function() {
+                                    const ahora = new Date();
+                                    let fechaInicio = null;
+                                    let fechaFin = null;
+                                    
+                                    if (evento.fecha_inicio) {
+                                        const match = evento.fecha_inicio.toString().match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})/);
+                                        if (match) {
+                                            const [, year, month, day, hour, minute, second] = match;
+                                            fechaInicio = new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10), parseInt(hour, 10), parseInt(minute, 10), parseInt(second || 0, 10));
+                                        } else {
+                                            fechaInicio = new Date(evento.fecha_inicio);
+                                        }
+                                    }
+                                    
+                                    if (evento.fecha_fin) {
+                                        const match = evento.fecha_fin.toString().match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})/);
+                                        if (match) {
+                                            const [, year, month, day, hour, minute, second] = match;
+                                            fechaFin = new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10), parseInt(hour, 10), parseInt(minute, 10), parseInt(second || 0, 10));
+                                        } else {
+                                            fechaFin = new Date(evento.fecha_fin);
+                                        }
+                                    }
+                                    
+                                    const eventoEnCurso = fechaInicio && fechaFin && ahora >= fechaInicio && ahora <= fechaFin;
+                                    const yaMarcado = participacion.estado_asistencia === 'asistido' || participacion.asistio === true;
+                                    
+                                    if (yaMarcado) {
+                                        return `
+                                            <div class="mt-3 pt-3 border-top">
+                                                <div class="alert alert-success mb-0" style="border-radius: 8px; padding: 0.75rem;">
+                                                    <i class="fas fa-check-circle mr-2"></i>
+                                                    <strong>Asistencia registrada</strong>
+                                                    <p class="mb-0 mt-1" style="font-size: 0.85rem;">Tu asistencia fue registrada correctamente.</p>
+                                                </div>
+                                            </div>
+                                        `;
+                                    } else if (eventoEnCurso && participacion.estado === 'aprobada') {
+                                        return `
+                                            <div class="mt-3 pt-3 border-top">
+                                                <button type="button" class="btn btn-block" onclick="registrarAsistenciaDesdeMisParticipaciones(${evento.id}, '${participacion.ticket_codigo || ''}')" 
+                                                        style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color: white; border: none; border-radius: 8px; padding: 0.6rem; font-weight: 600;">
+                                                    <i class="fas fa-clipboard-check mr-2"></i> Registrar Mi Asistencia
+                                                </button>
+                                            </div>
+                                        `;
+                                    }
+                                    return '';
+                                })()}
                             </div>
                             
                             <div class="card-actions">
@@ -648,7 +703,85 @@ async function cargarMisParticipaciones() {
                                         <span>${fechaInicio}</span>
                                     </div>
                                 </div>
+                                
+                                <!-- Sección de Ticket - Diseño Minimalista Mejorado para Mega Eventos -->
+                                ${mega.ticket_codigo ? `
+                                    <div class="ticket-section">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px; background: #f0fdf4; color: #00A36C;">
+                                                <i class="fas fa-ticket-alt" style="font-size: 1.1rem;"></i>
+                                            </div>
+                                            <div>
+                                                <strong style="color: #111827; font-size: 0.95rem; font-weight: 600;">Ticket de Acceso</strong>
+                                                <p class="mb-0" style="font-size: 0.75rem; color: #6b7280; font-family: 'Courier New', monospace;">${mega.ticket_codigo}</p>
+                                            </div>
+                                        </div>
+                                        <div class="ticket-buttons">
+                                            <button type="button" class="ticket-button ticket-button-primary" onclick="descargarQRTicketMega('${mega.ticket_codigo}', '${mega.titulo || 'Mega Evento'}')">
+                                                <i class="fas fa-download mr-2"></i> Descargar QR
+                                            </button>
+                                            <button type="button" class="ticket-button ticket-button-secondary" onclick="copiarCodigoTicket('${mega.ticket_codigo}')">
+                                                <i class="fas fa-copy mr-2"></i> Copiar Código
+                                            </button>
+                                        </div>
+                                    </div>
+                                ` : ''}
                             </div>
+                            
+                            <!-- Separador visual -->
+                            <div style="margin: 1.5rem 0; border-top: 1px solid #e5e7eb;"></div>
+                            
+                            <!-- Botón de Registrar Asistencia para Mega Eventos (si está en curso y no ha marcado asistencia) -->
+                            ${(function() {
+                                const ahora = new Date();
+                                let fechaInicio = null;
+                                let fechaFin = null;
+                                
+                                if (mega.fecha_inicio) {
+                                    const match = mega.fecha_inicio.toString().match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})/);
+                                    if (match) {
+                                        const [, year, month, day, hour, minute, second] = match;
+                                        fechaInicio = new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10), parseInt(hour, 10), parseInt(minute, 10), parseInt(second || 0, 10));
+                                    } else {
+                                        fechaInicio = new Date(mega.fecha_inicio);
+                                    }
+                                }
+                                
+                                if (mega.fecha_fin) {
+                                    const match = mega.fecha_fin.toString().match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})/);
+                                    if (match) {
+                                        const [, year, month, day, hour, minute, second] = match;
+                                        fechaFin = new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10), parseInt(hour, 10), parseInt(minute, 10), parseInt(second || 0, 10));
+                                    } else {
+                                        fechaFin = new Date(mega.fecha_fin);
+                                    }
+                                }
+                                
+                                const eventoEnCurso = fechaInicio && fechaFin && ahora >= fechaInicio && ahora <= fechaFin;
+                                const yaMarcado = mega.estado_asistencia === 'asistido' || mega.asistio === true;
+                                
+                                if (yaMarcado) {
+                                    return `
+                                        <div class="mt-3 pt-3 border-top">
+                                            <div class="alert alert-success mb-0" style="border-radius: 8px; padding: 0.75rem;">
+                                                <i class="fas fa-check-circle mr-2"></i>
+                                                <strong>Asistencia registrada</strong>
+                                                <p class="mb-0 mt-1" style="font-size: 0.85rem;">Tu asistencia fue registrada correctamente.</p>
+                                            </div>
+                                        </div>
+                                    `;
+                                } else if (eventoEnCurso && mega.estado_participacion === 'aprobada') {
+                                    return `
+                                        <div class="mt-3 pt-3 border-top">
+                                            <button type="button" class="btn btn-block" onclick="registrarAsistenciaMegaDesdeMisParticipaciones(${mega.mega_evento_id})" 
+                                                    style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color: white; border: none; border-radius: 8px; padding: 0.6rem; font-weight: 600;">
+                                                <i class="fas fa-clipboard-check mr-2"></i> Registrar Mi Asistencia
+                                            </button>
+                                        </div>
+                                    `;
+                                }
+                                return '';
+                            })()}
                             
                             <div class="card-actions">
                                 <a href="/externo/mega-eventos/${mega.mega_evento_id}/detalle" class="btn btn-minimalista btn-block" style="background: #00A36C; color: white; border-color: #00A36C;">
@@ -735,7 +868,7 @@ async function descargarQRTicket(ticketCodigo, tituloEvento) {
 
     try {
         // Primero registrar la descarga en el backend
-        const apiUrl = window.API_BASE_URL || 'http://192.168.0.6:8000';
+        const apiUrl = window.API_BASE_URL || 'http://10.26.0.215:8000';
         const res = await fetch(`${apiUrl}/api/registrar-descarga-qr`, {
             method: 'POST',
             headers: {
@@ -812,6 +945,192 @@ async function descargarQRTicket(ticketCodigo, tituloEvento) {
                         const a = document.createElement('a');
                         a.href = url;
                         a.download = `QR-Ticket-${tituloEvento.replace(/[^a-z0-9]/gi, '_')}-${ticketCodigo.substring(0, 8)}.png`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                            
+                            // Mostrar mensaje de éxito
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: '¡QR descargado!',
+                                    text: 'El código QR del ticket se ha descargado correctamente',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+                            }
+                        });
+                    } else {
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Error al generar el código QR'
+                    });
+                } else {
+                    alert('Error al generar el código QR');
+                        }
+                }
+                document.body.removeChild(container);
+            }, 500);
+        } catch (e) {
+            console.error('Error generando QR:', e);
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al generar el código QR. Por favor, intenta nuevamente.'
+                    });
+                } else {
+            alert('Error al generar el código QR. Por favor, intenta nuevamente.');
+                }
+        }
+    };
+
+    if (typeof QRCode === 'undefined') {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+        script.onload = generarYDescargarQR;
+        script.onerror = () => {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'No se pudo cargar la librería de QR. Por favor, recarga la página e intenta nuevamente.'
+                    });
+                } else {
+            alert('No se pudo cargar la librería de QR. Por favor, recarga la página e intenta nuevamente.');
+                }
+        };
+        document.head.appendChild(script);
+    } else {
+        generarYDescargarQR();
+        }
+
+    } catch (error) {
+        console.error('Error descargando QR:', error);
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al procesar la descarga. Por favor, intenta nuevamente.'
+            });
+        } else {
+            alert('Error al procesar la descarga. Por favor, intenta nuevamente.');
+        }
+    }
+}
+
+/**
+ * Descargar QR del ticket de mega evento como imagen (solo una vez)
+ */
+async function descargarQRTicketMega(ticketCodigo, tituloMegaEvento) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Debes iniciar sesión para descargar el QR del ticket'
+            });
+        } else {
+            alert('Debes iniciar sesión para descargar el QR del ticket');
+        }
+        return;
+    }
+
+    // Mostrar indicador de carga
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Verificando...',
+            text: 'Validando descarga del QR',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    }
+
+    try {
+        // Primero registrar la descarga en el backend (endpoint de mega eventos)
+        const apiUrl = window.API_BASE_URL || 'http://10.26.0.215:8000';
+        const res = await fetch(`${apiUrl}/api/mega-eventos/registrar-descarga-qr`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                ticket_codigo: ticketCodigo
+            })
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+            // Si ya fue descargado, mostrar mensaje específico
+            if (data.ya_descargado) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'QR ya descargado',
+                        html: `El QR de este ticket ya fue descargado anteriormente.<br><small>Fecha: ${data.fecha_descarga_anterior || 'No disponible'}</small><br><br><small>Solo se permite una descarga por ticket por seguridad.</small>`,
+                        confirmButtonText: 'Entendido'
+                    });
+                } else {
+                    alert(`El QR de este ticket ya fue descargado anteriormente (${data.fecha_descarga_anterior || 'No disponible'}). Solo se permite una descarga por ticket.`);
+                }
+            } else {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.error || 'No se pudo autorizar la descarga del QR'
+                    });
+                } else {
+                    alert(data.error || 'No se pudo autorizar la descarga del QR');
+                }
+            }
+            return;
+        }
+
+        // Si la descarga fue autorizada, proceder a generar y descargar el QR
+        if (typeof Swal !== 'undefined') {
+            Swal.close();
+        }
+
+    // Cargar librería QRCode si no está disponible
+    const generarYDescargarQR = () => {
+        try {
+            // Crear contenedor temporal
+            const container = document.createElement('div');
+            container.style.position = 'absolute';
+            container.style.left = '-9999px';
+            container.id = 'temp-qr-container-' + Date.now();
+            document.body.appendChild(container);
+
+            // Generar QR
+            new QRCode(container, {
+                text: ticketCodigo,
+                width: 400,
+                height: 400,
+                colorDark: "#0C2B44",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            // Esperar a que se genere el QR
+            setTimeout(() => {
+                const canvas = container.querySelector('canvas');
+                if (canvas) {
+                    // Convertir canvas a imagen
+                    canvas.toBlob((blob) => {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `QR-Ticket-Mega-${tituloMegaEvento.replace(/[^a-z0-9]/gi, '_')}-${ticketCodigo.substring(0, 8)}.png`;
                         document.body.appendChild(a);
                         a.click();
                         document.body.removeChild(a);
@@ -1016,6 +1335,177 @@ function mostrarTicketEvento(ticketCodigo, tituloEvento) {
             }
         }
     });
+}
+
+/**
+ * Registrar asistencia de mega evento desde Mis Participaciones
+ */
+async function registrarAsistenciaMegaDesdeMisParticipaciones(megaEventoId) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sesión Expirada',
+                text: 'Debes iniciar sesión para registrar asistencia',
+                confirmButtonText: 'Ir al Login'
+            }).then(() => {
+                window.location.href = '/login';
+            });
+        } else {
+            alert('Debes iniciar sesión para registrar asistencia');
+            window.location.href = '/login';
+        }
+        return;
+    }
+
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Registrando asistencia...',
+            text: 'Por favor espera',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    }
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/mega-eventos/${megaEventoId}/marcar-asistencia`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Asistencia registrada!',
+                    text: 'Tu asistencia ha sido registrada correctamente.',
+                    confirmButtonText: 'Aceptar'
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                alert('¡Asistencia registrada correctamente!');
+                location.reload();
+            }
+        } else {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.error || 'Error al registrar asistencia'
+                });
+            } else {
+                alert(data.error || 'Error al registrar asistencia');
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de conexión',
+                text: 'No se pudo conectar con el servidor. Por favor, intenta nuevamente.'
+            });
+        } else {
+            alert('Error de conexión al registrar asistencia');
+        }
+    }
+}
+
+/**
+ * Registrar asistencia desde Mis Participaciones
+ */
+async function registrarAsistenciaDesdeMisParticipaciones(eventoId, ticketCodigo) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sesión Expirada',
+                text: 'Debes iniciar sesión para registrar asistencia',
+                confirmButtonText: 'Ir al Login'
+            }).then(() => {
+                window.location.href = '/login';
+            });
+        } else {
+            alert('Debes iniciar sesión para registrar asistencia');
+            window.location.href = '/login';
+        }
+        return;
+    }
+
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Registrando asistencia...',
+            text: 'Por favor espera',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    }
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/eventos/${eventoId}/marcar-asistencia`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                ticket_codigo: ticketCodigo || null
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Asistencia registrada!',
+                    text: 'Tu asistencia ha sido registrada correctamente.',
+                    confirmButtonText: 'Aceptar'
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                alert('¡Asistencia registrada correctamente!');
+                location.reload();
+            }
+        } else {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.error || 'Error al registrar asistencia'
+                });
+            } else {
+                alert(data.error || 'Error al registrar asistencia');
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de conexión',
+                text: 'No se pudo conectar con el servidor. Por favor, intenta nuevamente.'
+            });
+        } else {
+            alert('Error de conexión al registrar asistencia');
+        }
+    }
 }
 </script>
 @endpush

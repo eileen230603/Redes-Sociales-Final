@@ -87,126 +87,162 @@
     <!-- Modal de Registrar Asistencia -->
     <div id="modalRegistrarAsistencia" class="modal fade" tabindex="-1" role="dialog" style="display: none;">
         <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-            <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
-                <div class="modal-header" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border-radius: 16px 16px 0 0; color: white;">
-                    <h5 class="modal-title font-weight-bold">
+            <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 12px 48px rgba(0,0,0,0.25); overflow: hidden;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border-radius: 0; color: white; padding: 1.5rem 2rem; border-bottom: none;">
+                    <h5 class="modal-title font-weight-bold mb-0" style="font-size: 1.5rem;">
                         <i class="fas fa-clipboard-check mr-2"></i>
                         Registrar Asistencia
                     </h5>
-                    <button type="button" class="close text-white" onclick="cerrarModalRegistrarAsistencia()" aria-label="Close" style="opacity: 0.9;">
+                    <button type="button" class="close text-white" onclick="cerrarModalRegistrarAsistencia()" aria-label="Close" style="opacity: 0.9; font-size: 1.5rem; transition: all 0.3s ease; padding: 0.5rem;"
+                        onmouseover="this.style.opacity='1'; this.style.transform='rotate(90deg)';"
+                        onmouseout="this.style.opacity='0.9'; this.style.transform='rotate(0deg)';">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body p-4">
+                <div class="modal-body p-5">
                     <!-- Mensaje informativo sobre tiempo límite -->
-                    <div id="mensajeTiempoLimite" class="alert alert-info mb-4" style="display: none; border-radius: 10px; border-left: 4px solid #17a2b8;">
+                    <div id="mensajeTiempoLimite" class="alert alert-info mb-4" style="display: none; border-radius: 12px; border-left: 4px solid #17a2b8; background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%); box-shadow: 0 2px 8px rgba(23, 162, 184, 0.15);">
                         <div class="d-flex align-items-start">
-                            <i class="fas fa-clock mr-3 mt-1" style="font-size: 1.5rem;"></i>
+                            <i class="fas fa-clock mr-3 mt-1" style="font-size: 1.5rem; color: #17a2b8;"></i>
                             <div>
-                                <strong>Tiempo límite para registrar asistencia</strong>
-                                <p class="mb-0 mt-1" id="textoTiempoLimite"></p>
+                                <strong style="color: #0c5460;">Tiempo límite para registrar asistencia</strong>
+                                <p class="mb-0 mt-1" id="textoTiempoLimite" style="color: #0c5460;"></p>
                             </div>
                         </div>
                     </div>
                     
-                    <p class="text-muted mb-4">
-                        Ingresa tu código de ticket o escanea el código QR para registrar tu asistencia a este evento.
-                    </p>
+                    <div class="text-center mb-4">
+                        <div class="mb-3">
+                            <i class="fas fa-ticket-alt" style="font-size: 3rem; color: #00A36C; opacity: 0.8;"></i>
+                        </div>
+                        <p class="text-muted mb-0" style="font-size: 1.05rem; line-height: 1.6;">
+                            Ingresa tu código de ticket o escanea el código QR para registrar tu asistencia a este evento.
+                        </p>
+                    </div>
 
                     <!-- Formulario de Validación -->
-                    <div class="mb-4">
-                        <div class="flex flex-col md:flex-row gap-4 mb-4">
-                            <div class="flex-1">
+                    <div class="mb-5">
+                        <div class="row mb-4">
+                            <div class="col-12 col-md-8 mb-3 mb-md-0">
+                                <label for="ticketCodigoInputDetalle" class="form-label font-weight-semibold mb-2" style="color: #0C2B44;">
+                                    <i class="fas fa-key mr-2 text-primary"></i>Código de Ticket
+                                </label>
                                 <input 
                                     type="text" 
                                     id="ticketCodigoInputDetalle" 
                                     placeholder="Ingresa tu código de ticket o escanea el QR"
                                     class="form-control form-control-lg"
-                                    style="border-radius: 8px; padding: 0.75rem 1rem;"
+                                    style="border-radius: 12px; padding: 1rem 1.25rem; border: 2px solid #e0e0e0; transition: all 0.3s ease; font-size: 1rem;"
                                     onkeypress="if(event.key === 'Enter') verificarTicketDetalle()"
+                                    onfocus="this.style.borderColor='#00A36C'; this.style.boxShadow='0 0 0 0.2rem rgba(0, 163, 108, 0.25)';"
+                                    onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none';"
                                 >
                             </div>
-                            <button 
-                                onclick="verificarTicketDetalle()" 
-                                id="btnVerificarDetalle"
-                                class="btn btn-primary btn-lg"
-                                style="border-radius: 8px; padding: 0.75rem 1.5rem; font-weight: 600;"
-                            >
-                                <i class="fas fa-search mr-2"></i> Verificar
-                            </button>
+                            <div class="col-12 col-md-4 d-flex align-items-end">
+                                <button 
+                                    onclick="verificarTicketDetalle()" 
+                                    id="btnVerificarDetalle"
+                                    class="btn btn-primary btn-lg w-100"
+                                    style="border-radius: 12px; padding: 1rem 1.5rem; font-weight: 600; background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); border: none; box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3); transition: all 0.3s ease;"
+                                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0, 123, 255, 0.4)';"
+                                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0, 123, 255, 0.3)';"
+                                >
+                                    <i class="fas fa-search mr-2"></i> Verificar
+                                </button>
+                            </div>
                         </div>
 
-                        <!-- Botones de QR -->
-                        <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center mb-4">
-                            <button 
-                                onclick="activarEscannerQRDetalle()" 
-                                id="btnEscanearQRDetalle"
-                                class="btn btn-info"
-                                style="border-radius: 8px; padding: 0.6rem 1.2rem; font-weight: 500;"
-                            >
-                                <i class="fas fa-camera mr-2"></i> Escanear Código QR
-                            </button>
-                            <button 
-                                type="button"
-                                onclick="document.getElementById('inputQRImagenDetalle').click()"
-                                id="btnImportarQRDetalle"
-                                class="btn btn-primary"
-                                style="border-radius: 8px; padding: 0.6rem 1.2rem; font-weight: 500;"
-                            >
-                                <i class="fas fa-upload mr-2"></i> Importar QR
-                            </button>
-                            <input
-                                type="file"
-                                id="inputQRImagenDetalle"
-                                accept="image/*"
-                                style="display: none;"
-                                onchange="procesarQRImagenDetalle(event)"
-                            >
+                        <!-- Separador -->
+                        <div class="text-center my-4 position-relative">
+                            <hr style="border: none; border-top: 2px solid #e0e0e0; margin: 0;">
+                            <span class="position-absolute" style="background: white; padding: 0 1rem; top: -12px; left: 50%; transform: translateX(-50%); color: #6c757d; font-weight: 500;">
+                                <i class="fas fa-qrcode mr-2"></i>O escanea un código QR
+                            </span>
                         </div>
+
+                        <!-- Botones de QR - Mejorados con más espacio -->
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <button 
+                                    onclick="activarEscannerQRDetalle()" 
+                                    id="btnEscanearQRDetalle"
+                                    class="btn btn-info w-100"
+                                    style="border-radius: 12px; padding: 1rem 1.5rem; font-weight: 600; background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); border: none; box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3); transition: all 0.3s ease; font-size: 1rem;"
+                                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(23, 162, 184, 0.4)';"
+                                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(23, 162, 184, 0.3)';"
+                                >
+                                    <i class="fas fa-camera mr-2"></i> Escanear Código QR
+                                </button>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <button 
+                                    type="button"
+                                    onclick="document.getElementById('inputQRImagenDetalle').click()"
+                                    id="btnImportarQRDetalle"
+                                    class="btn btn-primary w-100"
+                                    style="border-radius: 12px; padding: 1rem 1.5rem; font-weight: 600; background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); border: none; box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3); transition: all 0.3s ease; font-size: 1rem;"
+                                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0, 123, 255, 0.4)';"
+                                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0, 123, 255, 0.3)';"
+                                >
+                                    <i class="fas fa-upload mr-2"></i> Importar QR
+                                </button>
+                            </div>
+                        </div>
+                        <input
+                            type="file"
+                            id="inputQRImagenDetalle"
+                            accept="image/*"
+                            style="display: none;"
+                            onchange="procesarQRImagenDetalle(event)"
+                        >
 
                         <!-- Contenedor del Escáner QR -->
-                        <div id="qrScannerContainerDetalle" style="display: none; margin-top: 1.5rem; padding: 1.5rem; background: #f8f9fa; border-radius: 12px; border: 2px dashed #00A36C;">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6 class="font-weight-bold text-brand-primario mb-0">
-                                    <i class="fas fa-camera mr-2 text-brand-acento"></i> Escáner QR Activo
+                        <div id="qrScannerContainerDetalle" style="display: none; margin-top: 2rem; padding: 2rem; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 16px; border: 2px dashed #00A36C; box-shadow: 0 4px 16px rgba(0, 163, 108, 0.15);">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h6 class="font-weight-bold mb-0" style="color: #0C2B44; font-size: 1.1rem;">
+                                    <i class="fas fa-camera mr-2" style="color: #00A36C;"></i> Escáner QR Activo
                                 </h6>
-                                <button onclick="detenerEscannerQRDetalle()" class="btn btn-sm btn-danger">
+                                <button onclick="detenerEscannerQRDetalle()" class="btn btn-sm btn-danger" style="border-radius: 8px; padding: 0.5rem 1rem; font-weight: 600; box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3); transition: all 0.3s ease;"
+                                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(220, 53, 69, 0.4)';"
+                                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(220, 53, 69, 0.3)';">
                                     <i class="fas fa-times mr-1"></i> Cerrar
                                 </button>
                             </div>
-                            <div style="position: relative; width: 100%; max-width: 400px; margin: 0 auto; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);">
+                            <div style="position: relative; width: 100%; max-width: 450px; margin: 0 auto; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); border: 3px solid #00A36C;">
                                 <video id="qrVideoDetalle" width="100%" style="display: block; background: #000; border-radius: 12px;"></video>
                                 <canvas id="qrCanvasDetalle" style="display: none;"></canvas>
                             </div>
-                            <p class="text-center mt-3 text-muted text-sm">
-                                <i class="fas fa-info-circle mr-2"></i> Apunta la cámara hacia el código QR de tu ticket
+                            <p class="text-center mt-4 mb-0" style="color: #6c757d; font-size: 0.95rem;">
+                                <i class="fas fa-info-circle mr-2" style="color: #00A36C;"></i> Apunta la cámara hacia el código QR de tu ticket
                             </p>
                         </div>
                     </div>
 
                     <!-- Información del Evento (se muestra después de verificar el ticket) -->
-                    <div id="infoEventoContainerDetalle" class="hidden mb-4 p-4 bg-gradient-to-r from-brand-primario/10 to-brand-acento/10 rounded-xl border-2 border-brand-acento/30">
-                        <h5 class="font-weight-bold text-brand-primario mb-3">
-                            <i class="fas fa-calendar-check mr-2 text-brand-acento"></i> Confirmar Asistencia
+                    <div id="infoEventoContainerDetalle" class="hidden mb-4 p-4" style="background: linear-gradient(135deg, rgba(12, 43, 68, 0.05) 0%, rgba(0, 163, 108, 0.1) 100%); border-radius: 16px; border: 2px solid rgba(0, 163, 108, 0.2); box-shadow: 0 4px 16px rgba(0, 163, 108, 0.1);">
+                        <h5 class="font-weight-bold mb-4" style="color: #0C2B44; font-size: 1.25rem;">
+                            <i class="fas fa-calendar-check mr-2" style="color: #00A36C;"></i> Confirmar Asistencia
                         </h5>
-                        <div id="infoEventoDetalleDetalle" class="mb-3">
+                        <div id="infoEventoDetalleDetalle" class="mb-4">
                             <!-- Se llenará dinámicamente -->
                         </div>
                         
                         <!-- Campo de comentario -->
-                        <div class="form-group mb-3">
-                            <label for="comentarioAsistencia" class="font-weight-semibold text-dark">
-                                <i class="fas fa-comment-dots mr-2 text-info"></i> Comentario (opcional)
+                        <div class="form-group mb-4">
+                            <label for="comentarioAsistencia" class="font-weight-semibold mb-2" style="color: #0C2B44;">
+                                <i class="fas fa-comment-dots mr-2" style="color: #17a2b8;"></i> Comentario (opcional)
                             </label>
                             <textarea 
                                 id="comentarioAsistencia" 
                                 class="form-control" 
                                 rows="3" 
                                 placeholder="Agrega un comentario sobre tu asistencia al evento..."
-                                style="border-radius: 8px; resize: vertical;"
+                                style="border-radius: 12px; resize: vertical; border: 2px solid #e0e0e0; padding: 0.75rem 1rem; transition: all 0.3s ease;"
                                 maxlength="500"
+                                onfocus="this.style.borderColor='#00A36C'; this.style.boxShadow='0 0 0 0.2rem rgba(0, 163, 108, 0.25)';"
+                                onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='none';"
                             ></textarea>
-                            <small class="form-text text-muted">
+                            <small class="form-text text-muted mt-2">
                                 <i class="fas fa-info-circle mr-1"></i> Máximo 500 caracteres
                             </small>
                         </div>
@@ -215,14 +251,16 @@
                             onclick="confirmarAsistenciaDetalle()" 
                             id="btnConfirmarAsistenciaDetalle"
                             class="btn btn-success btn-block btn-lg"
-                            style="border-radius: 8px; padding: 0.75rem; font-weight: 600;"
+                            style="border-radius: 12px; padding: 1rem 1.5rem; font-weight: 600; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); border: none; box-shadow: 0 4px 16px rgba(40, 167, 69, 0.3); transition: all 0.3s ease; font-size: 1.05rem;"
+                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(40, 167, 69, 0.4)';"
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 16px rgba(40, 167, 69, 0.3)';"
                         >
                             <i class="fas fa-check-circle mr-2"></i> Confirmar Asistencia
                         </button>
                     </div>
 
                     <!-- Mensajes de Resultado -->
-                    <div id="mensajeResultadoDetalle" class="hidden mt-4 p-4 rounded-xl"></div>
+                    <div id="mensajeResultadoDetalle" class="hidden mt-4" style="display: none;"></div>
                 </div>
             </div>
         </div>
@@ -259,10 +297,10 @@
                 <i class="far fa-share-square mr-2"></i> Compartir
                 <span class="badge badge-light ml-2" id="contadorCompartidos" style="background: rgba(255,255,255,0.3); color: #007bff;">0</span>
             </button>
-            <button class="btn btn-success d-flex align-items-center" id="btnParticipar" style="border-radius: 10px; padding: 0.6rem 1.5rem; font-weight: 600; box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3); background: linear-gradient(135deg, #28a745 0%, #20c997 100%); border: none;">
+            <button class="btn btn-success d-none align-items-center" id="btnParticipar" style="display: none !important; visibility: hidden !important; border-radius: 10px; padding: 0.6rem 1.5rem; font-weight: 600; box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3); background: linear-gradient(135deg, #28a745 0%, #20c997 100%); border: none;">
                 <i class="fas fa-check-circle mr-2"></i> Participar
         </button>
-            <button class="btn btn-danger d-none d-flex align-items-center" id="btnCancelar" style="border-radius: 10px; padding: 0.6rem 1.5rem; font-weight: 600; box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3); background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); border: none;">
+            <button class="btn btn-danger d-none align-items-center" id="btnCancelar" style="display: none !important; visibility: hidden !important; border-radius: 10px; padding: 0.6rem 1.5rem; font-weight: 600; box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3); background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); border: none;">
                 <i class="fas fa-times-circle mr-2"></i> Cancelar Inscripción
         </button>
             <button class="btn btn-info d-none d-flex align-items-center" id="btnRegistrarAsistencia" onclick="abrirModalRegistrarAsistencia()" style="border-radius: 10px; padding: 0.6rem 1.5rem; font-weight: 600; box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3); background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); border: none;">
@@ -812,7 +850,7 @@
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs2@0.0.2/qrcode.min.js"></script>
 <script>
     // Definir PUBLIC_BASE_URL desde variable de entorno
-    window.PUBLIC_BASE_URL = "{{ env('PUBLIC_APP_URL', 'http://192.168.0.6:8000') }}";
+    window.PUBLIC_BASE_URL = "{{ env('PUBLIC_APP_URL', 'http://10.26.0.215:8000') }}";
     console.log("🌐 PUBLIC_BASE_URL desde .env:", window.PUBLIC_BASE_URL);
 </script>
 <script src="{{ asset('assets/js/config.js') }}"></script>
@@ -967,7 +1005,7 @@
             return;
         }
         
-        // Verificar si aún está dentro del período de 24 horas
+        // Verificar si aún está dentro del período de 30 minutos
         if (window.eventoActualGlobal) {
             const ahora = new Date();
             let fechaFin = null;
@@ -993,10 +1031,10 @@
             
             if (fechaFin && ahora > fechaFin) {
                 const diferenciaMs = ahora - fechaFin;
-                const horasDesdeFinalizacion = diferenciaMs / (1000 * 60 * 60);
+                const minutosDesdeFinalizacion = diferenciaMs / (1000 * 60);
                 
-                if (horasDesdeFinalizacion > 24) {
-                    mostrarMensajeDetalle('El plazo de 24 horas para registrar asistencia ha expirado. Ya no es posible registrar tu asistencia a este evento.', 'error');
+                if (minutosDesdeFinalizacion > 30) {
+                    mostrarMensajeDetalle('El plazo de 30 minutos para registrar asistencia ha expirado. Ya no es posible registrar tu asistencia a este evento.', 'error');
                     return;
                 }
             }
@@ -1007,7 +1045,7 @@
         btnVerificar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Verificando...';
 
         try {
-            const apiUrl = window.API_BASE_URL || 'http://192.168.0.6:8000';
+            const apiUrl = window.API_BASE_URL || 'http://10.26.0.215:8000';
             const res = await fetch(`${apiUrl}/api/verificar-ticket-welcome`, {
                 method: 'POST',
                 headers: {
@@ -1093,7 +1131,7 @@
         btnConfirmar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Confirmando...';
 
         try {
-            const apiUrl = window.API_BASE_URL || 'http://192.168.0.6:8000';
+            const apiUrl = window.API_BASE_URL || 'http://10.26.0.215:8000';
             const body = {
                 ticket_codigo: infoEventoDetalleActual.ticket_codigo,
                 modo_validacion: 'Manual'
@@ -1148,35 +1186,43 @@
         
         if (tipo === 'success') {
             mensajeDiv.className = 'alert alert-success mt-4';
-            mensajeDiv.style.backgroundColor = '#28a745';
+            mensajeDiv.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
             mensajeDiv.style.color = 'white';
             mensajeDiv.style.border = 'none';
-            mensajeDiv.style.borderRadius = '12px';
-            mensajeDiv.style.padding = '1.5rem';
+            mensajeDiv.style.borderRadius = '16px';
+            mensajeDiv.style.padding = '1.5rem 1.75rem';
             mensajeDiv.style.fontWeight = '600';
+            mensajeDiv.style.boxShadow = '0 4px 16px rgba(40, 167, 69, 0.3)';
+            mensajeDiv.style.borderLeft = '4px solid rgba(255, 255, 255, 0.5)';
             mensajeDiv.innerHTML = `
-                <div class="d-flex align-items-center">
-                    <i class="fas fa-check-circle mr-3" style="font-size: 2rem;"></i>
-                    <div>
-                        <div style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem;">¡Éxito!</div>
-                        <div style="font-size: 0.95rem;">${mensaje}</div>
+                <div class="d-flex align-items-start">
+                    <div style="background: rgba(255, 255, 255, 0.2); border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-right: 1rem;">
+                        <i class="fas fa-check-circle" style="font-size: 1.75rem;"></i>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; letter-spacing: 0.3px;">¡Éxito!</div>
+                        <div style="font-size: 0.95rem; line-height: 1.5; opacity: 0.95;">${mensaje}</div>
                     </div>
                 </div>
             `;
         } else {
             mensajeDiv.className = 'alert alert-danger mt-4';
-            mensajeDiv.style.backgroundColor = '#dc3545';
+            mensajeDiv.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
             mensajeDiv.style.color = 'white';
             mensajeDiv.style.border = 'none';
-            mensajeDiv.style.borderRadius = '12px';
-            mensajeDiv.style.padding = '1.5rem';
+            mensajeDiv.style.borderRadius = '16px';
+            mensajeDiv.style.padding = '1.5rem 1.75rem';
             mensajeDiv.style.fontWeight = '600';
+            mensajeDiv.style.boxShadow = '0 4px 16px rgba(220, 53, 69, 0.3)';
+            mensajeDiv.style.borderLeft = '4px solid rgba(255, 255, 255, 0.5)';
             mensajeDiv.innerHTML = `
-                <div class="d-flex align-items-center">
-                    <i class="fas fa-exclamation-circle mr-3" style="font-size: 2rem;"></i>
-                    <div>
-                        <div style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem;">Error</div>
-                        <div style="font-size: 0.95rem;">${mensaje}</div>
+                <div class="d-flex align-items-start">
+                    <div style="background: rgba(255, 255, 255, 0.2); border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-right: 1rem;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 1.75rem;"></i>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; letter-spacing: 0.3px;">Error</div>
+                        <div style="font-size: 0.95rem; line-height: 1.5; opacity: 0.95;">${mensaje}</div>
                     </div>
                 </div>
             `;
@@ -1308,5 +1354,87 @@
         reader.readAsDataURL(file);
         event.target.value = ''; // Clear input for re-selection
     }
+
+    // ========== SISTEMA DE ALERTAS DE 5 MINUTOS ANTES DEL INICIO ==========
+    let alertaEventoMostrada = false;
+    
+    // Verificar si el evento actual inicia en 5 minutos
+    function verificarAlertaEventoActual() {
+        const token = localStorage.getItem('token');
+        if (!token || alertaEventoMostrada) return;
+
+        const eventoIdInput = document.getElementById('eventoId');
+        const eventoId = eventoIdInput ? eventoIdInput.value : null;
+        if (!eventoId) return;
+
+        // Usar el evento que ya está cargado en window.eventoActualGlobal si está disponible
+        if (window.eventoActualGlobal && window.eventoActualGlobal.fecha_inicio) {
+            const fechaInicio = new Date(window.eventoActualGlobal.fecha_inicio);
+            const ahora = new Date();
+            const diferenciaMs = fechaInicio - ahora;
+            const minutosRestantes = Math.floor(diferenciaMs / (1000 * 60));
+
+            // Si faltan entre 0 y 5 minutos para el inicio
+            if (minutosRestantes >= 0 && minutosRestantes <= 5 && !alertaEventoMostrada) {
+                mostrarAlertaEventoActual(window.eventoActualGlobal);
+                alertaEventoMostrada = true;
+            }
+        } else {
+            // Si no está cargado, obtenerlo de la API
+            fetch(`${API_BASE_URL}/api/eventos/detalle/${eventoId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.evento && data.evento.fecha_inicio) {
+                    const fechaInicio = new Date(data.evento.fecha_inicio);
+                    const ahora = new Date();
+                    const diferenciaMs = fechaInicio - ahora;
+                    const minutosRestantes = Math.floor(diferenciaMs / (1000 * 60));
+
+                    // Si faltan entre 0 y 5 minutos para el inicio
+                    if (minutosRestantes >= 0 && minutosRestantes <= 5 && !alertaEventoMostrada) {
+                        mostrarAlertaEventoActual(data.evento);
+                        alertaEventoMostrada = true;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error verificando alerta del evento:', error);
+            });
+        }
+    }
+
+    // Mostrar alerta para el evento actual
+    function mostrarAlertaEventoActual(evento) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'info',
+                title: '¡Evento por comenzar!',
+                html: `
+                    <div class="text-left">
+                        <p class="mb-3"><strong>${evento.titulo || 'Evento'}</strong></p>
+                        <p class="mb-2">El evento está por comenzar. Recuerda que podrás registrar tu asistencia cuando se habilite la opción.</p>
+                        <p class="text-sm text-gray-600">Faltan 5 minutos para el inicio del evento.</p>
+                    </div>
+                `,
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#00A36C',
+                timer: 10000,
+                timerProgressBar: true
+            });
+        }
+    }
+
+    // Verificar alerta cuando se carga la página (después de que cargue el evento)
+    setTimeout(() => {
+        verificarAlertaEventoActual();
+    }, 3000); // Esperar 3 segundos para que cargue el evento
+
+    // Verificar cada minuto
+    setInterval(verificarAlertaEventoActual, 60000);
 </script>
 @endsection

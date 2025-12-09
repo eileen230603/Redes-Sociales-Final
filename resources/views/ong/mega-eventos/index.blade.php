@@ -4,19 +4,15 @@
 
 @section('content_body')
 <div class="container-fluid">
-    <!-- Botón normal (visible al inicio) -->
+    <!-- Botón normal (visible al inicio) - Diseño Minimalista -->
     <div class="d-flex justify-content-between align-items-center mb-4" id="btnNuevoMegaEventoNormal">
-        <h2 class="text-primary font-weight-bold">
-            <i class="fas fa-star mr-2"></i> Mega Eventos
-        </h2>
         <div>
-            <button id="btnSeguimientoGeneral" class="btn btn-info btn-lg mr-2">
-                <i class="fas fa-chart-line mr-2"></i> Seguimiento General
-            </button>
-            <a href="{{ route('ong.mega-eventos.create') }}" class="btn btn-success btn-lg">
-                <i class="fas fa-plus mr-2"></i> Nuevo Mega Evento
-            </a>
+            <h2 class="mb-0" style="font-weight: 600; color: #0C2B44; font-size: 1.75rem;">Mega Eventos</h2>
+            <p class="text-muted mb-0" style="font-size: 0.9rem; margin-top: 0.25rem;">Gestiona tus eventos principales</p>
         </div>
+        <a href="{{ route('ong.mega-eventos.create') }}" class="btn" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: none; border-radius: 12px; padding: 0.75rem 1.5rem; font-weight: 500; box-shadow: 0 2px 8px rgba(12, 43, 68, 0.15); transition: all 0.3s ease;">
+            <i class="fas fa-plus mr-2"></i> Nuevo Mega Evento
+        </a>
     </div>
 
     <!-- Botón FAB circular (oculto inicialmente) -->
@@ -24,14 +20,14 @@
         <i class="fas fa-plus"></i>
     </a>
 
-    <!-- Panel de Estadísticas Agregadas -->
-    <div id="panelEstadisticasAgregadas" class="card mb-4 shadow-sm" style="border: none; border-radius: 12px; display: none;">
-        <div class="card-header bg-white" style="border-bottom: 1px solid #f0f0f0; padding: 1.25rem;">
+    <!-- Panel de Estadísticas Agregadas - Minimalista -->
+    <div id="panelEstadisticasAgregadas" class="card mb-4 shadow-sm" style="border: none; border-radius: 16px; display: none; background: white;">
+        <div class="card-header bg-white" style="border-bottom: 1px solid #f0f0f0; padding: 1.5rem; border-radius: 16px 16px 0 0;">
             <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0" style="font-weight: 700; color: #0C2B44;">
-                    <i class="fas fa-chart-bar mr-2" style="color: #00A36C;"></i>Estadísticas Agregadas de Todos los Mega Eventos
+                <h5 class="mb-0" style="font-weight: 600; color: #0C2B44; font-size: 1.25rem;">
+                    <i class="fas fa-chart-bar mr-2" style="color: #00A36C;"></i>Estadísticas Agregadas
                 </h5>
-                <button class="btn btn-sm btn-outline-secondary" onclick="ocultarEstadisticasAgregadas()">
+                <button class="btn btn-sm" onclick="ocultarEstadisticasAgregadas()" style="background: #f8f9fa; border: 1px solid #e0e0e0; color: #6c757d; border-radius: 8px; padding: 0.5rem 1rem;">
                     <i class="fas fa-times mr-1"></i> Cerrar
                 </button>
             </div>
@@ -157,20 +153,15 @@
         </div>
     </div>
 
-    <!-- Filtros y Búsqueda -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary">
-            <h5 class="card-title mb-0 text-white">
-                <i class="fas fa-filter mr-2"></i>Filtros y Búsqueda
-            </h5>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4 mb-3 mb-md-0">
-                    <label for="filtroCategoria" class="font-weight-bold text-dark">
-                        <i class="fas fa-sliders-h mr-2 text-info"></i>Categoría
+    <!-- Filtros y Búsqueda - Diseño Minimalista -->
+    <div class="card mb-4 shadow-sm" style="border: none; border-radius: 16px; background: #ffffff;">
+        <div class="card-body p-4">
+            <div class="row align-items-end">
+                <div class="col-md-3 mb-3 mb-md-0">
+                    <label for="filtroCategoria" class="form-label text-muted mb-2" style="font-size: 0.875rem; font-weight: 500;">
+                        Categoría
                     </label>
-                    <select id="filtroCategoria" class="form-control">
+                    <select id="filtroCategoria" class="form-control" style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 0.625rem 1rem; font-size: 0.9rem;">
                         <option value="todos">Todas las categorías</option>
                         <option value="cultural">Cultural</option>
                         <option value="deportivo">Deportivo</option>
@@ -180,11 +171,11 @@
                         <option value="otro">Otro</option>
                     </select>
                 </div>
-                <div class="col-md-4 mb-3 mb-md-0">
-                    <label for="filtroEstado" class="font-weight-bold text-dark">
-                        <i class="fas fa-info-circle mr-2 text-success"></i>Estado
+                <div class="col-md-3 mb-3 mb-md-0">
+                    <label for="filtroEstado" class="form-label text-muted mb-2" style="font-size: 0.875rem; font-weight: 500;">
+                        Estado
                     </label>
-                    <select id="filtroEstado" class="form-control">
+                    <select id="filtroEstado" class="form-control" style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 0.625rem 1rem; font-size: 0.9rem;">
                         <option value="todos">Todos los estados</option>
                         <option value="planificacion">Planificación</option>
                         <option value="activo">Activo</option>
@@ -193,18 +184,21 @@
                         <option value="cancelado">Cancelado</option>
                     </select>
                 </div>
-                <div class="col-md-4">
-                    <label for="buscador" class="font-weight-bold text-dark">
-                        <i class="fas fa-search mr-2 text-warning"></i>Buscar
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <label for="buscador" class="form-label text-muted mb-2" style="font-size: 0.875rem; font-weight: 500;">
+                        Buscar
                     </label>
-                    <div class="input-group">
-                        <input type="text" id="buscador" class="form-control" placeholder="Buscar por título o descripción...">
-                        <div class="input-group-append">
-                            <button class="btn btn-outline-secondary" type="button" id="btnLimpiar">
-                                <i class="fas fa-times-circle"></i>
-                            </button>
-                        </div>
+                    <div class="input-group" style="border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0;">
+                        <input type="text" id="buscador" class="form-control border-0" placeholder="Buscar por título o descripción..." style="padding: 0.625rem 1rem; font-size: 0.9rem;">
+                        <button class="btn btn-link text-muted border-0" type="button" id="btnLimpiar" style="padding: 0.625rem 1rem;">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
+                </div>
+                <div class="col-md-2 mb-3 mb-md-0">
+                    <button class="btn btn-primary w-100" type="button" onclick="mostrarEstadisticasAgregadas()" style="border-radius: 8px; padding: 0.625rem 1rem; font-size: 0.9rem; font-weight: 500;">
+                        <i class="fas fa-chart-bar mr-2"></i>Estadísticas
+                    </button>
                 </div>
             </div>
         </div>
@@ -223,35 +217,46 @@
 
 @push('css')
 <style>
-    /* Botón FAB (Floating Action Button) */
+    /* Estilo Minimalista General */
+    body {
+        background-color: #f8f9fa;
+    }
+    
+    .container-fluid {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+    }
+    
+    /* Botón FAB (Floating Action Button) - Minimalista */
     .fab-button {
         position: fixed;
         bottom: 30px;
         right: 30px;
-        width: 60px;
-        height: 60px;
+        width: 56px;
+        height: 56px;
         border-radius: 50%;
         background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%);
         color: white;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 12px rgba(12, 43, 68, 0.3);
+        box-shadow: 0 4px 16px rgba(12, 43, 68, 0.25);
         z-index: 1000;
-        transition: all 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         text-decoration: none;
         border: none;
     }
 
     .fab-button:hover {
-        transform: scale(1.1);
-        box-shadow: 0 6px 16px rgba(12, 43, 68, 0.4);
+        transform: scale(1.05) translateY(-2px);
+        box-shadow: 0 6px 20px rgba(12, 43, 68, 0.35);
         color: white;
         text-decoration: none;
     }
 
     .fab-button i {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
     }
 
     .fab-button.show {
@@ -265,33 +270,251 @@
         visibility: hidden;
         transform: scale(0.8);
     }
+    
+    /* Cards de Mega Eventos - Minimalista */
+    .card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+        background: white;
+    }
+    
+    .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+    
+    /* Inputs y Selects - Minimalista */
+    .form-control:focus {
+        border-color: #00A36C;
+        box-shadow: 0 0 0 0.2rem rgba(0, 163, 108, 0.1);
+    }
+    
+    /* Botones de acción en cards - Separados */
+    .btn-group-minimal {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .btn-group-minimal .btn {
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border: 1px solid #e0e0e0;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-group-minimal .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Badges - Minimalista */
+    .badge {
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.75rem;
+    }
+    
+    /* Placeholder de imagen */
+    .image-placeholder {
+        background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .container-fluid {
+            padding: 1rem;
+        }
+        
+        .fab-button {
+            width: 52px;
+            height: 52px;
+            bottom: 20px;
+            right: 20px;
+        }
+    }
 </style>
 @endpush
 
 @section('js')
+{{-- Script global para icono de notificaciones --}}
+<script src="{{ asset('js/notificaciones-ong.js') }}"></script>
 <script src="{{ asset('assets/js/config.js') }}"></script>
 <script>
-// Función helper para construir URL de imagen
+// Función helper para construir URL de imagen (IGUAL QUE EN SHOW.BLADE.PHP)
 function buildImageUrl(imgUrl) {
-    if (!imgUrl || imgUrl.trim() === '') return null;
+    // Validar que imgUrl sea un string válido
+    if (!imgUrl) return null;
     
-    // Si ya es una URL completa
-    if (imgUrl.startsWith('http://') || imgUrl.startsWith('https://')) {
-        return imgUrl;
+    // Si es un array u objeto, retornar null (no debería pasar)
+    if (typeof imgUrl !== 'string') {
+        console.warn('buildImageUrl recibió un valor no string:', typeof imgUrl, imgUrl);
+        return null;
     }
     
-    // Si empieza con /storage/, usar directamente
+    // Limpiar espacios en blanco
+    imgUrl = imgUrl.trim();
+    if (imgUrl === '') return null;
+    
+    // CASO ESPECIAL: Detectar URLs malformadas como /storage/["http://..."]
+    const storageJsonPattern = /\/storage\/\[(.*?)\]$/;
+    const storageJsonMatch = imgUrl.match(storageJsonPattern);
+    if (storageJsonMatch) {
+        console.warn('buildImageUrl: Detectada URL malformada con /storage/[...], extrayendo JSON:', imgUrl.substring(0, 150));
+        try {
+            const jsonStr = '[' + storageJsonMatch[1] + ']';
+            const parsed = JSON.parse(jsonStr);
+            if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === 'string') {
+                imgUrl = parsed[0].trim();
+                if (imgUrl === '') return null;
+            } else {
+                return null;
+            }
+        } catch (e) {
+            return null;
+        }
+    }
+    
+    // Si parece ser un array JSON serializado, intentar parsearlo
+    if (imgUrl.startsWith('[') && imgUrl.endsWith(']')) {
+        try {
+            const parsed = JSON.parse(imgUrl);
+            if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === 'string') {
+                imgUrl = parsed[0].trim();
+                if (imgUrl === '') return null;
+            } else {
+                return null;
+            }
+        } catch (e) {
+            return null;
+        }
+    }
+    
+    // Validación adicional: asegurar que imgUrl no contenga arrays JSON
+    if (imgUrl.includes('[') || imgUrl.includes(']')) {
+        console.warn('buildImageUrl: URL contiene caracteres de array JSON:', imgUrl);
+        return null;
+    }
+    
+    // Filtrar rutas inválidas (solo si NO es URL completa)
+    const esUrlCompleta = imgUrl.startsWith('http://') || imgUrl.startsWith('https://');
+    const rutasInvalidas = ['/templates/', '/cache/', '/yootheme/', '/resizer/', '/wp-content/', 
+                            'templates/', 'cache/', 'yootheme/', 'resizer/', 'wp-content/'];
+    
+    if (!esUrlCompleta) {
+        const esRutaInvalida = rutasInvalidas.some(ruta => imgUrl.toLowerCase().includes(ruta.toLowerCase()));
+        if (esRutaInvalida) {
+            console.warn('Ruta de imagen inválida filtrada:', imgUrl);
+            return null;
+        }
+    }
+    
+    // Si ya es una URL completa, reemplazar IPs antiguas y retornarla
+    if (esUrlCompleta) {
+        // Reemplazar IPs antiguas
+        imgUrl = imgUrl.replace(/http:\/\/127\.0\.0\.1:8000/g, 'http://10.26.0.215:8000');
+        imgUrl = imgUrl.replace(/https:\/\/127\.0\.0\.1:8000/g, 'https://10.26.0.215:8000');
+        imgUrl = imgUrl.replace(/http:\/\/192\.168\.0\.6:8000/g, 'http://10.26.0.215:8000');
+        imgUrl = imgUrl.replace(/https:\/\/192\.168\.0\.6:8000/g, 'https://10.26.0.215:8000');
+        imgUrl = imgUrl.replace(/http:\/\/10\.26\.15\.110:8000/g, 'http://10.26.0.215:8000');
+        imgUrl = imgUrl.replace(/https:\/\/10\.26\.15\.110:8000/g, 'https://10.26.0.215:8000');
+        
+        // Validar que la URL completa no contenga arrays JSON
+        if (!imgUrl.includes('[') && !imgUrl.includes(']')) {
+            // Si es una URL externa, usar el proxy
+            try {
+                const url = new URL(imgUrl);
+                const currentHost = window.location.hostname;
+                const currentPort = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
+                const imageHost = url.hostname;
+                const imagePort = url.port || (url.protocol === 'https:' ? '443' : '80');
+                
+                if (imageHost !== currentHost || imagePort !== currentPort) {
+                    const baseUrl = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) 
+                        ? API_BASE_URL 
+                        : window.location.origin;
+                    const correctedBaseUrl = baseUrl.replace(/127\.0\.0\.1:8000/g, '10.26.0.215:8000')
+                                                     .replace(/192\.168\.0\.6:8000/g, '10.26.0.215:8000')
+                                                     .replace(/10\.26\.15\.110:8000/g, '10.26.0.215:8000');
+                    return `${correctedBaseUrl}/api/image-proxy?url=${encodeURIComponent(imgUrl)}`;
+                }
+            } catch (e) {
+                // Si no se puede parsear, retornar la URL original
+            }
+            
+            return imgUrl;
+        } else {
+            return null;
+        }
+    }
+    
+    // Si empieza con /storage/, verificar si es una ruta externa mal formateada
     if (imgUrl.startsWith('/storage/')) {
-        return `${window.location.origin}${imgUrl}`;
+        const rutasExternas = ['/storage/resizer/', '/storage/wp-content/', '/storage/templates/', 
+                               '/storage/cache/', '/storage/yootheme/'];
+        const esRutaExterna = rutasExternas.some(ruta => imgUrl.toLowerCase().startsWith(ruta.toLowerCase()));
+        
+        if (esRutaExterna) {
+            console.warn('buildImageUrl: Ruta externa mal formateada detectada:', imgUrl);
+            return null;
+        }
+        
+        const baseUrl = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) 
+            ? API_BASE_URL 
+            : window.location.origin;
+        const correctedBaseUrl = baseUrl.replace(/127\.0\.0\.1:8000/g, '10.26.0.215:8000')
+                                         .replace(/192\.168\.0\.6:8000/g, '10.26.0.215:8000')
+                                         .replace(/10\.26\.15\.110:8000/g, '10.26.0.215:8000');
+        const finalUrl = `${correctedBaseUrl}${imgUrl}`;
+        if (!finalUrl.includes('[') && !finalUrl.includes(']')) {
+            return finalUrl;
+        } else {
+            return null;
+        }
     }
     
     // Si empieza con storage/, agregar /
     if (imgUrl.startsWith('storage/')) {
-        return `${window.location.origin}/${imgUrl}`;
+        const baseUrl = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) 
+            ? API_BASE_URL 
+            : window.location.origin;
+        const correctedBaseUrl = baseUrl.replace(/127\.0\.0\.1:8000/g, '10.26.0.215:8000')
+                                         .replace(/192\.168\.0\.6:8000/g, '10.26.0.215:8000')
+                                         .replace(/10\.26\.15\.110:8000/g, '10.26.0.215:8000');
+        const finalUrl = `${correctedBaseUrl}/${imgUrl}`;
+        if (!finalUrl.includes('[') && !finalUrl.includes(']')) {
+            return finalUrl;
+        } else {
+            return null;
+        }
     }
     
-    // Si no tiene prefijo, agregar /storage/
-    return `${window.location.origin}/storage/${imgUrl}`;
+    // Solo procesar si parece ser una ruta de imagen válida
+    const extensionesValidas = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+    const tieneExtensionValida = extensionesValidas.some(ext => imgUrl.toLowerCase().includes(ext.toLowerCase()));
+    
+    if (tieneExtensionValida) {
+        const baseUrl = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) 
+            ? API_BASE_URL 
+            : window.location.origin;
+        const correctedBaseUrl = baseUrl.replace(/127\.0\.0\.1:8000/g, '10.26.0.215:8000')
+                                         .replace(/192\.168\.0\.6:8000/g, '10.26.0.215:8000')
+                                         .replace(/10\.26\.15\.110:8000/g, '10.26.0.215:8000');
+        const finalUrl = `${correctedBaseUrl}/storage/${imgUrl.replace(/^\//, '')}`;
+        if (!finalUrl.includes('[') && !finalUrl.includes(']')) {
+            return finalUrl;
+        } else {
+            return null;
+        }
+    }
+    
+    return null;
 }
 
 let filtrosMegaEventos = {
@@ -432,9 +655,168 @@ async function cargarMegaEventos() {
             const fechaInicio = formatearFechaPostgreSQL(mega.fecha_inicio);
             const fechaFin = formatearFechaPostgreSQL(mega.fecha_fin);
 
-            // Obtener primera imagen o usar placeholder
-            const imagenes = Array.isArray(mega.imagenes) ? mega.imagenes.filter(img => img && img.trim() !== '') : [];
-            const imagenPrincipal = imagenes.length > 0 ? buildImageUrl(imagenes[0]) : null;
+            // Debug: Ver qué está recibiendo del backend
+            console.log(`Procesando mega evento "${mega.titulo}":`, {
+                imagenes_raw: mega.imagenes,
+                tipo: typeof mega.imagenes,
+                es_array: Array.isArray(mega.imagenes)
+            });
+
+            // Función recursiva para extraer URLs válidas de cualquier estructura
+            function extraerUrlsValidas(input) {
+                const urls = [];
+                
+                if (!input) return urls;
+                
+                // Si es un array, procesar cada elemento
+                if (Array.isArray(input)) {
+                    input.forEach(item => {
+                        urls.push(...extraerUrlsValidas(item));
+                    });
+                    return urls;
+                }
+                
+                // Si es un string
+                if (typeof input === 'string') {
+                    let trimmed = input.trim();
+                    if (trimmed === '') return urls;
+                    
+                    // Decodificar URL si está codificada (maneja %22, %5B, %5D, etc.)
+                    try {
+                        const decoded = decodeURIComponent(trimmed);
+                        if (decoded !== trimmed) {
+                            trimmed = decoded;
+                        }
+                    } catch (e) {
+                        // Si falla la decodificación, usar el original
+                    }
+                    
+                    // Normalizar dobles barras a barras simples
+                    trimmed = trimmed.replace(/\/\//g, '/').replace(/http:\//g, 'http://').replace(/https:\//g, 'https://');
+                    
+                    // Si parece ser un JSON array, parsearlo recursivamente
+                    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+                        try {
+                            const parsed = JSON.parse(trimmed);
+                            return extraerUrlsValidas(parsed);
+                        } catch (e) {
+                            return urls;
+                        }
+                    }
+                    
+                    // Caso especial: si la URL contiene /storage/["http://..."] o /storage/[%22http://...%22] extraer solo el JSON
+                    if (trimmed.includes('[') || trimmed.includes(']') || trimmed.includes('%5B') || trimmed.includes('%5D')) {
+                        // Intentar extraer JSON de /storage/[...]
+                        const storageJsonMatch = trimmed.match(/\/storage\/\[(.*?)\]$/);
+                        if (storageJsonMatch) {
+                            try {
+                                let jsonStr = '[' + storageJsonMatch[1] + ']';
+                                // Decodificar el contenido del JSON si está codificado
+                                try {
+                                    jsonStr = decodeURIComponent(jsonStr);
+                                } catch (e) {
+                                    // Si falla, usar el original
+                                }
+                                const parsed = JSON.parse(jsonStr);
+                                return extraerUrlsValidas(parsed);
+                            } catch (e) {
+                                // Intentar parsear directamente sin decodificar
+                                try {
+                                    const jsonStr = '[' + storageJsonMatch[1] + ']';
+                                    const parsed = JSON.parse(jsonStr);
+                                    return extraerUrlsValidas(parsed);
+                                } catch (e2) {
+                                    return urls;
+                                }
+                            }
+                        }
+                        
+                        // Intentar extraer JSON codificado con %5B y %5D
+                        const encodedJsonMatch = trimmed.match(/\[(.*?)\]|%5B(.*?)%5D/);
+                        if (encodedJsonMatch) {
+                            try {
+                                let jsonStr = '[' + (encodedJsonMatch[1] || encodedJsonMatch[2]) + ']';
+                                // Decodificar si está codificado
+                                try {
+                                    jsonStr = decodeURIComponent(jsonStr);
+                                } catch (e) {
+                                    // Si falla, usar el original
+                                }
+                                const parsed = JSON.parse(jsonStr);
+                                return extraerUrlsValidas(parsed);
+                            } catch (e) {
+                                return urls;
+                            }
+                        }
+                        
+                        // Intentar extraer URLs del string si contiene JSON en cualquier parte
+                        try {
+                            const jsonMatch = trimmed.match(/\[.*?\]/);
+                            if (jsonMatch) {
+                                let jsonStr = jsonMatch[0];
+                                // Decodificar si es necesario
+                                try {
+                                    jsonStr = decodeURIComponent(jsonStr);
+                                } catch (e) {
+                                    // Si falla, usar el original
+                                }
+                                const parsed = JSON.parse(jsonStr);
+                                return extraerUrlsValidas(parsed);
+                            }
+                        } catch (e) {
+                            return urls;
+                        }
+                        return urls; // Rechazar si contiene arrays JSON y no se pudo parsear
+                    }
+                    
+                    // Filtrar rutas inválidas y servicios externos no disponibles
+                    const rutasInvalidas = ['/templates/', '/cache/', '/yootheme/', 'templates/', 'cache/', 'yootheme/', '/resizer/'];
+                    const esRutaInvalida = rutasInvalidas.some(ruta => trimmed.toLowerCase().includes(ruta.toLowerCase()));
+                    
+                    // También filtrar URLs que parecen ser de servicios externos no disponibles
+                    const esServicioExterno = trimmed.includes('/resizer/') || trimmed.includes('resizer');
+                    
+                    if (!esRutaInvalida && !esServicioExterno) {
+                        urls.push(trimmed);
+                    }
+                }
+                
+                return urls;
+            }
+            
+            // Extraer todas las URLs válidas usando la función recursiva
+            let imagenes = extraerUrlsValidas(mega.imagenes);
+            
+            // Eliminar duplicados
+            imagenes = [...new Set(imagenes)];
+            
+            // Debug: Log para ver qué imágenes se están procesando
+            if (imagenes.length > 0) {
+                console.log(`Mega evento "${mega.titulo}": ${imagenes.length} imagen(es) encontrada(s)`, imagenes);
+            }
+            
+            // Procesar imágenes del backend usando buildImageUrl (IGUAL QUE EN SHOW.BLADE.PHP)
+            let imagenesValidas = [];
+            
+            if (mega.imagenes && Array.isArray(mega.imagenes)) {
+                imagenesValidas = mega.imagenes
+                    .map(img => {
+                        if (!img || typeof img !== 'string') return null;
+                        
+                        // Usar buildImageUrl para procesar y validar la URL
+                        return buildImageUrl(img.trim());
+                    })
+                    .filter(img => img !== null && img !== undefined);
+            }
+            
+            const imagenPrincipal = imagenesValidas.length > 0 ? imagenesValidas[0] : null;
+            
+            // Debug: Log para ver qué imágenes se están procesando
+            if (imagenPrincipal) {
+                console.log(`[DEBUG] Imagen principal para "${mega.titulo}":`, imagenPrincipal);
+            } else if (mega.imagenes && mega.imagenes.length > 0) {
+                console.warn(`[DEBUG] No se pudo procesar imágenes para "${mega.titulo}". Imágenes recibidas:`, mega.imagenes);
+            }
 
             const estadoBadge = {
                 'planificacion': '<span class="badge badge-secondary">Planificación</span>',
@@ -461,40 +843,90 @@ async function cargarMegaEventos() {
             };
             
             // Imagen o placeholder - clickable para ir a detalles
+            const imgWrapper = document.createElement('div');
+            imgWrapper.className = 'position-relative';
+            imgWrapper.style.cssText = 'cursor: pointer; overflow: hidden; height: 220px; background: #f8f9fa;';
+            imgWrapper.onclick = () => window.location.href = `/ong/mega-eventos/${mega.mega_evento_id}/detalle`;
+            
             if (imagenPrincipal) {
-                const imgWrapper = document.createElement('div');
-                imgWrapper.className = 'position-relative';
-                imgWrapper.style.cssText = 'cursor: pointer; overflow: hidden;';
-                imgWrapper.onclick = () => window.location.href = `/ong/mega-eventos/${mega.mega_evento_id}/detalle`;
-                
                 const img = document.createElement('img');
-                img.src = imagenPrincipal;
                 img.className = 'card-img-top';
-                img.style.cssText = 'height: 220px; object-fit: cover; transition: transform 0.3s ease;';
+                img.style.cssText = 'width: 100%; height: 220px; object-fit: cover; transition: transform 0.3s ease; display: block;';
                 img.alt = mega.titulo || 'Mega Evento';
-                img.onerror = function() {
-                    this.onerror = null;
-                    this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="200"%3E%3Crect fill="%23f0f0f0" width="400" height="200"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999" font-family="Arial" font-size="14"%3EImagen no disponible%3C/text%3E%3C/svg%3E';
-                    this.style.objectFit = 'contain';
+                img.crossOrigin = 'anonymous'; // Permitir CORS
+                
+                // Crear placeholder que se mostrará si la imagen falla
+                const placeholder = document.createElement('div');
+                placeholder.className = 'image-placeholder';
+                placeholder.style.cssText = 'display: none; width: 100%; height: 220px; align-items: center; justify-content: center; background: #f8f9fa; position: absolute; top: 0; left: 0;';
+                placeholder.innerHTML = '<i class="fas fa-image fa-3x text-muted" style="opacity: 0.3;"></i>';
+                imgWrapper.appendChild(placeholder);
+                
+                let errorHandled = false;
+                let loadAttempted = false;
+                
+                // Función para intentar cargar la imagen
+                const intentarCargarImagen = (url) => {
+                    if (loadAttempted) return;
+                    loadAttempted = true;
+                    
+                    // Verificar primero con fetch si la imagen existe
+                    fetch(url, { method: 'HEAD', mode: 'no-cors' })
+                        .then(() => {
+                            // Si no hay error, establecer src
+                            img.src = url;
+                        })
+                        .catch(() => {
+                            // Si falla, intentar de todas formas (puede ser problema de CORS)
+                            img.src = url;
+                        });
                 };
+                
+                // Configurar handlers antes de establecer src
+                img.onerror = function() {
+                    if (!errorHandled) {
+                        errorHandled = true;
+                        console.warn(`[DEBUG] Error cargando imagen para "${mega.titulo}":`, this.src);
+                        this.style.display = 'none';
+                        placeholder.style.display = 'flex';
+                    }
+                };
+                
+                img.onload = function() {
+                    placeholder.style.display = 'none';
+                    console.log(`[DEBUG] Imagen cargada exitosamente para "${mega.titulo}"`);
+                };
+                
+                // Intentar cargar la imagen
+                intentarCargarImagen(imagenPrincipal);
+                
+                // Agregar atributos adicionales para mejor carga
+                img.loading = 'lazy';
+                img.decoding = 'async';
                 
                 imgWrapper.onmouseenter = function() {
-                    img.style.transform = 'scale(1.05)';
+                    const imgEl = imgWrapper.querySelector('img');
+                    if (imgEl && imgEl.style.display !== 'none') {
+                        imgEl.style.transform = 'scale(1.05)';
+                    }
                 };
                 imgWrapper.onmouseleave = function() {
-                    img.style.transform = 'scale(1)';
+                    const imgEl = imgWrapper.querySelector('img');
+                    if (imgEl && imgEl.style.display !== 'none') {
+                        imgEl.style.transform = 'scale(1)';
+                    }
                 };
                 
+                // Agregar imagen y placeholder al wrapper
                 imgWrapper.appendChild(img);
-                cardDiv.appendChild(imgWrapper);
+                imgWrapper.appendChild(placeholder);
             } else {
-                const placeholder = document.createElement('div');
-                placeholder.className = 'card-img-top d-flex align-items-center justify-content-center position-relative';
-                placeholder.style.cssText = 'height: 220px; background: #f8f9fa; border-bottom: 1px solid #e9ecef; cursor: pointer;';
-                placeholder.onclick = () => window.location.href = `/ong/mega-eventos/${mega.mega_evento_id}/detalle`;
-                placeholder.innerHTML = '<i class="fas fa-image fa-3x text-muted" style="opacity: 0.3;"></i>';
-                cardDiv.appendChild(placeholder);
+                // Si no hay imagen, mostrar placeholder directamente
+                imgWrapper.style.cssText = 'cursor: pointer; height: 220px; background: #f8f9fa; border-bottom: 1px solid #e9ecef; display: flex; align-items: center; justify-content: center;';
+                imgWrapper.innerHTML = '<i class="fas fa-image fa-3x text-muted" style="opacity: 0.3;"></i>';
             }
+            
+            cardDiv.appendChild(imgWrapper);
             
             // Card body mejorado
             const cardBody = document.createElement('div');
@@ -516,25 +948,40 @@ async function cargarMegaEventos() {
             infoDiv.className = 'mb-3';
             infoDiv.style.cssText = 'font-size: 0.85rem; color: #6c757d;';
             
-            // Formatear fecha de finalización de forma más corta
-            const fechaFinFormateada = mega.fecha_fin ? new Date(mega.fecha_fin).toLocaleDateString('es-ES', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            }) : 'No especificada';
+            // Formatear fecha de finalización completa
+            const fechaFinFormateada = mega.fecha_fin ? formatearFechaPostgreSQL(mega.fecha_fin) : 'No especificada';
+            
+            // Obtener información del usuario/ONG organizadora
+            const ongPrincipal = mega.ong_principal || {};
+            const nombreUsuario = ongPrincipal.nombre_usuario || ongPrincipal.nombre_ong || ongPrincipal.nombre || 'Usuario';
+            const fotoPerfilOng = ongPrincipal.foto_perfil_url || ongPrincipal.avatar || null;
+            const inicialNombre = nombreUsuario.charAt(0).toUpperCase();
             
             infoDiv.innerHTML = `
                 <div class="mb-2">
-                    <i class="fas fa-calendar-alt mr-2 text-info"></i> <strong>Inicio:</strong> ${fechaInicio.split(',')[0]}
+                    <i class="fas fa-calendar-alt mr-2 text-info"></i> <strong>Inicio:</strong> ${fechaInicio}
                 </div>
                 <div class="mb-2">
-                    <i class="fas fa-calendar-check mr-2 text-success"></i> <strong>Fin:</strong> ${fechaFinFormateada}
+                    <i class="fas fa-calendar-check mr-2 text-success"></i> <strong>Finalización:</strong> ${fechaFinFormateada}
                 </div>
                 ${mega.ubicacion ? `
                     <div class="mb-2">
                         <i class="fas fa-map-marker-alt mr-2 text-danger"></i> ${mega.ubicacion.length > 35 ? mega.ubicacion.substring(0, 35) + '...' : mega.ubicacion}
                     </div>
                 ` : ''}
+                <div class="mb-2 d-flex align-items-center">
+                    <i class="fas fa-user mr-2" style="color: #17a2b8;"></i>
+                    <div class="d-flex align-items-center">
+                        ${fotoPerfilOng ? `
+                            <img src="${fotoPerfilOng}" 
+                                 alt="${nombreUsuario}" 
+                                 class="rounded-circle mr-2" 
+                                 style="width: 24px; height: 24px; object-fit: cover; border: 1px solid #e9ecef;"
+                                 onerror="this.style.display='none';">
+                        ` : ''}
+                        <span style="font-weight: 500; color: #0C2B44;">${nombreUsuario}</span>
+                    </div>
+                </div>
                 <div class="d-flex flex-wrap gap-2">
                     ${estadoBadge}
                     ${mega.es_publico ? '<span class="badge badge-info">Público</span>' : '<span class="badge badge-secondary">Privado</span>'}
@@ -543,22 +990,23 @@ async function cargarMegaEventos() {
             
             const btnGroup = document.createElement('div');
             btnGroup.className = 'mt-auto pt-3 border-top';
+            btnGroup.style.cssText = 'border-top: 1px solid #f0f0f0 !important;';
             btnGroup.innerHTML = `
-                <div class="d-flex justify-content-between align-items-center" style="gap: 0.5rem;">
+                <div class="btn-group-minimal">
                     <a href="/ong/mega-eventos/${mega.mega_evento_id}/detalle" 
-                       class="btn btn-sm btn-primary flex-fill" title="Ver detalles">
+                       class="btn btn-sm btn-primary" title="Ver detalles" style="background: #0C2B44; border-color: #0C2B44; color: white; border-radius: 8px; padding: 0.5rem 1rem; font-weight: 500;">
                         <i class="fas fa-eye mr-1"></i> Detalles
                     </a>
                     <a href="/ong/mega-eventos/${mega.mega_evento_id}/seguimiento" 
-                       class="btn btn-sm btn-info flex-fill" title="Seguimiento">
+                       class="btn btn-sm btn-info" title="Seguimiento" style="background: #00A36C; border-color: #00A36C; color: white; border-radius: 8px; padding: 0.5rem 1rem; font-weight: 500;">
                         <i class="fas fa-chart-line mr-1"></i> Seguimiento
                     </a>
                     <a href="/ong/mega-eventos/${mega.mega_evento_id}/editar" 
-                       class="btn btn-sm btn-warning" title="Editar" style="min-width: 40px;">
+                       class="btn btn-sm btn-warning" title="Editar" style="background: #ffc107; border-color: #ffc107; color: #0C2B44; border-radius: 8px; padding: 0.5rem 0.75rem; font-weight: 500;">
                         <i class="fas fa-edit"></i>
                     </a>
                     <button onclick="eliminarMegaEvento(${mega.mega_evento_id})" 
-                            class="btn btn-sm btn-danger" title="Eliminar" style="min-width: 40px;">
+                            class="btn btn-sm btn-danger" title="Eliminar" style="background: #dc3545; border-color: #dc3545; color: white; border-radius: 8px; padding: 0.5rem 0.75rem; font-weight: 500;">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>

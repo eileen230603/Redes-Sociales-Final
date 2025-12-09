@@ -6,6 +6,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('formRegister');
   const msg = document.getElementById('msg');
 
+  // Obtener eventoId o megaEventoId de la URL si existe
+  const urlParams = new URLSearchParams(window.location.search);
+  const eventoId = urlParams.get('eventoId');
+  const megaEventoId = urlParams.get('megaEventoId');
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -46,9 +51,91 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error(data.error || 'Error al registrar usuario externo');
       }
 
+      // Si hay eventoId o megaEventoId, inscribir automáticamente después del registro
+      if ((eventoId || megaEventoId) && data.token) {
+        // Guardar token primero
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('id_usuario', data.user.id_usuario);
+        localStorage.setItem('tipo_usuario', data.user.tipo_usuario);
+        
+        if (eventoId) {
+          msg.textContent = '✅ Usuario registrado. Inscribiéndote al evento...';
+          
+          try {
+            const resInscripcion = await fetch(`${API_BASE_URL}/api/participaciones/inscribir`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${data.token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ evento_id: parseInt(eventoId) })
+            });
+
+            const dataInscripcion = await resInscripcion.json();
+            
+            if (dataInscripcion.success) {
+              msg.textContent = '✅ ¡Registro e inscripción exitosos! Redirigiendo...';
+              msg.className = 'success';
+              setTimeout(() => {
+                window.location.href = `/externo/eventos/${eventoId}`;
+              }, 2000);
+            } else {
+              msg.textContent = '✅ Usuario registrado. Error al inscribirte al evento. Redirigiendo...';
+              msg.className = 'success';
+              setTimeout(() => {
+                window.location.href = '/login';
+              }, 2000);
+            }
+          } catch (errInscripcion) {
+            console.error('Error al inscribir:', errInscripcion);
+            msg.textContent = '✅ Usuario registrado. Error al inscribirte al evento. Redirigiendo...';
+            msg.className = 'success';
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 2000);
+          }
+        } else if (megaEventoId) {
+          msg.textContent = '✅ Usuario registrado. Inscribiéndote al mega evento...';
+          
+          try {
+            const resInscripcion = await fetch(`${API_BASE_URL}/api/mega-eventos/${megaEventoId}/participar`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${data.token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+
+            const dataInscripcion = await resInscripcion.json();
+            
+            if (dataInscripcion.success) {
+              msg.textContent = '✅ ¡Registro e inscripción exitosos! Redirigiendo...';
+              msg.className = 'success';
+              setTimeout(() => {
+                window.location.href = `/externo/mega-eventos/${megaEventoId}/detalle`;
+              }, 2000);
+            } else {
+              msg.textContent = '✅ Usuario registrado. Error al inscribirte al mega evento. Redirigiendo...';
+              msg.className = 'success';
+              setTimeout(() => {
+                window.location.href = '/login';
+              }, 2000);
+            }
+          } catch (errInscripcion) {
+            console.error('Error al inscribir:', errInscripcion);
+            msg.textContent = '✅ Usuario registrado. Error al inscribirte al mega evento. Redirigiendo...';
+            msg.className = 'success';
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 2000);
+          }
+        }
+      } else {
+        // No hay eventoId, redirigir normalmente
       msg.textContent = '✅ Usuario registrado con éxito. Redirigiendo...';
       msg.className = 'success';
       setTimeout(() => (window.location.href = '/login'), 2000);
+      }
 
     } catch (err) {
       console.error(err);

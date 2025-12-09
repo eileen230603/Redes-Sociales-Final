@@ -15,6 +15,7 @@ class Notificacion extends Model
         'ong_id',
         'evento_id',
         'externo_id',
+        'empresa_id',
         'tipo',
         'titulo',
         'mensaje',

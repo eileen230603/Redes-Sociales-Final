@@ -1132,7 +1132,7 @@
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs2@0.0.2/qrcode.min.js"></script>
 <script>
     // Definir PUBLIC_BASE_URL desde variable de entorno
-    window.PUBLIC_BASE_URL = "{{ env('PUBLIC_APP_URL', 'http://192.168.0.6:8000') }}";
+    window.PUBLIC_BASE_URL = "{{ env('PUBLIC_APP_URL', 'http://10.26.0.215:8000') }}";
     console.log("🌐 PUBLIC_BASE_URL desde .env:", window.PUBLIC_BASE_URL);
 </script>
 <script src="{{ asset('assets/js/config.js') }}"></script>

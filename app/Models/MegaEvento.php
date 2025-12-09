@@ -58,20 +58,89 @@ class MegaEvento extends Model
             }
         }
 
-        // Obtener la URL base desde PUBLIC_APP_URL o APP_URL
-        $baseUrl = env('PUBLIC_APP_URL', env('APP_URL', 'http://192.168.0.6:8000'));
+        // Obtener la URL base desde PUBLIC_APP_URL, APP_URL o del request actual
+        $baseUrl = env('PUBLIC_APP_URL', env('APP_URL'));
+        
+        // Si no hay baseUrl configurada, intentar obtenerla del request actual
+        if (empty($baseUrl) && app()->runningInConsole() === false) {
+            try {
+                $request = request();
+                if ($request) {
+                    // Priorizar el header Origin si existe
+                    $origin = $request->header('Origin');
+                    if ($origin) {
+                        $baseUrl = $origin;
+                    } else {
+                        $baseUrl = $request->getSchemeAndHttpHost();
+                    }
+                }
+            } catch (\Exception $e) {
+                // Si falla, usar el valor por defecto
+            }
+        }
+        
+        // Si aún no hay baseUrl, usar un valor por defecto
+        if (empty($baseUrl)) {
+            $baseUrl = 'http://10.26.0.215:8000';
+        }
         
         // Generar URLs completas para cada imagen
-        return array_map(function($imagen) use ($baseUrl) {
+        $resultado = array_map(function($imagen) use ($baseUrl) {
             if (empty($imagen) || !is_string($imagen)) {
                 return null;
             }
 
-            // Si ya es una URL completa, verificar si tiene la IP antigua y reemplazarla
-            if (strpos($imagen, 'http://') === 0 || strpos($imagen, 'https://') === 0) {
-                // Reemplazar IP antigua con la nueva si está presente
+            // Filtrar rutas inválidas (templates, cache, yootheme, resizer, wp-content) - solo para rutas locales
+            $esUrlExterna = (strpos($imagen, 'http://') === 0 || strpos($imagen, 'https://') === 0);
+            if (!$esUrlExterna) {
+                if (strpos($imagen, '/templates/') !== false || 
+                    strpos($imagen, '/cache/') !== false || 
+                    strpos($imagen, '/yootheme/') !== false ||
+                    strpos($imagen, '/resizer/') !== false ||
+                    strpos($imagen, '/wp-content/') !== false ||
+                    strpos($imagen, 'templates/') !== false || 
+                    strpos($imagen, 'cache/') !== false || 
+                    strpos($imagen, 'yootheme/') !== false ||
+                    strpos($imagen, 'resizer/') !== false ||
+                    strpos($imagen, 'wp-content/') !== false) {
+                    return null;
+                }
+            }
+
+            // Si ya es una URL completa, verificar si necesita actualización del host
+            if ($esUrlExterna) {
+                // Reemplazar IPs antiguas explícitamente
+                $imagen = str_replace('http://127.0.0.1:8000', $baseUrl, $imagen);
+                $imagen = str_replace('https://127.0.0.1:8000', $baseUrl, $imagen);
+                $imagen = str_replace('http://192.168.0.6:8000', $baseUrl, $imagen);
+                $imagen = str_replace('https://192.168.0.6:8000', $baseUrl, $imagen);
                 $imagen = str_replace('http://10.26.15.110:8000', $baseUrl, $imagen);
                 $imagen = str_replace('https://10.26.15.110:8000', $baseUrl, $imagen);
+                
+                $parsedUrl = parse_url($imagen);
+                $currentHost = parse_url($baseUrl, PHP_URL_HOST);
+                
+                // Si el host de la imagen es diferente al origen actual, actualizarlo
+                if (isset($parsedUrl['host']) && $parsedUrl['host'] !== $currentHost) {
+                    // Si es una URL externa de internet, mantenerla (no es del mismo dominio)
+                    if ($parsedUrl['host'] !== 'localhost' && 
+                        $parsedUrl['host'] !== '127.0.0.1' && 
+                        !str_starts_with($parsedUrl['host'], '192.168.') &&
+                        strpos($parsedUrl['host'], '192.168.') !== 0 &&
+                        strpos($parsedUrl['host'], '10.26.') !== 0) {
+                        // Es una URL externa de internet, retornarla tal cual
+                        return $imagen;
+                    }
+                    
+                    // Es una IP local antigua, actualizarla
+                    $parsedUrl['scheme'] = parse_url($baseUrl, PHP_URL_SCHEME) ?? 'http';
+                    $parsedUrl['host'] = $currentHost;
+                    $parsedUrl['port'] = parse_url($baseUrl, PHP_URL_PORT);
+                    
+                    $imagen = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] 
+                        . (isset($parsedUrl['port']) ? ':' . $parsedUrl['port'] : '') 
+                        . ($parsedUrl['path'] ?? '');
+                }
                 return $imagen;
             }
 
@@ -82,13 +151,18 @@ class MegaEvento extends Model
 
             // Si empieza con storage/, agregar /storage/
             if (strpos($imagen, 'storage/') === 0) {
-                return rtrim($baseUrl, '/') . '/storage/' . $imagen;
+                return rtrim($baseUrl, '/') . '/' . $imagen;
             }
 
             // Por defecto, asumir que es relativa a storage
             return rtrim($baseUrl, '/') . '/storage/' . ltrim($imagen, '/');
         }, array_filter($value, function($img) {
             return !empty($img) && is_string($img);
+        }));
+        
+        // Filtrar valores null después del mapeo
+        return array_values(array_filter($resultado, function($img) {
+            return $img !== null && !empty($img);
         }));
     }
 

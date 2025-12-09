@@ -1234,7 +1234,7 @@ async function configurarBotonesBanner(eventoId, evento) {
         id: eventoId,
         titulo: evento.titulo || 'Evento',
         descripcion: evento.descripcion || '',
-        url: `http://192.168.0.6:8000/evento/${eventoId}/qr`
+        url: `http://10.26.0.215:8000/evento/${eventoId}/qr`
     };
 }
 
@@ -1290,7 +1290,7 @@ async function copiarEnlace() {
     // Usar la URL pública con IP para que cualquier usuario en la misma red pueda acceder
     const url = typeof getPublicUrl !== 'undefined' 
         ? getPublicUrl(`/evento/${evento.id}/qr`)
-        : `http://192.168.0.6:8000/evento/${evento.id}/qr`;
+        : `http://10.26.0.215:8000/evento/${evento.id}/qr`;
     
     // Registrar compartido
     await registrarCompartido(evento.id, 'link');
@@ -1400,7 +1400,7 @@ async function mostrarQR() {
     // URL pública con IP para acceso mediante QR (accesible desde otros dispositivos en la misma red)
     const qrUrl = typeof getPublicUrl !== 'undefined' 
         ? getPublicUrl(`/evento/${evento.id}/qr`)
-        : `http://192.168.0.6:8000/evento/${evento.id}/qr`;
+        : `http://10.26.0.215:8000/evento/${evento.id}/qr`;
     
     // Limpiar contenido anterior
     qrcodeDiv.innerHTML = '';

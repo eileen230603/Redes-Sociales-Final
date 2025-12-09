@@ -148,14 +148,6 @@ async function cargarMegaEventos() {
     const token = localStorage.getItem("token");
     const cont = document.getElementById("listaMegaEventos");
 
-    if (!token) {
-        cont.innerHTML = `<div class="alert alert-warning">
-            <p>Debes iniciar sesión para ver los mega eventos.</p>
-            <a href="/login" class="btn btn-primary">Iniciar sesión</a>
-        </div>`;
-        return;
-    }
-
     cont.innerHTML = '<div class="col-12 text-center py-3"><div class="spinner-border" role="status" style="width: 3rem; height: 3rem; color: #00A36C;"><span class="sr-only">Cargando...</span></div><p class="mt-2 text-muted">Cargando mega eventos...</p></div>';
 
     try {
@@ -169,13 +161,18 @@ async function cargarMegaEventos() {
 
         const url = `${API_BASE_URL}/api/mega-eventos/publicos${params.toString() ? '?' + params.toString() : ''}`;
 
+        // Headers opcionales - incluir token solo si existe
+        const headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        };
+        if (token) {
+            headers["Authorization"] = `Bearer ${token}`;
+        }
+
         const res = await fetch(url, {
             method: 'GET',
-            headers: { 
-                "Authorization": `Bearer ${token}`,
-                "Accept": "application/json",
-                "Content-Type": "application/json"
-            }
+            headers: headers
         });
 
         if (!res.ok) {
@@ -205,7 +202,10 @@ async function cargarMegaEventos() {
 
         cont.innerHTML = "";
 
-        // Cargar participaciones en mega eventos
+        // Cargar participaciones en mega eventos (solo si hay token)
+        let participacionesMap = {};
+        if (token) {
+            try {
         const participacionesPromises = data.mega_eventos.map(mega => 
             fetch(`${API_BASE_URL}/api/mega-eventos/${mega.mega_evento_id}/verificar-participacion`, {
                 headers: { 
@@ -216,15 +216,19 @@ async function cargarMegaEventos() {
         );
 
         const participacionesData = await Promise.all(participacionesPromises);
-        const participacionesMap = {};
         data.mega_eventos.forEach((mega, index) => {
             participacionesMap[mega.mega_evento_id] = participacionesData[index]?.participando || false;
         });
 
-        // Filtrar mega eventos en los que ya está participando
+                // Filtrar mega eventos en los que ya está participando (solo para usuarios autenticados)
         data.mega_eventos = data.mega_eventos.filter(mega => {
             return !participacionesMap[mega.mega_evento_id];
         });
+            } catch (error) {
+                console.warn("No se pudieron cargar las participaciones:", error);
+                // Continuar sin filtrar si hay error
+            }
+        }
 
         function buildImageUrl(imgUrl) {
             if (!imgUrl || imgUrl.trim() === '') return null;

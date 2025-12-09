@@ -51,11 +51,17 @@
                     <i class="far fa-share-square mr-2"></i> Compartir
                     <span class="badge badge-light ml-2" id="contadorCompartidos">0</span>
                 </button>
-                <button class="btn btn-primary" id="btnParticipar" style="border-radius: 12px; padding: 0.6rem 1.5rem; font-weight: 500; transition: all 0.3s ease; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border: none; box-shadow: 0 2px 8px rgba(12,43,68,0.2);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(12,43,68,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(12,43,68,0.2)'">
+                <button class="btn btn-primary d-none" id="btnParticipar" style="display: none !important; visibility: hidden !important; border-radius: 12px; padding: 0.6rem 1.5rem; font-weight: 500; transition: all 0.3s ease; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border: none; box-shadow: 0 2px 8px rgba(12,43,68,0.2);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(12,43,68,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(12,43,68,0.2)'">
                     <i class="fas fa-user-plus mr-2"></i> <span id="btnParticiparTexto">Participar en el mega evento</span>
                 </button>
-                <button class="btn btn-success d-none" id="btnYaParticipando" disabled style="border-radius: 12px; padding: 0.6rem 1.5rem; font-weight: 500; background: linear-gradient(135deg, #00A36C 0%, #008a5a 100%); border: none;">
+                <button class="btn btn-danger d-none" id="btnCancelarMega" style="display: none !important; visibility: hidden !important; border-radius: 12px; padding: 0.6rem 1.5rem; font-weight: 500; transition: all 0.3s ease; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); border: none; box-shadow: 0 2px 8px rgba(220,53,69,0.2);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(220,53,69,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(220,53,69,0.2)'">
+                    <i class="fas fa-times-circle mr-2"></i> Cancelar Inscripción
+                </button>
+                <button class="btn btn-success d-none" id="btnYaParticipando" disabled style="display: none !important; visibility: hidden !important; border-radius: 12px; padding: 0.6rem 1.5rem; font-weight: 500; background: linear-gradient(135deg, #00A36C 0%, #008a5a 100%); border: none;">
                     <i class="fas fa-check-circle mr-2"></i> Ya estás participando
+                </button>
+                <button class="btn btn-info d-none d-flex align-items-center" id="btnRegistrarAsistenciaMega" onclick="abrirModalRegistrarAsistenciaMega()" style="border-radius: 12px; padding: 0.6rem 1.5rem; font-weight: 600; box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3); background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); border: none;">
+                    <i class="fas fa-clipboard-check mr-2"></i> Registrar Asistencia
                 </button>
             </div>
 
@@ -571,10 +577,102 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (btnCompartir) {
         btnCompartir.addEventListener('click', mostrarModalCompartir);
     }
+    
+    // Configurar botón de cancelar inscripción para mega eventos
+    const btnCancelarMega = document.getElementById('btnCancelarMega');
+    if (btnCancelarMega) {
+        btnCancelarMega.addEventListener('click', async function() {
+            if (typeof Swal !== 'undefined') {
+                const result = await Swal.fire({
+                    title: '¿Cancelar inscripción?',
+                    text: 'Esta acción cancelará tu participación en el mega evento',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Sí, cancelar',
+                    cancelButtonText: 'No'
+                });
+                if (!result.isConfirmed) return;
+            }
+            
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/mega-eventos/${megaEventoId}/cancelar-participacion`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const data = await res.json();
+                if (data.success) {
+                    // Ocultar botón Cancelar de forma inmediata
+                    btnCancelarMega.classList.add('d-none');
+                    btnCancelarMega.style.display = 'none';
+                    btnCancelarMega.style.visibility = 'hidden';
+                    
+                    // Mostrar botón Participar de forma inmediata
+                    const btnParticipar = document.getElementById('btnParticipar');
+                    if (btnParticipar) {
+                        btnParticipar.classList.remove('d-none');
+                        btnParticipar.style.display = '';
+                        btnParticipar.style.visibility = 'visible';
+                        btnParticipar.style.removeProperty('display');
+                        btnParticipar.style.removeProperty('visibility');
+                    }
+                    
+                    estaParticipando = false;
+                    
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Inscripción cancelada',
+                            text: 'Tu participación ha sido cancelada',
+                            timer: 3000,
+                            showConfirmButton: false
+                        });
+                    }
+                    // Verificar nuevamente para actualizar estado
+                    verificarParticipacion();
+                } else {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.error || 'Error al cancelar inscripción'
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error cancelando participación:', error);
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de conexión',
+                        text: 'No se pudo cancelar la participación'
+                    });
+                }
+            }
+        });
+    }
 });
 
 async function verificarParticipacion() {
     const token = localStorage.getItem('token');
+    
+    // Obtener referencias a los botones
+    const btnParticipar = document.getElementById('btnParticipar');
+    const btnCancelar = document.getElementById('btnCancelarMega');
+    const btnYaParticipando = document.getElementById('btnYaParticipando');
+    
+    if (!btnParticipar || !btnCancelar) {
+        console.warn('⚠️ Botones no encontrados en el DOM, reintentando en 500ms...');
+        setTimeout(() => verificarParticipacion(), 500);
+        return;
+    }
+    
     try {
         const res = await fetch(`${API_BASE_URL}/api/mega-eventos/${megaEventoId}/verificar-participacion`, {
             headers: {
@@ -586,13 +684,309 @@ async function verificarParticipacion() {
         estaParticipando = data.participando || false;
         
         if (estaParticipando) {
-            document.getElementById('btnParticipar').classList.add('d-none');
-            document.getElementById('btnYaParticipando').classList.remove('d-none');
+            // Ocultar botón Participar de forma forzada
+            btnParticipar.classList.add('d-none');
+            btnParticipar.style.display = 'none';
+            btnParticipar.style.visibility = 'hidden';
+            
+            // Ocultar botón Ya Participando (si existe)
+            if (btnYaParticipando) {
+                btnYaParticipando.classList.add('d-none');
+                btnYaParticipando.style.display = 'none';
+                btnYaParticipando.style.visibility = 'hidden';
+            }
+            
+            // Mostrar botón Cancelar de forma inmediata
+            btnCancelar.classList.remove('d-none');
+            btnCancelar.style.display = '';
+            btnCancelar.style.visibility = 'visible';
+            btnCancelar.style.removeProperty('display');
+            btnCancelar.style.removeProperty('visibility');
+            
+            console.log('✅ Usuario inscrito en mega evento - Botón Participar ocultado, botón Cancelar mostrado');
+            
+            // Verificar si el mega evento está en curso para mostrar botón de registrar asistencia
+            verificarMostrarBotonAsistenciaMega();
+        } else {
+            // Usuario NO está inscrito
+            // Ocultar botón Cancelar primero
+            btnCancelar.classList.add('d-none');
+            btnCancelar.style.display = 'none';
+            btnCancelar.style.visibility = 'hidden';
+            
+            // Ocultar botón Ya Participando (si existe)
+            if (btnYaParticipando) {
+                btnYaParticipando.classList.add('d-none');
+                btnYaParticipando.style.display = 'none';
+                btnYaParticipando.style.visibility = 'hidden';
+            }
+            
+            // Mostrar botón Participar de forma inmediata
+            btnParticipar.classList.remove('d-none');
+            btnParticipar.style.display = '';
+            btnParticipar.style.visibility = 'visible';
+            btnParticipar.style.removeProperty('display');
+            btnParticipar.style.removeProperty('visibility');
+            
+            console.log('ℹ️ Usuario no inscrito en mega evento - Botón Participar visible, botón Cancelar oculto');
         }
     } catch (error) {
         console.error('Error verificando participación:', error);
+        // En caso de error, mostrar botón de participar por defecto
+        if (btnParticipar) {
+            btnParticipar.classList.remove('d-none');
+            btnParticipar.style.display = '';
+            btnParticipar.style.visibility = 'visible';
+        }
+        if (btnCancelar) {
+            btnCancelar.classList.add('d-none');
+            btnCancelar.style.display = 'none';
+            btnCancelar.style.visibility = 'hidden';
+        }
     }
 }
+
+// Verificar si se debe mostrar el botón de registrar asistencia para mega eventos
+async function verificarMostrarBotonAsistenciaMega() {
+    const token = localStorage.getItem('token');
+    const btnRegistrarAsistencia = document.getElementById('btnRegistrarAsistenciaMega');
+    
+    if (!btnRegistrarAsistencia || !token) return;
+    
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/mega-eventos/${megaEventoId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            }
+        });
+        
+        const data = await res.json();
+        if (!data.success || !data.mega_evento) return;
+        
+        const mega = data.mega_evento;
+        const ahora = new Date();
+        
+        // Parsear fechas
+        let fechaInicio = null;
+        let fechaFin = null;
+        
+        if (mega.fecha_inicio) {
+            const match = mega.fecha_inicio.toString().match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})/);
+            if (match) {
+                const [, year, month, day, hour, minute, second] = match;
+                fechaInicio = new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10), parseInt(hour, 10), parseInt(minute, 10), parseInt(second || 0, 10));
+            } else {
+                fechaInicio = new Date(mega.fecha_inicio);
+            }
+        }
+        
+        if (mega.fecha_fin) {
+            const match = mega.fecha_fin.toString().match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})/);
+            if (match) {
+                const [, year, month, day, hour, minute, second] = match;
+                fechaFin = new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10), parseInt(hour, 10), parseInt(minute, 10), parseInt(second || 0, 10));
+            } else {
+                fechaFin = new Date(mega.fecha_fin);
+            }
+        }
+        
+        const eventoEnCurso = fechaInicio && fechaFin && ahora >= fechaInicio && ahora <= fechaFin;
+        
+        if (eventoEnCurso) {
+            btnRegistrarAsistencia.classList.remove('d-none');
+        } else {
+            btnRegistrarAsistencia.classList.add('d-none');
+        }
+    } catch (error) {
+        console.error('Error verificando estado del mega evento:', error);
+    }
+}
+
+// Abrir modal para registrar asistencia en mega evento
+function abrirModalRegistrarAsistenciaMega() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Sesión Expirada',
+            text: 'Debes iniciar sesión para registrar asistencia',
+            confirmButtonText: 'Ir al Login'
+        }).then(() => {
+            window.location.href = '/login';
+        });
+        return;
+    }
+    
+    Swal.fire({
+        title: 'Registrar Asistencia',
+        html: `
+            <div class="text-left">
+                <p>¿Deseas registrar tu asistencia a este mega evento?</p>
+                <p class="text-muted small">Tu asistencia será registrada automáticamente usando tu código QR único.</p>
+            </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, registrar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#17a2b8'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            await registrarAsistenciaMegaEventoUsuario();
+        }
+    });
+}
+
+// Registrar asistencia del usuario en mega evento
+async function registrarAsistenciaMegaEventoUsuario() {
+    const token = localStorage.getItem('token');
+    const megaEventoId = document.getElementById('megaEventoId').value;
+    
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Registrando asistencia...',
+            text: 'Por favor espera',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    }
+    
+    try {
+        // Verificar que el usuario esté participando en el mega evento
+        const resParticipacion = await fetch(`${API_BASE_URL}/api/mega-eventos/${megaEventoId}/verificar-participacion`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            }
+        });
+        
+        const dataParticipacion = await resParticipacion.json();
+        
+        if (!dataParticipacion.success || !dataParticipacion.participando) {
+            throw new Error('No se encontró tu participación en este mega evento');
+        }
+        
+        // Registrar asistencia usando la ruta de usuario externo
+        const res = await fetch(`${API_BASE_URL}/api/mega-eventos/${megaEventoId}/marcar-asistencia`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Asistencia registrada!',
+                    text: 'Tu asistencia ha sido registrada correctamente.',
+                    confirmButtonText: 'Aceptar'
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                alert('¡Asistencia registrada correctamente!');
+                location.reload();
+            }
+        } else {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.error || 'Error al registrar asistencia'
+                });
+            } else {
+                alert(data.error || 'Error al registrar asistencia');
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Error al registrar asistencia'
+            });
+        } else {
+            alert(error.message || 'Error al registrar asistencia');
+        }
+    }
+}
+
+// ========== SISTEMA DE ALERTAS DE 5 MINUTOS ANTES DEL INICIO ==========
+let alertaMegaEventoMostrada = false;
+
+// Verificar si el mega evento actual inicia en 5 minutos
+function verificarAlertaMegaEventoActual() {
+    const token = localStorage.getItem('token');
+    if (!token || alertaMegaEventoMostrada) return;
+
+    const megaEventoIdInput = document.getElementById('megaEventoId');
+    const megaEventoId = megaEventoIdInput ? megaEventoIdInput.value : null;
+    if (!megaEventoId) return;
+
+    // Obtener información del mega evento actual
+    fetch(`${API_BASE_URL}/api/mega-eventos/${megaEventoId}`, {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success && data.mega_evento && data.mega_evento.fecha_inicio) {
+            const fechaInicio = new Date(data.mega_evento.fecha_inicio);
+            const ahora = new Date();
+            const diferenciaMs = fechaInicio - ahora;
+            const minutosRestantes = Math.floor(diferenciaMs / (1000 * 60));
+
+            // Si faltan entre 0 y 5 minutos para el inicio
+            if (minutosRestantes >= 0 && minutosRestantes <= 5 && !alertaMegaEventoMostrada) {
+                mostrarAlertaMegaEventoActual(data.mega_evento);
+                alertaMegaEventoMostrada = true;
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error verificando alerta del mega evento:', error);
+    });
+}
+
+// Mostrar alerta para el mega evento actual
+function mostrarAlertaMegaEventoActual(megaEvento) {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'info',
+            title: '¡Mega Evento por comenzar!',
+            html: `
+                <div class="text-left">
+                    <p class="mb-3"><strong>${megaEvento.titulo || 'Mega Evento'}</strong></p>
+                    <p class="mb-2">Faltan 5 minutos para el inicio del mega evento.</p>
+                    <p class="text-sm text-gray-600">Recuerda que podrás registrar tu asistencia cuando se habilite la opción.</p>
+                </div>
+            `,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#00A36C',
+            timer: 10000,
+            timerProgressBar: true
+        });
+    }
+}
+
+// Verificar alerta cuando se carga la página (después de que cargue el mega evento)
+setTimeout(() => {
+    verificarAlertaMegaEventoActual();
+}, 3000); // Esperar 3 segundos para que cargue el mega evento
+
+// Verificar cada minuto
+setInterval(verificarAlertaMegaEventoActual, 60000);
 
 async function loadMegaEvento() {
     const token = localStorage.getItem('token');
@@ -1196,8 +1590,35 @@ document.getElementById('btnParticipar').addEventListener('click', async functio
                 showConfirmButton: false
             });
             estaParticipando = true;
-            document.getElementById('btnParticipar').classList.add('d-none');
-            document.getElementById('btnYaParticipando').classList.remove('d-none');
+            const btnParticipar = document.getElementById('btnParticipar');
+            const btnCancelar = document.getElementById('btnCancelarMega');
+            const btnYaParticipando = document.getElementById('btnYaParticipando');
+            
+            // Ocultar botón Participar de forma inmediata
+            if (btnParticipar) {
+                btnParticipar.classList.add('d-none');
+                btnParticipar.style.display = 'none';
+                btnParticipar.style.visibility = 'hidden';
+            }
+            
+            // Ocultar botón Ya Participando (si existe)
+            if (btnYaParticipando) {
+                btnYaParticipando.classList.add('d-none');
+                btnYaParticipando.style.display = 'none';
+                btnYaParticipando.style.visibility = 'hidden';
+            }
+            
+            // Mostrar botón Cancelar de forma inmediata
+            if (btnCancelar) {
+                btnCancelar.classList.remove('d-none');
+                btnCancelar.style.display = '';
+                btnCancelar.style.visibility = 'visible';
+                btnCancelar.style.removeProperty('display');
+                btnCancelar.style.removeProperty('visibility');
+            }
+            
+            // Verificar nuevamente para actualizar estado
+            verificarParticipacion();
         } else {
             Swal.fire({
                 icon: 'error',
@@ -1465,7 +1886,7 @@ function setMegaEventoParaCompartir(megaEvento) {
         ...megaEvento,
         url: typeof getPublicUrl !== 'undefined' 
             ? getPublicUrl(`/mega-evento/${megaEvento.mega_evento_id}/qr`)
-            : `http://192.168.0.6:8000/mega-evento/${megaEvento.mega_evento_id}/qr`
+            : `http://10.26.0.215:8000/mega-evento/${megaEvento.mega_evento_id}/qr`
     };
     console.log('Mega evento para compartir configurado:', megaEventoParaCompartir);
 }
@@ -1561,7 +1982,7 @@ async function copiarEnlaceMegaEvento() {
     // URL pública para compartir (debe ser accesible desde cualquier dispositivo)
     const url = typeof getPublicUrl !== 'undefined' 
         ? getPublicUrl(`/mega-evento/${megaEventoId}/qr`)
-        : `http://192.168.0.6:8000/mega-evento/${megaEventoId}/qr`;
+        : `http://10.26.0.215:8000/mega-evento/${megaEventoId}/qr`;
 
     // Registrar compartido en backend
     await registrarCompartidoMegaEvento(megaEventoId, 'link');
@@ -1622,7 +2043,7 @@ async function mostrarQRMegaEvento() {
     // URL pública para compartir (debe ser accesible desde cualquier dispositivo)
     const qrUrl = typeof getPublicUrl !== 'undefined' 
         ? getPublicUrl(`/mega-evento/${megaEventoId}/qr`)
-        : `http://192.168.0.6:8000/mega-evento/${megaEventoId}/qr`;
+        : `http://10.26.0.215:8000/mega-evento/${megaEventoId}/qr`;
 
     // Registrar compartido en backend
     await registrarCompartidoMegaEvento(megaEventoId, 'qr');

@@ -83,6 +83,8 @@
     </script>
 @endpush
 
+{{-- El layout usa completamente la configuración de config/adminlte.php --}}
+
 {{-- HEADER --}}
 @section('content_header')
 <div class="d-flex align-items-center justify-content-between" style="margin-bottom: 0.5rem;">
@@ -158,134 +160,7 @@
 @endsection
 
 {{-- SIDEBAR --}}
-@push('adminlte_sidebar')
-<nav class="mt-2">
-    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
-
-        {{-- 🏠 Inicio --}}
-        <li class="nav-item">
-            <a href="/home-ong" class="nav-link {{ request()->is('home-ong') ? 'active' : '' }}">
-                <i class="nav-icon far fa-home"></i>
-                <p>Inicio</p>
-            </a>
-        </li>
-
-        {{-- 📅 Eventos --}}
-        <li class="nav-item has-treeview {{ request()->is('ong/eventos*') ? 'menu-open' : '' }}">
-            <a href="#" class="nav-link {{ request()->is('ong/eventos*') ? 'active' : '' }}">
-                <i class="nav-icon far fa-calendar"></i>
-                <p>
-                    Eventos
-                    <i class="right far fa-angle-left"></i>
-                </p>
-            </a>
-            <ul class="nav nav-treeview">
-                {{-- Lista de eventos --}}
-                <li class="nav-item">
-                    <a href="{{ route('ong.eventos.index') }}" 
-                       class="nav-link {{ request()->is('ong/eventos') ? 'active' : '' }}">
-                        <i class="far fa-list nav-icon text-primary"></i>
-                        <p>Lista de eventos</p>
-                    </a>
-                </li>
-
-                {{-- Dashboard de eventos --}}
-                <li class="nav-item">
-                    <a href="{{ route('ong.eventos-dashboard.index') }}" 
-                       class="nav-link {{ request()->is('ong/eventos-dashboard*') ? 'active' : '' }}">
-                        <i class="far fa-chart-bar nav-icon text-info"></i>
-                        <p>Dashboard de eventos</p>
-                    </a>
-                </li>
-
-                {{-- Eventos en curso --}}
-                <li class="nav-item">
-                    <a href="{{ route('ong.eventos.en-curso') }}" 
-                       class="nav-link {{ request()->is('ong/eventos/en-curso*') ? 'active' : '' }}">
-                        <i class="far fa-play-circle nav-icon text-success"></i>
-                        <p>Eventos en curso</p>
-                    </a>
-                </li>
-
-                {{-- Eventos finalizados --}}
-                <li class="nav-item">
-                    <a href="{{ route('ong.eventos.historial') }}" 
-                       class="nav-link {{ request()->is('ong/eventos/historial*') ? 'active' : '' }}">
-                        <i class="far fa-history nav-icon text-warning"></i>
-                        <p>Eventos finalizados</p>
-                    </a>
-                </li>
-
-                {{-- Crear evento --}}
-                <li class="nav-item">
-                    <a href="{{ route('ong.eventos.create') }}" 
-                       class="nav-link {{ request()->is('ong/eventos/crear') ? 'active' : '' }}">
-                        <i class="far fa-calendar-plus nav-icon text-success"></i>
-                        <p>Crear evento</p>
-                    </a>
-                </li>
-            </ul>
-        </li>
-
-        {{-- 👥 Voluntarios --}}
-        <li class="nav-item">
-            <a href="{{ route('ong.voluntarios.index') }}" class="nav-link {{ request()->is('ong/voluntarios*') ? 'active' : '' }}">
-                <i class="nav-icon far fa-users"></i>
-                <p>Voluntarios</p>
-            </a>
-        </li>
-
-        {{-- 📊 Dashboard --}}
-        <li class="nav-item">
-            <a href="{{ route('ong.dashboard.index') }}" class="nav-link {{ request()->is('ong/dashboard*') ? 'active' : '' }}">
-                <i class="nav-icon far fa-tachometer-alt"></i>
-                <p>Dashboard</p>
-            </a>
-        </li>
-
-        {{-- 📊 Reportes --}}
-        <li class="nav-item">
-            <a href="{{ route('ong.reportes.index') }}" class="nav-link {{ request()->is('ong/reportes*') ? 'active' : '' }}">
-                <i class="nav-icon far fa-chart-bar"></i>
-                <p>Reportes</p>
-            </a>
-        </li>
-
-        {{-- 🔔 Notificaciones --}}
-        <li class="nav-item">
-            <a href="{{ route('ong.notificaciones.index') }}" class="nav-link {{ request()->is('ong/notificaciones*') ? 'active' : '' }}">
-                <i class="nav-icon far fa-bell"></i>
-                <p>Notificaciones</p>
-            </a>
-        </li>
-
-        {{-- 👤 Perfil --}}
-        <li class="nav-item">
-            <a href="{{ route('perfil.ong') }}" class="nav-link {{ request()->is('perfil/ong') ? 'active' : '' }}">
-                <i class="nav-icon far fa-user-circle"></i>
-                <p>Mi Perfil</p>
-            </a>
-        </li>
-
-        {{-- 🌐 OTRAS OPCIONES --}}
-        <li class="nav-header">OTRAS OPCIONES</li>
-
-        <li class="nav-item">
-            <a href="/home-publica" class="nav-link">
-                <i class="nav-icon far fa-globe"></i>
-                <p>Ir a página pública</p>
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a href="#" onclick="cerrarSesion(event)" class="nav-link text-danger">
-                <i class="nav-icon far fa-sign-out-alt"></i>
-                <p>Cerrar sesión</p>
-            </a>
-        </li>
-    </ul>
-</nav>
-@endpush
+{{-- El menú se genera automáticamente desde config/adminlte.php --}}
 
 {{-- CSS --}}
 @section('css')
@@ -1428,6 +1303,80 @@ document.addEventListener('DOMContentLoaded', () => {
     menuItems.forEach((item, index) => {
         item.style.animationDelay = `${index * 0.05}s`;
     });
+    
+    // Función para manejar el toggle de menús (Eventos y Mega Eventos)
+    function toggleMenu(menuItem) {
+        const treeview = menuItem.querySelector('.nav-treeview');
+        if (treeview) {
+            if (menuItem.classList.contains('menu-open')) {
+                // Colapsar
+                menuItem.classList.remove('menu-open');
+                treeview.style.display = 'none';
+            } else {
+                // Expandir
+                menuItem.classList.add('menu-open');
+                treeview.style.display = 'block';
+            }
+        }
+    }
+    
+    // Inicializar los menús con toggle después de que AdminLTE cargue
+    function inicializarMenusToggle() {
+        // Buscar todos los menús con submenús (Eventos y Mega Eventos)
+        const menuItems = document.querySelectorAll('.nav-sidebar .nav-item.has-treeview');
+        
+        menuItems.forEach(item => {
+            const link = item.querySelector('.nav-link');
+            if (link && link.getAttribute('href') === '#') {
+                // Remover listeners anteriores si existen
+                const newLink = link.cloneNode(true);
+                link.parentNode.replaceChild(newLink, link);
+                
+                // Agregar evento de clic para toggle
+                newLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleMenu(item);
+                });
+            }
+        });
+    }
+    
+    // Inicializar cuando el DOM esté listo
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(inicializarMenusToggle, 300);
+        });
+    } else {
+        setTimeout(inicializarMenusToggle, 300);
+    }
+    
+    // También inicializar después de que AdminLTE haya renderizado completamente
+    window.addEventListener('load', function() {
+        setTimeout(inicializarMenusToggle, 500);
+    });
+    
+    // Expandir automáticamente el menú "Eventos" cuando se está en home-ong
+    if (window.location.pathname === '/home-ong' || window.location.pathname === '/home-ong/') {
+        setTimeout(() => {
+            const eventosMenuItems = document.querySelectorAll('.nav-sidebar .nav-item.has-treeview');
+            eventosMenuItems.forEach(item => {
+                const link = item.querySelector('.nav-link');
+                if (link) {
+                    const text = link.textContent.trim();
+                    // Buscar el menú que contiene "Eventos" y tiene submenú (pero no "Mega Eventos")
+                    if (text.includes('Eventos') && !text.includes('Mega')) {
+                        // Expandir automáticamente
+                        item.classList.add('menu-open');
+                        const treeview = item.querySelector('.nav-treeview');
+                        if (treeview) {
+                            treeview.style.display = 'block';
+                        }
+                    }
+                }
+            });
+        }, 800);
+    }
 });
 
 // Asegurar visibilidad del icono cuando se navega entre páginas

@@ -57,6 +57,20 @@ class StorageController extends Controller
             
             Log::info("StorageController: Intentando servir archivo (path procesado): $path");
             
+            // Filtrar rutas que son claramente URLs externas mal formateadas
+            $rutasExternasInvalidas = ['resizer/', '/resizer/', 'wp-content/', '/wp-content/', 
+                                       'templates/', '/templates/', 'yootheme/', '/yootheme/'];
+            foreach ($rutasExternasInvalidas as $rutaInvalida) {
+                if (stripos($path, $rutaInvalida) !== false) {
+                    Log::warning("StorageController: Ruta externa inválida detectada, rechazando: $path");
+                    return response('Invalid path: external URL path detected', 404)
+                        ->header('Access-Control-Allow-Origin', '*')
+                        ->header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+                        ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+                        ->header('Content-Type', 'text/plain');
+                }
+            }
+            
             // Intentar encontrar el archivo en diferentes ubicaciones
             $filePath = null;
             
@@ -205,60 +219,86 @@ class StorageController extends Controller
             }
             
             if (!$filePath || !file_exists($filePath) || !is_file($filePath)) {
-                Log::error("StorageController: Archivo no encontrado después de todas las búsquedas");
-                Log::error("StorageController: Path recibido: $path");
-                Log::error("StorageController: Path normalizado: $normalizedPath");
-                Log::error("StorageController: Total paths de búsqueda probados: " . count($searchPaths));
-                Log::error("StorageController: Total ubicaciones probadas: " . count($locations));
-                
-                // Listar algunos archivos existentes para debug
-                $sampleDir = storage_path('app/public/eventos');
-                if (is_dir($sampleDir)) {
-                    try {
-                        $sampleFiles = glob($sampleDir . '/*/*.{jpeg,jpg,png}', GLOB_BRACE);
-                        if ($sampleFiles && count($sampleFiles) > 0) {
-                            $sampleNames = array_slice(array_map('basename', $sampleFiles), 0, 3);
-                            Log::info("StorageController: Archivos de ejemplo encontrados en eventos: " . implode(', ', $sampleNames));
-                        } else {
-                            Log::info("StorageController: No se encontraron archivos de ejemplo en eventos/");
+                // Intentar buscar el archivo por nombre en todas las carpetas de mega_eventos
+                if (strpos($normalizedPath, 'mega_eventos/') !== false || strpos($normalizedPath, 'mega_eventos') !== false) {
+                    $megaEventosDir = storage_path('app/public/mega_eventos');
+                    if (is_dir($megaEventosDir)) {
+                        $fileName = basename($normalizedPath);
+                        $iterator = new \RecursiveIteratorIterator(
+                            new \RecursiveDirectoryIterator($megaEventosDir, \RecursiveDirectoryIterator::SKIP_DOTS),
+                            \RecursiveIteratorIterator::SELF_FIRST
+                        );
+                        
+                        foreach ($iterator as $file) {
+                            if ($file->isFile() && $file->getFilename() === $fileName) {
+                                $filePath = $file->getRealPath();
+                                Log::info("StorageController: Archivo encontrado por búsqueda recursiva: $filePath");
+                                break;
+                            }
                         }
-                    } catch (\Exception $e) {
-                        Log::warning("StorageController: Error listando archivos de ejemplo: " . $e->getMessage());
                     }
                 }
                 
-                return response('File not found: ' . $normalizedPath, 404)
-                    ->header('Access-Control-Allow-Origin', '*')
-                    ->header('Access-Control-Allow-Methods', 'GET, OPTIONS')
-                    ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-                    ->header('Content-Type', 'text/plain');
+                if (!$filePath || !file_exists($filePath) || !is_file($filePath)) {
+                    Log::error("StorageController: Archivo no encontrado después de todas las búsquedas");
+                    Log::error("StorageController: Path recibido: $path");
+                    Log::error("StorageController: Path normalizado: $normalizedPath");
+                    Log::error("StorageController: Total paths de búsqueda probados: " . count($searchPaths));
+                    Log::error("StorageController: Total ubicaciones probadas: " . count($locations));
+                    
+                    // Listar algunos archivos existentes para debug
+                    $sampleDir = storage_path('app/public/mega_eventos');
+                    if (is_dir($sampleDir)) {
+                        try {
+                            $sampleFiles = glob($sampleDir . '/*/*.{jpeg,jpg,png}', GLOB_BRACE);
+                            if ($sampleFiles && count($sampleFiles) > 0) {
+                                $sampleNames = array_slice(array_map('basename', $sampleFiles), 0, 5);
+                                Log::info("StorageController: Archivos de ejemplo encontrados en mega_eventos: " . implode(', ', $sampleNames));
+                            } else {
+                                Log::info("StorageController: No se encontraron archivos de ejemplo en mega_eventos/");
+                            }
+                        } catch (\Exception $e) {
+                            Log::warning("StorageController: Error listando archivos de ejemplo: " . $e->getMessage());
+                        }
+                    }
+                    
+                    return response('File not found: ' . $normalizedPath, 404)
+                        ->header('Access-Control-Allow-Origin', '*')
+                        ->header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+                        ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+                        ->header('Content-Type', 'text/plain');
+                }
             }
             
-            // Verificar permisos y corregirlos si es necesario
-            $filePerms = fileperms($filePath);
-            $currentPerms = substr(sprintf('%o', $filePerms), -4);
+            // Intentar leer el archivo directamente (funciona mejor en Windows que is_readable)
+            $fileContent = @file_get_contents($filePath);
             
-            if (!is_readable($filePath)) {
-                Log::warning("StorageController: Archivo no tiene permisos de lectura: $filePath");
+            if ($fileContent === false) {
+                // Si no se pudo leer, intentar cambiar permisos
+                $filePerms = fileperms($filePath);
+                $currentPerms = substr(sprintf('%o', $filePerms), -4);
+                
+                Log::warning("StorageController: No se pudo leer el archivo: $filePath");
                 Log::warning("StorageController: Permisos actuales: $currentPerms");
                 
                 // Intentar cambiar permisos (lectura para todos)
                 $newPerms = 0644; // rw-r--r--
                 if (@chmod($filePath, $newPerms)) {
                     Log::info("StorageController: Permisos cambiados a 0644 para: $filePath");
-                } else {
+                    $fileContent = @file_get_contents($filePath);
+                }
+                
+                if ($fileContent === false) {
                     // Intentar con permisos más permisivos
                     $newPerms = 0666; // rw-rw-rw-
                     if (@chmod($filePath, $newPerms)) {
                         Log::info("StorageController: Permisos cambiados a 0666 para: $filePath");
-                    } else {
-                        Log::error("StorageController: No se pudieron cambiar los permisos del archivo: $filePath");
+                        $fileContent = @file_get_contents($filePath);
                     }
                 }
                 
-                // Verificar nuevamente
-                if (!is_readable($filePath)) {
-                    Log::error("StorageController: Archivo sigue sin ser legible después de cambiar permisos: $filePath");
+                if ($fileContent === false) {
+                    Log::error("StorageController: No se pudo leer el archivo después de cambiar permisos: $filePath");
                     return response('Permission denied', 403)
                         ->header('Access-Control-Allow-Origin', '*')
                         ->header('Access-Control-Allow-Methods', 'GET, OPTIONS')
@@ -290,16 +330,8 @@ class StorageController extends Controller
                 $mimeType = $mimeTypes[$extension] ?? $mimeType;
             }
             
-            // Leer y servir el archivo
-            $file = file_get_contents($filePath);
-            if ($file === false) {
-                Log::error("StorageController: No se pudo leer el archivo: $filePath");
-                return response('Could not read file', 500)
-                    ->header('Access-Control-Allow-Origin', '*')
-                    ->header('Access-Control-Allow-Methods', 'GET, OPTIONS')
-                    ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-                    ->header('Content-Type', 'text/plain');
-            }
+            // Usar el contenido ya leído
+            $file = $fileContent;
             
             Log::info("StorageController: Archivo servido exitosamente: $filePath (MIME: $mimeType, Tamaño: " . strlen($file) . " bytes)");
             

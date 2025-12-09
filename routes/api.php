@@ -20,6 +20,15 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MegaEventoController;
 use App\Http\Controllers\StorageController;
 
+// ----------- CORS PREFLIGHT CATCH-ALL (DEBE ESTAR PRIMERO) -----------
+Route::options('{any}', function () {
+    return response('', 200)
+        ->header('Access-Control-Allow-Origin', '*')
+        ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH')
+        ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin')
+        ->header('Access-Control-Max-Age', '86400');
+})->where('any', '.*');
+
 // ----------- STORAGE (con CORS para Flutter) -----------
 // Esta ruta debe estar antes de las protegidas para que funcione sin autenticación
 Route::options('/storage/{path}', [StorageController::class, 'options'])
@@ -104,6 +113,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/eventos/activos-para-marcar', [EventoParticipacionController::class, 'eventosActivosParaMarcar']);
     // Validación desde welcome.php
     Route::get('/eventos/en-curso-usuario', [EventoParticipacionController::class, 'eventosEnCursoUsuario']);
+    Route::get('/eventos/alertas-5-minutos', [EventoParticipacionController::class, 'alertas5Minutos']);
     Route::post('/verificar-ticket-welcome', [EventoParticipacionController::class, 'verificarTicketWelcome']);
     Route::post('/validar-asistencia-welcome', [EventoParticipacionController::class, 'validarAsistenciaWelcome']);
     // Validación para usuarios no registrados (sin autenticación)
@@ -184,28 +194,46 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ----------- MEGA EVENTOS -----------
     Route::prefix('mega-eventos')->group(function () {
+        // Ruta OPTIONS para CORS preflight
+        Route::options('/', function () {
+            return response('', 200)
+                ->header('Access-Control-Allow-Origin', '*')
+                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+        });
         Route::get('/', [MegaEventoController::class, 'index']);
-        Route::get('/publicos', [MegaEventoController::class, 'publicos']);
+        Route::get('/en-curso', [MegaEventoController::class, 'enCurso']);
+        Route::get('/finalizados', [MegaEventoController::class, 'finalizados']);
         Route::get('/mis-participaciones', [MegaEventoController::class, 'misParticipaciones']);
         Route::post('/', [MegaEventoController::class, 'store']);
-        Route::get('/{id}', [MegaEventoController::class, 'show']);
+        // IMPORTANTE: Rutas con parámetros dinámicos deben ir al final, después de rutas específicas
+        Route::get('/{id}', [MegaEventoController::class, 'show'])->where('id', '[0-9]+');
         // Compartidos
-        Route::post('/{megaEventoId}/compartir', [MegaEventoCompartidoController::class, 'compartir']);
-        Route::get('/{megaEventoId}/compartidos/total', [MegaEventoCompartidoController::class, 'totalCompartidos']);
+        Route::post('/{megaEventoId}/compartir', [MegaEventoCompartidoController::class, 'compartir'])->where('megaEventoId', '[0-9]+');
+        Route::get('/{megaEventoId}/compartidos/total', [MegaEventoCompartidoController::class, 'totalCompartidos'])->where('megaEventoId', '[0-9]+');
         // Reacciones (usuarios registrados)
         Route::post('/reacciones/toggle', [MegaEventoReaccionController::class, 'toggle']);
-        Route::get('/reacciones/verificar/{megaEventoId}', [MegaEventoReaccionController::class, 'verificar']);
-        Route::get('/reacciones/{megaEventoId}', [MegaEventoReaccionController::class, 'usuariosQueReaccionaron']);
-        Route::put('/{id}', [MegaEventoController::class, 'update']);
-        Route::delete('/{id}', [MegaEventoController::class, 'destroy']);
-        Route::delete('/{id}/imagen', [MegaEventoController::class, 'deleteImage']);
-        Route::post('/{id}/participar', [MegaEventoController::class, 'participar']);
-        Route::get('/{id}/verificar-participacion', [MegaEventoController::class, 'verificarParticipacion']);
+        Route::get('/reacciones/verificar/{megaEventoId}', [MegaEventoReaccionController::class, 'verificar'])->where('megaEventoId', '[0-9]+');
+        Route::get('/reacciones/{megaEventoId}', [MegaEventoReaccionController::class, 'usuariosQueReaccionaron'])->where('megaEventoId', '[0-9]+');
+        Route::put('/{id}', [MegaEventoController::class, 'update'])->where('id', '[0-9]+');
+        Route::delete('/{id}', [MegaEventoController::class, 'destroy'])->where('id', '[0-9]+');
+        Route::delete('/{id}/imagen', [MegaEventoController::class, 'deleteImage'])->where('id', '[0-9]+');
+        Route::post('/{id}/participar', [MegaEventoController::class, 'participar'])->where('id', '[0-9]+');
+        Route::post('/{id}/cancelar-participacion', [MegaEventoController::class, 'cancelarParticipacion'])->where('id', '[0-9]+');
+        Route::get('/{id}/verificar-participacion', [MegaEventoController::class, 'verificarParticipacion'])->where('id', '[0-9]+');
+        // Registrar descarga de QR (solo una vez)
+        Route::post('/registrar-descarga-qr', [MegaEventoController::class, 'registrarDescargaQR']);
+        Route::get('/{id}/participantes', [MegaEventoController::class, 'participantes'])->where('id', '[0-9]+');
+        // Control de asistencias
+        Route::get('/{id}/control-asistencia', [MegaEventoController::class, 'controlAsistencia'])->where('id', '[0-9]+');
+        Route::post('/{id}/registrar-asistencia', [MegaEventoController::class, 'registrarAsistencia'])->where('id', '[0-9]+');
+        Route::post('/{id}/marcar-asistencia', [MegaEventoController::class, 'marcarAsistenciaUsuario'])->where('id', '[0-9]+'); // Usuario externo se auto-registra
+        Route::put('/asistencias/{participacionId}/{tipo}', [MegaEventoController::class, 'modificarAsistencia'])->where('participacionId', '[0-9A-Za-z-]+');
+        Route::get('/alertas-5-minutos', [MegaEventoController::class, 'alertas5Minutos']);
         // Rutas de seguimiento
-        Route::get('/{id}/seguimiento', [MegaEventoController::class, 'seguimiento']);
-        Route::get('/{id}/participantes', [MegaEventoController::class, 'participantes']);
-        Route::get('/{id}/historial', [MegaEventoController::class, 'historial']);
-        Route::get('/{id}/exportar-excel', [MegaEventoController::class, 'exportarExcel']);
+        Route::get('/{id}/seguimiento', [MegaEventoController::class, 'seguimiento'])->where('id', '[0-9]+');
+        Route::get('/{id}/historial', [MegaEventoController::class, 'historial'])->where('id', '[0-9]+');
+        Route::get('/{id}/exportar-excel', [MegaEventoController::class, 'exportarExcel'])->where('id', '[0-9]+');
         Route::get('/seguimiento/general', [MegaEventoController::class, 'seguimientoGeneral']);
     });
 
@@ -287,13 +315,25 @@ Route::post('/eventos/{eventoId}/compartir-publico', [EventoCompartidoController
 Route::get('/eventos/{eventoId}/compartidos/total', [EventoCompartidoController::class, 'totalCompartidos']);
 
 // ----------- COMPARTIDOS PÚBLICOS MEGA EVENTOS (SIN AUTENTICACIÓN) -----------
-Route::post('/mega-eventos/{megaEventoId}/compartir-publico', [MegaEventoCompartidoController::class, 'compartir']);
-Route::get('/mega-eventos/{megaEventoId}/compartidos/total', [MegaEventoCompartidoController::class, 'totalCompartidos']);
+Route::post('/mega-eventos/{megaEventoId}/compartir-publico', [MegaEventoCompartidoController::class, 'compartir'])->where('megaEventoId', '[0-9]+');
+Route::get('/mega-eventos/{megaEventoId}/compartidos/total', [MegaEventoCompartidoController::class, 'totalCompartidos'])->where('megaEventoId', '[0-9]+');
 
 // ----------- PARTICIPACIÓN PÚBLICA (SIN AUTENTICACIÓN) -----------
-Route::post('/eventos/{eventoId}/participar-publico', [EventoParticipacionController::class, 'participarPublico']);
+// Ruta eliminada - Ya no se permite participación pública sin registro
+// Route::post('/eventos/{eventoId}/participar-publico', [EventoParticipacionController::class, 'participarPublico']);
 Route::post('/eventos/{eventoId}/verificar-participacion-publica', [EventoParticipacionController::class, 'verificarParticipacionPublica']);
 
+// ----------- MEGA EVENTOS PÚBLICOS (SIN AUTENTICACIÓN) - DEBE ESTAR ANTES DE LAS RUTAS PROTEGIDAS -----------
+Route::options('/mega-eventos/publicos', function () {
+    return response('', 200)
+        ->header('Access-Control-Allow-Origin', '*')
+        ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin')
+        ->header('Access-Control-Max-Age', '86400');
+});
+Route::get('/mega-eventos/publicos', [MegaEventoController::class, 'publicos']);
+
 // ----------- PARTICIPACIÓN PÚBLICA MEGA EVENTOS (SIN AUTENTICACIÓN) -----------
-Route::post('/mega-eventos/{megaEventoId}/participar-publico', [MegaEventoController::class, 'participarPublico']);
-Route::post('/mega-eventos/{megaEventoId}/verificar-participacion-publica', [MegaEventoController::class, 'verificarParticipacionPublica']);
+// Ruta eliminada - Ya no se permite participación pública sin registro
+// Route::post('/mega-eventos/{megaEventoId}/participar-publico', [MegaEventoController::class, 'participarPublico'])->where('megaEventoId', '[0-9]+');
+Route::post('/mega-eventos/{megaEventoId}/verificar-participacion-publica', [MegaEventoController::class, 'verificarParticipacionPublica'])->where('megaEventoId', '[0-9]+');

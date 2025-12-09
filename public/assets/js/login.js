@@ -22,7 +22,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   result.innerHTML = "Verificando...";
 
   // Asegurar que API_BASE_URL esté definido
-  const apiUrl = window.API_BASE_URL || API_BASE_URL || "http://192.168.0.6:8000";
+  const apiUrl = window.API_BASE_URL || API_BASE_URL || "http://10.26.0.215:8000";
   
   // Debug: Verificar qué URL se está usando
   console.log("🔍 Intentando login con URL:", apiUrl);
@@ -60,7 +60,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
 
     // REDIRECCIÓN
     let ruta = "/";
-    if (data.user.tipo_usuario === "ONG") ruta = "/ong/eventos";
+    if (data.user.tipo_usuario === "ONG") ruta = "/home-ong";
     if (data.user.tipo_usuario === "Empresa") ruta = "/home-empresa";
     if (data.user.tipo_usuario === "Integrante externo") ruta = "/home-externo";
 

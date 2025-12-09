@@ -13,7 +13,10 @@ return new class extends Migration
     {
         Schema::table('evento_participaciones', function (Blueprint $table) {
             // Timestamp para registrar cuando se descargó el QR por primera vez
-            $table->timestamp('qr_descargado_at')->nullable()->after('ticket_codigo');
+            // Nota: PostgreSQL no soporta 'after()', la columna se agregará al final
+            if (!Schema::hasColumn('evento_participaciones', 'qr_descargado_at')) {
+                $table->timestamp('qr_descargado_at')->nullable();
+            }
         });
     }
 

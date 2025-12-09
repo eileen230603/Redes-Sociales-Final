@@ -3,6 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Log;
 
+// ---------------- PROXY DE IMÁGENES EXTERNAS (PARA EVITAR CORS) ----------------
+Route::options('/api/image-proxy', [App\Http\Controllers\ImageProxyController::class, 'options']);
+Route::get('/api/image-proxy', [App\Http\Controllers\ImageProxyController::class, 'proxy']);
+
 // ---------------- SERVIR ARCHIVOS DE STORAGE CON CORS (MÁXIMA PRIORIDAD) ----------------
 // Esta ruta DEBE estar al principio para tener máxima prioridad
 Route::options('/storage/{path}', [App\Http\Controllers\StorageController::class, 'options'])
@@ -94,6 +98,7 @@ Route::prefix('ong/eventos-dashboard')->name('ong.eventos-dashboard.')->group(fu
 // ---------------- ONG: MEGA EVENTOS ----------------
 Route::prefix('ong/mega-eventos')->name('ong.mega-eventos.')->group(function () {
     Route::view('/', 'ong.mega-eventos.index')->name('index');
+    Route::view('/en-curso', 'ong.mega-eventos.en-curso')->name('en-curso');
     Route::view('/historial', 'ong.mega-eventos.historial')->name('historial');
     Route::view('/crear', 'ong.mega-eventos.create')->name('create');
     Route::view('/{id}/editar', 'ong.mega-eventos.edit')->name('edit');

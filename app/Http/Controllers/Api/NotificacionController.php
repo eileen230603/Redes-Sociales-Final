@@ -17,10 +17,30 @@ class NotificacionController extends Controller
             $ongId = $request->user()->id_usuario;
 
             $notificaciones = Notificacion::where('ong_id', $ongId)
-                ->with(['evento:id,titulo', 'externo'])
+                ->with(['evento:id,titulo', 'externo.integranteExterno'])
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function($notificacion) {
+                    $externo = $notificacion->externo;
+                    $nombreExterno = null;
+                    $fotoExterno = null;
+                    $tituloExterno = 'Usuario';
+                    
+                    if ($externo) {
+                        // Obtener nombre del integrante externo si existe
+                        if ($externo->integranteExterno) {
+                            $nombres = trim($externo->integranteExterno->nombres ?? '');
+                            $apellidos = trim($externo->integranteExterno->apellidos ?? '');
+                            $nombreExterno = trim("{$nombres} {$apellidos}") ?: $externo->nombre_usuario;
+                            $fotoExterno = $externo->integranteExterno->foto_perfil_url ?? $externo->foto_perfil_url ?? null;
+                            $tituloExterno = 'Participante';
+                        } else {
+                            $nombreExterno = $externo->nombre_usuario;
+                            $fotoExterno = $externo->foto_perfil_url ?? null;
+                            $tituloExterno = 'Usuario';
+                        }
+                    }
+                    
                     return [
                         'id' => $notificacion->id,
                         'tipo' => $notificacion->tipo,
@@ -30,6 +50,11 @@ class NotificacionController extends Controller
                         'evento_id' => $notificacion->evento_id,
                         'evento_titulo' => $notificacion->evento ? $notificacion->evento->titulo : null,
                         'externo_id' => $notificacion->externo_id,
+                        'externo' => $externo ? [
+                            'nombre_usuario' => $nombreExterno,
+                            'foto_perfil_url' => $fotoExterno,
+                            'titulo' => $tituloExterno
+                        ] : null,
                         'fecha' => $notificacion->created_at,
                     ];
                 });

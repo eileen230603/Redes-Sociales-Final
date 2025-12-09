@@ -90,6 +90,7 @@ class MegaEventoReaccionController extends Controller
                 ]);
             } else {
                 // Crear reacción
+                DB::transaction(function () use ($megaEventoId, $nombres, $apellidos, $email, $megaEvento) {
                 $reaccion = MegaEventoReaccion::create([
                     'mega_evento_id' => $megaEventoId,
                     'externo_id' => null,
@@ -97,13 +98,16 @@ class MegaEventoReaccionController extends Controller
                     'apellidos' => $apellidos,
                     'email' => $email,
                 ]);
+                    
+                    // Crear notificación para la ONG
+                    $this->crearNotificacionReaccionMegaEventoPublica($megaEvento, $nombres, $apellidos);
+                });
 
                 // Contar TODAS las reacciones (registradas y no registradas)
                 $totalReacciones = MegaEventoReaccion::where('mega_evento_id', $megaEventoId)->count();
 
                 \Log::info('Reacción pública de mega evento creada:', [
                     'mega_evento_id' => $megaEventoId,
-                    'reaccion_id' => $reaccion->id,
                     'nombres' => $nombres,
                     'apellidos' => $apellidos,
                     'total_reacciones' => $totalReacciones
@@ -171,6 +175,9 @@ class MegaEventoReaccionController extends Controller
                         'mega_evento_id' => $megaEventoId,
                         'externo_id' => $externoId
                     ]);
+                    
+                    // Crear notificación para la ONG
+                    $this->crearNotificacionReaccionMegaEvento($megaEvento, $externoId);
                 });
 
                 return response()->json([
@@ -290,6 +297,60 @@ class MegaEventoReaccionController extends Controller
                 'success' => false,
                 'error' => 'Error al obtener reacciones: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Crear notificación para la ONG cuando un usuario registrado reacciona
+     */
+    private function crearNotificacionReaccionMegaEvento(MegaEvento $megaEvento, $externoId)
+    {
+        try {
+            $externo = User::find($externoId);
+            if (!$externo) return;
+
+            $integranteExterno = IntegranteExterno::where('user_id', $externoId)->first();
+            $nombreUsuario = $integranteExterno 
+                ? trim($integranteExterno->nombres . ' ' . ($integranteExterno->apellidos ?? ''))
+                : $externo->nombre_usuario;
+
+            \App\Models\Notificacion::create([
+                'ong_id' => $megaEvento->ong_organizadora_principal,
+                'evento_id' => null, // Los mega eventos no tienen evento_id
+                'externo_id' => $externoId,
+                'tipo' => 'reaccion_mega_evento',
+                'titulo' => 'Nueva reacción en tu mega evento',
+                'mensaje' => "{$nombreUsuario} reaccionó con un corazón al mega evento \"{$megaEvento->titulo}\"",
+                'leida' => false
+            ]);
+
+        } catch (\Throwable $e) {
+            // Log error pero no fallar la reacción
+            \Log::error('Error creando notificación de reacción de mega evento: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Crear notificación para la ONG cuando un usuario no registrado reacciona
+     */
+    private function crearNotificacionReaccionMegaEventoPublica(MegaEvento $megaEvento, $nombres, $apellidos)
+    {
+        try {
+            $nombreCompleto = trim($nombres . ' ' . ($apellidos ?? ''));
+
+            \App\Models\Notificacion::create([
+                'ong_id' => $megaEvento->ong_organizadora_principal,
+                'evento_id' => null, // Los mega eventos no tienen evento_id
+                'externo_id' => null, // Usuario no registrado
+                'tipo' => 'reaccion_mega_evento_publica',
+                'titulo' => 'Nueva reacción en tu mega evento',
+                'mensaje' => "{$nombreCompleto} (usuario no registrado) reaccionó con un corazón al mega evento \"{$megaEvento->titulo}\"",
+                'leida' => false
+            ]);
+
+        } catch (\Throwable $e) {
+            // Log error pero no fallar la reacción
+            \Log::error('Error creando notificación de reacción pública de mega evento: ' . $e->getMessage());
         }
     }
 }

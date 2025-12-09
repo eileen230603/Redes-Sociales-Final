@@ -560,30 +560,16 @@
                             </h5>
                                 </div>
                             </div>
-                            <!-- Mensaje si ya está participando -->
-                            <div id="mensajeYaParticipa" class="alert alert-info" style="display: none;">
+                            <!-- Mensaje informativo -->
+                            <div class="alert alert-info mb-3" style="border-radius: 10px;">
                                 <i class="fas fa-info-circle mr-2"></i>
-                                <strong>¡Ya estás participando en este mega evento!</strong>
-                                <p class="mb-0 mt-2" style="font-size: 0.9rem;">Tu participación está registrada y aprobada.</p>
+                                <strong>¿Quieres participar?</strong>
+                                <p class="mb-0 mt-2" style="font-size: 0.9rem;">Debes tener una cuenta de Usuario Externo para inscribirte en este mega evento.</p>
                             </div>
-                            <!-- Formulario de participación -->
-                            <form id="formParticipar">
-                                <div class="form-group mb-3">
-                                    <label for="nombres" style="color: #495057; font-weight: 600;">Nombres <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="nombres" name="nombres" required placeholder="Ingresa tus nombres">
-                                </div>
-                                <div class="form-group mb-3">
-                                    <label for="apellidos" style="color: #495057; font-weight: 600;">Apellidos <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="apellidos" name="apellidos" required placeholder="Ingresa tus apellidos">
-                                </div>
-                                <div class="form-group mb-3">
-                                    <label for="email" style="color: #495057; font-weight: 600;">Email <span class="text-muted">(opcional)</span></label>
-                                    <input type="email" class="form-control" id="email" name="email" placeholder="Ingresa tu email">
-                                </div>
-                                <button type="submit" class="btn btn-participar w-100" style="background: #ffc107; color: #333;">
+                            <!-- Botón de Participar -->
+                            <button type="button" class="btn btn-participar w-100" id="btnParticiparPublicoMega" style="background: #ffc107; color: #333;">
                                     <i class="fas fa-check-circle mr-2"></i> Participar
                                 </button>
-                            </form>
                             <div id="mensajeParticipacion" class="mt-3" style="display: none;"></div>
                         </div>
                     </div>
@@ -687,8 +673,8 @@
         const megaEventoId = {{ $megaEventoId }};
         const API_BASE_URL = '{{ url("/") }}';
         const PUBLIC_BASE_URL = typeof getPublicUrl !== 'undefined' 
-            ? (window.PUBLIC_BASE_URL || 'http://192.168.0.6:8000')
-            : 'http://192.168.0.6:8000';
+            ? (window.PUBLIC_BASE_URL || 'http://10.26.0.215:8000')
+            : 'http://10.26.0.215:8000';
         
         // Almacenar datos del mega evento para compartir
         window.megaEventoParaCompartir = {
@@ -808,35 +794,44 @@
         
         // Toggle reacción (público - con nombres y apellidos del formulario)
         async function toggleReaccionPublico() {
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                // No está autenticado - redirigir a login
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Inicia sesión',
+                        text: 'Debes iniciar sesión para reaccionar a este mega evento.',
+                        confirmButtonText: 'Ir a Login',
+                        cancelButtonText: 'Cancelar',
+                        showCancelButton: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '/login';
+                        }
+                    });
+                } else {
+                    alert('Debes iniciar sesión para reaccionar');
+                    window.location.href = '/login';
+                }
+                return;
+            }
+            
             const btnReaccionar = document.getElementById('btnReaccionarPublico');
             const iconoCorazon = document.getElementById('iconoCorazonPublico');
             const textoReaccion = document.getElementById('textoReaccionPublico');
             const contadorReacciones = document.getElementById('contadorReaccionesPublico');
-            
-            // Obtener nombres y apellidos del formulario
-            const nombres = document.getElementById('nombres')?.value || '';
-            const apellidos = document.getElementById('apellidos')?.value || '';
-            const email = document.getElementById('email')?.value || '';
-            
-            if (!nombres || !apellidos) {
-                alert('Por favor, completa tu nombre y apellido para reaccionar');
-                return;
-            }
-            
             const estaReaccionado = btnReaccionar.classList.contains('btn-danger');
             
             try {
-                const res = await fetch(`${API_BASE_URL}/api/reacciones/mega-evento/${megaEventoId}/reaccionar-publico`, {
+                const res = await fetch(`${API_BASE_URL}/api/reacciones/mega-evento/${megaEventoId}/toggle`, {
                     method: 'POST',
                     headers: {
+                        'Authorization': `Bearer ${token}`,
                         'Accept': 'application/json',
                         'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        nombres: nombres,
-                        apellidos: apellidos,
-                        email: email || null
-                    })
+                    }
                 });
                 
                 const data = await res.json();
@@ -1113,78 +1108,61 @@
             }
         });
 
-        // Formulario de participación
-        document.getElementById('formParticipar').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        // Botón de Participar - Redirige a registro o login
+        document.getElementById('btnParticiparPublicoMega').addEventListener('click', function() {
+            const token = localStorage.getItem('token');
             
-            const nombres = document.getElementById('nombres').value.trim();
-            const apellidos = document.getElementById('apellidos').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const mensajeDiv = document.getElementById('mensajeParticipacion');
+            if (!token) {
+                // No está autenticado - redirigir a registro con megaEventoId
+                const megaEventoId = {{ $megaEventoId }};
+                window.location.href = `/register-externo?megaEventoId=${megaEventoId}`;
+            } else {
+                // Está autenticado - verificar si es usuario externo y si ya está inscrito
+                verificarYParticiparMega();
+            }
+        });
+        
+        // Verificar si el usuario autenticado ya está participando o inscribirlo
+        async function verificarYParticiparMega() {
+            const token = localStorage.getItem('token');
+            const megaEventoId = {{ $megaEventoId }};
             
-            if (!nombres || !apellidos) {
-                mensajeDiv.innerHTML = '<div class="alert alert-danger">Por favor completa todos los campos requeridos</div>';
-                mensajeDiv.style.display = 'block';
-                return;
-            }
-
-            // Verificar nuevamente antes de enviar
-            const yaParticipa = await verificarParticipacion(nombres, apellidos);
-            if (yaParticipa) {
-                Swal.fire({
-                    icon: 'info',
-                    title: 'Ya estás participando',
-                    text: 'Ya estás registrado en este mega evento. Tu participación está aprobada.',
-                    confirmButtonText: 'Aceptar'
-                });
-                document.getElementById('mensajeYaParticipa').style.display = 'block';
-                this.style.display = 'none';
-                return;
-            }
-
             try {
-                const response = await fetch(`${API_BASE_URL}/api/mega-eventos/${megaEventoId}/participar-publico`, {
+                // Verificar si ya está inscrito (necesitamos una ruta para esto)
+                // Por ahora, intentar inscribir directamente
+                const resInscribir = await fetch(`${API_BASE_URL}/api/mega-eventos/${megaEventoId}/participar`, {
                     method: 'POST',
                     headers: {
+                        'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        nombres: nombres,
-                        apellidos: apellidos,
-                        email: email || null
-                    })
+                    }
                 });
 
-                const data = await response.json();
+                const dataInscribir = await resInscribir.json();
 
-                if (data.success) {
+                if (dataInscribir.success) {
                     Swal.fire({
                         icon: 'success',
-                        title: '¡Participación exitosa!',
-                        text: data.message || 'Te has registrado correctamente en el mega evento',
+                        title: '¡Inscripción exitosa!',
+                        text: 'Te has inscrito correctamente en el mega evento.',
                         confirmButtonText: 'Aceptar'
                     }).then(() => {
-                        document.getElementById('formParticipar').style.display = 'none';
-                        document.getElementById('mensajeYaParticipa').style.display = 'block';
-                        mensajeDiv.style.display = 'none';
+                        location.reload();
                     });
                 } else {
-                    if (data.error && data.error.includes('Ya estás inscrito')) {
+                    if (dataInscribir.error && dataInscribir.error.includes('Ya estás inscrito')) {
                         Swal.fire({
                             icon: 'info',
                             title: 'Ya estás participando',
-                            text: 'Ya estás registrado en este mega evento. Tu participación está aprobada.',
+                            text: 'Ya estás inscrito en este mega evento.',
                             confirmButtonText: 'Aceptar'
-                        }).then(() => {
-                            document.getElementById('formParticipar').style.display = 'none';
-                            document.getElementById('mensajeYaParticipa').style.display = 'block';
                         });
                     } else {
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: data.error || 'Error al registrar tu participación'
+                            text: dataInscribir.error || 'Error al inscribirte en el mega evento'
                         });
                     }
                 }
@@ -1196,10 +1174,10 @@
                     text: 'No se pudo conectar con el servidor. Por favor, intenta nuevamente.'
                 });
             }
-        });
+        }
 
         // Helper para construir URL de imagen con IP fija
-        const IMAGE_BASE_URL = 'http://192.168.0.6:8000';
+        const IMAGE_BASE_URL = 'http://10.26.0.215:8000';
         function buildImageUrl(imgUrl) {
             if (!imgUrl || imgUrl.trim() === '') return null;
             // Si ya es una URL completa, retornarla directamente
@@ -1333,11 +1311,11 @@
             $bannerUrl = $bannerImg;
             if (strpos($bannerImg, 'http://') !== 0 && strpos($bannerImg, 'https://') !== 0) {
                 if (strpos($bannerImg, '/storage/') === 0) {
-                    $bannerUrl = 'http://192.168.0.6:8000' . $bannerImg;
+                    $bannerUrl = 'http://10.26.0.215:8000' . $bannerImg;
                 } elseif (strpos($bannerImg, 'storage/') === 0) {
-                    $bannerUrl = 'http://192.168.0.6:8000/storage/' . $bannerImg;
+                    $bannerUrl = 'http://10.26.0.215:8000/storage/' . $bannerImg;
                 } else {
-                    $bannerUrl = 'http://192.168.0.6:8000/storage/' . ltrim($bannerImg, '/');
+                    $bannerUrl = 'http://10.26.0.215:8000/storage/' . ltrim($bannerImg, '/');
                 }
             }
         @endphp
