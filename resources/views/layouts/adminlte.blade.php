@@ -1,4 +1,17 @@
 {{-- resources/views/layouts/adminlte.blade.php --}}
+@php
+    // Asegurar que el sidebar esté habilitado y visible por defecto
+    // Usar la configuración del menú desde config/adminlte.php
+    config(['adminlte.layout_topnav' => null]);
+    config(['adminlte.layout_fixed_sidebar' => true]);
+    config(['adminlte.layout_fixed_navbar' => true]);
+    config(['adminlte.sidebar_enabled' => true]);
+    config(['adminlte.sidebar_collapse_on_load' => false]);
+    config(['adminlte.sidebar_nav_accordion' => true]);
+    config(['adminlte.sidebar_nav_animation_speed' => 300]);
+    // El menú se toma automáticamente de config/adminlte.php
+@endphp
+
 @extends('adminlte::page')
 
 @section('title', 'UNI2 • Panel Principal')
@@ -510,30 +523,33 @@
         }
     }
     
-    /* Flecha de Treeview */
-    .sidebar-dark-primary .nav-link .right,
-    .main-sidebar .nav-link .right {
+    /* Flecha de Treeview - Iconos de rotación mejorados */
+    .sidebar-dark-primary .nav-item.has-treeview > .nav-link > .right,
+    .main-sidebar .nav-item.has-treeview > .nav-link > .right {
+        position: absolute !important;
+        right: 1rem !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        transition: transform 0.3s ease !important;
         color: rgba(255, 255, 255, 0.6) !important;
-        transition: all 0.3s ease !important;
         display: inline-block !important;
+        font-size: 0.875rem !important;
     }
     
-    .sidebar-dark-primary .nav-item.menu-open > .nav-link .right,
-    .main-sidebar .nav-item.menu-open > .nav-link .right {
-        transform: rotate(-90deg) !important;
+    .sidebar-dark-primary .nav-item.has-treeview.menu-open > .nav-link > .right,
+    .main-sidebar .nav-item.has-treeview.menu-open > .nav-link > .right {
+        transform: translateY(-50%) rotate(90deg) !important;
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+    
+    .sidebar-dark-primary .nav-item.has-treeview > .nav-link:hover > .right,
+    .main-sidebar .nav-item.has-treeview > .nav-link:hover > .right {
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+    
+    .sidebar-dark-primary .nav-item.has-treeview > .nav-link.active > .right,
+    .main-sidebar .nav-item.has-treeview > .nav-link.active > .right {
         color: white !important;
-    }
-    
-    .sidebar-dark-primary .nav-link.active .right,
-    .sidebar-dark-primary .nav-link:hover .right,
-    .main-sidebar .nav-link.active .right,
-    .main-sidebar .nav-link:hover .right {
-        color: white !important;
-    }
-    
-    .sidebar-dark-primary .nav-link:hover .right,
-    .main-sidebar .nav-link:hover .right {
-        transform: translateX(2px) !important;
     }
     
     /* Enlace de Cerrar Sesión */
@@ -1073,6 +1089,13 @@
 
 {{-- JS --}}
 @section('js')
+{{-- Asegurar que jQuery y Bootstrap se carguen antes de AdminLTE --}}
+@if(!isset($jquery_loaded))
+<script src="{{ asset('vendor/jquery/jquery.min.js') }}"></script>
+@endif
+@if(!isset($bootstrap_loaded))
+<script src="{{ asset('vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+@endif
 <script src="{{ asset('vendor/adminlte/dist/js/adminlte.min.js') }}"></script>
 @if(file_exists(public_path('js/custom.js')))
 <script src="{{ asset('js/custom.js') }}?v={{ time() }}"></script>
@@ -1304,79 +1327,212 @@ document.addEventListener('DOMContentLoaded', () => {
         item.style.animationDelay = `${index * 0.05}s`;
     });
     
-    // Función para manejar el toggle de menús (Eventos y Mega Eventos)
-    function toggleMenu(menuItem) {
-        const treeview = menuItem.querySelector('.nav-treeview');
-        if (treeview) {
-            if (menuItem.classList.contains('menu-open')) {
-                // Colapsar
-                menuItem.classList.remove('menu-open');
-                treeview.style.display = 'none';
-            } else {
-                // Expandir
-                menuItem.classList.add('menu-open');
-                treeview.style.display = 'block';
-            }
-        }
-    }
+    // =======================================================
+    // INICIALIZACIÓN CORRECTA DEL TREEVIEW DE ADMINLTE
+    // =======================================================
     
-    // Inicializar los menús con toggle después de que AdminLTE cargue
-    function inicializarMenusToggle() {
-        // Buscar todos los menús con submenús (Eventos y Mega Eventos)
-        const menuItems = document.querySelectorAll('.nav-sidebar .nav-item.has-treeview');
+    function inicializarTreeview() {
+        // Esperar a que jQuery y AdminLTE estén disponibles
+        if (typeof jQuery === 'undefined') {
+            return; // jQuery aún no está disponible, reintentar más tarde
+        }
         
-        menuItems.forEach(item => {
-            const link = item.querySelector('.nav-link');
-            if (link && link.getAttribute('href') === '#') {
-                // Remover listeners anteriores si existen
-                const newLink = link.cloneNode(true);
-                link.parentNode.replaceChild(newLink, link);
-                
-                // Agregar evento de clic para toggle
-                newLink.addEventListener('click', function(e) {
+        if (typeof jQuery.fn.tree === 'undefined') {
+            // AdminLTE Treeview aún no está disponible, usar inicialización manual
+            const sidebarNav = document.querySelector('.nav-sidebar');
+            if (sidebarNav) {
+                const $sidebarNav = jQuery(sidebarNav);
+                $sidebarNav.find('.nav-item.has-treeview > .nav-link').off('click.treeview').on('click.treeview', function(e) {
                     e.preventDefault();
-                    e.stopPropagation();
-                    toggleMenu(item);
+                    const $item = jQuery(this).parent();
+                    const $treeview = $item.find('.nav-treeview');
+                    
+                    if ($item.hasClass('menu-open')) {
+                        $item.removeClass('menu-open');
+                        $treeview.slideUp(300);
+            } else {
+                        if (sidebarNav.getAttribute('data-accordion') === 'true') {
+                            $sidebarNav.find('.nav-item.has-treeview.menu-open').removeClass('menu-open');
+                            $sidebarNav.find('.nav-treeview').slideUp(300);
+                        }
+                        $item.addClass('menu-open');
+                        $treeview.slideDown(300);
+            }
                 });
             }
-        });
+            return;
     }
     
-    // Inicializar cuando el DOM esté listo
+        // Buscar el contenedor del menú sidebar
+        const sidebarNav = document.querySelector('.nav-sidebar');
+        if (!sidebarNav) {
+            console.warn('No se encontró el contenedor .nav-sidebar');
+            return;
+        }
+        
+        // Asegurar que el contenedor tenga los atributos correctos
+        if (!sidebarNav.hasAttribute('data-widget')) {
+            sidebarNav.setAttribute('data-widget', 'treeview');
+        }
+        if (!sidebarNav.hasAttribute('data-accordion')) {
+            sidebarNav.setAttribute('data-accordion', 'true');
+        }
+        
+        // Asegurar que tenga las clases correctas
+        if (!sidebarNav.classList.contains('nav')) {
+            sidebarNav.classList.add('nav');
+        }
+        if (!sidebarNav.classList.contains('nav-pills')) {
+            sidebarNav.classList.add('nav-pills');
+        }
+        if (!sidebarNav.classList.contains('nav-sidebar')) {
+            sidebarNav.classList.add('nav-sidebar');
+        }
+        if (!sidebarNav.classList.contains('flex-column')) {
+            sidebarNav.classList.add('flex-column');
+        }
+        
+        // Inicializar treeview usando el método correcto de AdminLTE
+        // AdminLTE v3 inicializa automáticamente elementos con data-widget="treeview"
+        // Pero podemos forzar la inicialización manual si es necesario
+        
+        // Método 1: Usar el plugin Treeview de AdminLTE directamente
+        const $sidebarNav = jQuery(sidebarNav);
+        if ($sidebarNav.length) {
+            // Verificar si AdminLTE tiene el método Treeview
+            if (typeof jQuery.fn.tree !== 'undefined') {
+                // Inicializar cada item con treeview
+                $sidebarNav.find('.nav-item.has-treeview').each(function() {
+                    const $item = jQuery(this);
+                    if (!$item.data('lte.treeview')) {
+                        try {
+                            $item.tree({
+                                animationSpeed: 300,
+                                accordion: true
+                            });
+                        } catch (e) {
+                            console.warn('Error al inicializar treeview item:', e);
+                        }
+                    }
+                });
+            } else {
+                // Si el método tree no está disponible, usar inicialización manual
+                console.warn('AdminLTE Treeview plugin no está disponible, usando inicialización manual');
+                $sidebarNav.find('.nav-item.has-treeview > .nav-link').off('click.treeview').on('click.treeview', function(e) {
+                    e.preventDefault();
+                    const $item = jQuery(this).parent();
+                    const $treeview = $item.find('.nav-treeview');
+                    
+                    if ($item.hasClass('menu-open')) {
+                        $item.removeClass('menu-open');
+                        $treeview.slideUp(300);
+                    } else {
+                        // Si es acordeón, cerrar otros menús abiertos
+                        if (sidebarNav.getAttribute('data-accordion') === 'true') {
+                            $sidebarNav.find('.nav-item.has-treeview.menu-open').removeClass('menu-open');
+                            $sidebarNav.find('.nav-treeview').slideUp(300);
+                        }
+                        $item.addClass('menu-open');
+                        $treeview.slideDown(300);
+                    }
+                });
+            }
+        }
+        
+        console.log('Treeview inicializado correctamente');
+    }
+    
+    // Inicializar cuando el DOM esté listo y después de que AdminLTE cargue
+    function inicializarCuandoListo() {
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(inicializarMenusToggle, 300);
+                setTimeout(inicializarTreeview, 500);
         });
     } else {
-        setTimeout(inicializarMenusToggle, 300);
+            setTimeout(inicializarTreeview, 500);
     }
     
-    // También inicializar después de que AdminLTE haya renderizado completamente
+        // También inicializar después de que la ventana cargue completamente
     window.addEventListener('load', function() {
-        setTimeout(inicializarMenusToggle, 500);
-    });
+            setTimeout(inicializarTreeview, 800);
+        });
+    }
     
-    // Expandir automáticamente el menú "Eventos" cuando se está en home-ong
-    if (window.location.pathname === '/home-ong' || window.location.pathname === '/home-ong/') {
-        setTimeout(() => {
-            const eventosMenuItems = document.querySelectorAll('.nav-sidebar .nav-item.has-treeview');
-            eventosMenuItems.forEach(item => {
-                const link = item.querySelector('.nav-link');
-                if (link) {
-                    const text = link.textContent.trim();
-                    // Buscar el menú que contiene "Eventos" y tiene submenú (pero no "Mega Eventos")
-                    if (text.includes('Eventos') && !text.includes('Mega')) {
-                        // Expandir automáticamente
-                        item.classList.add('menu-open');
-                        const treeview = item.querySelector('.nav-treeview');
-                        if (treeview) {
-                            treeview.style.display = 'block';
-                        }
+    // Si jQuery ya está disponible, inicializar inmediatamente
+    if (typeof jQuery !== 'undefined') {
+        jQuery(document).ready(function($) {
+            setTimeout(inicializarTreeview, 300);
+    });
+    }
+    
+    // Inicializar de todas formas
+    inicializarCuandoListo();
+    
+    // Expandir automáticamente el menú activo cuando corresponda
+    function expandirMenuActivo() {
+        if (typeof jQuery === 'undefined') return;
+        
+        const currentPath = window.location.pathname;
+        const $sidebarNav = jQuery('.nav-sidebar');
+        
+        // Buscar el item del menú que corresponde a la ruta actual
+        $sidebarNav.find('.nav-item.has-treeview').each(function() {
+            const $item = jQuery(this);
+            const $link = $item.find('> .nav-link');
+            const $submenu = $item.find('.nav-treeview');
+            
+            // Verificar si algún subitem está activo
+            const tieneSubitemActivo = $submenu.find('.nav-link.active').length > 0;
+            
+            if (tieneSubitemActivo && !$item.hasClass('menu-open')) {
+                // Expandir el menú padre si tiene un subitem activo
+                $item.addClass('menu-open');
+                $submenu.show();
+                
+                // Inicializar treeview si no está inicializado
+                if (!$item.data('lte.treeview')) {
+                    $item.tree({
+                        animationSpeed: 300,
+                        accordion: true
+                    });
                     }
                 }
             });
-        }, 800);
     }
+    
+    // Expandir menú activo después de inicializar treeview
+    setTimeout(expandirMenuActivo, 1000);
+    
+    // =======================================================
+    // ASEGURAR QUE EL BODY TENGA LAS CLASES CORRECTAS
+    // =======================================================
+    function asegurarClasesBody() {
+        const body = document.body;
+        if (!body) return;
+        
+        // Agregar clases necesarias si no las tiene
+        const clasesNecesarias = ['hold-transition', 'sidebar-mini', 'layout-fixed'];
+        clasesNecesarias.forEach(clase => {
+            if (!body.classList.contains(clase)) {
+                body.classList.add(clase);
+            }
+        });
+        
+        // Remover hold-transition después de un delay (AdminLTE lo hace automáticamente)
+        setTimeout(function() {
+            body.classList.remove('hold-transition');
+        }, 50);
+    }
+    
+    // Asegurar clases del body cuando el DOM esté listo
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', asegurarClasesBody);
+    } else {
+        asegurarClasesBody();
+    }
+    
+    // También ejecutar después de que la ventana cargue
+    window.addEventListener('load', asegurarClasesBody);
 });
 
 // Asegurar visibilidad del icono cuando se navega entre páginas

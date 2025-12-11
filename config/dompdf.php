@@ -20,6 +20,15 @@ return [
      */
     'convert_entities' => true,
 
+    'defines' => [
+        'DOMPDF_ENABLE_REMOTE' => true,
+        'DOMPDF_ENABLE_PHP' => true,
+        'DOMPDF_ENABLE_HTML5PARSER' => true,
+        'DOMPDF_DPI' => 96,
+        'DOMPDF_DEFAULT_FONT' => 'Arial',
+        'DOMPDF_FONT_HEIGHT_RATIO' => 1.1,
+    ],
+
     'options' => [
         /**
          * The location of the DOMPDF font directory
@@ -64,7 +73,7 @@ return [
          * The temporary directory is required to download remote images and when
          * using the PDFLib back end.
          */
-        'temp_dir' => sys_get_temp_dir(),
+        'temp_dir' => storage_path('app/temp'),
 
         /**
          * ==== IMPORTANT ====
@@ -78,7 +87,7 @@ return [
          * direct class use like:
          * $dompdf = new DOMPDF();  $dompdf->load_html($htmldata); $dompdf->render(); $pdfdata = $dompdf->output();
          */
-        'chroot' => realpath(base_path()),
+        'chroot' => base_path(),
 
         /**
          * Protocol whitelist
@@ -96,6 +105,11 @@ return [
             'http://' => ['rules' => []],
             'https://' => ['rules' => []],
         ],
+
+        'isRemoteEnabled' => true,
+        'isHtml5ParserEnabled' => true,
+        'isFontSubsettingEnabled' => true,
+        'defaultFont' => 'Arial',
 
         /**
          * Operational artifact (log files, temporary files) path validation
@@ -267,7 +281,7 @@ return [
          *
          * @var bool
          */
-        'enable_remote' => false,
+        'enable_remote' => true,
 
         /**
          * List of allowed remote hosts

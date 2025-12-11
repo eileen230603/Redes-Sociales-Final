@@ -12,26 +12,23 @@
         <p class="mt-3 text-muted">Cargando información de seguimiento...</p>
     </div>
 
-    <div id="seguimientoContent" style="display: none;">
+    <div id="seguimientoContent" style="display: none; animation: fadeIn 0.5s ease-in;">
         <!-- Header con información del mega evento -->
-        <div class="card mb-4">
-            <div class="card-header bg-primary">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div class="flex-grow-1">
-                        <h3 class="card-title mb-1 text-white" id="tituloMegaEvento">
-                            <i class="fas fa-star mr-2"></i>-
-                        </h3>
-                        <p class="mb-0 text-white-50" id="fechasMegaEvento">-</p>
-                    </div>
-                    <div>
-                        <a href="#" id="volverLink" class="btn btn-sm btn-secondary mr-2">
-                            <i class="fas fa-arrow-left mr-1"></i> Volver
-                        </a>
-                        </a>
-                        <button id="btnExportarReporte" class="btn btn-sm btn-success">
-                            <i class="fas fa-file-export mr-1"></i> Exportar Reporte
-                        </button>
-                    </div>
+        <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap" style="gap: 0.75rem;">
+                <div class="flex-grow-1">
+                    <a href="#" id="volverLink" class="btn btn-outline-secondary mb-3" style="border-radius: 12px; padding: 0.6rem 1.5rem; font-weight: 500; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'">
+                        <i class="fas fa-arrow-left mr-2"></i> Volver
+                    </a>
+                    <h2 class="mb-2" id="tituloMegaEvento" style="font-weight: 700; color: var(--primary-color); font-size: 2rem; animation: fadeInUp 0.5s ease-out;">
+                        -
+                    </h2>
+                    <p class="mb-0" id="fechasMegaEvento" style="font-size: 0.95rem; color: var(--text-muted); animation: fadeInUp 0.6s ease-out;">-</p>
+                </div>
+                <div>
+                    <button id="btnExportarReporte" class="btn btn-primary" style="border-radius: 12px; padding: 0.6rem 1.5rem; font-weight: 500; transition: all 0.3s ease; background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); border: none; box-shadow: 0 2px 8px rgba(12,43,68,0.2);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(12,43,68,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(12,43,68,0.2)'">
+                        <i class="fas fa-download mr-2"></i> Exportar Reporte
+                    </button>
                 </div>
             </div>
         </div>
@@ -39,67 +36,91 @@
         <!-- Panel de Métricas Principales -->
         <div class="row mb-4">
             <!-- Total Participantes -->
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="small-box bg-primary stat-card-custom">
-                    <div class="inner">
-                        <h3 id="totalParticipantes" class="text-white">0</h3>
-                        <p class="text-white">Total Participantes</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-users"></i>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card border-0 shadow-sm stat-card-modern" style="border-radius: 16px; overflow: hidden; animation: fadeInUp 0.5s ease-out;">
+                    <div class="card-body p-4" style="background: linear-gradient(135deg, #0C2B44 0%, #094166 100%);">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <p class="text-white mb-1" style="opacity: 0.9; font-size: 0.85rem; font-weight: 500;">Total Participantes</p>
+                                <h3 id="totalParticipantes" class="text-white mb-0" style="font-size: 2.2rem; font-weight: 700;">0</h3>
+                            </div>
+                            <div class="bg-white rounded-circle p-3" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; opacity: 0.9;">
+                                <i class="fas fa-users" style="font-size: 1.3rem; color: #0C2B44;"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Participantes Aprobados -->
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="small-box bg-success stat-card-custom">
-                    <div class="inner">
-                        <h3 id="participantesAprobados" class="text-white">0</h3>
-                        <p class="text-white">Aprobados</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-check-circle"></i>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card border-0 shadow-sm stat-card-modern" style="border-radius: 16px; overflow: hidden; animation: fadeInUp 0.6s ease-out;">
+                    <div class="card-body p-4" style="background: linear-gradient(135deg, #00A36C 0%, #008557 100%);">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <p class="text-white mb-1" style="opacity: 0.9; font-size: 0.85rem; font-weight: 500;">Aprobados</p>
+                                <h3 id="participantesAprobados" class="text-white mb-0" style="font-size: 2.2rem; font-weight: 700;">0</h3>
+                            </div>
+                            <div class="bg-white rounded-circle p-3" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; opacity: 0.9;">
+                                <i class="fas fa-check-circle" style="font-size: 1.3rem; color: #00A36C;"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Tasa de Confirmación -->
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="small-box bg-info stat-card-custom">
-                    <div class="inner">
-                        <h3 id="tasaConfirmacion" class="text-white">0%</h3>
-                        <p class="text-white">Tasa Confirmación</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-percentage"></i>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card border-0 shadow-sm stat-card-modern" style="border-radius: 16px; overflow: hidden; animation: fadeInUp 0.7s ease-out;">
+                    <div class="card-body p-4" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%);">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <p class="text-white mb-1" style="opacity: 0.9; font-size: 0.85rem; font-weight: 500;">Tasa Confirmación</p>
+                                <h3 id="tasaConfirmacion" class="text-white mb-0" style="font-size: 2.2rem; font-weight: 700;">0%</h3>
+                            </div>
+                            <div class="bg-white rounded-circle p-3" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; opacity: 0.9;">
+                                <i class="fas fa-percentage" style="font-size: 1.3rem; color: #0C2B44;"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Capacidad -->
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="small-box bg-warning stat-card-custom">
-                    <div class="inner">
-                        <h3 id="porcentajeCapacidad" class="text-white">-</h3>
-                        <p class="text-white">Capacidad</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-chart-pie"></i>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card border-0 shadow-sm stat-card-modern" style="border-radius: 16px; overflow: hidden; animation: fadeInUp 0.8s ease-out;">
+                    <div class="card-body p-4" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%);">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <p class="text-white mb-1" style="opacity: 0.9; font-size: 0.85rem; font-weight: 500;">Capacidad</p>
+                                <h3 id="porcentajeCapacidad" class="text-white mb-0" style="font-size: 2.2rem; font-weight: 700;">-</h3>
+                            </div>
+                            <div class="bg-white rounded-circle p-3" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; opacity: 0.9;">
+                                <i class="fas fa-chart-pie" style="font-size: 1.3rem; color: #00A36C;"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Panel de Alertas -->
-        <div id="panelAlertas" class="card mb-4" style="display: none;">
-            <div class="card-header bg-warning">
-                <h5 class="card-title mb-0 text-white">
-                    <i class="fas fa-bell mr-2"></i>Alertas y Notificaciones
-                </h5>
-            </div>
-            <div class="card-body p-0">
-                <div id="alertasContainer" class="p-3">
+        <div id="panelAlertas" class="card border-0 shadow-sm mb-4" style="border-radius: 16px; animation: fadeInUp 0.5s ease-out; display: none;">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="section-icon mr-3">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem;">
+                            Alertas y Notificaciones
+                        </h5>
+                        <p class="mb-0 text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">
+                            Información importante sobre el evento
+                        </p>
+                    </div>
+                </div>
+                <div id="alertasContainer">
                     <!-- Las alertas se cargarán aquí dinámicamente -->
                 </div>
             </div>
@@ -108,43 +129,55 @@
         <!-- Métricas de Interacción: Reacciones, Compartidos, Participaciones -->
         <div class="row mb-4">
             <!-- Total Reacciones -->
-            <div class="col-lg-4 col-md-6 mb-3">
-                <div class="info-box">
-                    <span class="info-box-icon bg-danger elevation-1">
-                        <i class="fas fa-heart"></i>
-                    </span>
-                    <div class="info-box-content">
-                        <span class="info-box-text font-weight-bold">Total Reacciones</span>
-                        <span class="info-box-number" id="totalReacciones">0</span>
-                        <small class="text-muted">Me gusta recibidos</small>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card border-0 shadow-sm" style="border-radius: 16px; animation: fadeInUp 0.6s ease-out;">
+                    <div class="card-body p-4">
+                        <div class="info-item" style="padding: 0; margin: 0;">
+                            <div class="info-icon" style="width: 48px; height: 48px; background: rgba(0, 163, 108, 0.1); border-radius: 12px; color: #00A36C;">
+                                <i class="fas fa-heart"></i>
+                            </div>
+                            <div class="info-content">
+                                <h6 class="info-label">Total Reacciones</h6>
+                                <p class="info-value mb-0" id="totalReacciones" style="font-size: 1.5rem; color: #0C2B44;">0</p>
+                                <small class="text-muted">Me gusta recibidos</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Total Compartidos -->
-            <div class="col-lg-4 col-md-6 mb-3">
-                <div class="info-box">
-                    <span class="info-box-icon bg-warning elevation-1">
-                        <i class="fas fa-share-alt"></i>
-                    </span>
-                    <div class="info-box-content">
-                        <span class="info-box-text font-weight-bold">Total Compartidos</span>
-                        <span class="info-box-number" id="totalCompartidos">0</span>
-                        <small class="text-muted">Veces compartido</small>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card border-0 shadow-sm" style="border-radius: 16px; animation: fadeInUp 0.7s ease-out;">
+                    <div class="card-body p-4">
+                        <div class="info-item" style="padding: 0; margin: 0;">
+                            <div class="info-icon" style="width: 48px; height: 48px; background: rgba(12, 43, 68, 0.1); border-radius: 12px; color: #0C2B44;">
+                                <i class="fas fa-share-alt"></i>
+                            </div>
+                            <div class="info-content">
+                                <h6 class="info-label">Total Compartidos</h6>
+                                <p class="info-value mb-0" id="totalCompartidos" style="font-size: 1.5rem; color: #0C2B44;">0</p>
+                                <small class="text-muted">Veces compartido</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Total Participaciones -->
-            <div class="col-lg-4 col-md-6 mb-3">
-                <div class="info-box">
-                    <span class="info-box-icon bg-success elevation-1">
-                        <i class="fas fa-user-check"></i>
-                    </span>
-                    <div class="info-box-content">
-                        <span class="info-box-text font-weight-bold">Total Participaciones</span>
-                        <span class="info-box-number" id="totalParticipaciones">0</span>
-                        <small class="text-muted" id="detalleParticipaciones">0 registrados, 0 no registrados</small>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card border-0 shadow-sm" style="border-radius: 16px; animation: fadeInUp 0.8s ease-out;">
+                    <div class="card-body p-4">
+                        <div class="info-item" style="padding: 0; margin: 0;">
+                            <div class="info-icon" style="width: 48px; height: 48px; background: rgba(0, 163, 108, 0.1); border-radius: 12px; color: #00A36C;">
+                                <i class="fas fa-user-check"></i>
+                            </div>
+                            <div class="info-content">
+                                <h6 class="info-label">Total Participaciones</h6>
+                                <p class="info-value mb-0" id="totalParticipaciones" style="font-size: 1.5rem; color: #0C2B44;">0</p>
+                                <small class="text-muted" id="detalleParticipaciones">0 registrados, 0 no registrados</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -153,24 +186,32 @@
         <!-- Seguimiento por Tipo de Actor -->
         <div class="row mb-4">
             <!-- ONG Organizadora -->
-            <div class="col-lg-12 col-md-12 mb-3">
-                <div class="card">
-                    <div class="card-header bg-primary">
-                        <h6 class="card-title mb-0 text-white">
-                            <i class="fas fa-flag mr-2"></i>ONG Organizadora
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="font-weight-bold text-dark">Cumplimiento de tareas</span>
-                                <strong id="porcentajeCumplimientoOng" class="text-success">0%</strong>
+            <div class="col-lg-12 col-md-12 mb-4">
+                <div class="card border-0 shadow-sm" style="border-radius: 16px; animation: fadeInUp 0.6s ease-out;">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="section-icon mr-3">
+                                <i class="fas fa-flag"></i>
                             </div>
-                            <div class="progress">
-                                <div id="barraCumplimientoOng" class="progress-bar bg-success" role="progressbar" style="width: 0%;"></div>
+                            <div>
+                                <h5 class="mb-0" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem;">
+                                    ONG Organizadora
+                                </h5>
+                                <p class="mb-0 text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">
+                                    Cumplimiento de tareas y responsabilidades
+                                </p>
                             </div>
                         </div>
-                        <div id="tareasOngContainer" class="mt-3">
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="info-label">Cumplimiento de tareas</span>
+                                <strong id="porcentajeCumplimientoOng" class="info-value" style="color: #00A36C;">0%</strong>
+                            </div>
+                            <div class="progress" style="height: 8px; border-radius: 4px; background: #f0f0f0;">
+                                <div id="barraCumplimientoOng" class="progress-bar" role="progressbar" style="width: 0%; background: linear-gradient(90deg, #0C2B44 0%, #00A36C 100%); transition: width 0.3s ease;"></div>
+                            </div>
+                        </div>
+                        <div id="tareasOngContainer" class="row">
                             <!-- Tareas se cargarán dinámicamente -->
                         </div>
                     </div>
@@ -179,17 +220,17 @@
         </div>
 
         <!-- Gráficas -->
-        <div class="row mb-4">
-            <!-- Gráfica de Inscripciones por Día -->
-            <div class="col-lg-6 col-md-12 mb-3">
-                <div class="card">
-                    <div class="card-header bg-danger">
-                        <h6 class="card-title mb-0 text-white">
-                            <i class="fas fa-heart mr-2"></i>Reacciones por Día
-                        </h6>
-                        <small class="text-white-50">Últimos 30 días</small>
+        <div class="row mb-5">
+            <!-- Gráfica de Reacciones por Día -->
+            <div class="col-lg-6 col-md-12 mb-4">
+                <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+                    <div class="card-header bg-white border-0 pt-4 pb-3 px-4">
+                        <h3 class="card-title mb-0" style="font-size: 1.1rem; font-weight: 600; color: #333333;">
+                            <i class="fas fa-heart mr-2" style="color: #00A36C;"></i>Reacciones por Día
+                        </h3>
+                        <small class="text-muted" style="font-size: 0.85rem;">Últimos 30 días</small>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body px-4 pb-4">
                         <div style="height: 300px; position: relative;">
                             <canvas id="graficaInscripciones"></canvas>
                         </div>
@@ -198,15 +239,15 @@
             </div>
 
             <!-- Gráfica de Estado de Participantes -->
-            <div class="col-lg-6 col-md-12 mb-3">
-                <div class="card">
-                    <div class="card-header bg-success">
-                        <h6 class="card-title mb-0 text-white">
-                            <i class="fas fa-chart-pie mr-2"></i>Estado de Participantes
-                        </h6>
-                        <small class="text-white-50">Distribución actual</small>
+            <div class="col-lg-6 col-md-12 mb-4">
+                <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+                    <div class="card-header bg-white border-0 pt-4 pb-3 px-4">
+                        <h3 class="card-title mb-0" style="font-size: 1.1rem; font-weight: 600; color: #333333;">
+                            <i class="fas fa-chart-pie mr-2" style="color: #0C2B44;"></i>Estado de Participantes
+                        </h3>
+                        <small class="text-muted" style="font-size: 0.85rem;">Distribución actual</small>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body px-4 pb-4">
                         <div style="height: 300px; position: relative;">
                             <canvas id="graficaEstados"></canvas>
                         </div>
@@ -216,40 +257,46 @@
         </div>
 
         <!-- Tabla de Participantes -->
-        <div class="card mb-4">
-            <div class="card-header bg-primary">
-                <div class="d-flex justify-content-between align-items-center flex-wrap">
-                    <h5 class="card-title mb-0 text-white">
-                        <i class="fas fa-users mr-2"></i>Seguimiento de Inscripciones
-                    </h5>
-                    <div class="d-flex align-items-center mt-2 mt-md-0">
-                        <select id="filtroEstadoParticipante" class="form-control form-control-sm mr-2" style="width: auto;">
-                            <option value="todos">Todos los estados</option>
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; animation: fadeInUp 0.7s ease-out;">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="section-icon mr-3">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="mb-0" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem;">
+                            Seguimiento de Inscripciones
+                        </h5>
+                        <p class="mb-0 text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">
+                            Lista de participantes registrados
+                        </p>
+                    </div>
+                    <div class="d-flex align-items-center" style="gap: 0.5rem;">
+                        <select id="filtroEstadoParticipante" class="form-control" style="border-radius: 8px; padding: 0.5rem 0.75rem; font-size: 0.9rem; border: 1px solid rgba(12, 43, 68, 0.2);">
+                            <option value="todos">Todos</option>
                             <option value="aprobada">Aprobados</option>
                             <option value="pendiente">Pendientes</option>
                             <option value="rechazada">Rechazados</option>
                         </select>
-                        <input type="text" id="buscadorParticipantes" class="form-control form-control-sm" placeholder="Buscar participante..." style="width: 200px;">
+                        <input type="text" id="buscadorParticipantes" class="form-control" placeholder="Buscar..." style="width: 200px; border-radius: 8px; padding: 0.5rem 0.75rem; font-size: 0.9rem; border: 1px solid rgba(12, 43, 68, 0.2);">
                     </div>
                 </div>
-            </div>
-            <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
-                        <thead>
+                        <thead style="background: var(--brand-gris-suave);">
                             <tr>
-                                <th>Participante</th>
-                                <th>Email</th>
-                                <th>Teléfono</th>
-                                <th>Estado</th>
-                                <th>Fecha Registro</th>
-                                <th>Acciones</th>
+                                <th style="padding: 1rem; font-weight: 600; color: var(--primary-color); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Participante</th>
+                                <th style="padding: 1rem; font-weight: 600; color: var(--primary-color); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Email</th>
+                                <th style="padding: 1rem; font-weight: 600; color: var(--primary-color); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Teléfono</th>
+                                <th style="padding: 1rem; font-weight: 600; color: var(--primary-color); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Estado</th>
+                                <th style="padding: 1rem; font-weight: 600; color: var(--primary-color); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Fecha Registro</th>
+                                <th style="padding: 1rem; font-weight: 600; color: var(--primary-color); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="tablaParticipantes">
                             <tr>
                                 <td colspan="6" class="text-center py-5">
-                                    <div class="spinner-border text-primary" role="status">
+                                    <div class="spinner-border" role="status" style="color: #00A36C; width: 2rem; height: 2rem;">
                                         <span class="sr-only">Cargando...</span>
                                     </div>
                                 </td>
@@ -261,16 +308,24 @@
         </div>
 
         <!-- Historial de Cambios -->
-        <div class="card mb-4">
-            <div class="card-header bg-info">
-                <h5 class="card-title mb-0 text-white">
-                    <i class="fas fa-history mr-2"></i>Bitácora de Cambios
-                </h5>
-            </div>
-            <div class="card-body">
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; animation: fadeInUp 0.8s ease-out;">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="section-icon mr-3">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem;">
+                            Bitácora de Cambios
+                        </h5>
+                        <p class="mb-0 text-muted" style="font-size: 0.85rem; margin-top: 0.25rem;">
+                            Registro de actividades y modificaciones
+                        </p>
+                    </div>
+                </div>
                 <div id="historialContainer">
-                    <div class="text-center py-3">
-                        <div class="spinner-border text-primary" role="status">
+                    <div class="text-center py-4">
+                        <div class="spinner-border" role="status" style="color: #00A36C; width: 2rem; height: 2rem;">
                             <span class="sr-only">Cargando...</span>
                         </div>
                     </div>
@@ -283,34 +338,568 @@
 
 @push('css')
 <style>
+    /* Variables CSS (igual que show.blade.php) */
+    :root {
+        --primary-color: #0C2B44;
+        --secondary-color: #00A36C;
+        --text-dark: #2c3e50;
+        --text-muted: #6c757d;
+        --border-radius: 16px;
+        --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+        --shadow-md: 0 4px 12px rgba(0,0,0,0.12);
+        --shadow-lg: 0 8px 24px rgba(0,0,0,0.15);
+        --brand-primario: #0C2B44;
+        --brand-acento: #00A36C;
+        --brand-blanco: #FFFFFF;
+        --brand-gris-oscuro: #333333;
+        --brand-gris-suave: #F5F5F5;
+    }
+    
+    /* Animaciones (igual que show.blade.php) */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes fadeInUp {
+        from { 
+            opacity: 0; 
+            transform: translateY(30px); 
+        }
+        to { 
+            opacity: 1; 
+            transform: translateY(0); 
+        }
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.05);
+            opacity: 0.9;
+        }
+    }
+
+    /* Section Icon (igual que show.blade.php) */
+    .section-icon {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.25rem;
+        box-shadow: 0 4px 12px rgba(12, 43, 68, 0.2);
+        flex-shrink: 0;
+        transition: all 0.3s ease;
+    }
+
+    .section-icon:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(12, 43, 68, 0.3);
+    }
+
+    /* Info Icon (para items individuales) */
+    .info-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #0C2B44;
+        font-size: 1.2rem;
+        margin-right: 1rem;
+        flex-shrink: 0;
+        transition: all 0.3s ease;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 1rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        margin-bottom: 0.5rem;
+    }
+
+    .info-item:hover {
+        background: rgba(12, 43, 68, 0.03);
+        transform: translateX(5px);
+    }
+
+    .info-item:hover .info-icon {
+        color: #00A36C;
+        transform: scale(1.1);
+    }
+
+    .info-content {
+        flex: 1;
+    }
+
+    .info-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .info-value {
+        font-size: 1rem;
+        color: var(--text-dark);
+        margin: 0;
+        font-weight: 500;
+    }
+
+    /* Cards mejoradas (igual que show.blade.php) */
+    .card {
+        transition: all 0.3s ease;
+        border: none;
+    }
+    
+    .card:hover {
+        box-shadow: var(--shadow-md) !important;
+        transform: translateY(-2px);
+    }
+
+    /* Badges mejorados (igual que show.blade.php) */
+    .badge {
+        font-weight: 500;
+        padding: 0.5em 0.8em;
+        border-radius: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .badge:hover {
+        transform: scale(1.05);
+    }
+    
+    .badge-success {
+        background: linear-gradient(135deg, #00A36C 0%, #008a5a 100%) !important;
+        color: white !important;
+    }
+    
+    .badge-info {
+        background: linear-gradient(135deg, #0C2B44 0%, #1a4d6b 100%) !important;
+        color: white !important;
+    }
+    
+    .badge-primary {
+        background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%) !important;
+        color: white !important;
+    }
+
+    body {
+        background-color: var(--brand-gris-suave);
+    }
+
+    .container-fluid {
+        max-width: 1400px;
+        padding: 2rem 1.5rem;
+    }
+
+    /* Métricas Principales */
+    .metric-card-minimal {
+        background: var(--brand-blanco);
+        border: 1px solid rgba(12, 43, 68, 0.1);
+        border-radius: 8px;
+        padding: 2rem 1.5rem;
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+
+    .metric-card-minimal:hover {
+        border-color: var(--brand-acento);
+        box-shadow: 0 2px 8px rgba(0, 163, 108, 0.1);
+    }
+
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 300;
+        color: var(--brand-primario);
+        line-height: 1.2;
+        margin-bottom: 0.5rem;
+    }
+
+    .metric-label {
+        font-size: 0.9rem;
+        color: var(--brand-gris-oscuro);
+        font-weight: 400;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Tarjetas de Interacción */
+    .interaction-card-minimal {
+        background: var(--brand-blanco);
+        border: 1px solid rgba(12, 43, 68, 0.1);
+        border-radius: 8px;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        transition: all 0.2s ease;
+    }
+
+    .interaction-card-minimal:hover {
+        border-color: var(--brand-acento);
+        box-shadow: 0 2px 8px rgba(0, 163, 108, 0.1);
+    }
+
+    .interaction-icon-minimal {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: rgba(0, 163, 108, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1.25rem;
+        color: var(--brand-acento);
+        font-size: 1.25rem;
+    }
+
+    .interaction-content-minimal {
+        flex: 1;
+    }
+
+    .interaction-value {
+        font-size: 2rem;
+        font-weight: 300;
+        color: var(--brand-primario);
+        line-height: 1.2;
+        margin-bottom: 0.25rem;
+    }
+
+    .interaction-label {
+        font-size: 0.95rem;
+        color: var(--brand-gris-oscuro);
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+
+    .interaction-subtitle {
+        font-size: 0.85rem;
+        color: var(--brand-gris-oscuro);
+        opacity: 0.7;
+    }
+
+    /* Secciones */
+    .section-card-minimal {
+        background: var(--brand-blanco);
+        border: 1px solid rgba(12, 43, 68, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .section-header-minimal {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid rgba(12, 43, 68, 0.1);
+        background: var(--brand-gris-suave);
+    }
+
+    .section-title-minimal {
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--brand-primario);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .section-subtitle-minimal {
+        font-size: 0.85rem;
+        color: var(--brand-gris-oscuro);
+        opacity: 0.7;
+        margin-top: 0.25rem;
+        font-weight: 400;
+    }
+
+    .section-body-minimal {
+        padding: 1.5rem;
+    }
+
+    /* Progress Bar Minimalista */
+    .progress-minimal {
+        height: 6px;
+        background: var(--brand-gris-suave);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .progress-bar-minimal {
+        height: 100%;
+        background: linear-gradient(90deg, var(--brand-primario) 0%, var(--brand-acento) 100%);
+        transition: width 0.3s ease;
+    }
+
+    .progress-label-minimal {
+        font-size: 0.9rem;
+        color: var(--brand-gris-oscuro);
+        font-weight: 400;
+    }
+
+    .progress-value-minimal {
+        font-size: 0.9rem;
+        color: var(--brand-acento);
+        font-weight: 500;
+    }
+
+    /* Tareas */
+    .tareas-container-minimal {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .tarea-item-minimal {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(12, 43, 68, 0.1);
+    }
+
+    .tarea-item-minimal:last-child {
+        border-bottom: none;
+    }
+
+    .tarea-item-minimal i {
+        margin-right: 0.75rem;
+        width: 20px;
+    }
+
+    .tarea-item-minimal small {
+        color: var(--brand-gris-oscuro);
+        font-size: 0.9rem;
+    }
+
+    /* Alertas Minimalistas */
+    .alertas-container-minimal {
+        background: var(--brand-blanco);
+        border: 1px solid rgba(12, 43, 68, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .alertas-header-minimal {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid rgba(12, 43, 68, 0.1);
+        background: var(--brand-gris-suave);
+    }
+
+    .alertas-title {
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--brand-primario);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .alertas-content-minimal {
+        padding: 1.5rem;
+    }
+
+    .alert-item-minimal {
+        border-radius: 4px;
+    }
+
+    /* Tabla Minimalista */
+    .table-minimal {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .table-minimal thead {
+        background: var(--brand-gris-suave);
+    }
+
+    .table-minimal thead th {
+        padding: 1rem 1.5rem;
+        text-align: left;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--brand-primario);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid rgba(12, 43, 68, 0.1);
+    }
+
+    .table-minimal tbody td {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid rgba(12, 43, 68, 0.05);
+        color: var(--brand-gris-oscuro);
+        font-size: 0.9rem;
+    }
+
+    .table-minimal tbody tr:hover {
+        background: rgba(0, 163, 108, 0.03);
+    }
+
+    .table-minimal tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Form Controls Minimalistas */
+    .form-control-minimal {
+        border: 1px solid rgba(12, 43, 68, 0.2);
+        border-radius: 6px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9rem;
+        color: var(--brand-gris-oscuro);
+        background: var(--brand-blanco);
+        transition: all 0.2s ease;
+    }
+
+    .form-control-minimal:focus {
+        outline: none;
+        border-color: var(--brand-acento);
+        box-shadow: 0 0 0 3px rgba(0, 163, 108, 0.1);
+    }
+
+    /* Badges Minimalistas */
+    .badge-estado {
+        padding: 0.35em 0.75em;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: inline-block;
+    }
+
+    .badge-aprobada {
+        background: rgba(0, 163, 108, 0.1);
+        color: var(--brand-acento);
+    }
+
+    .badge-pendiente {
+        background: rgba(12, 43, 68, 0.1);
+        color: var(--brand-primario);
+    }
+
+    .badge-rechazada {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    /* Historial Minimalista */
+    .historial-item-minimal {
+        display: flex;
+        align-items: flex-start;
+        padding: 1rem 0;
+        border-bottom: 1px solid rgba(12, 43, 68, 0.1);
+    }
+
+    .historial-item-minimal:last-child {
+        border-bottom: none;
+    }
+
+    .historial-icon-minimal {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(0, 163, 108, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        color: var(--brand-acento);
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .historial-content-minimal {
+        flex: 1;
+    }
+
+    .historial-title-minimal {
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--brand-gris-oscuro);
+        margin-bottom: 0.25rem;
+    }
+
+    .historial-detail-minimal {
+        font-size: 0.85rem;
+        color: var(--brand-gris-oscuro);
+        opacity: 0.7;
+        margin-bottom: 0.25rem;
+    }
+
+    .historial-date-minimal {
+        font-size: 0.8rem;
+        color: var(--brand-gris-oscuro);
+        opacity: 0.6;
+    }
+
+    /* Canvas */
     canvas {
         max-width: 100%;
     }
 
-    .stat-card-custom {
-        border-radius: 16px !important;
+    /* Estilo para tarjetas de gráficas (igual que home-ong) */
+    .card.border-0.shadow-sm {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
-    .badge-estado {
-        padding: 0.4em 0.8em;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 500;
+    .card.border-0.shadow-sm:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12) !important;
     }
 
-    .badge-aprobada {
-        background: #d4edda;
-        color: #155724;
+    /* Botones mejorados (igual que show.blade.php) */
+    .btn {
+        transition: all 0.3s ease;
     }
 
-    .badge-pendiente {
-        background: #fff3cd;
-        color: #856404;
+    .btn:hover {
+        transform: translateY(-2px);
     }
 
-    .badge-rechazada {
-        background: #f8d7da;
-        color: #721c24;
+    .btn:active {
+        transform: translateY(0);
+    }
+
+    /* Loading State */
+    #loadingMessage {
+        padding: 4rem 2rem;
+    }
+
+    #loadingMessage .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        border-width: 0.3rem;
+        color: var(--brand-acento);
+    }
+
+    #loadingMessage p {
+        color: var(--brand-gris-oscuro);
+        opacity: 0.7;
+        margin-top: 1rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .container-fluid {
+            padding: 1rem;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+        }
+
+        .interaction-value {
+            font-size: 1.5rem;
+        }
+
+        .section-body-minimal {
+            padding: 1rem;
+        }
+
+        .table-minimal thead th,
+        .table-minimal tbody td {
+            padding: 0.75rem 1rem;
+        }
     }
 </style>
 @endpush
@@ -424,17 +1013,57 @@ async function cargarSeguimiento() {
             const tareasContainer = document.getElementById('tareasOngContainer');
             const tareas = stats.tareas_cumplidas_ong;
             tareasContainer.innerHTML = `
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <small><i class="fas ${tareas.evento_publicado ? 'fa-check-circle text-success' : 'fa-times-circle text-danger'} mr-2"></i>Evento publicado</small>
+                <div class="col-md-6 mb-3">
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas ${tareas.evento_publicado ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+                        </div>
+                        <div class="info-content">
+                            <h6 class="info-label">Evento publicado</h6>
+                            <p class="info-value" style="color: ${tareas.evento_publicado ? '#00A36C' : '#dc3545'};">
+                                ${tareas.evento_publicado ? 'Completado' : 'Pendiente'}
+                            </p>
+                        </div>
+                    </div>
                 </div>
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <small><i class="fas ${tareas.imagenes_cargadas ? 'fa-check-circle text-success' : 'fa-times-circle text-danger'} mr-2"></i>Imágenes cargadas</small>
+                <div class="col-md-6 mb-3">
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas ${tareas.imagenes_cargadas ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+                        </div>
+                        <div class="info-content">
+                            <h6 class="info-label">Imágenes cargadas</h6>
+                            <p class="info-value" style="color: ${tareas.imagenes_cargadas ? '#00A36C' : '#dc3545'};">
+                                ${tareas.imagenes_cargadas ? 'Completado' : 'Pendiente'}
+                            </p>
+                        </div>
+                    </div>
                 </div>
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <small><i class="fas ${tareas.fechas_definidas ? 'fa-check-circle text-success' : 'fa-times-circle text-danger'} mr-2"></i>Fechas definidas</small>
+                <div class="col-md-6 mb-3">
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas ${tareas.fechas_definidas ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+                        </div>
+                        <div class="info-content">
+                            <h6 class="info-label">Fechas definidas</h6>
+                            <p class="info-value" style="color: ${tareas.fechas_definidas ? '#00A36C' : '#dc3545'};">
+                                ${tareas.fechas_definidas ? 'Completado' : 'Pendiente'}
+                            </p>
+                        </div>
+                    </div>
                 </div>
-                <div class="d-flex justify-content-between align-items-center">
-                    <small><i class="fas ${tareas.ubicacion_definida ? 'fa-check-circle text-success' : 'fa-times-circle text-danger'} mr-2"></i>Ubicación definida</small>
+                <div class="col-md-6 mb-3">
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas ${tareas.ubicacion_definida ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+                        </div>
+                        <div class="info-content">
+                            <h6 class="info-label">Ubicación definida</h6>
+                            <p class="info-value" style="color: ${tareas.ubicacion_definida ? '#00A36C' : '#dc3545'};">
+                                ${tareas.ubicacion_definida ? 'Completado' : 'Pendiente'}
+                            </p>
+                        </div>
+                    </div>
                 </div>
             `;
         }
@@ -496,6 +1125,11 @@ function crearGraficaReacciones(datos) {
         graficaInscripciones.destroy();
     }
 
+    // Crear gradiente para el área
+    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, 'rgba(0, 163, 108, 0.6)');
+    gradient.addColorStop(1, 'rgba(0, 163, 108, 0.0)');
+
     graficaInscripciones = new Chart(ctx, {
         type: 'line',
         data: {
@@ -503,14 +1137,14 @@ function crearGraficaReacciones(datos) {
             datasets: [{
                 label: 'Reacciones',
                 data: valores,
-                borderColor: '#e91e63',
-                backgroundColor: 'rgba(233, 30, 99, 0.1)',
+                borderColor: '#00A36C',
+                backgroundColor: gradient,
                 tension: 0.4,
                 fill: true,
                 pointRadius: 4,
                 pointHoverRadius: 6,
-                pointBackgroundColor: '#e91e63',
-                pointBorderColor: '#fff',
+                pointBackgroundColor: '#00A36C',
+                pointBorderColor: '#ffffff',
                 pointBorderWidth: 2
             }]
         },
@@ -519,13 +1153,21 @@ function crearGraficaReacciones(datos) {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    display: false
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 12,
+                        font: { size: 11, weight: '500' },
+                        color: '#666'
+                    }
                 },
                 tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    backgroundColor: 'rgba(0, 163, 108, 0.9)',
+                    padding: 12,
                     titleColor: '#fff',
                     bodyColor: '#fff',
-                    borderColor: '#e91e63',
+                    borderColor: '#00A36C',
                     borderWidth: 1
                 }
             },
@@ -533,7 +1175,9 @@ function crearGraficaReacciones(datos) {
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        stepSize: 1
+                        stepSize: 1,
+                        color: '#666',
+                        font: { size: 11 }
                     },
                     grid: {
                         color: 'rgba(0, 0, 0, 0.05)'
@@ -542,6 +1186,10 @@ function crearGraficaReacciones(datos) {
                 x: {
                     grid: {
                         display: false
+                    },
+                    ticks: {
+                        color: '#666',
+                        font: { size: 11, weight: '500' }
                     }
                 }
             }
@@ -558,12 +1206,19 @@ function crearGraficaEstados(stats) {
     }
 
     const labels = ['Aprobados', 'Pendientes'];
-    const data = [stats.participantes_aprobados, stats.participantes_pendientes];
+    const data = [stats.participantes_aprobados || 0, stats.participantes_pendientes || 0];
     
     // Agregar cancelados si existen
     if (stats.participantes_cancelados > 0) {
         labels.push('Cancelados');
         data.push(stats.participantes_cancelados);
+    }
+
+    // Si no hay datos, mostrar valores mínimos para evitar error
+    const total = data.reduce((a, b) => a + b, 0);
+    if (total === 0) {
+        data[0] = 1;
+        data[1] = 1;
     }
 
     graficaEstados = new Chart(ctx, {
@@ -572,8 +1227,9 @@ function crearGraficaEstados(stats) {
             labels: labels,
             datasets: [{
                 data: data,
-                backgroundColor: ['#00A36C', '#FFC107', '#dc3545'],
-                borderWidth: 0
+                backgroundColor: ['#00A36C', '#0C2B44', '#dc3545'],
+                borderWidth: 0,
+                cutout: '70%'
             }]
         },
         options: {
@@ -581,7 +1237,27 @@ function crearGraficaEstados(stats) {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    position: 'bottom'
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 15,
+                        font: { size: 12, weight: '500' },
+                        color: '#666'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(12, 43, 68, 0.9)',
+                    padding: 12,
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
                 }
             }
         }
@@ -606,7 +1282,7 @@ function mostrarAlertas(alertas) {
         'info': { bg: '#d1ecf1', border: '#17a2b8', icon: 'fa-info-circle', text: '#0c5460' }
     };
 
-    container.innerHTML = alertas.map(alerta => {
+        container.innerHTML = alertas.map(alerta => {
         const color = nivelColores[alerta.nivel] || nivelColores.info;
         const fecha = new Date(alerta.fecha).toLocaleString('es-BO', {
             year: 'numeric',
@@ -617,14 +1293,13 @@ function mostrarAlertas(alertas) {
         });
 
         return `
-            <div class="alert mb-2 alert-${alerta.nivel === 'critica' ? 'danger' : alerta.nivel === 'advertencia' ? 'warning' : 'info'}" style="border-left: 4px solid ${color.border}; border-radius: 8px;">
-                <div class="d-flex align-items-start">
-                    <i class="fas ${color.icon} mr-2 mt-1"></i>
-                    <div class="flex-grow-1">
-                        <strong>${alerta.mensaje}</strong>
-                        <br>
-                        <small class="text-muted">${fecha}</small>
-                    </div>
+            <div class="info-item" style="border-left: 4px solid ${color.border}; background: ${color.bg}; margin-bottom: 0.75rem;">
+                <div class="info-icon" style="color: ${color.text};">
+                    <i class="fas ${color.icon}"></i>
+                </div>
+                <div class="info-content">
+                    <h6 class="info-label" style="color: ${color.text}; margin-bottom: 0.5rem;">${alerta.mensaje}</h6>
+                    <p class="info-value mb-0" style="color: ${color.text}; opacity: 0.7; font-size: 0.85rem;">${fecha}</p>
                 </div>
             </div>
         `;
@@ -812,14 +1487,14 @@ async function cargarHistorial() {
             const color = coloresPorTipo[h.tipo] || '#00A36C';
 
             return `
-                <div class="d-flex align-items-start mb-3 pb-3 border-bottom">
-                    <div class="mr-3" style="width: 48px; height: 48px; background: ${color}20; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                        <i class="fas ${icono}" style="color: ${color}; font-size: 1.2rem;"></i>
+                <div class="info-item">
+                    <div class="info-icon" style="color: ${color};">
+                        <i class="fas ${icono}"></i>
                     </div>
-                    <div class="flex-grow-1">
-                        <h6 class="mb-1 font-weight-bold text-dark">${h.accion}</h6>
-                        <p class="mb-1 text-muted">${h.detalle}</p>
-                        <small class="text-muted">${fecha} - ${h.usuario}</small>
+                    <div class="info-content">
+                        <h6 class="info-label" style="margin-bottom: 0.25rem;">${h.accion}</h6>
+                        <p class="info-value mb-1" style="font-size: 0.9rem;">${h.detalle}</p>
+                        <small class="text-muted" style="font-size: 0.8rem;">${fecha} - ${h.usuario}</small>
                     </div>
                 </div>
             `;

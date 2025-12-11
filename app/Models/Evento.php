@@ -205,7 +205,7 @@ class Evento extends Model
         
         // Si aún no hay baseUrl, usar un valor por defecto
         if (empty($baseUrl)) {
-            $baseUrl = 'http://10.26.0.215:8000';
+            $baseUrl = 'http://10.26.5.12:8000';
         }
         
         // Generar URLs completas para cada imagen
@@ -217,10 +217,12 @@ class Evento extends Model
             // Si ya es una URL completa, verificar si tiene IPs antiguas y reemplazarlas
             if (strpos($imagen, 'http://') === 0 || strpos($imagen, 'https://') === 0) {
                 // Reemplazar IPs antiguas con la nueva si están presentes
-                $imagen = str_replace('http://10.26.0.215:8000', $baseUrl, $imagen);
-                $imagen = str_replace('https://10.26.0.215:8000', $baseUrl, $imagen);
-                $imagen = str_replace('http://10.26.0.215:8000', $baseUrl, $imagen);
-                $imagen = str_replace('https://10.26.0.215:8000', $baseUrl, $imagen);
+                $imagen = str_replace('http://192.168.0.6:8000', $baseUrl, $imagen);
+                $imagen = str_replace('https://192.168.0.6:8000', $baseUrl, $imagen);
+                $imagen = str_replace('http://10.26.15.110:8000', $baseUrl, $imagen);
+                $imagen = str_replace('https://10.26.15.110:8000', $baseUrl, $imagen);
+                $imagen = str_replace('http://10.26.5.12:8000', $baseUrl, $imagen);
+                $imagen = str_replace('https://10.26.5.12:8000', $baseUrl, $imagen);
                 return $imagen;
             }
 

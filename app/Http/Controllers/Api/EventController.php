@@ -55,14 +55,16 @@ class EventController extends Controller
                 }
             }
             if (empty($baseUrl)) {
-                $baseUrl = 'http://10.26.0.215:8000';
+                $baseUrl = 'http://10.26.5.12:8000';
             }
             
             // Reemplazar IPs antiguas con la URL actual
-            $avatar = str_replace('http://10.26.0.215:8000', $baseUrl, $avatar);
-            $avatar = str_replace('https://10.26.0.215:8000', $baseUrl, $avatar);
-            $avatar = str_replace('http://10.26.0.215:8000', $baseUrl, $avatar);
-            $avatar = str_replace('https://10.26.0.215:8000', $baseUrl, $avatar);
+            $avatar = str_replace('http://192.168.0.6:8000', $baseUrl, $avatar);
+            $avatar = str_replace('https://192.168.0.6:8000', $baseUrl, $avatar);
+            $avatar = str_replace('http://10.26.15.110:8000', $baseUrl, $avatar);
+            $avatar = str_replace('https://10.26.15.110:8000', $baseUrl, $avatar);
+            $avatar = str_replace('http://10.26.5.12:8000', $baseUrl, $avatar);
+            $avatar = str_replace('https://10.26.5.12:8000', $baseUrl, $avatar);
             
             return $avatar;
         }
@@ -80,7 +82,7 @@ class EventController extends Controller
             }
         }
         if (empty($baseUrl)) {
-            $baseUrl = 'http://10.26.0.215:8000';
+            $baseUrl = 'http://10.26.5.12:8000';
         }
         
         // Normalizar la ruta
@@ -693,6 +695,11 @@ class EventController extends Controller
     public function show($id)
     {
         try {
+            // Limpiar cualquier output buffer
+            if (ob_get_level()) {
+                ob_clean();
+            }
+            
             // Obtener el evento sin caché para asegurar datos actualizados
             // Usar fresh() para forzar una nueva consulta a la base de datos
             $evento = Evento::with('ong')->find($id);
@@ -759,18 +766,30 @@ class EventController extends Controller
                 $eventoArray['fecha_finalizacion'] = is_string($rawValue) ? $rawValue : ($evento->fecha_finalizacion ? $evento->fecha_finalizacion->format('Y-m-d H:i:s') : null);
             }
 
-            return response()->json([
+            // Preparar datos para JSON
+            $datos = [
                 "success" => true,
                 "evento" => $eventoArray
-            ]);
+            ];
+            
+            // Limpiar output buffer antes de enviar respuesta
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
+            return response()->json($datos, 200, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         } catch (\Throwable $e) {
+            // Limpiar output buffer antes de enviar respuesta de error
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
             return response()->json([
                 "success" => false,
                 "error" => $e->getMessage(),
                 "line" => $e->getLine(),
                 "file" => $e->getFile()
-            ], 500);
+            ], 500, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         }
     }
 
@@ -991,6 +1010,11 @@ class EventController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            // Limpiar cualquier output buffer
+            if (ob_get_level()) {
+                ob_clean();
+            }
+            
             \Log::info("=== INICIO ACTUALIZACIÓN EVENTO ID: {$id} ===");
             \Log::info("Datos recibidos:", $request->all());
             
@@ -1201,19 +1225,31 @@ class EventController extends Controller
             }
             \Log::info("=== FIN ACTUALIZACIÓN EVENTO ID: {$id} ===");
 
-            return response()->json([
+            // Preparar datos para JSON
+            $datos = [
                 "success" => true,
                 "message" => "Evento actualizado correctamente",
                 "evento" => $eventoActualizado ? $eventoActualizado->fresh() : $evento->fresh()
-            ]);
+            ];
+            
+            // Limpiar output buffer antes de enviar respuesta
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
+            return response()->json($datos, 200, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         } catch (\Throwable $e) {
+            // Limpiar output buffer antes de enviar respuesta de error
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
             return response()->json([
                 "success" => false,
                 "error" => $e->getMessage(),
                 "line" => $e->getLine(),
                 "file" => $e->getFile()
-            ], 500);
+            ], 500, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         }
     }
 
@@ -1223,6 +1259,11 @@ class EventController extends Controller
     public function dashboardPorEstado($ongId, Request $request)
     {
         try {
+            // Limpiar cualquier output buffer
+            if (ob_get_level()) {
+                ob_clean();
+            }
+            
             // Obtener el usuario autenticado
             $usuarioAutenticado = $request->user();
             
@@ -1448,7 +1489,8 @@ class EventController extends Controller
                 ];
             })->values();
             
-            return response()->json([
+            // Preparar datos para JSON
+            $datos = [
                 'success' => true,
                 'eventos' => $eventos,
                 'estadisticas' => $estadisticas,
@@ -1490,7 +1532,14 @@ class EventController extends Controller
                 'tabla_resumen' => $tablaResumen,
                 'filtro_estado' => $estadoFiltro,
                 'count' => $eventos->count()
-            ]);
+            ];
+            
+            // Limpiar output buffer antes de enviar respuesta
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
+            return response()->json($datos, 200, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
@@ -1555,7 +1604,7 @@ class EventController extends Controller
                     // Construir URL completa de la foto de perfil
                     $fotoPerfil = null;
                     if ($empresa->foto_perfil) {
-                        $baseUrl = env('PUBLIC_APP_URL', env('APP_URL', 'http://10.26.0.215:8000'));
+                        $baseUrl = env('PUBLIC_APP_URL', env('APP_URL', 'http://10.26.5.12:8000'));
                         if (strpos($empresa->foto_perfil, 'http://') === 0 || strpos($empresa->foto_perfil, 'https://') === 0) {
                             $fotoPerfil = $empresa->foto_perfil;
                         } else {

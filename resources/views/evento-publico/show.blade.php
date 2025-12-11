@@ -584,8 +584,8 @@
         const eventoId = {{ $eventoId }};
         const API_BASE_URL = '{{ url("/") }}';
         const PUBLIC_BASE_URL = typeof getPublicUrl !== 'undefined' 
-            ? (window.PUBLIC_BASE_URL || 'http://10.26.0.215:8000')
-            : 'http://10.26.0.215:8000';
+            ? (window.PUBLIC_BASE_URL || 'http://10.26.5.12:8000')
+            : 'http://10.26.5.12:8000';
         
         // Almacenar datos del evento para compartir
         window.eventoParaCompartir = {

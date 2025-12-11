@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\Ong;
 use App\Models\Empresa;
 use App\Models\IntegranteExterno;
+use Spatie\Permission\Models\Role;
 
 class AuthController extends Controller
 {
@@ -91,6 +92,24 @@ class AuthController extends Controller
                     'descripcion'      => $request->descripcion,
                 ]);
             }
+
+                // 3. Asignar rol de Spatie según tipo de usuario
+                $tipoUsuarioToRole = [
+                    'ONG' => 'ONG',
+                    'Empresa' => 'Empresa',
+                    'Integrante externo' => 'Integrante Externo',
+                ];
+
+                $nombreRol = $tipoUsuarioToRole[$user->tipo_usuario] ?? null;
+                if ($nombreRol) {
+                    try {
+                        $rol = Role::findByName($nombreRol, 'web');
+                        $user->assignRole($rol);
+                    } catch (\Exception $e) {
+                        // Si el rol no existe, continuar sin asignar (se puede asignar después)
+                        \Log::warning("Rol '{$nombreRol}' no encontrado para usuario {$user->id_usuario}");
+                    }
+                }
 
                 return $user;
             });

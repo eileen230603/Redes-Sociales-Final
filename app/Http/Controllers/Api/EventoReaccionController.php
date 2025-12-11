@@ -87,6 +87,11 @@ class EventoReaccionController extends Controller
     public function verificar(Request $request, $eventoId)
     {
         try {
+            // Limpiar cualquier output buffer
+            if (ob_get_level()) {
+                ob_clean();
+            }
+            
             $externoId = $request->user()->id_usuario;
 
             $reaccionado = EventoReaccion::where('evento_id', $eventoId)
@@ -95,17 +100,29 @@ class EventoReaccionController extends Controller
 
             $totalReacciones = EventoReaccion::where('evento_id', $eventoId)->count();
 
-            return response()->json([
+            // Preparar datos para JSON
+            $datos = [
                 'success' => true,
                 'reaccionado' => $reaccionado,
                 'total_reacciones' => $totalReacciones
-            ]);
+            ];
+            
+            // Limpiar output buffer antes de enviar respuesta
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
+            return response()->json($datos, 200, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         } catch (\Throwable $e) {
+            // Limpiar output buffer antes de enviar respuesta de error
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
             return response()->json([
                 'success' => false,
                 'error' => 'Error al verificar reacción: ' . $e->getMessage()
-            ], 500);
+            ], 500, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         }
     }
 
@@ -115,6 +132,11 @@ class EventoReaccionController extends Controller
     public function usuariosQueReaccionaron(Request $request, $eventoId)
     {
         try {
+            // Limpiar cualquier output buffer
+            if (ob_get_level()) {
+                ob_clean();
+            }
+            
             $evento = Evento::find($eventoId);
             if (!$evento) {
                 return response()->json([
@@ -175,17 +197,29 @@ class EventoReaccionController extends Controller
                 })
                 ->filter(); // Eliminar nulls
 
-            return response()->json([
+            // Preparar datos para JSON
+            $datos = [
                 'success' => true,
                 'reacciones' => $reacciones->values(),
                 'total' => $reacciones->count()
-            ]);
+            ];
+            
+            // Limpiar output buffer antes de enviar respuesta
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
+            return response()->json($datos, 200, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         } catch (\Throwable $e) {
+            // Limpiar output buffer antes de enviar respuesta de error
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
             return response()->json([
                 'success' => false,
                 'error' => 'Error al obtener reacciones: ' . $e->getMessage()
-            ], 500);
+            ], 500, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         }
     }
 
@@ -339,6 +373,11 @@ class EventoReaccionController extends Controller
     public function totalReacciones($eventoId)
     {
         try {
+            // Limpiar cualquier output buffer
+            if (ob_get_level()) {
+                ob_clean();
+            }
+            
             $evento = Evento::find($eventoId);
             if (!$evento) {
                 return response()->json([
@@ -365,10 +404,18 @@ class EventoReaccionController extends Controller
                 'no_registradas' => $noRegistradas
             ]);
 
-            return response()->json([
+            // Preparar datos para JSON
+            $datos = [
                 'success' => true,
                 'total_reacciones' => $totalReacciones
-            ]);
+            ];
+            
+            // Limpiar output buffer antes de enviar respuesta
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
+            return response()->json($datos, 200, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         } catch (\Throwable $e) {
             \Log::error('Error en totalReacciones:', [
@@ -376,10 +423,15 @@ class EventoReaccionController extends Controller
                 'error' => $e->getMessage()
             ]);
             
+            // Limpiar output buffer antes de enviar respuesta de error
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
             return response()->json([
                 'success' => false,
                 'error' => 'Error al obtener total de reacciones: ' . $e->getMessage()
-            ], 500);
+            ], 500, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         }
     }
 }

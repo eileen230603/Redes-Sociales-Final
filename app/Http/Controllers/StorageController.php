@@ -236,38 +236,38 @@ class StorageController extends Controller
                                 break;
                             }
                         }
+                }
+            }
+            
+            if (!$filePath || !file_exists($filePath) || !is_file($filePath)) {
+                Log::error("StorageController: Archivo no encontrado después de todas las búsquedas");
+                Log::error("StorageController: Path recibido: $path");
+                Log::error("StorageController: Path normalizado: $normalizedPath");
+                Log::error("StorageController: Total paths de búsqueda probados: " . count($searchPaths));
+                Log::error("StorageController: Total ubicaciones probadas: " . count($locations));
+                
+                // Listar algunos archivos existentes para debug
+                    $sampleDir = storage_path('app/public/mega_eventos');
+                if (is_dir($sampleDir)) {
+                    try {
+                        $sampleFiles = glob($sampleDir . '/*/*.{jpeg,jpg,png}', GLOB_BRACE);
+                        if ($sampleFiles && count($sampleFiles) > 0) {
+                                $sampleNames = array_slice(array_map('basename', $sampleFiles), 0, 5);
+                                Log::info("StorageController: Archivos de ejemplo encontrados en mega_eventos: " . implode(', ', $sampleNames));
+                        } else {
+                                Log::info("StorageController: No se encontraron archivos de ejemplo en mega_eventos/");
+                        }
+                    } catch (\Exception $e) {
+                        Log::warning("StorageController: Error listando archivos de ejemplo: " . $e->getMessage());
                     }
                 }
                 
-                if (!$filePath || !file_exists($filePath) || !is_file($filePath)) {
-                    Log::error("StorageController: Archivo no encontrado después de todas las búsquedas");
-                    Log::error("StorageController: Path recibido: $path");
-                    Log::error("StorageController: Path normalizado: $normalizedPath");
-                    Log::error("StorageController: Total paths de búsqueda probados: " . count($searchPaths));
-                    Log::error("StorageController: Total ubicaciones probadas: " . count($locations));
-                    
-                    // Listar algunos archivos existentes para debug
-                    $sampleDir = storage_path('app/public/mega_eventos');
-                    if (is_dir($sampleDir)) {
-                        try {
-                            $sampleFiles = glob($sampleDir . '/*/*.{jpeg,jpg,png}', GLOB_BRACE);
-                            if ($sampleFiles && count($sampleFiles) > 0) {
-                                $sampleNames = array_slice(array_map('basename', $sampleFiles), 0, 5);
-                                Log::info("StorageController: Archivos de ejemplo encontrados en mega_eventos: " . implode(', ', $sampleNames));
-                            } else {
-                                Log::info("StorageController: No se encontraron archivos de ejemplo en mega_eventos/");
-                            }
-                        } catch (\Exception $e) {
-                            Log::warning("StorageController: Error listando archivos de ejemplo: " . $e->getMessage());
-                        }
-                    }
-                    
-                    return response('File not found: ' . $normalizedPath, 404)
-                        ->header('Access-Control-Allow-Origin', '*')
-                        ->header('Access-Control-Allow-Methods', 'GET, OPTIONS')
-                        ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-                        ->header('Content-Type', 'text/plain');
-                }
+                return response('File not found: ' . $normalizedPath, 404)
+                    ->header('Access-Control-Allow-Origin', '*')
+                    ->header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+                    ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+                    ->header('Content-Type', 'text/plain');
+            }
             }
             
             // Intentar leer el archivo directamente (funciona mejor en Windows que is_readable)
@@ -275,9 +275,9 @@ class StorageController extends Controller
             
             if ($fileContent === false) {
                 // Si no se pudo leer, intentar cambiar permisos
-                $filePerms = fileperms($filePath);
-                $currentPerms = substr(sprintf('%o', $filePerms), -4);
-                
+            $filePerms = fileperms($filePath);
+            $currentPerms = substr(sprintf('%o', $filePerms), -4);
+            
                 Log::warning("StorageController: No se pudo leer el archivo: $filePath");
                 Log::warning("StorageController: Permisos actuales: $currentPerms");
                 

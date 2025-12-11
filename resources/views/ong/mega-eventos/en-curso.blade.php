@@ -3,9 +3,60 @@
 @section('page_title', 'Mega Eventos en Curso')
 
 @section('content_body')
+<style>
+    /* Mejoras de espaciado para botones y tarjetas */
+    .mega-eventos-grid {
+        margin-left: -0.75rem;
+        margin-right: -0.75rem;
+    }
+    
+    .mega-eventos-grid > [class*="col-"] {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .mega-eventos-grid .card {
+        margin-bottom: 0;
+        height: 100%;
+    }
+    
+    .mega-eventos-grid .card-body {
+        display: flex;
+        flex-direction: column;
+        padding: 1.5rem;
+    }
+    
+    .mega-eventos-grid .btn-group-spaced {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: auto;
+        padding-top: 0.5rem;
+    }
+    
+    .mega-eventos-grid .btn-group-spaced .btn {
+        flex: 1;
+        margin: 0;
+        min-width: 0;
+    }
+    
+    /* Fallback para navegadores que no soportan gap */
+    @supports not (gap: 0.75rem) {
+        .mega-eventos-grid .btn-group-spaced .btn:not(:last-child) {
+            margin-right: 0.75rem;
+        }
+    }
+    
+    /* Hover effect mejorado para botones */
+    .mega-eventos-grid .btn-group-spaced .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+</style>
+
 <div class="container-fluid">
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="mb-0" style="color: #0C2B44; font-weight: 700;">
             <i class="far fa-play-circle mr-2" style="color: #00A36C;"></i>Mega Eventos en Curso
         </h3>
@@ -58,7 +109,7 @@
         </div>
     </div>
 
-    <div id="megaEventosContainer" class="row">
+    <div id="megaEventosContainer" class="row mega-eventos-grid">
         <p class="text-muted px-3">Cargando mega eventos en curso...</p>
     </div>
 
@@ -260,7 +311,7 @@ async function cargarMegaEventos() {
             }
 
             return `
-                <div class="col-lg-4 col-md-6 mb-4">
+                <div class="col-lg-4 col-md-6">
                     <div class="card shadow-sm h-100" style="border-radius: 12px; border: none; overflow: hidden; transition: transform 0.3s, box-shadow 0.3s; border-left: 4px solid #00A36C;" 
                          onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.15)'" 
                          onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
@@ -283,28 +334,28 @@ async function cargarMegaEventos() {
                                 </div>
                             </div>
                         </a>
-                        <div class="card-body" style="padding: 1.5rem;">
-                            <h5 class="card-title mb-2" style="color: #0C2B44; font-weight: 700; font-size: 1.1rem; line-height: 1.3;">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3" style="color: #0C2B44; font-weight: 700; font-size: 1.1rem; line-height: 1.3;">
                                 ${e.titulo || 'Sin título'}
                             </h5>
-                            <p class="card-text text-muted mb-3" style="font-size: 0.9rem; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                            <p class="card-text text-muted mb-3" style="font-size: 0.9rem; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; flex-grow: 1;">
                                 ${e.descripcion || 'Sin descripción'}
                             </p>
-                            <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-3" style="margin-bottom: 1rem !important;">
                                 <div>
-                                    <small class="text-muted">
+                                    <small class="text-muted d-block">
                                         <i class="far fa-calendar mr-1"></i>
                                         ${fechaInicio ? fechaInicio.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Fecha no especificada'}
                                     </small>
                                 </div>
-                                <span class="badge badge-secondary" style="font-size: 0.75rem;">${e.categoria || 'N/A'}</span>
+                                <span class="badge badge-secondary" style="font-size: 0.75rem; padding: 0.4em 0.8em;">${e.categoria || 'N/A'}</span>
                             </div>
-                            ${tiempoInfo ? `<div class="mb-3">${tiempoInfo}</div>` : ''}
-                            <div class="d-flex gap-2">
-                                <a href="/ong/mega-eventos/${e.mega_evento_id}/detalle" class="btn btn-primary btn-sm flex-fill" style="border-radius: 8px;">
+                            ${tiempoInfo ? `<div class="mb-3" style="margin-bottom: 1rem !important;">${tiempoInfo}</div>` : ''}
+                            <div class="btn-group-spaced">
+                                <a href="/ong/mega-eventos/${e.mega_evento_id}/detalle" class="btn btn-primary btn-sm" style="border-radius: 8px; padding: 0.5rem 1rem; font-weight: 500; transition: all 0.2s;">
                                     <i class="far fa-eye mr-1"></i> Ver Detalles
                                 </a>
-                                <a href="/ong/mega-eventos/${e.mega_evento_id}/seguimiento" class="btn btn-success btn-sm" style="border-radius: 8px;">
+                                <a href="/ong/mega-eventos/${e.mega_evento_id}/seguimiento" class="btn btn-success btn-sm" style="border-radius: 8px; padding: 0.5rem 1rem; font-weight: 500; transition: all 0.2s;">
                                     <i class="far fa-chart-bar mr-1"></i> Seguimiento
                                 </a>
                             </div>

@@ -44,18 +44,57 @@ class MegaEvento extends Model
 
     /**
      * Accessor para convertir rutas relativas de imágenes a URLs completas
+     * Retorna siempre un array limpio validando y filtrando correctamente
      */
     public function getImagenesAttribute($value)
     {
-        // Si $value es null o no es array, retornar array vacío
-        if (!is_array($value)) {
+        // Obtener el valor raw del campo (antes del cast)
+        $rawValue = $this->attributes['imagenes'] ?? null;
+        
+        // Si es null, retornar array vacío
+        if ($rawValue === null) {
+            return [];
+        }
+        
+        // Si ya es array PHP (procesado por el cast), procesarlo
+        if (is_array($rawValue)) {
+            // Filtrar solo strings no vacíos
+            $filtered = array_filter($rawValue, function($img) {
+                return is_string($img) && trim($img) !== '';
+            });
+            $value = array_values($filtered);
+        }
             // Si es string, intentar decodificar JSON
-            if (is_string($value)) {
-                $decoded = json_decode($value, true);
-                $value = is_array($decoded) ? $decoded : [];
-            } else {
-                $value = [];
+        elseif (is_string($rawValue)) {
+            $trimmed = trim($rawValue);
+            if ($trimmed === '') {
+                return [];
             }
+            
+            // Verificar si empieza con [ o { para identificar JSON
+            if (($trimmed[0] === '[' || $trimmed[0] === '{')) {
+                $decoded = json_decode($trimmed, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    // Filtrar solo strings no vacíos
+                    $filtered = array_filter($decoded, function($img) {
+                        return is_string($img) && trim($img) !== '';
+                    });
+                    $value = array_values($filtered);
+                } else {
+                    return [];
+                }
+            } else {
+                // Si no es JSON pero es string no vacío, tratarlo como URL única
+                $value = [$trimmed];
+            }
+        } else {
+            // Si no es array ni string, retornar array vacío
+            return [];
+            }
+        
+        // Si después de procesar no hay valor válido, retornar array vacío
+        if (empty($value) || !is_array($value)) {
+            return [];
         }
 
         // Obtener la URL base desde PUBLIC_APP_URL, APP_URL o del request actual
@@ -81,11 +120,17 @@ class MegaEvento extends Model
         
         // Si aún no hay baseUrl, usar un valor por defecto
         if (empty($baseUrl)) {
-            $baseUrl = 'http://10.26.0.215:8000';
+            $baseUrl = 'http://10.26.5.12:8000';
         }
         
         // Generar URLs completas para cada imagen
         $resultado = array_map(function($imagen) use ($baseUrl) {
+            // Validar que sea string y no vacío
+            if (!is_string($imagen) || trim($imagen) === '') {
+                return null;
+            }
+            
+            $imagen = trim($imagen);
             if (empty($imagen) || !is_string($imagen)) {
                 return null;
             }
@@ -93,17 +138,17 @@ class MegaEvento extends Model
             // Filtrar rutas inválidas (templates, cache, yootheme, resizer, wp-content) - solo para rutas locales
             $esUrlExterna = (strpos($imagen, 'http://') === 0 || strpos($imagen, 'https://') === 0);
             if (!$esUrlExterna) {
-                if (strpos($imagen, '/templates/') !== false || 
-                    strpos($imagen, '/cache/') !== false || 
-                    strpos($imagen, '/yootheme/') !== false ||
+            if (strpos($imagen, '/templates/') !== false || 
+                strpos($imagen, '/cache/') !== false || 
+                strpos($imagen, '/yootheme/') !== false ||
                     strpos($imagen, '/resizer/') !== false ||
                     strpos($imagen, '/wp-content/') !== false ||
-                    strpos($imagen, 'templates/') !== false || 
-                    strpos($imagen, 'cache/') !== false || 
+                strpos($imagen, 'templates/') !== false || 
+                strpos($imagen, 'cache/') !== false || 
                     strpos($imagen, 'yootheme/') !== false ||
                     strpos($imagen, 'resizer/') !== false ||
                     strpos($imagen, 'wp-content/') !== false) {
-                    return null;
+                return null;
                 }
             }
 
@@ -114,8 +159,8 @@ class MegaEvento extends Model
                 $imagen = str_replace('https://127.0.0.1:8000', $baseUrl, $imagen);
                 $imagen = str_replace('http://192.168.0.6:8000', $baseUrl, $imagen);
                 $imagen = str_replace('https://192.168.0.6:8000', $baseUrl, $imagen);
-                $imagen = str_replace('http://10.26.15.110:8000', $baseUrl, $imagen);
-                $imagen = str_replace('https://10.26.15.110:8000', $baseUrl, $imagen);
+                $imagen = str_replace('http://192.168.0.6:8000', $baseUrl, $imagen);
+                $imagen = str_replace('https://192.168.0.6:8000', $baseUrl, $imagen);
                 
                 $parsedUrl = parse_url($imagen);
                 $currentHost = parse_url($baseUrl, PHP_URL_HOST);
@@ -164,6 +209,52 @@ class MegaEvento extends Model
         return array_values(array_filter($resultado, function($img) {
             return $img !== null && !empty($img);
         }));
+    }
+
+    /**
+     * Mutator para limpiar y normalizar el array de imágenes antes de guardar
+     */
+    public function setImagenesAttribute($value)
+    {
+        // Si es array, limpiarlo
+        if (is_array($value)) {
+            // Eliminar elementos vacíos
+            $cleaned = array_filter($value, function($img) {
+                return !empty($img) && is_string($img) && trim($img) !== '';
+            });
+            
+            // Eliminar duplicados
+            $cleaned = array_unique($cleaned);
+            
+            // Reindexar array
+            $cleaned = array_values($cleaned);
+            
+            // Codificar a JSON antes de asignar
+            $this->attributes['imagenes'] = json_encode($cleaned);
+        }
+        // Si es string JSON válido, parsearlo y llamar recursivamente
+        elseif (is_string($value)) {
+            $trimmed = trim($value);
+            if ($trimmed === '') {
+                $this->attributes['imagenes'] = json_encode([]);
+            } elseif (($trimmed[0] === '[' || $trimmed[0] === '{')) {
+                $decoded = json_decode($trimmed, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    // Llamar recursivamente con el array decodificado
+                    $this->setImagenesAttribute($decoded);
+                } else {
+                    // JSON inválido, guardar array vacío
+                    $this->attributes['imagenes'] = json_encode([]);
+                }
+            } else {
+                // String simple, tratarlo como URL única
+                $this->attributes['imagenes'] = json_encode([$trimmed]);
+            }
+        }
+        // Si no es válido, guardar array vacío
+        else {
+            $this->attributes['imagenes'] = json_encode([]);
+        }
     }
 
     public function ongPrincipal()

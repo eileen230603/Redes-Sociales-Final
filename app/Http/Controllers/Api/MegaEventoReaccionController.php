@@ -202,6 +202,11 @@ class MegaEventoReaccionController extends Controller
     public function verificar(Request $request, $megaEventoId)
     {
         try {
+            // Limpiar cualquier output buffer
+            if (ob_get_level()) {
+                ob_clean();
+            }
+            
             $externoId = $request->user()->id_usuario;
 
             $reaccionado = MegaEventoReaccion::where('mega_evento_id', $megaEventoId)
@@ -210,11 +215,19 @@ class MegaEventoReaccionController extends Controller
 
             $totalReacciones = MegaEventoReaccion::where('mega_evento_id', $megaEventoId)->count();
 
-            return response()->json([
+            // Preparar datos para JSON
+            $datos = [
                 'success' => true,
                 'reaccionado' => $reaccionado,
                 'total_reacciones' => $totalReacciones
-            ]);
+            ];
+            
+            // Limpiar output buffer antes de enviar respuesta
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
+            return response()->json($datos, 200, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         } catch (\Throwable $e) {
             return response()->json([
@@ -230,6 +243,11 @@ class MegaEventoReaccionController extends Controller
     public function usuariosQueReaccionaron(Request $request, $megaEventoId)
     {
         try {
+            // Limpiar cualquier output buffer
+            if (ob_get_level()) {
+                ob_clean();
+            }
+            
             $megaEvento = MegaEvento::find($megaEventoId);
             if (!$megaEvento) {
                 return response()->json([
@@ -286,11 +304,19 @@ class MegaEventoReaccionController extends Controller
                 })
                 ->filter(); // Eliminar nulls
 
-            return response()->json([
+            // Preparar datos para JSON
+            $datos = [
                 'success' => true,
                 'reacciones' => $reacciones->values(),
                 'total' => $reacciones->count()
-            ]);
+            ];
+            
+            // Limpiar output buffer antes de enviar respuesta
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
+            return response()->json($datos, 200, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         } catch (\Throwable $e) {
             return response()->json([

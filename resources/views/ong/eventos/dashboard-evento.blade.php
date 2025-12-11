@@ -5,20 +5,23 @@
 @section('content_body')
 <div class="container-fluid">
     <!-- Header -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary">
+    <div class="card mb-4" style="border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+        <div class="card-header" style="background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); border-bottom: 3px solid #00A36C; border-radius: 12px 12px 0 0;">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h3 class="card-title mb-0 text-white">
-                        <i class="fas fa-chart-bar mr-2"></i> Dashboard del Evento
+                    <h3 class="card-title mb-0" style="color: #0C2B44; font-weight: 700; font-size: 1.75rem;">
+                        <i class="fas fa-chart-bar mr-2" style="color: #00A36C;"></i> Dashboard del Evento
                     </h3>
-                    <p class="mb-0 text-white-50 mt-1" id="eventoTitulo">Cargando información del evento...</p>
+                    <p class="mb-0 mt-2" id="eventoTitulo" style="color: #6c757d; font-size: 0.95rem;">Cargando información del evento...</p>
                 </div>
                 <div class="d-flex" style="gap: 0.5rem;">
-                    <button id="btnDescargarPDF" class="btn btn-success" onclick="descargarPDF()">
+                    <button id="btnDescargarPDF" class="btn btn-sm" onclick="descargarPDF()" style="background: #dc3545; border: none; color: #ffffff; border-radius: 6px; font-weight: 600;">
                         <i class="fas fa-file-pdf mr-2"></i> Descargar PDF
                     </button>
-                    <a href="#" id="btnVolver" class="btn btn-light">
+                    <button id="btnDescargarExcel" class="btn btn-sm" onclick="descargarExcel()" style="background: #00A36C; border: none; color: #ffffff; border-radius: 6px; font-weight: 600;">
+                        <i class="fas fa-file-excel mr-2"></i> Descargar Excel
+                    </button>
+                    <a href="#" id="btnVolver" class="btn btn-sm btn-light" style="border: 1px solid #dee2e6; border-radius: 6px; color: #0C2B44; font-weight: 600;">
                         <i class="fas fa-arrow-left mr-2"></i> Volver
                     </a>
                 </div>
@@ -29,49 +32,65 @@
     <!-- Tarjetas de Estadísticas -->
     <div class="row mb-4">
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="small-box bg-danger" style="border-radius: 16px;">
-                <div class="inner">
-                    <h3 id="totalReacciones" class="text-white">0</h3>
-                    <p class="text-white">Reacciones</p>
-                </div>
-                <div class="icon">
-                    <i class="fas fa-heart"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="small-box bg-success" style="border-radius: 16px;">
-                <div class="inner">
-                    <h3 id="totalCompartidos" class="text-white">0</h3>
-                    <p class="text-white">Compartidos</p>
-                </div>
-                <div class="icon">
-                    <i class="fas fa-share-alt"></i>
+            <div class="card metric-card" style="border-left: 4px solid #dc3545; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 id="totalReacciones" style="color: #0C2B44; font-weight: 700; font-size: 2.5rem; margin: 0;">0</h3>
+                            <p style="color: #6c757d; font-size: 0.95rem; margin: 0.5rem 0 0 0; font-weight: 600;">Reacciones</p>
+                        </div>
+                        <div style="color: #dc3545; opacity: 0.2; font-size: 3rem;">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="small-box bg-info" style="border-radius: 16px;">
-                <div class="inner">
-                    <h3 id="totalVoluntarios" class="text-white">0</h3>
-                    <p class="text-white">Voluntarios</p>
-                </div>
-                <div class="icon">
-                    <i class="fas fa-users"></i>
+            <div class="card metric-card" style="border-left: 4px solid #00A36C; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 id="totalCompartidos" style="color: #0C2B44; font-weight: 700; font-size: 2.5rem; margin: 0;">0</h3>
+                            <p style="color: #6c757d; font-size: 0.95rem; margin: 0.5rem 0 0 0; font-weight: 600;">Compartidos</p>
+                        </div>
+                        <div style="color: #00A36C; opacity: 0.2; font-size: 3rem;">
+                            <i class="fas fa-share-alt"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="small-box bg-warning" style="border-radius: 16px;">
-                <div class="inner">
-                    <h3 id="totalParticipantes" class="text-white">0</h3>
-                    <p class="text-white">Participantes</p>
+            <div class="card metric-card" style="border-left: 4px solid #17a2b8; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 id="totalVoluntarios" style="color: #0C2B44; font-weight: 700; font-size: 2.5rem; margin: 0;">0</h3>
+                            <p style="color: #6c757d; font-size: 0.95rem; margin: 0.5rem 0 0 0; font-weight: 600;">Voluntarios</p>
+                        </div>
+                        <div style="color: #17a2b8; opacity: 0.2; font-size: 3rem;">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
                 </div>
-                <div class="icon">
-                    <i class="fas fa-user-check"></i>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card metric-card" style="border-left: 4px solid #ffc107; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 id="totalParticipantes" style="color: #0C2B44; font-weight: 700; font-size: 2.5rem; margin: 0;">0</h3>
+                            <p style="color: #6c757d; font-size: 0.95rem; margin: 0.5rem 0 0 0; font-weight: 600;">Participantes</p>
+                        </div>
+                        <div style="color: #ffc107; opacity: 0.2; font-size: 3rem;">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -81,10 +100,10 @@
     <div class="row mb-4">
         <!-- Gráfica de Reacciones por Día -->
         <div class="col-lg-6 mb-4">
-            <div class="card">
-                <div class="card-header bg-danger">
-                    <h5 class="card-title mb-0 text-white">
-                        <i class="fas fa-heart mr-2"></i> Reacciones por Día
+            <div class="card" style="border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-radius: 12px;">
+                <div class="card-header" style="background: #ffffff; border-bottom: 2px solid #dc3545; border-radius: 12px 12px 0 0;">
+                    <h5 class="card-title mb-0" style="color: #0C2B44; font-weight: 700;">
+                        <i class="fas fa-heart mr-2" style="color: #dc3545;"></i> Reacciones por Día
                     </h5>
                 </div>
                 <div class="card-body">
@@ -97,10 +116,10 @@
 
         <!-- Gráfica de Participantes por Estado -->
         <div class="col-lg-6 mb-4">
-            <div class="card">
-                <div class="card-header bg-success">
-                    <h5 class="card-title mb-0 text-white">
-                        <i class="fas fa-users mr-2"></i> Participantes por Estado
+            <div class="card" style="border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-radius: 12px;">
+                <div class="card-header" style="background: #ffffff; border-bottom: 2px solid #00A36C; border-radius: 12px 12px 0 0;">
+                    <h5 class="card-title mb-0" style="color: #0C2B44; font-weight: 700;">
+                        <i class="fas fa-users mr-2" style="color: #00A36C;"></i> Participantes por Estado
                     </h5>
                 </div>
                 <div class="card-body">
@@ -113,10 +132,10 @@
 
         <!-- Gráfica de Compartidos por Día -->
         <div class="col-lg-6 mb-4">
-            <div class="card">
-                <div class="card-header bg-info">
-                    <h5 class="card-title mb-0 text-white">
-                        <i class="fas fa-share-alt mr-2"></i> Compartidos por Día
+            <div class="card" style="border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-radius: 12px;">
+                <div class="card-header" style="background: #ffffff; border-bottom: 2px solid #17a2b8; border-radius: 12px 12px 0 0;">
+                    <h5 class="card-title mb-0" style="color: #0C2B44; font-weight: 700;">
+                        <i class="fas fa-share-alt mr-2" style="color: #17a2b8;"></i> Compartidos por Día
                     </h5>
                 </div>
                 <div class="card-body">
@@ -129,10 +148,10 @@
 
         <!-- Gráfica de Inscripciones por Día -->
         <div class="col-lg-6 mb-4">
-            <div class="card">
-                <div class="card-header bg-warning">
-                    <h5 class="card-title mb-0 text-white">
-                        <i class="fas fa-calendar-check mr-2"></i> Inscripciones por Día
+            <div class="card" style="border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-radius: 12px;">
+                <div class="card-header" style="background: #ffffff; border-bottom: 2px solid #ffc107; border-radius: 12px 12px 0 0;">
+                    <h5 class="card-title mb-0" style="color: #0C2B44; font-weight: 700;">
+                        <i class="fas fa-calendar-check mr-2" style="color: #ffc107;"></i> Inscripciones por Día
                     </h5>
                 </div>
                 <div class="card-body">
@@ -145,10 +164,10 @@
 
         <!-- Gráfica de Comparación Reacciones vs Compartidos -->
         <div class="col-lg-6 mb-4">
-            <div class="card">
-                <div class="card-header bg-primary">
-                    <h5 class="card-title mb-0 text-white">
-                        <i class="fas fa-chart-line mr-2"></i> Reacciones vs Compartidos
+            <div class="card" style="border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-radius: 12px;">
+                <div class="card-header" style="background: #ffffff; border-bottom: 2px solid #0C2B44; border-radius: 12px 12px 0 0;">
+                    <h5 class="card-title mb-0" style="color: #0C2B44; font-weight: 700;">
+                        <i class="fas fa-chart-line mr-2" style="color: #0C2B44;"></i> Reacciones vs Compartidos
                     </h5>
                 </div>
                 <div class="card-body">
@@ -161,10 +180,10 @@
 
         <!-- Gráfica de Actividad por Semana -->
         <div class="col-lg-6 mb-4">
-            <div class="card">
-                <div class="card-header bg-secondary">
-                    <h5 class="card-title mb-0 text-white">
-                        <i class="fas fa-chart-bar mr-2"></i> Actividad por Semana
+            <div class="card" style="border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-radius: 12px;">
+                <div class="card-header" style="background: #ffffff; border-bottom: 2px solid #6c757d; border-radius: 12px 12px 0 0;">
+                    <h5 class="card-title mb-0" style="color: #0C2B44; font-weight: 700;">
+                        <i class="fas fa-chart-bar mr-2" style="color: #6c757d;"></i> Actividad por Semana
                     </h5>
                 </div>
                 <div class="card-body">
@@ -177,10 +196,10 @@
 
         <!-- Gráfica de Tendencias -->
         <div class="col-lg-6 mb-4">
-            <div class="card">
-                <div class="card-header bg-success">
-                    <h5 class="card-title mb-0 text-white">
-                        <i class="fas fa-chart-area mr-2"></i> Tendencias de Participación
+            <div class="card" style="border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-radius: 12px;">
+                <div class="card-header" style="background: #ffffff; border-bottom: 2px solid #00A36C; border-radius: 12px 12px 0 0;">
+                    <h5 class="card-title mb-0" style="color: #0C2B44; font-weight: 700;">
+                        <i class="fas fa-chart-area mr-2" style="color: #00A36C;"></i> Tendencias de Participación
                     </h5>
                 </div>
                 <div class="card-body">
@@ -193,10 +212,10 @@
 
         <!-- Gráfica de Radar - Métricas Generales -->
         <div class="col-lg-6 mb-4">
-            <div class="card">
-                <div class="card-header bg-info">
-                    <h5 class="card-title mb-0 text-white">
-                        <i class="fas fa-chart-pie mr-2"></i> Métricas Generales
+            <div class="card" style="border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-radius: 12px;">
+                <div class="card-header" style="background: #ffffff; border-bottom: 2px solid #17a2b8; border-radius: 12px 12px 0 0;">
+                    <h5 class="card-title mb-0" style="color: #0C2B44; font-weight: 700;">
+                        <i class="fas fa-chart-pie mr-2" style="color: #17a2b8;"></i> Métricas Generales
                     </h5>
                 </div>
                 <div class="card-body">
@@ -208,13 +227,115 @@
         </div>
     </div>
 
+    <!-- Filtros de Fecha -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card" style="border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-radius: 12px;">
+                <div class="card-header" style="background: #ffffff; border-bottom: 2px solid #17a2b8; border-radius: 12px 12px 0 0;">
+                    <h5 class="card-title mb-0" style="color: #0C2B44; font-weight: 700;">
+                        <i class="fas fa-filter mr-2" style="color: #17a2b8;"></i> Filtros de Fecha
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="fechaInicio">Fecha Inicio:</label>
+                            <input type="date" id="fechaInicio" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label for="fechaFin">Fecha Fin:</label>
+                            <input type="date" id="fechaFin" class="form-control" />
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button class="btn btn-primary w-100" onclick="aplicarFiltros()">
+                                <i class="fas fa-search mr-2"></i> Aplicar Filtros
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Actividad Reciente (Últimos 10 días) -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card" style="border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-radius: 12px;">
+                <div class="card-header" style="background: #ffffff; border-bottom: 2px solid #0C2B44; border-radius: 12px 12px 0 0;">
+                    <h5 class="card-title mb-0" style="color: #0C2B44; font-weight: 700;">
+                        <i class="fas fa-calendar-day mr-2" style="color: #0C2B44;"></i> Actividad de los Últimos 10 Días
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th class="text-center">Reacciones</th>
+                                    <th class="text-center">Compartidos</th>
+                                    <th class="text-center">Inscripciones</th>
+                                    <th class="text-center">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaActividadReciente">
+                                <tr>
+                                    <td colspan="5" class="text-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="sr-only">Cargando...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla Top 10 Participantes -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card" style="border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-radius: 12px;">
+                <div class="card-header" style="background: #ffffff; border-bottom: 2px solid #ffc107; border-radius: 12px 12px 0 0;">
+                    <h5 class="card-title mb-0" style="color: #0C2B44; font-weight: 700;">
+                        <i class="fas fa-trophy mr-2" style="color: #ffc107;"></i> Top 10 Participantes Más Activos
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Nombre</th>
+                                    <th class="text-center">Total Actividades</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaTopParticipantes">
+                                <tr>
+                                    <td colspan="3" class="text-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="sr-only">Cargando...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Tabla de Resumen -->
     <div class="row">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header bg-primary">
-                    <h5 class="card-title mb-0 text-white">
-                        <i class="fas fa-list-alt mr-2"></i> Resumen Detallado
+            <div class="card" style="border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-radius: 12px;">
+                <div class="card-header" style="background: #ffffff; border-bottom: 2px solid #0C2B44; border-radius: 12px 12px 0 0;">
+                    <h5 class="card-title mb-0" style="color: #0C2B44; font-weight: 700;">
+                        <i class="fas fa-list-alt mr-2" style="color: #0C2B44;"></i> Resumen Detallado
                     </h5>
                 </div>
                 <div class="card-body">
@@ -246,50 +367,71 @@
 
 @push('css')
 <style>
-    .small-box {
-        border-radius: 16px !important;
-        overflow: hidden;
-        position: relative;
+    .metric-card {
         transition: all 0.3s ease;
+        border: none !important;
     }
 
-    .small-box:hover {
+    .metric-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
-    }
-
-    .small-box .icon {
-        color: rgba(255, 255, 255, 0.2);
-        font-size: 70px;
-        top: 15px;
-    }
-
-    .small-box .inner h3 {
-        font-size: 2.8rem;
-        font-weight: 700;
-    }
-
-    .small-box .inner p {
-        font-size: 1.1rem;
-        opacity: 0.9;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12) !important;
     }
 
     .card {
-        border-radius: 16px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         transition: all 0.3s ease;
     }
 
     .card:hover {
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12) !important;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1) !important;
     }
 
     .card-header {
         border-bottom: none;
     }
 
+    .card-body {
+        padding: 1.5rem;
+    }
+
     canvas {
         max-width: 100%;
+    }
+
+    .table thead th {
+        background-color: #f8f9fa;
+        color: #0C2B44;
+        font-weight: 700;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .btn {
+        transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    label {
+        color: #0C2B44;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .form-control {
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .form-control:focus {
+        border-color: #00A36C;
+        box-shadow: 0 0 0 0.2rem rgba(0, 163, 108, 0.25);
     }
 </style>
 @endpush
@@ -346,7 +488,19 @@ async function cargarDashboard() {
             throw new Error('No hay token de autenticación');
         }
 
-        const res = await fetch(`${API_BASE_URL}/api/eventos/${eventoId}/dashboard`, {
+        // Obtener filtros de fecha
+        const fechaInicio = document.getElementById('fechaInicio')?.value || '';
+        const fechaFin = document.getElementById('fechaFin')?.value || '';
+        
+        let url = `${API_BASE_URL}/api/eventos/${eventoId}/dashboard-completo`;
+        if (fechaInicio || fechaFin) {
+            const params = new URLSearchParams();
+            if (fechaInicio) params.append('fecha_inicio', fechaInicio);
+            if (fechaFin) params.append('fecha_fin', fechaFin);
+            url += '?' + params.toString();
+        }
+
+        const res = await fetch(url, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Accept': 'application/json',
@@ -376,16 +530,21 @@ async function cargarDashboard() {
         document.getElementById('eventoTitulo').textContent = data.evento?.titulo || 'Evento';
 
         // Actualizar tarjetas
-        document.getElementById('totalReacciones').textContent = data.estadisticas?.reacciones || 0;
-        document.getElementById('totalCompartidos').textContent = data.estadisticas?.compartidos || 0;
-        document.getElementById('totalVoluntarios').textContent = data.estadisticas?.voluntarios || 0;
-        document.getElementById('totalParticipantes').textContent = data.estadisticas?.participantes || 0;
+        document.getElementById('totalReacciones').textContent = data.metricas?.reacciones || 0;
+        document.getElementById('totalCompartidos').textContent = data.metricas?.compartidos || 0;
+        document.getElementById('totalVoluntarios').textContent = data.metricas?.voluntarios || 0;
+        document.getElementById('totalParticipantes').textContent = data.metricas?.participantes_total || 0;
 
-        // Crear gráficas
-        crearGraficas(data);
+        // Crear gráficas con nuevos datos
+        crearGraficasMejoradas(data);
 
-        // Actualizar tabla de resumen
-        actualizarTablaResumen(data.estadisticas);
+        // Actualizar tablas
+        actualizarTablaResumen(data.metricas);
+        actualizarTablaActividadReciente(data.actividad_reciente);
+        actualizarTablaTopParticipantes(data.top_participantes);
+        
+        // Mostrar comparativas
+        mostrarComparativas(data.comparativas);
 
     } catch (error) {
         console.error('Error completo:', error);
@@ -404,8 +563,7 @@ async function cargarDashboard() {
         
         // Mostrar mensaje en la página también
         document.getElementById('eventoTitulo').textContent = 'Error al cargar datos';
-        document.getElementById('eventoTitulo').classList.remove('text-white-50');
-        document.getElementById('eventoTitulo').classList.add('text-danger');
+        document.getElementById('eventoTitulo').style.color = '#dc3545';
     }
 }
 
@@ -629,8 +787,8 @@ function crearGraficas(data) {
                     tension: 0.5,
                     pointRadius: 5,
                     pointBackgroundColor: '#00A36C',
-                    pointBorderColor: '#fff',
-                    pointHoverBackgroundColor: '#fff',
+                    pointBorderColor: '#00A36C',
+                    pointHoverBackgroundColor: '#0C2B44',
                     pointHoverBorderColor: '#00A36C'
                 }]
             },
@@ -677,8 +835,8 @@ function crearGraficas(data) {
                     borderColor: '#00A36C',
                     borderWidth: 2,
                     pointBackgroundColor: '#00A36C',
-                    pointBorderColor: '#fff',
-                    pointHoverBackgroundColor: '#fff',
+                    pointBorderColor: '#00A36C',
+                    pointHoverBackgroundColor: '#0C2B44',
                     pointHoverBorderColor: '#00A36C'
                 }]
             },
@@ -743,35 +901,51 @@ async function descargarPDF() {
             btnPDF.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generando PDF...';
         }
 
-        const res = await fetch(`${API_BASE_URL}/api/eventos/${eventoId}/dashboard/pdf`, {
+        // Obtener filtros de fecha
+        const fechaInicio = document.getElementById('fechaInicio')?.value || '';
+        const fechaFin = document.getElementById('fechaFin')?.value || '';
+        
+        let url = `${API_BASE_URL}/api/eventos/${eventoId}/dashboard-completo/pdf`;
+        if (fechaInicio || fechaFin) {
+            const params = new URLSearchParams();
+            if (fechaInicio) params.append('fecha_inicio', fechaInicio);
+            if (fechaFin) params.append('fecha_fin', fechaFin);
+            url += '?' + params.toString();
+        }
+
+        const res = await fetch(url, {
             headers: {
                 'Authorization': `Bearer ${token}`,
-                'Accept': 'application/json'
+                'Accept': 'application/pdf'
             }
         });
 
         if (!res.ok) {
-            throw new Error('Error al generar PDF');
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Error al generar PDF');
         }
 
         // Obtener el blob del PDF
         const blob = await res.blob();
-        const url = window.URL.createObjectURL(blob);
+        const urlBlob = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
+        a.href = urlBlob;
         a.download = `dashboard-evento-${eventoId}-${new Date().toISOString().split('T')[0]}.pdf`;
         document.body.appendChild(a);
         a.click();
-        window.URL.revokeObjectURL(url);
+        window.URL.revokeObjectURL(urlBlob);
         document.body.removeChild(a);
 
         if (btnPDF) {
             btnPDF.disabled = false;
             btnPDF.innerHTML = '<i class="fas fa-file-pdf mr-2"></i> Descargar PDF';
         }
+        
+        // Mostrar notificación de éxito
+        mostrarNotificacion('PDF generado exitosamente', 'success');
     } catch (error) {
         console.error('Error al descargar PDF:', error);
-        alert('Error al generar el PDF: ' + error.message);
+        mostrarNotificacion('Error al generar el PDF: ' + error.message, 'error');
         
         const btnPDF = document.getElementById('btnDescargarPDF');
         if (btnPDF) {
@@ -779,6 +953,195 @@ async function descargarPDF() {
             btnPDF.innerHTML = '<i class="fas fa-file-pdf mr-2"></i> Descargar PDF';
         }
     }
+}
+
+// Función para descargar Excel
+async function descargarExcel() {
+    try {
+        const btnExcel = document.getElementById('btnDescargarExcel');
+        if (btnExcel) {
+            btnExcel.disabled = true;
+            btnExcel.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generando Excel...';
+        }
+
+        // Obtener filtros de fecha
+        const fechaInicio = document.getElementById('fechaInicio')?.value || '';
+        const fechaFin = document.getElementById('fechaFin')?.value || '';
+        
+        let url = `${API_BASE_URL}/api/eventos/${eventoId}/dashboard-completo/excel`;
+        if (fechaInicio || fechaFin) {
+            const params = new URLSearchParams();
+            if (fechaInicio) params.append('fecha_inicio', fechaInicio);
+            if (fechaFin) params.append('fecha_fin', fechaFin);
+            url += '?' + params.toString();
+        }
+
+        const res = await fetch(url, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            }
+        });
+
+        if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Error al generar Excel');
+        }
+
+        // Obtener el blob del Excel
+        const blob = await res.blob();
+        const urlBlob = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = urlBlob;
+        a.download = `dashboard-evento-${eventoId}-${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(urlBlob);
+        document.body.removeChild(a);
+
+        if (btnExcel) {
+            btnExcel.disabled = false;
+            btnExcel.innerHTML = '<i class="fas fa-file-excel mr-2"></i> Descargar Excel';
+        }
+        
+        // Mostrar notificación de éxito
+        mostrarNotificacion('Excel generado exitosamente', 'success');
+    } catch (error) {
+        console.error('Error al descargar Excel:', error);
+        mostrarNotificacion('Error al generar el Excel: ' + error.message, 'error');
+        
+        const btnExcel = document.getElementById('btnDescargarExcel');
+        if (btnExcel) {
+            btnExcel.disabled = false;
+            btnExcel.innerHTML = '<i class="fas fa-file-excel mr-2"></i> Descargar Excel';
+        }
+    }
+}
+
+// Función para aplicar filtros
+function aplicarFiltros() {
+    cargarDashboard();
+}
+
+// Función para mostrar notificaciones
+function mostrarNotificacion(mensaje, tipo) {
+    const alertClass = tipo === 'success' ? 'alert-success' : 'alert-danger';
+    const icon = tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+    
+    const alert = document.createElement('div');
+    alert.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alert.innerHTML = `
+        <i class="fas ${icon} mr-2"></i> ${mensaje}
+        <button type="button" class="close" data-dismiss="alert">
+            <span>&times;</span>
+        </button>
+    `;
+    
+    document.body.appendChild(alert);
+    
+    setTimeout(() => {
+        alert.remove();
+    }, 5000);
+}
+
+// Funciones para actualizar tablas
+function actualizarTablaActividadReciente(actividad) {
+    const tbody = document.getElementById('tablaActividadReciente');
+    if (!actividad || Object.keys(actividad).length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No hay datos disponibles</td></tr>';
+        return;
+    }
+
+    let html = '';
+    let totalReacciones = 0, totalCompartidos = 0, totalInscripciones = 0, totalGeneral = 0;
+    
+    Object.entries(actividad).forEach(([fecha, datos]) => {
+        const fechaFormateada = new Date(fecha).toLocaleDateString('es-ES', { 
+            day: '2-digit', 
+            month: '2-digit', 
+            year: 'numeric' 
+        });
+        
+        totalReacciones += datos.reacciones || 0;
+        totalCompartidos += datos.compartidos || 0;
+        totalInscripciones += datos.inscripciones || 0;
+        totalGeneral += datos.total || 0;
+        
+        html += `
+            <tr>
+                <td><strong>${fechaFormateada}</strong></td>
+                <td class="text-center">${datos.reacciones || 0}</td>
+                <td class="text-center">${datos.compartidos || 0}</td>
+                <td class="text-center">${datos.inscripciones || 0}</td>
+                <td class="text-center"><strong>${datos.total || 0}</strong></td>
+            </tr>
+        `;
+    });
+    
+    html += `
+        <tr class="bg-light font-weight-bold">
+            <td><strong>TOTAL</strong></td>
+            <td class="text-center">${totalReacciones}</td>
+            <td class="text-center">${totalCompartidos}</td>
+            <td class="text-center">${totalInscripciones}</td>
+            <td class="text-center">${totalGeneral}</td>
+        </tr>
+    `;
+    
+    tbody.innerHTML = html;
+}
+
+function actualizarTablaTopParticipantes(participantes) {
+    const tbody = document.getElementById('tablaTopParticipantes');
+    if (!participantes || participantes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center">No hay datos disponibles</td></tr>';
+        return;
+    }
+
+    let html = '';
+    participantes.slice(0, 10).forEach((participante, index) => {
+        html += `
+            <tr>
+                <td class="text-center"><strong>${index + 1}</strong></td>
+                <td>${participante.nombre || 'Participante'}</td>
+                <td class="text-center"><span class="badge badge-warning" style="font-size: 1rem; padding: 0.5em 1em;">${participante.total_actividades || 0}</span></td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+}
+
+function mostrarComparativas(comparativas) {
+    // Esta función puede mostrar badges de crecimiento en las tarjetas
+    if (!comparativas) return;
+    
+    // Agregar badges de crecimiento a las tarjetas si es necesario
+    Object.entries(comparativas).forEach(([metrica, datos]) => {
+        const crecimiento = datos.crecimiento || 0;
+        const tendencia = datos.tendencia || 'stable';
+        
+        // Aquí puedes agregar indicadores visuales de crecimiento
+        // Por ejemplo, agregar un badge a las tarjetas de métricas
+    });
+}
+
+// Función mejorada para crear gráficas con nuevos datos
+function crearGraficasMejoradas(data) {
+    // Reutilizar la función crearGraficas pero adaptada a la nueva estructura
+    const datosAdaptados = {
+        estadisticas: data.metricas,
+        graficas: {
+            reacciones_por_dia: data.tendencias?.reacciones_por_dia || {},
+            compartidos_por_dia: data.tendencias?.compartidos_por_dia || {},
+            participantes_por_estado: data.distribucion_estados || {},
+            inscripciones_por_dia: data.tendencias?.inscripciones_por_dia || {},
+            actividad_semanal: data.actividad_semanal || {}
+        }
+    };
+    
+    crearGraficas(datosAdaptados);
 }
 
 document.addEventListener('DOMContentLoaded', () => {

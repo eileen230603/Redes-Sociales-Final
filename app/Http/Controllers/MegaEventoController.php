@@ -151,6 +151,11 @@ class MegaEventoController extends Controller
     public function index(Request $request)
     {
         try {
+            // Limpiar cualquier output buffer
+            if (ob_get_level()) {
+                ob_clean();
+            }
+            
             // Obtener el usuario autenticado
             $usuarioAutenticado = $request->user();
             
@@ -224,10 +229,14 @@ class MegaEventoController extends Controller
                 throw $e;
             }
             
-            // Procesar cada mega evento de forma segura
-            $megaEventosArray = [];
-            foreach ($megaEventos as $mega) {
+            // Procesar cada mega evento usando map
+            $megaEventos = $megaEventos->map(function($mega) use ($request) {
                 try {
+                    // Validar que $mega no sea null
+                    if (!$mega || !isset($mega->mega_evento_id)) {
+                        return null;
+                    }
+                    
                     // Obtener datos directamente de la base de datos
                     // Helper para formatear fechas de forma segura
                     $formatDate = function($date) {
@@ -245,52 +254,63 @@ class MegaEventoController extends Controller
                         }
                     };
                     
-                    $megaData = [
-                        'mega_evento_id' => (int) ($mega->mega_evento_id ?? 0),
-                        'titulo' => $mega->titulo ?? '',
-                        'descripcion' => $mega->descripcion ?? null,
-                        'fecha_inicio' => $formatDate($mega->fecha_inicio ?? null),
-                        'fecha_fin' => $formatDate($mega->fecha_fin ?? null),
-                        'ubicacion' => $mega->ubicacion ?? null,
-                        'lat' => isset($mega->lat) && $mega->lat !== null ? (float) $mega->lat : null,
-                        'lng' => isset($mega->lng) && $mega->lng !== null ? (float) $mega->lng : null,
-                        'categoria' => $mega->categoria ?? 'social',
-                        'estado' => $mega->estado ?? 'planificacion',
-                        'es_publico' => (bool) ($mega->es_publico ?? false),
-                        'activo' => (bool) ($mega->activo ?? true),
-                        'fecha_creacion' => $formatDate($mega->fecha_creacion ?? null),
-                        'fecha_actualizacion' => $formatDate($mega->fecha_actualizacion ?? null),
-                        'ong_organizadora_principal' => isset($mega->ong_organizadora_principal) ? (int) $mega->ong_organizadora_principal : null,
-                    ];
-                    
-                    // Procesar capacidad_maxima
-                    $capacidadMaxima = $mega->capacidad_maxima ?? null;
-                    if ($capacidadMaxima !== null && is_numeric($capacidadMaxima)) {
-                        $megaData['capacidad_maxima'] = (int) $capacidadMaxima;
-                    } else {
-                        $megaData['capacidad_maxima'] = null;
-                    }
-                    
                     // Procesar imágenes - MEJORADO
                     $imagenesRaw = $mega->imagenes ?? null;
                     $imagenes = [];
                     
-                    if ($imagenesRaw) {
-                        // Decodificar si es string JSON
-                        if (is_string($imagenesRaw)) {
-                            $imagenesRaw = json_decode($imagenesRaw, true) ?: [];
+                // Si ya es array PHP (procesado por el cast del modelo)
+                if (is_array($imagenesRaw)) {
+                    // Mapear y limpiar cada elemento
+                    $imagenes = array_map(function($img) {
+                        if (!is_string($img)) return null;
+                        $trimmed = trim($img);
+                        return $trimmed !== '' ? $trimmed : null;
+                    }, $imagenesRaw);
+                    $imagenes = array_filter($imagenes, function($img) {
+                        return $img !== null;
+                    });
+                }
+                // Si es string, procesarlo
+                elseif (is_string($imagenesRaw) && !empty($imagenesRaw)) {
+                    $trimmed = trim($imagenesRaw);
+                    
+                    // Verificar si empieza con [ o { para identificar JSON
+                    if (!empty($trimmed) && ($trimmed[0] === '[' || $trimmed[0] === '{')) {
+                        $decoded = json_decode($trimmed, true);
+                        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                            // Procesar igual que array
+                            $imagenes = array_map(function($img) {
+                                if (!is_string($img)) return null;
+                                $trimmed = trim($img);
+                                return $trimmed !== '' ? $trimmed : null;
+                            }, $decoded);
+                            $imagenes = array_filter($imagenes, function($img) {
+                                return $img !== null;
+                            });
+                        } else {
+                            // JSON inválido, tratar como URL única
+                            $imagenes = [$trimmed];
                         }
-                        if (!is_array($imagenesRaw)) {
-                            $imagenesRaw = [];
+                    } else {
+                        // String simple, tratarlo como URL única
+                        $imagenes = [$trimmed];
                         }
+                }
+                
+                // Limpiar el array final
+                $imagenes = array_values(array_unique(array_filter($imagenes, function($img) {
+                    return !empty($img) && is_string($img);
+                })));
                         
                         // Obtener base URL del request o configuración
-                        $baseUrl = $request->getSchemeAndHttpHost() ?: env('APP_URL', 'http://10.26.0.215:8000');
+                        $baseUrl = $request->getSchemeAndHttpHost() ?: env('APP_URL', 'http://10.26.5.12:8000');
                         
-                        foreach ($imagenesRaw as $img) {
-                            if (empty($img) || !is_string($img)) continue;
-                            
+                // Procesar cada imagen para construir URLs completas
+                $imagenesProcesadas = [];
+                foreach ($imagenes as $img) {
                             $img = trim($img);
+                    if (empty($img)) continue;
+                    
                             // Filtrar rutas inválidas (solo si no es URL completa)
                             $esUrlCompleta = strpos($img, 'http://') === 0 || strpos($img, 'https://') === 0;
                             if (!$esUrlCompleta && (stripos($img, 'wp-content') !== false || 
@@ -300,7 +320,7 @@ class MegaEventoController extends Controller
                             }
                             
                             // Si ya es URL completa, reemplazar IPs antiguas y usar directamente
-                            if (strpos($img, 'http://') === 0 || strpos($img, 'https://') === 0) {
+                    if ($esUrlCompleta) {
                                 // Reemplazar IPs antiguas explícitamente
                                 $img = str_replace('http://127.0.0.1:8000', $baseUrl, $img);
                                 $img = str_replace('https://127.0.0.1:8000', $baseUrl, $img);
@@ -308,6 +328,8 @@ class MegaEventoController extends Controller
                                 $img = str_replace('https://192.168.0.6:8000', $baseUrl, $img);
                                 $img = str_replace('http://10.26.15.110:8000', $baseUrl, $img);
                                 $img = str_replace('https://10.26.15.110:8000', $baseUrl, $img);
+                                $img = str_replace('http://10.26.5.12:8000', $baseUrl, $img);
+                                $img = str_replace('https://10.26.5.12:8000', $baseUrl, $img);
                                 
                                 // Si es una URL externa de internet, mantenerla
                                 $parsedUrl = parse_url($img);
@@ -316,10 +338,11 @@ class MegaEventoController extends Controller
                                 if (isset($parsedUrl['host']) && $parsedUrl['host'] !== $currentHost) {
                                     // Si no es localhost ni IP local, es URL externa - mantenerla
                                     if ($parsedUrl['host'] !== 'localhost' && 
-                                        $parsedUrl['host'] !== '127.0.0.1' && 
+                                        $parsedUrl['host'] !== '127.0.0.1' &&
+                                        $parsedUrl['host'] !== '10.26.5.12' && 
                                         strpos($parsedUrl['host'], '192.168.') !== 0 &&
                                         strpos($parsedUrl['host'], '10.26.') !== 0) {
-                                        $imagenes[] = $img;
+                                $imagenesProcesadas[] = $img;
                                         continue;
                                     }
                                     
@@ -331,9 +354,9 @@ class MegaEventoController extends Controller
                                     $img = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] 
                                         . (isset($parsedUrl['port']) ? ':' . $parsedUrl['port'] : '') 
                                         . ($parsedUrl['path'] ?? '');
-                                }
+                                    }
                                 
-                                $imagenes[] = $img;
+                        $imagenesProcesadas[] = $img;
                                 continue;
                             }
                             
@@ -357,38 +380,67 @@ class MegaEventoController extends Controller
                             $existe = Storage::disk('public')->exists($storagePath);
                             
                             // Construir URL completa para rutas de storage
-                            $urlCompleta = rtrim($baseUrl, '/') . '/storage/' . $storagePath;
-                            
-                            // Solo agregar si el archivo existe O si parece ser una ruta válida de mega_eventos
-                            if ($existe || (strpos($storagePath, 'mega_eventos/') === 0 && preg_match('/\.(jpg|jpeg|png|gif|webp|svg)$/i', $storagePath))) {
-                                $imagenes[] = $urlCompleta;
+                                $urlCompleta = rtrim($baseUrl, '/') . '/storage/' . $storagePath;
                                 
-                                if (!$existe) {
-                                    \Log::warning('Imagen agregada sin verificación de existencia', [
+                                // Solo agregar si el archivo existe O si parece ser una ruta válida de mega_eventos
+                                if ($existe || (strpos($storagePath, 'mega_eventos/') === 0 && preg_match('/\.(jpg|jpeg|png|gif|webp|svg)$/i', $storagePath))) {
+                        $imagenesProcesadas[] = $urlCompleta;
+                                    
+                                    if (!$existe) {
+                                        \Log::warning('Imagen agregada sin verificación de existencia', [
+                                            'storage_path' => $storagePath,
+                                            'url' => $urlCompleta,
+                                            'mega_evento_id' => $mega->mega_evento_id ?? 'N/A'
+                                        ]);
+                                    }
+                                } else {
+                                    \Log::debug('Imagen omitida - no existe en storage', [
                                         'storage_path' => $storagePath,
-                                        'url' => $urlCompleta,
                                         'mega_evento_id' => $mega->mega_evento_id ?? 'N/A'
                                     ]);
-                                }
-                            } else {
-                                \Log::debug('Imagen omitida - no existe en storage', [
-                                    'storage_path' => $storagePath,
-                                    'mega_evento_id' => $mega->mega_evento_id ?? 'N/A'
-                                ]);
-                            }
                         }
                     }
                     
                     // Filtrar duplicados y valores nulos
-                    $megaData['imagenes'] = array_values(array_unique(array_filter($imagenes)));
+                $imagenesProcesadas = array_values(array_unique(array_filter($imagenesProcesadas, function($img) {
+                    return !empty($img) && is_string($img);
+                })));
                     
                     // Log para depuración
-                    if (count($megaData['imagenes']) > 0) {
+                if (count($imagenesProcesadas) > 0) {
                         \Log::info('Imágenes procesadas para mega evento', [
                             'mega_evento_id' => $mega->mega_evento_id ?? 'N/A',
-                            'total' => count($megaData['imagenes']),
-                            'imagenes' => $megaData['imagenes']
-                        ]);
+                        'total' => count($imagenesProcesadas),
+                        'imagenes' => $imagenesProcesadas
+                    ]);
+                }
+                    
+                    // Construir objeto de retorno
+                    $megaData = [
+                        'mega_evento_id' => (int) ($mega->mega_evento_id ?? 0),
+                        'titulo' => $mega->titulo ?? '',
+                        'descripcion' => $mega->descripcion ?? null,
+                        'fecha_inicio' => $formatDate($mega->fecha_inicio ?? null),
+                        'fecha_fin' => $formatDate($mega->fecha_fin ?? null),
+                        'ubicacion' => $mega->ubicacion ?? null,
+                        'lat' => isset($mega->lat) && $mega->lat !== null ? (float) $mega->lat : null,
+                        'lng' => isset($mega->lng) && $mega->lng !== null ? (float) $mega->lng : null,
+                        'categoria' => $mega->categoria ?? 'social',
+                        'estado' => $mega->estado ?? 'planificacion',
+                        'es_publico' => (bool) ($mega->es_publico ?? false),
+                        'activo' => (bool) ($mega->activo ?? true),
+                        'fecha_creacion' => $formatDate($mega->fecha_creacion ?? null),
+                        'fecha_actualizacion' => $formatDate($mega->fecha_actualizacion ?? null),
+                        'ong_organizadora_principal' => isset($mega->ong_organizadora_principal) ? (int) $mega->ong_organizadora_principal : null,
+                        'imagenes' => $imagenesProcesadas
+                    ];
+                    
+                    // Procesar capacidad_maxima
+                    $capacidadMaxima = $mega->capacidad_maxima ?? null;
+                    if ($capacidadMaxima !== null && is_numeric($capacidadMaxima)) {
+                        $megaData['capacidad_maxima'] = (int) $capacidadMaxima;
+                    } else {
+                        $megaData['capacidad_maxima'] = null;
                     }
                     
                     // Cargar ONG organizadora de forma segura usando DB::table para evitar problemas
@@ -417,7 +469,7 @@ class MegaEventoController extends Controller
                                         // Usar el origen de la petición
                                         $origin = $request->header('Origin') 
                                             ?? $request->getSchemeAndHttpHost() 
-                                            ?? env('PUBLIC_APP_URL', env('APP_URL', 'http://10.26.0.215:8000'));
+                                            ?? env('PUBLIC_APP_URL', env('APP_URL', 'http://10.26.5.12:8000'));
                                         $fotoPerfilUrl = rtrim($origin, '/') . '/storage/' . ltrim($fotoPerfil, '/');
                                     }
                                 }
@@ -437,28 +489,39 @@ class MegaEventoController extends Controller
                         // Continuar sin la ONG si hay error
                     }
                     
-                    $megaEventosArray[] = $megaData;
+                    return $megaData;
                 } catch (\Exception $e) {
                     \Log::error('Error al procesar mega evento: ' . $e->getMessage(), [
                         'mega_evento_id' => $mega->mega_evento_id ?? 'unknown',
                         'trace' => $e->getTraceAsString()
                     ]);
-                    // Continuar con el siguiente si hay error
-                    continue;
+                    // Retornar null si hay error, será filtrado después
+                    return null;
                 }
-            }
+            })->filter(function($mega) {
+                return $mega !== null;
+            })->values();
             
             \Log::info('Mega Evento Index - Completado', [
-                'count' => count($megaEventosArray)
+                'count' => $megaEventos->count()
             ]);
             
-            return response()->json([
+            // Preparar datos para JSON
+            $datos = [
                 'success' => true,
-                'mega_eventos' => $megaEventosArray,
-                'count' => count($megaEventosArray)
-            ])->header('Access-Control-Allow-Origin', '*')
-              ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-              ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+                'mega_eventos' => $megaEventos->toArray()
+            ];
+            
+            // Limpiar output buffer antes de enviar respuesta
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
+            return response()->json($datos, 200, [
+                'Access-Control-Allow-Origin' => '*',
+                'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS',
+                'Access-Control-Allow-Headers' => 'Content-Type, Authorization'
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         } catch (\Throwable $e) {
             \Log::error('Mega Evento Index - Error completo', [
                 'error_message' => $e->getMessage(),
@@ -631,6 +694,11 @@ class MegaEventoController extends Controller
     public function show($id)
     {
         try {
+            // Limpiar cualquier output buffer
+            if (ob_get_level()) {
+                ob_clean();
+            }
+            
             // Validar que el ID sea numérico
             if (!is_numeric($id)) {
                 return response()->json([
@@ -681,7 +749,7 @@ class MegaEventoController extends Controller
             ]);
             
             // Procesar cada imagen para construir URLs completas
-            $baseUrl = request()->getSchemeAndHttpHost() ?? env('PUBLIC_APP_URL', env('APP_URL', 'http://10.26.0.215:8000'));
+            $baseUrl = request()->getSchemeAndHttpHost() ?? env('PUBLIC_APP_URL', env('APP_URL', 'http://10.26.5.12:8000'));
             
             $imagenesFinales = [];
             foreach ($imagenesProcesadas as $img) {
@@ -692,17 +760,17 @@ class MegaEventoController extends Controller
                 
                 // Filtrar rutas inválidas (solo si no es URL completa)
                 if (!$esUrlCompleta) {
-                    if (strpos($img, '/templates/') !== false || 
-                        strpos($img, '/cache/') !== false || 
-                        strpos($img, '/yootheme/') !== false ||
+                if (strpos($img, '/templates/') !== false || 
+                    strpos($img, '/cache/') !== false || 
+                    strpos($img, '/yootheme/') !== false ||
                         strpos($img, '/resizer/') !== false ||
                         strpos($img, '/wp-content/') !== false ||
-                        strpos($img, 'templates/') !== false || 
-                        strpos($img, 'cache/') !== false || 
+                    strpos($img, 'templates/') !== false || 
+                    strpos($img, 'cache/') !== false || 
                         strpos($img, 'yootheme/') !== false ||
                         strpos($img, 'resizer/') !== false ||
                         strpos($img, 'wp-content/') !== false) {
-                        continue;
+                    continue;
                     }
                 }
                 
@@ -715,6 +783,8 @@ class MegaEventoController extends Controller
                     $img = str_replace('https://192.168.0.6:8000', $baseUrl, $img);
                     $img = str_replace('http://10.26.15.110:8000', $baseUrl, $img);
                     $img = str_replace('https://10.26.15.110:8000', $baseUrl, $img);
+                    $img = str_replace('http://10.26.5.12:8000', $baseUrl, $img);
+                    $img = str_replace('https://10.26.5.12:8000', $baseUrl, $img);
                     
                     // Actualizar host si es diferente (solo para IPs locales antiguas)
                     $parsedUrl = parse_url($img);
@@ -722,7 +792,7 @@ class MegaEventoController extends Controller
                     
                     if (isset($parsedUrl['host']) && $parsedUrl['host'] !== $currentHost) {
                         // Solo actualizar si es una IP local antigua
-                        $hostsAntiguos = ['127.0.0.1', '10.26.0.215'];
+                        $hostsAntiguos = ['127.0.0.1', '192.168.0.6', '10.26.15.110'];
                         if (in_array($parsedUrl['host'], $hostsAntiguos) || 
                             strpos($parsedUrl['host'], 'localhost') !== false) {
                             $parsedUrl['scheme'] = parse_url($baseUrl, PHP_URL_SCHEME) ?? 'http';
@@ -860,7 +930,7 @@ class MegaEventoController extends Controller
                         } else {
                             // Construir URL completa si no lo es
                             if (!str_starts_with($fotoPerfil, 'http://') && !str_starts_with($fotoPerfil, 'https://')) {
-                                $baseUrl = request()->getSchemeAndHttpHost() ?? env('PUBLIC_APP_URL', env('APP_URL', 'http://10.26.0.215:8000'));
+                                $baseUrl = request()->getSchemeAndHttpHost() ?? env('PUBLIC_APP_URL', env('APP_URL', 'http://10.26.5.12:8000'));
                                 
                                 // Si ya empieza con /storage/, solo agregar el dominio
                                 if (str_starts_with($fotoPerfil, '/storage/')) {
@@ -938,20 +1008,36 @@ class MegaEventoController extends Controller
                 'imagenes_sample' => count($imagenesFinales) > 0 ? $imagenesFinales[0] : null
             ]);
             
-            return response()->json([
+            // Preparar datos para JSON
+            $datos = [
                 'success' => true,
                 'mega_evento' => $megaEventoArray
-            ]);
+            ];
+            
+            // Limpiar output buffer antes de enviar respuesta
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
+            return response()->json($datos, 200, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            // Limpiar output buffer antes de enviar respuesta de error
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
             return response()->json([
                 'success' => false,
                 'error' => 'Mega evento no encontrado'
-            ], 404);
+            ], 404, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         } catch (\Throwable $e) {
+            // Limpiar output buffer antes de enviar respuesta de error
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
             return response()->json([
                 'success' => false,
                 'error' => 'Error al obtener mega evento: ' . $e->getMessage()
-            ], 500);
+            ], 500, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         }
     }
 
@@ -961,6 +1047,11 @@ class MegaEventoController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            // Limpiar cualquier output buffer
+            if (ob_get_level()) {
+                ob_clean();
+            }
+            
             $megaEvento = MegaEvento::find($id);
 
             if (!$megaEvento) {
@@ -1154,7 +1245,7 @@ class MegaEventoController extends Controller
                         
                         // Si el host no es localhost ni el dominio actual, es URL de internet
                         if (!empty($host) && 
-                            !in_array($host, ['localhost', '127.0.0.1', '10.26.0.215']) && 
+                            !in_array($host, ['localhost', '127.0.0.1', '192.168.0.6', '10.26.15.110', '10.26.5.12']) && 
                             $host !== $appHost &&
                             strpos($host, $appHost) === false &&
                             strpos($appHost, $host) === false) {
@@ -1539,11 +1630,19 @@ class MegaEventoController extends Controller
                 'categoria' => $megaEvento->categoria
             ]);
 
-            return response()->json([
+            // Preparar datos para JSON
+            $datos = [
                 'success' => true,
                 'message' => 'Mega evento actualizado correctamente',
                 'mega_evento' => $megaEvento
-            ]);
+            ];
+            
+            // Limpiar output buffer antes de enviar respuesta
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
+            return response()->json($datos, 200, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         } catch (\Throwable $e) {
             \Log::error('Mega Evento Update - Error completo', [
@@ -1554,6 +1653,11 @@ class MegaEventoController extends Controller
                 'error_line' => $e->getLine()
             ]);
             
+            // Limpiar output buffer antes de enviar respuesta de error
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
             return response()->json([
                 'success' => false,
                 'error' => 'Error al actualizar mega evento: ' . $e->getMessage(),
@@ -1562,7 +1666,7 @@ class MegaEventoController extends Controller
                     'line' => $e->getLine(),
                     'trace' => $e->getTraceAsString()
                 ] : null
-            ], 500);
+            ], 500, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         }
     }
 
@@ -2148,7 +2252,7 @@ class MegaEventoController extends Controller
             // Obtener el origen de la petición para generar URLs correctas
             $origin = $request->header('Origin') 
                 ?? $request->getSchemeAndHttpHost() 
-                ?? env('PUBLIC_APP_URL', env('APP_URL', 'http://10.26.0.215:8000'));
+                ?? env('PUBLIC_APP_URL', env('APP_URL', 'http://10.26.5.12:8000'));
             
             // Procesar imágenes para usar URLs completas
             foreach ($megaEventos as $mega) {
@@ -2397,6 +2501,11 @@ class MegaEventoController extends Controller
     public function seguimiento($id)
     {
         try {
+            // Limpiar cualquier output buffer
+            if (ob_get_level()) {
+                ob_clean();
+            }
+            
             // Validar que el ID sea numérico
             if (!is_numeric($id)) {
                 return response()->json([
@@ -2689,7 +2798,8 @@ class MegaEventoController extends Controller
                 'es_publico' => $megaEvento->es_publico,
             ];
 
-            return response()->json([
+            // Preparar datos para JSON
+            $datos = [
                 'success' => true,
                 'mega_evento' => $megaEvento,
                 'resumen' => $resumen,
@@ -2734,7 +2844,14 @@ class MegaEventoController extends Controller
                 'inscripciones_por_dia' => $inscripcionesPorDia,
                 'reacciones_por_dia' => $reaccionesPorDia,
                 'alertas' => $alertas,
-            ]);
+            ];
+            
+            // Limpiar output buffer antes de enviar respuesta
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
+            return response()->json($datos, 200, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         } catch (\Throwable $e) {
             return response()->json([
@@ -2750,6 +2867,11 @@ class MegaEventoController extends Controller
     public function seguimientoGeneral()
     {
         try {
+            // Limpiar cualquier output buffer
+            if (ob_get_level()) {
+                ob_clean();
+            }
+            
             $user = auth()->user();
             
             if (!$user) {
@@ -2839,7 +2961,8 @@ class MegaEventoController extends Controller
 
             $totalMegaEventos = $megaEventos->count();
 
-            return response()->json([
+            // Preparar datos para JSON
+            $datos = [
                 'success' => true,
                 'estadisticas_agregadas' => [
                     'total_mega_eventos' => $totalMegaEventos,
@@ -2854,7 +2977,14 @@ class MegaEventoController extends Controller
                     'promedio_compartidos_por_evento' => $totalMegaEventos > 0 ? round($totalCompartidos / $totalMegaEventos, 2) : 0
                 ],
                 'mega_eventos_detalle' => $megaEventosDetalle
-            ]);
+            ];
+            
+            // Limpiar output buffer antes de enviar respuesta
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
+            return response()->json($datos, 200, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         } catch (\Throwable $e) {
             return response()->json([
@@ -2870,6 +3000,11 @@ class MegaEventoController extends Controller
     public function participantes($id, Request $request)
     {
         try {
+            // Limpiar cualquier output buffer
+            if (ob_get_level()) {
+                ob_clean();
+            }
+            
             $megaEvento = MegaEvento::find($id);
 
             if (!$megaEvento) {
@@ -3030,11 +3165,19 @@ class MegaEventoController extends Controller
                 ->sortByDesc('fecha_registro')
                 ->values();
 
-            return response()->json([
+            // Preparar datos para JSON
+            $datos = [
                 'success' => true,
                 'participantes' => $participantes,
                 'count' => $participantes->count()
-            ]);
+            ];
+            
+            // Limpiar output buffer antes de enviar respuesta
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
+            return response()->json($datos, 200, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         } catch (\Throwable $e) {
             return response()->json([
@@ -3051,6 +3194,11 @@ class MegaEventoController extends Controller
     public function historial($id)
     {
         try {
+            // Limpiar cualquier output buffer
+            if (ob_get_level()) {
+                ob_clean();
+            }
+            
             $megaEvento = MegaEvento::find($id);
 
             if (!$megaEvento) {
@@ -3161,11 +3309,19 @@ class MegaEventoController extends Controller
                 return strtotime($b['fecha']) - strtotime($a['fecha']);
             });
 
-            return response()->json([
+            // Preparar datos para JSON
+            $datos = [
                 'success' => true,
                 'historial' => $historial,
                 'total_registros' => count($historial)
-            ]);
+            ];
+            
+            // Limpiar output buffer antes de enviar respuesta
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
+            return response()->json($datos, 200, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         } catch (\Throwable $e) {
             return response()->json([
@@ -3817,6 +3973,11 @@ Reporte generado el ' . date('d/m/Y H:i:s') . ' | Mega Evento ID: ' . $megaEvent
     public function controlAsistencia(Request $request, $id)
     {
         try {
+            // Limpiar cualquier output buffer
+            if (ob_get_level()) {
+                ob_clean();
+            }
+            
             $ongId = $request->user()->id_usuario;
             
             $megaEvento = MegaEvento::find($id);
@@ -4030,7 +4191,8 @@ Reporte generado el ' . date('d/m/Y H:i:s') . ' | Mega Evento ID: ' . $megaEvent
             // Combinar ambos tipos
             $participantes = $participantesRegistrados->concat($participantesNoRegistrados);
 
-            return response()->json([
+            // Preparar datos para JSON
+            $datos = [
                 "success" => true,
                 "mega_evento" => [
                     'id' => $megaEvento->mega_evento_id,
@@ -4041,7 +4203,14 @@ Reporte generado el ' . date('d/m/Y H:i:s') . ' | Mega Evento ID: ' . $megaEvent
                 "total" => $participantes->count(),
                 "asistieron" => $participantes->where('estado_asistencia_raw', 'asistido')->count(),
                 "no_asistieron" => $participantes->where('estado_asistencia_raw', 'no_asistido')->count(),
-            ]);
+            ];
+            
+            // Limpiar output buffer antes de enviar respuesta
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
+            return response()->json($datos, 200, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         } catch (\Throwable $e) {
             return response()->json([

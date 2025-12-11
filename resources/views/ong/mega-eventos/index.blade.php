@@ -11,8 +11,8 @@
             <p class="text-muted mb-0" style="font-size: 0.9rem; margin-top: 0.25rem;">Gestiona tus eventos principales</p>
         </div>
         <a href="{{ route('ong.mega-eventos.create') }}" class="btn" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: none; border-radius: 12px; padding: 0.75rem 1.5rem; font-weight: 500; box-shadow: 0 2px 8px rgba(12, 43, 68, 0.15); transition: all 0.3s ease;">
-            <i class="fas fa-plus mr-2"></i> Nuevo Mega Evento
-        </a>
+                <i class="fas fa-plus mr-2"></i> Nuevo Mega Evento
+            </a>
     </div>
 
     <!-- Botón FAB circular (oculto inicialmente) -->
@@ -192,9 +192,9 @@
                         <input type="text" id="buscador" class="form-control border-0" placeholder="Buscar por título o descripción..." style="padding: 0.625rem 1rem; font-size: 0.9rem;">
                         <button class="btn btn-link text-muted border-0" type="button" id="btnLimpiar" style="padding: 0.625rem 1rem;">
                             <i class="fas fa-times"></i>
-                        </button>
+                            </button>
+                        </div>
                     </div>
-                </div>
                 <div class="col-md-2 mb-3 mb-md-0">
                     <button class="btn btn-primary w-100" type="button" onclick="mostrarEstadisticasAgregadas()" style="border-radius: 8px; padding: 0.625rem 1rem; font-size: 0.9rem; font-weight: 500;">
                         <i class="fas fa-chart-bar mr-2"></i>Estadísticas
@@ -418,12 +418,12 @@ function buildImageUrl(imgUrl) {
     // Si ya es una URL completa, reemplazar IPs antiguas y retornarla
     if (esUrlCompleta) {
         // Reemplazar IPs antiguas
-        imgUrl = imgUrl.replace(/http:\/\/127\.0\.0\.1:8000/g, 'http://10.26.0.215:8000');
-        imgUrl = imgUrl.replace(/https:\/\/127\.0\.0\.1:8000/g, 'https://10.26.0.215:8000');
-        imgUrl = imgUrl.replace(/http:\/\/192\.168\.0\.6:8000/g, 'http://10.26.0.215:8000');
-        imgUrl = imgUrl.replace(/https:\/\/192\.168\.0\.6:8000/g, 'https://10.26.0.215:8000');
-        imgUrl = imgUrl.replace(/http:\/\/10\.26\.15\.110:8000/g, 'http://10.26.0.215:8000');
-        imgUrl = imgUrl.replace(/https:\/\/10\.26\.15\.110:8000/g, 'https://10.26.0.215:8000');
+        imgUrl = imgUrl.replace(/http:\/\/127\.0\.0\.1:8000/g, 'http://10.26.5.12:8000');
+        imgUrl = imgUrl.replace(/https:\/\/127\.0\.0\.1:8000/g, 'https://10.26.5.12:8000');
+        imgUrl = imgUrl.replace(/http:\/\/192\.168\.0\.6:8000/g, 'http://10.26.5.12:8000');
+        imgUrl = imgUrl.replace(/https:\/\/192\.168\.0\.6:8000/g, 'https://10.26.5.12:8000');
+        imgUrl = imgUrl.replace(/http:\/\/10\.26\.15\.110:8000/g, 'http://10.26.5.12:8000');
+        imgUrl = imgUrl.replace(/https:\/\/10\.26\.15\.110:8000/g, 'https://10.26.5.12:8000');
         
         // Validar que la URL completa no contenga arrays JSON
         if (!imgUrl.includes('[') && !imgUrl.includes(']')) {
@@ -439,9 +439,9 @@ function buildImageUrl(imgUrl) {
                     const baseUrl = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) 
                         ? API_BASE_URL 
                         : window.location.origin;
-                    const correctedBaseUrl = baseUrl.replace(/127\.0\.0\.1:8000/g, '10.26.0.215:8000')
-                                                     .replace(/192\.168\.0\.6:8000/g, '10.26.0.215:8000')
-                                                     .replace(/10\.26\.15\.110:8000/g, '10.26.0.215:8000');
+                    const correctedBaseUrl = baseUrl.replace(/127\.0\.0\.1:8000/g, '10.26.5.12:8000')
+                                                     .replace(/192\.168\.0\.6:8000/g, '10.26.5.12:8000')
+                                                     .replace(/10\.26\.15\.110:8000/g, '10.26.5.12:8000');
                     return `${correctedBaseUrl}/api/image-proxy?url=${encodeURIComponent(imgUrl)}`;
                 }
             } catch (e) {
@@ -468,9 +468,9 @@ function buildImageUrl(imgUrl) {
         const baseUrl = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) 
             ? API_BASE_URL 
             : window.location.origin;
-        const correctedBaseUrl = baseUrl.replace(/127\.0\.0\.1:8000/g, '10.26.0.215:8000')
-                                         .replace(/192\.168\.0\.6:8000/g, '10.26.0.215:8000')
-                                         .replace(/10\.26\.15\.110:8000/g, '10.26.0.215:8000');
+        const correctedBaseUrl = baseUrl.replace(/127\.0\.0\.1:8000/g, '10.26.5.12:8000')
+                                         .replace(/192\.168\.0\.6:8000/g, '10.26.5.12:8000')
+                                         .replace(/10\.26\.15\.110:8000/g, '10.26.5.12:8000');
         const finalUrl = `${correctedBaseUrl}${imgUrl}`;
         if (!finalUrl.includes('[') && !finalUrl.includes(']')) {
             return finalUrl;
@@ -484,9 +484,9 @@ function buildImageUrl(imgUrl) {
         const baseUrl = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) 
             ? API_BASE_URL 
             : window.location.origin;
-        const correctedBaseUrl = baseUrl.replace(/127\.0\.0\.1:8000/g, '10.26.0.215:8000')
-                                         .replace(/192\.168\.0\.6:8000/g, '10.26.0.215:8000')
-                                         .replace(/10\.26\.15\.110:8000/g, '10.26.0.215:8000');
+        const correctedBaseUrl = baseUrl.replace(/127\.0\.0\.1:8000/g, '10.26.5.12:8000')
+                                         .replace(/192\.168\.0\.6:8000/g, '10.26.5.12:8000')
+                                         .replace(/10\.26\.15\.110:8000/g, '10.26.5.12:8000');
         const finalUrl = `${correctedBaseUrl}/${imgUrl}`;
         if (!finalUrl.includes('[') && !finalUrl.includes(']')) {
             return finalUrl;
@@ -503,9 +503,9 @@ function buildImageUrl(imgUrl) {
         const baseUrl = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) 
             ? API_BASE_URL 
             : window.location.origin;
-        const correctedBaseUrl = baseUrl.replace(/127\.0\.0\.1:8000/g, '10.26.0.215:8000')
-                                         .replace(/192\.168\.0\.6:8000/g, '10.26.0.215:8000')
-                                         .replace(/10\.26\.15\.110:8000/g, '10.26.0.215:8000');
+        const correctedBaseUrl = baseUrl.replace(/127\.0\.0\.1:8000/g, '10.26.5.12:8000')
+                                         .replace(/192\.168\.0\.6:8000/g, '10.26.5.12:8000')
+                                         .replace(/10\.26\.15\.110:8000/g, '10.26.5.12:8000');
         const finalUrl = `${correctedBaseUrl}/storage/${imgUrl.replace(/^\//, '')}`;
         if (!finalUrl.includes('[') && !finalUrl.includes(']')) {
             return finalUrl;
@@ -655,33 +655,20 @@ async function cargarMegaEventos() {
             const fechaInicio = formatearFechaPostgreSQL(mega.fecha_inicio);
             const fechaFin = formatearFechaPostgreSQL(mega.fecha_fin);
 
-            // Debug: Ver qué está recibiendo del backend
-            console.log(`Procesando mega evento "${mega.titulo}":`, {
-                imagenes_raw: mega.imagenes,
-                tipo: typeof mega.imagenes,
-                es_array: Array.isArray(mega.imagenes)
-            });
-
-            // Función recursiva para extraer URLs válidas de cualquier estructura
-            function extraerUrlsValidas(input) {
-                const urls = [];
-                
-                if (!input) return urls;
-                
-                // Si es un array, procesar cada elemento
-                if (Array.isArray(input)) {
-                    input.forEach(item => {
-                        urls.push(...extraerUrlsValidas(item));
-                    });
-                    return urls;
+            // Función para procesar una URL de imagen individual
+            function procesarImagenUrl(img) {
+                // Validar que sea string
+                if (typeof img !== 'string') {
+                    return null;
                 }
                 
-                // Si es un string
-                if (typeof input === 'string') {
-                    let trimmed = input.trim();
-                    if (trimmed === '') return urls;
+                // Hacer trim y validar que no esté vacío
+                let trimmed = img.trim();
+                if (trimmed === '') {
+                    return null;
+                }
                     
-                    // Decodificar URL si está codificada (maneja %22, %5B, %5D, etc.)
+                // Intentar decodificar URI component en bloque try-catch
                     try {
                         const decoded = decodeURIComponent(trimmed);
                         if (decoded !== trimmed) {
@@ -691,123 +678,81 @@ async function cargarMegaEventos() {
                         // Si falla la decodificación, usar el original
                     }
                     
-                    // Normalizar dobles barras a barras simples
-                    trimmed = trimmed.replace(/\/\//g, '/').replace(/http:\//g, 'http://').replace(/https:\//g, 'https://');
+                // Normalizar dobles barras
+                trimmed = trimmed.replace(/\/\//g, '/');
+                
+                // Corregir http:/ y https:/ sin doble barra
+                trimmed = trimmed.replace(/http:\/(?!\/)/g, 'http://');
+                trimmed = trimmed.replace(/https:\/(?!\/)/g, 'https://');
                     
-                    // Si parece ser un JSON array, parsearlo recursivamente
-                    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
-                        try {
-                            const parsed = JSON.parse(trimmed);
-                            return extraerUrlsValidas(parsed);
-                        } catch (e) {
-                            return urls;
-                        }
-                    }
-                    
-                    // Caso especial: si la URL contiene /storage/["http://..."] o /storage/[%22http://...%22] extraer solo el JSON
-                    if (trimmed.includes('[') || trimmed.includes(']') || trimmed.includes('%5B') || trimmed.includes('%5D')) {
-                        // Intentar extraer JSON de /storage/[...]
-                        const storageJsonMatch = trimmed.match(/\/storage\/\[(.*?)\]$/);
+                // Detectar si contiene caracteres de JSON como [ ] %5B %5D
+                const tieneCaracteresJson = trimmed.includes('[') || trimmed.includes(']') || 
+                                           trimmed.includes('%5B') || trimmed.includes('%5D') ||
+                                           trimmed.includes('%22');
+                
+                if (tieneCaracteresJson) {
+                    // Intentar extraer JSON primero buscando patrón /storage/[...]
+                    const storageJsonMatch = trimmed.match(/\/storage\/\[(.*?)\]/);
                         if (storageJsonMatch) {
                             try {
                                 let jsonStr = '[' + storageJsonMatch[1] + ']';
-                                // Decodificar el contenido del JSON si está codificado
+                            // Decodificar si es necesario
                                 try {
                                     jsonStr = decodeURIComponent(jsonStr);
                                 } catch (e) {
                                     // Si falla, usar el original
                                 }
                                 const parsed = JSON.parse(jsonStr);
-                                return extraerUrlsValidas(parsed);
-                            } catch (e) {
-                                // Intentar parsear directamente sin decodificar
-                                try {
-                                    const jsonStr = '[' + storageJsonMatch[1] + ']';
-                                    const parsed = JSON.parse(jsonStr);
-                                    return extraerUrlsValidas(parsed);
-                                } catch (e2) {
-                                    return urls;
-                                }
+                            // Si es array, procesar el primer elemento
+                            if (Array.isArray(parsed) && parsed.length > 0) {
+                                return procesarImagenUrl(parsed[0]);
                             }
-                        }
-                        
-                        // Intentar extraer JSON codificado con %5B y %5D
-                        const encodedJsonMatch = trimmed.match(/\[(.*?)\]|%5B(.*?)%5D/);
-                        if (encodedJsonMatch) {
-                            try {
-                                let jsonStr = '[' + (encodedJsonMatch[1] || encodedJsonMatch[2]) + ']';
-                                // Decodificar si está codificado
-                                try {
-                                    jsonStr = decodeURIComponent(jsonStr);
                                 } catch (e) {
-                                    // Si falla, usar el original
-                                }
-                                const parsed = JSON.parse(jsonStr);
-                                return extraerUrlsValidas(parsed);
-                            } catch (e) {
-                                return urls;
+                            // Si falla, continuar con el procesamiento normal
                             }
                         }
                         
-                        // Intentar extraer URLs del string si contiene JSON en cualquier parte
+                    // Intentar parsear como JSON directamente
+                    if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
                         try {
-                            const jsonMatch = trimmed.match(/\[.*?\]/);
-                            if (jsonMatch) {
-                                let jsonStr = jsonMatch[0];
-                                // Decodificar si es necesario
-                                try {
-                                    jsonStr = decodeURIComponent(jsonStr);
-                                } catch (e) {
-                                    // Si falla, usar el original
-                                }
-                                const parsed = JSON.parse(jsonStr);
-                                return extraerUrlsValidas(parsed);
+                            const parsed = JSON.parse(trimmed);
+                            if (Array.isArray(parsed) && parsed.length > 0) {
+                                return procesarImagenUrl(parsed[0]);
                             }
                         } catch (e) {
-                            return urls;
+                            // Si falla, continuar con el procesamiento normal
                         }
-                        return urls; // Rechazar si contiene arrays JSON y no se pudo parsear
+                    }
                     }
                     
-                    // Filtrar rutas inválidas y servicios externos no disponibles
+                // Filtrar rutas inválidas
                     const rutasInvalidas = ['/templates/', '/cache/', '/yootheme/', 'templates/', 'cache/', 'yootheme/', '/resizer/'];
                     const esRutaInvalida = rutasInvalidas.some(ruta => trimmed.toLowerCase().includes(ruta.toLowerCase()));
                     
-                    // También filtrar URLs que parecen ser de servicios externos no disponibles
-                    const esServicioExterno = trimmed.includes('/resizer/') || trimmed.includes('resizer');
-                    
-                    if (!esRutaInvalida && !esServicioExterno) {
-                        urls.push(trimmed);
-                    }
-                }
-                
-                return urls;
+                if (esRutaInvalida) {
+                    return null;
             }
             
-            // Extraer todas las URLs válidas usando la función recursiva
-            let imagenes = extraerUrlsValidas(mega.imagenes);
-            
-            // Eliminar duplicados
-            imagenes = [...new Set(imagenes)];
-            
-            // Debug: Log para ver qué imágenes se están procesando
-            if (imagenes.length > 0) {
-                console.log(`Mega evento "${mega.titulo}": ${imagenes.length} imagen(es) encontrada(s)`, imagenes);
+                return trimmed;
             }
             
-            // Procesar imágenes del backend usando buildImageUrl (IGUAL QUE EN SHOW.BLADE.PHP)
+            // Procesar imágenes del backend
             let imagenesValidas = [];
             
             if (mega.imagenes && Array.isArray(mega.imagenes)) {
                 imagenesValidas = mega.imagenes
-                    .map(img => {
-                        if (!img || typeof img !== 'string') return null;
-                        
-                        // Usar buildImageUrl para procesar y validar la URL
-                        return buildImageUrl(img.trim());
-                    })
+                    .map(img => procesarImagenUrl(img))
                     .filter(img => img !== null && img !== undefined);
+            } else if (mega.imagenes && typeof mega.imagenes === 'string') {
+                // Si es string, intentar procesarlo
+                const procesada = procesarImagenUrl(mega.imagenes);
+                if (procesada) {
+                    imagenesValidas = [procesada];
+                }
             }
+            
+            // Eliminar duplicados
+            imagenesValidas = [...new Set(imagenesValidas)];
             
             const imagenPrincipal = imagenesValidas.length > 0 ? imagenesValidas[0] : null;
             

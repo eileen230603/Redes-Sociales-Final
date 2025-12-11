@@ -126,6 +126,11 @@ class EventoParticipacionController extends Controller
     public function participantesEvento(Request $request, $eventoId)
     {
         try {
+            // Limpiar cualquier output buffer
+            if (ob_get_level()) {
+                ob_clean();
+            }
+            
             $evento = Evento::find($eventoId);
             
             if (!$evento) {
@@ -319,13 +324,25 @@ class EventoParticipacionController extends Controller
                 'total_count' => $participantes->count()
             ]);
 
-            return response()->json([
+            // Preparar datos para JSON
+            $datos = [
                 "success" => true,
                 "participantes" => $participantes,
                 "count" => $participantes->count()
-            ]);
+            ];
+            
+            // Limpiar output buffer antes de enviar respuesta
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
+            return response()->json($datos, 200, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         } catch (\Throwable $e) {
+            // Limpiar output buffer antes de enviar respuesta de error
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
             return response()->json([
                 "success" => false,
                 "error" => "Error al obtener participantes: " . $e->getMessage()
@@ -1102,6 +1119,11 @@ class EventoParticipacionController extends Controller
     public function controlAsistencia(Request $request, $eventoId)
     {
         try {
+            // Limpiar cualquier output buffer
+            if (ob_get_level()) {
+                ob_clean();
+            }
+            
             $ongId = $request->user()->id_usuario;
             
             $evento = Evento::find($eventoId);
@@ -1224,7 +1246,8 @@ class EventoParticipacionController extends Controller
             // Combinar ambos tipos
             $participantes = $participantesRegistrados->concat($participantesNoRegistrados);
 
-            return response()->json([
+            // Preparar datos para JSON
+            $datos = [
                 "success" => true,
                 "evento" => [
                     'id' => $evento->id,
@@ -1235,9 +1258,20 @@ class EventoParticipacionController extends Controller
                 "total" => $participantes->count(),
                 "asistieron" => $participantes->where('estado_asistencia_raw', 'asistido')->count(),
                 "no_asistieron" => $participantes->where('estado_asistencia_raw', 'no_asistido')->count(),
-            ]);
+            ];
+            
+            // Limpiar output buffer antes de enviar respuesta
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
+            return response()->json($datos, 200, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         } catch (\Throwable $e) {
+            // Limpiar output buffer antes de enviar respuesta de error
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
             return response()->json([
                 "success" => false,
                 "error" => "Error al obtener control de asistencia: " . $e->getMessage()

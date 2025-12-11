@@ -116,7 +116,7 @@ return [
     | Admin Panel Classes
     |--------------------------------------------------------------------------
     */
-    'classes_body' => '',
+    'classes_body' => 'hold-transition sidebar-mini layout-fixed',
     'classes_brand' => 'bg-brand-primario',
     'classes_brand_text' => '',
     'classes_sidebar' => 'sidebar-dark-primary elevation-4',
@@ -190,7 +190,6 @@ return [
         ],
         [
             'text' => 'Eventos',
-            'url'  => '#',
             'icon' => 'fas fa-fw fa-calendar-alt',
             'submenu' => [
                 [
@@ -222,7 +221,6 @@ return [
         ],
         [
             'text' => 'Mega Eventos',
-            'url'  => '#',
             'icon' => 'fas fa-fw fa-calendar-check',
             'submenu' => [
                 [
@@ -274,7 +272,6 @@ return [
         ],
         [
             'text' => 'Configuraciones',
-            'url'  => '#',
             'icon' => 'fas fa-fw fa-cogs',
             'submenu' => [
                 [

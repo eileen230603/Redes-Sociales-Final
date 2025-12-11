@@ -15,6 +15,11 @@ class DatabaseSeeder extends Seeder
             ParametrizacionesSeeder::class,
         ]);
 
+        // Ejecutar seeder de roles y permisos
+        $this->call([
+            RolesAndPermissionsSeeder::class,
+        ]);
+
         // Usuario ONG demo
         $id = DB::table('usuarios')->insertGetId([
             'nombre_usuario'    => 'ong_demo',
@@ -33,5 +38,11 @@ class DatabaseSeeder extends Seeder
             'sitio_web'   => 'https://demo.org',
             'descripcion' => 'ONG de prueba',
         ]);
+
+        // Asignar rol ONG al usuario demo
+        $user = \App\Models\User::find($id);
+        if ($user) {
+            $user->assignRole('ONG');
+        }
     }
 }

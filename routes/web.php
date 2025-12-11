@@ -76,8 +76,43 @@ Route::prefix('ong/voluntarios')->name('ong.voluntarios.')->group(function () {
 });
 
 // ---------------- ONG: REPORTES ----------------
+// Nota: No usamos middleware auth aquí porque el sistema usa tokens en localStorage
+// La validación se hace en el frontend como en otras vistas de ONG
 Route::prefix('ong/reportes')->name('ong.reportes.')->group(function () {
-    Route::view('/', 'ong.reportes.index')->name('index');
+    // Dashboard principal de reportes
+    Route::get('/', [App\Http\Controllers\ReportController::class, 'index'])->name('index');
+    
+    // Reporte 1: Resumen Ejecutivo
+    Route::get('/resumen-ejecutivo', [App\Http\Controllers\ReportController::class, 'resumenEjecutivo'])->name('resumen-ejecutivo');
+    Route::get('/resumen-ejecutivo/exportar/pdf', [App\Http\Controllers\ReportController::class, 'exportarResumenEjecutivoPDF'])->name('resumen-ejecutivo.exportar.pdf');
+    Route::get('/resumen-ejecutivo/exportar/excel', [App\Http\Controllers\ReportController::class, 'exportarResumenEjecutivoExcel'])->name('resumen-ejecutivo.exportar.excel');
+    
+    // Reporte 2: Análisis Temporal
+    Route::get('/analisis-temporal', [App\Http\Controllers\ReportController::class, 'analisisTemporal'])->name('analisis-temporal');
+    Route::get('/analisis-temporal/exportar/pdf', [App\Http\Controllers\ReportController::class, 'exportarAnalisisTemporalPDF'])->name('analisis-temporal.exportar.pdf');
+    Route::get('/analisis-temporal/exportar/excel', [App\Http\Controllers\ReportController::class, 'exportarAnalisisTemporalExcel'])->name('analisis-temporal.exportar.excel');
+    Route::get('/analisis-temporal/exportar/csv', [App\Http\Controllers\ReportController::class, 'exportarAnalisisTemporalCSV'])->name('analisis-temporal.exportar.csv');
+    
+    // Reporte 3: Participación y Colaboración
+    Route::get('/participacion-colaboracion', [App\Http\Controllers\ReportController::class, 'participacionColaboracion'])->name('participacion-colaboracion');
+    Route::get('/participacion-colaboracion/exportar/pdf', [App\Http\Controllers\ReportController::class, 'exportarParticipacionColaboracionPDF'])->name('participacion-colaboracion.exportar.pdf');
+    Route::get('/participacion-colaboracion/exportar/excel', [App\Http\Controllers\ReportController::class, 'exportarParticipacionColaboracionExcel'])->name('participacion-colaboracion.exportar.excel');
+    
+    // Reporte 4: Análisis Geográfico
+    Route::get('/analisis-geografico', [App\Http\Controllers\ReportController::class, 'analisisGeografico'])->name('analisis-geografico');
+    Route::get('/analisis-geografico/exportar/pdf', [App\Http\Controllers\ReportController::class, 'exportarAnalisisGeograficoPDF'])->name('analisis-geografico.exportar.pdf');
+    Route::get('/analisis-geografico/exportar/excel', [App\Http\Controllers\ReportController::class, 'exportarAnalisisGeograficoExcel'])->name('analisis-geografico.exportar.excel');
+    
+    // Reporte 5: Rendimiento por ONG
+    Route::get('/rendimiento-ong', [App\Http\Controllers\ReportController::class, 'rendimientoOng'])->name('rendimiento-ong');
+    Route::get('/rendimiento-ong/exportar/pdf', [App\Http\Controllers\ReportController::class, 'exportarRendimientoOngPDF'])->name('rendimiento-ong.exportar.pdf');
+    Route::get('/rendimiento-ong/exportar/excel', [App\Http\Controllers\ReportController::class, 'exportarRendimientoOngExcel'])->name('rendimiento-ong.exportar.excel');
+    Route::get('/rendimiento-ong/exportar/json', [App\Http\Controllers\ReportController::class, 'exportarRendimientoOngJSON'])->name('rendimiento-ong.exportar.json');
+    
+    // Nuevos reportes: Eventos Regulares, Mega Eventos, Consolidado
+    Route::get('/eventos', [App\Http\Controllers\ReportController::class, 'eventosReport'])->name('eventos');
+    Route::get('/mega-eventos', [App\Http\Controllers\ReportController::class, 'megaEventosReport'])->name('mega-eventos');
+    Route::get('/consolidado', [App\Http\Controllers\ReportController::class, 'consolidadoReport'])->name('consolidado');
 });
 
 // ---------------- ONG: NOTIFICACIONES ----------------
@@ -87,7 +122,9 @@ Route::prefix('ong/notificaciones')->name('ong.notificaciones.')->group(function
 
 // ---------------- ONG: DASHBOARD ----------------
 Route::prefix('ong/dashboard')->name('ong.dashboard.')->group(function () {
-    Route::view('/', 'ong.dashboard.index')->name('index');
+    Route::get('/', [App\Http\Controllers\Ong\OngDashboardController::class, 'index'])->name('index');
+    Route::get('/descargar-pdf', [App\Http\Controllers\Ong\OngDashboardController::class, 'exportarPdf'])->name('descargar-pdf');
+    Route::get('/descargar-excel', [App\Http\Controllers\Ong\OngDashboardController::class, 'exportarExcel'])->name('descargar-excel');
 });
 
 // ---------------- ONG: DASHBOARD DE EVENTOS ----------------
