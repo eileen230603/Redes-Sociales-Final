@@ -94,37 +94,69 @@ class Evento {
     return [value];
   }
 
+  // Helper para parsear int que puede venir como String o int
+  static int? _parseInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is String) {
+      final parsed = int.tryParse(value);
+      return parsed;
+    }
+    if (value is num) return value.toInt();
+    return null;
+  }
+
+  // Helper para parsear int requerido que puede venir como String o int
+  static int _parseIntRequired(dynamic value) {
+    if (value is int) return value;
+    if (value is String) {
+      final parsed = int.tryParse(value);
+      if (parsed != null) return parsed;
+    }
+    if (value is num) return value.toInt();
+    throw FormatException('No se pudo parsear como int: $value');
+  }
+
+  // Helper para parsear String que puede ser null
+  static String _parseString(dynamic value, [String defaultValue = '']) {
+    if (value == null) return defaultValue;
+    return value.toString();
+  }
+
+  // Helper para parsear DateTime que puede ser null
+  static DateTime? _parseDateTime(dynamic value) {
+    if (value == null) return null;
+    if (value is String && value.isNotEmpty) {
+      return DateTime.tryParse(value);
+    }
+    return null;
+  }
+
   factory Evento.fromJson(Map<String, dynamic> json) {
     return Evento(
-      id: json['id'] as int,
-      ongId: json['ong_id'] as int?,
-      titulo: json['titulo'] as String,
-      descripcion: json['descripcion'] as String?,
-      tipoEvento: json['tipo_evento'] as String,
-      fechaInicio: DateTime.parse(json['fecha_inicio'] as String),
-      fechaFin:
-          json['fecha_fin'] != null
-              ? DateTime.parse(json['fecha_fin'] as String)
-              : null,
-      fechaLimiteInscripcion:
-          json['fecha_limite_inscripcion'] != null
-              ? DateTime.parse(json['fecha_limite_inscripcion'] as String)
-              : null,
-      capacidadMaxima: json['capacidad_maxima'] as int?,
-      estado: json['estado'] as String,
-      ciudad: json['ciudad'] as String?,
-      direccion: json['direccion'] as String?,
+      id: _parseIntRequired(json['id']),
+      ongId: _parseInt(json['ong_id']),
+      titulo: _parseString(json['titulo'], 'Sin título'),
+      descripcion: json['descripcion']?.toString(),
+      tipoEvento: _parseString(json['tipo_evento'], ''),
+      fechaInicio: _parseDateTime(json['fecha_inicio']) ?? DateTime.now(),
+      fechaFin: _parseDateTime(json['fecha_fin']),
+      fechaLimiteInscripcion: _parseDateTime(json['fecha_limite_inscripcion']),
+      capacidadMaxima: _parseInt(json['capacidad_maxima']),
+      estado: _parseString(json['estado'], 'pendiente'),
+      ciudad: json['ciudad']?.toString(),
+      direccion: json['direccion']?.toString(),
       lat:
           json['lat'] != null
               ? (json['lat'] is String
                   ? double.tryParse(json['lat'] as String)
-                  : (json['lat'] as num).toDouble())
+                  : (json['lat'] is num ? (json['lat'] as num).toDouble() : null))
               : null,
       lng:
           json['lng'] != null
               ? (json['lng'] is String
                   ? double.tryParse(json['lng'] as String)
-                  : (json['lng'] as num).toDouble())
+                  : (json['lng'] is num ? (json['lng'] as num).toDouble() : null))
               : null,
       inscripcionAbierta:
           json['inscripcion_abierta'] == 1 ||
@@ -133,14 +165,8 @@ class Evento {
       invitados: _parseJsonArray(json['invitados']),
       imagenes: _parseJsonArray(json['imagenes']),
       auspiciadores: _parseJsonArray(json['auspiciadores']),
-      createdAt:
-          json['created_at'] != null
-              ? DateTime.parse(json['created_at'] as String)
-              : null,
-      updatedAt:
-          json['updated_at'] != null
-              ? DateTime.parse(json['updated_at'] as String)
-              : null,
+      createdAt: _parseDateTime(json['created_at']),
+      updatedAt: _parseDateTime(json['updated_at']),
     );
   }
 

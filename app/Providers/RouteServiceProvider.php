@@ -12,14 +12,7 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // ⚙️ En Laravel 11 el método routes() no siempre existe,
-        // así que definimos las rutas directamente aquí:
-
-        Route::middleware('api')
-            ->prefix('api')
-            ->group(base_path('routes/api.php'));
-
-        Route::middleware('web')
-            ->group(base_path('routes/web.php'));
+        // ⚙️ Las rutas API y Web ahora se cargan desde bootstrap/app.php
+        // No cargar aquí para evitar duplicación
     }
 }

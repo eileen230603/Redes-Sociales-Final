@@ -9,6 +9,7 @@ import '../models/evento.dart';
 import '../models/evento_participacion.dart';
 import '../models/notificacion.dart';
 import 'storage_service.dart';
+import 'cache_service.dart';
 
 class ApiService {
   // Obtener headers con autenticación
@@ -28,6 +29,80 @@ class ApiService {
     }
 
     return headers;
+  }
+
+  // Helper para parsear JSON de forma segura, limpiando contenido extra
+  static Map<String, dynamic> _parseJsonSafely(String body, String endpoint) {
+    try {
+      // Limpiar la respuesta
+      String cleanedBody = body.trim();
+
+      // Verificar si contiene HTML (error de Laravel)
+      if (cleanedBody.contains('<!DOCTYPE') ||
+          cleanedBody.contains('<html') ||
+          cleanedBody.contains('<!doctype')) {
+        print(
+          '❌ Error: La respuesta contiene HTML en lugar de JSON para $endpoint',
+        );
+        // Intentar extraer JSON si está dentro de un script tag o similar
+        final jsonMatch = RegExp(
+          r'\{[\s\S]*\}',
+          dotAll: true,
+        ).firstMatch(cleanedBody);
+        if (jsonMatch != null) {
+          cleanedBody = jsonMatch.group(0)!;
+          print('✅ JSON extraído del HTML');
+        } else {
+          throw FormatException(
+            'La respuesta del servidor contiene HTML en lugar de JSON',
+          );
+        }
+      }
+
+      // Buscar el inicio del JSON (puede haber espacios o caracteres antes)
+      final jsonStart = cleanedBody.indexOf('{');
+      if (jsonStart > 0) {
+        cleanedBody = cleanedBody.substring(jsonStart);
+        print(
+          '⚠️ Se encontraron ${jsonStart} caracteres antes del JSON, limpiados',
+        );
+      }
+
+      // Buscar el final del JSON (puede haber contenido después)
+      int jsonEnd = cleanedBody.lastIndexOf('}');
+      if (jsonEnd > 0 && jsonEnd < cleanedBody.length - 1) {
+        // Verificar si hay más contenido después del JSON válido
+        final afterJson = cleanedBody.substring(jsonEnd + 1).trim();
+        if (afterJson.isNotEmpty && !afterJson.startsWith('}')) {
+          cleanedBody = cleanedBody.substring(0, jsonEnd + 1);
+          print(
+            '⚠️ Se encontraron ${afterJson.length} caracteres después del JSON, limpiados',
+          );
+        }
+      }
+
+      // Verificar que el body no esté vacío
+      if (cleanedBody.isEmpty) {
+        throw FormatException('La respuesta del servidor está vacía');
+      }
+
+      // Intentar parsear el JSON
+      return jsonDecode(cleanedBody) as Map<String, dynamic>;
+    } on FormatException catch (e) {
+      print('❌ Error parseando JSON para $endpoint: ${e.message}');
+      if (body.length > 0) {
+        final preview = body.length > 500 ? body.substring(0, 500) : body;
+        print('📄 Primeros caracteres de la respuesta: $preview...');
+        if (body.length > 500) {
+          final lastChars =
+              body.length > 1000
+                  ? body.substring(body.length - 500)
+                  : body.substring(500);
+          print('📄 Últimos caracteres: ...$lastChars');
+        }
+      }
+      rethrow;
+    }
   }
 
   // Login
@@ -79,6 +154,8 @@ class ApiService {
             userName: authResponse.user!.nombreUsuario,
             userType: authResponse.user!.tipoUsuario,
             entityId: authResponse.user!.idEntidad,
+            roles: authResponse.user!.roles,
+            permissions: authResponse.user!.permissions,
           );
         }
       }
@@ -95,6 +172,7 @@ class ApiService {
             '   cd Redes-Sociales-Final\n'
             '   php artisan serve\n\n'
             '2. Que la URL en lib/config/api_config.dart sea correcta:\n'
+            '   - Web/Chrome: http://localhost:8000/api\n'
             '   - Emulador Android: http://10.0.2.2:8000/api\n'
             '   - Dispositivo físico: http://TU_IP_LOCAL:8000/api\n\n'
             '3. Que el firewall no bloquee la conexión',
@@ -277,6 +355,8 @@ class ApiService {
             userName: authResponse.user!.nombreUsuario,
             userType: authResponse.user!.tipoUsuario,
             entityId: authResponse.user!.idEntidad,
+            roles: authResponse.user!.roles,
+            permissions: authResponse.user!.permissions,
           );
         }
       }
@@ -330,12 +410,39 @@ class ApiService {
   // Listar eventos publicados
   static Future<Map<String, dynamic>> getEventosPublicados() async {
     try {
-      final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/eventos'),
-        headers: await _getHeaders(includeAuth: true),
-      );
+      final url = Uri.parse('${ApiConfig.baseUrl}/eventos');
+      print('🔗 Intentando obtener eventos desde: $url');
 
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final response = await http
+          .get(url, headers: await _getHeaders(includeAuth: true))
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              throw Exception(
+                'Tiempo de espera agotado. Verifica que el servidor esté corriendo en ${ApiConfig.baseUrl}',
+              );
+            },
+          );
+
+      // Manejar errores del servidor (500, etc.)
+      if (response.statusCode >= 500) {
+        print('❌ Error del servidor: ${response.statusCode}');
+        return {
+          'success': false,
+          'error':
+              'Error del servidor (${response.statusCode}). Intenta nuevamente.',
+        };
+      }
+
+      // Verificar Content-Type
+      final contentType = response.headers['content-type'] ?? '';
+      if (!contentType.contains('application/json') &&
+          response.statusCode == 200) {
+        print('⚠️ Advertencia: Content-Type no es JSON: $contentType');
+      }
+
+      // Parsear JSON de forma segura
+      final data = _parseJsonSafely(response.body, 'getEventosPublicados');
 
       if (response.statusCode == 200 && data['success'] == true) {
         final eventosList =
@@ -349,8 +456,42 @@ class ApiService {
         'success': false,
         'error': data['error'] ?? 'Error al obtener eventos',
       };
+    } on SocketException catch (e) {
+      print('❌ SocketException: ${e.message}');
+      return {
+        'success': false,
+        'error':
+            'No se pudo conectar al servidor.\n\n'
+            'Verifica que el servidor Laravel esté corriendo:\n'
+            'cd Redes-Sociales-Final\n'
+            'php artisan serve',
+      };
+    } on TimeoutException catch (e) {
+      print('❌ TimeoutException: ${e.message}');
+      return {
+        'success': false,
+        'error':
+            'Tiempo de espera agotado.\n\n'
+            'El servidor no respondió a tiempo.\n'
+            'Verifica que el servidor esté corriendo:\n'
+            'cd Redes-Sociales-Final\n'
+            'php artisan serve',
+      };
     } catch (e) {
-      return {'success': false, 'error': 'Error de conexión: ${e.toString()}'};
+      print('❌ Error: ${e.toString()}');
+      String errorMessage = 'Error de conexión';
+      if (e.toString().contains('Failed to fetch') ||
+          e.toString().contains('ClientException')) {
+        errorMessage =
+            'No se pudo conectar al servidor.\n\n'
+            'Verifica que el servidor Laravel esté corriendo.\n\n'
+            'Para iniciar el servidor:\n'
+            'cd Redes-Sociales-Final\n'
+            'php artisan serve';
+      } else {
+        errorMessage = 'Error de conexión: ${e.toString()}';
+      }
+      return {'success': false, 'error': errorMessage};
     }
   }
 
@@ -654,12 +795,29 @@ class ApiService {
   // Listar eventos de una ONG
   static Future<Map<String, dynamic>> getEventosOng(int ongId) async {
     try {
-      final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/eventos/ong/$ongId'),
-        headers: await _getHeaders(includeAuth: true),
-      );
+      final url = Uri.parse('${ApiConfig.baseUrl}/eventos/ong/$ongId');
+      print('🔗 Intentando obtener eventos de ONG desde: $url');
 
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final response = await http
+          .get(url, headers: await _getHeaders(includeAuth: true))
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              throw Exception(
+                'Tiempo de espera agotado. Verifica que el servidor esté corriendo en ${ApiConfig.baseUrl}',
+              );
+            },
+          );
+
+      // Verificar Content-Type
+      final contentType = response.headers['content-type'] ?? '';
+      if (!contentType.contains('application/json') &&
+          response.statusCode == 200) {
+        print('⚠️ Advertencia: Content-Type no es JSON: $contentType');
+      }
+
+      // Parsear JSON de forma segura
+      final data = _parseJsonSafely(response.body, 'getEventosOng');
 
       if (response.statusCode == 200 && data['success'] == true) {
         final eventosList =
@@ -673,7 +831,22 @@ class ApiService {
         'success': false,
         'error': data['error'] ?? 'Error al obtener eventos',
       };
+    } on SocketException catch (e) {
+      print('❌ SocketException: ${e.message}');
+      return {
+        'success': false,
+        'error':
+            'No se pudo conectar al servidor. Verifica que el servidor Laravel esté corriendo en ${ApiConfig.baseUrl}',
+      };
+    } on TimeoutException catch (e) {
+      print('❌ TimeoutException: ${e.message}');
+      return {
+        'success': false,
+        'error':
+            'Tiempo de espera agotado. Verifica que el servidor esté corriendo.',
+      };
     } catch (e) {
+      print('❌ Error: ${e.toString()}');
       return {'success': false, 'error': 'Error de conexión: ${e.toString()}'};
     }
   }
@@ -1328,6 +1501,20 @@ class ApiService {
         headers: await _getHeaders(includeAuth: true),
       );
 
+      // Verificar si la respuesta es HTML (error de Laravel)
+      final contentType = response.headers['content-type'] ?? '';
+      if (contentType.contains('text/html')) {
+        print('❌ Error: El servidor devolvió HTML en lugar de JSON');
+        print(
+          '📄 Respuesta: ${response.body.substring(0, 500)}...',
+        ); // Primeros 500 caracteres
+        return {
+          'success': false,
+          'error':
+              'Error del servidor. Verifica que estés autenticado como ONG.',
+        };
+      }
+
       final data = jsonDecode(response.body) as Map<String, dynamic>;
 
       if (response.statusCode == 200 && data['success'] == true) {
@@ -1344,6 +1531,7 @@ class ApiService {
         'error': data['error'] ?? 'Error al obtener estadísticas',
       };
     } catch (e) {
+      print('❌ Error en getEstadisticasGeneralesOng: $e');
       return {'success': false, 'error': 'Error de conexión: ${e.toString()}'};
     }
   }
@@ -1918,10 +2106,28 @@ class ApiService {
   // ========== DASHBOARD DE EVENTO INDIVIDUAL ==========
 
   // Obtener dashboard detallado de un evento
-  static Future<Map<String, dynamic>> getDashboardEvento(int eventoId) async {
+  static Future<Map<String, dynamic>> getDashboardEvento(
+    int eventoId, {
+    Map<String, dynamic>? params,
+  }) async {
     try {
+      String url = '${ApiConfig.baseUrl}/eventos/$eventoId/dashboard';
+
+      if (params != null && params.isNotEmpty) {
+        final queryParams = <String, String>{};
+        params.forEach((key, value) {
+          if (value != null) {
+            queryParams[key] = value.toString();
+          }
+        });
+
+        if (queryParams.isNotEmpty) {
+          url += '?${Uri(queryParameters: queryParams).query}';
+        }
+      }
+
       final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/eventos/$eventoId/dashboard'),
+        Uri.parse(url),
         headers: await _getHeaders(includeAuth: true),
       );
 
@@ -1930,11 +2136,7 @@ class ApiService {
       if (response.statusCode == 200 && data['success'] == true) {
         return {
           'success': true,
-          'evento': data['evento'],
-          'estadisticas': data['estadisticas'] as Map?,
-          'participantes': data['participantes'] as List? ?? [],
-          'reacciones': data['reacciones'] as Map?,
-          'compartidos': data['compartidos'] as int? ?? 0,
+          ...data, // Incluye todos los datos del dashboard
         };
       }
 
@@ -1970,6 +2172,386 @@ class ApiService {
       return {
         'success': false,
         'error': data['error'] ?? 'Error al descargar PDF',
+      };
+    } catch (e) {
+      return {'success': false, 'error': 'Error de conexión: ${e.toString()}'};
+    }
+  }
+
+  // Descargar dashboard de evento en Excel (CSV)
+  static Future<Map<String, dynamic>> descargarDashboardEventoExcel(
+    int eventoId,
+  ) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/eventos/$eventoId/dashboard/excel'),
+        headers: await _getHeaders(includeAuth: true),
+      );
+
+      if (response.statusCode == 200) {
+        // Si la respuesta es un CSV, retornar los bytes
+        return {
+          'success': true,
+          'csvBytes': response.bodyBytes,
+          'contentType': response.headers['content-type'] ?? 'text/csv',
+        };
+      }
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return {
+        'success': false,
+        'error': data['error'] ?? 'Error al descargar Excel',
+      };
+    } catch (e) {
+      return {'success': false, 'error': 'Error de conexión: ${e.toString()}'};
+    }
+  }
+
+  // ========== DASHBOARD ONG COMPLETO ==========
+
+  /// Obtener dashboard completo de ONG
+  /// Endpoint: /api/ong/dashboard
+  /// Incluye todas las métricas, gráficos, top eventos, top voluntarios, etc.
+  static Future<Map<String, dynamic>> getDashboardOngCompleto({
+    String? fechaInicio,
+    String? fechaFin,
+    String? estadoEvento,
+    String? tipoParticipacion,
+    String? busquedaEvento,
+    bool useCache = true,
+  }) async {
+    try {
+      // Verificar cache primero
+      if (useCache) {
+        final cacheKey =
+            'ong_dashboard_${fechaInicio}_${fechaFin}_${estadoEvento}_${tipoParticipacion}_${busquedaEvento}';
+        final cachedData = await CacheService.getCachedData(cacheKey);
+        if (cachedData != null) {
+          print('✅ Datos obtenidos del cache');
+          return cachedData;
+        }
+      }
+
+      String url = '${ApiConfig.baseUrl}/ong/dashboard';
+      final queryParams = <String, String>{};
+
+      if (fechaInicio != null && fechaInicio.isNotEmpty) {
+        queryParams['fecha_inicio'] = fechaInicio;
+      }
+      if (fechaFin != null && fechaFin.isNotEmpty) {
+        queryParams['fecha_fin'] = fechaFin;
+      }
+      if (estadoEvento != null && estadoEvento.isNotEmpty) {
+        queryParams['estado_evento'] = estadoEvento;
+      }
+      if (tipoParticipacion != null && tipoParticipacion.isNotEmpty) {
+        queryParams['tipo_participacion'] = tipoParticipacion;
+      }
+      if (busquedaEvento != null && busquedaEvento.isNotEmpty) {
+        queryParams['busqueda_evento'] = busquedaEvento;
+      }
+
+      if (queryParams.isNotEmpty) {
+        url += '?${Uri(queryParameters: queryParams).query}';
+      }
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: await _getHeaders(includeAuth: true),
+      );
+
+      final data = _parseJsonSafely(response.body, 'getDashboardOngCompleto');
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        final result = {'success': true, 'data': data['data']};
+
+        // Guardar en cache
+        if (useCache) {
+          final cacheKey =
+              'ong_dashboard_${fechaInicio}_${fechaFin}_${estadoEvento}_${tipoParticipacion}_${busquedaEvento}';
+          await CacheService.setCachedData(cacheKey, result);
+        }
+
+        return result;
+      }
+
+      return {
+        'success': false,
+        'error': data['error'] ?? 'Error al obtener dashboard',
+      };
+    } catch (e) {
+      return {'success': false, 'error': 'Error de conexión: ${e.toString()}'};
+    }
+  }
+
+  /// Obtener dashboard completo de evento individual
+  /// Endpoint: /api/eventos/{id}/dashboard-completo
+  static Future<Map<String, dynamic>> getDashboardEventoCompleto(
+    int eventoId, {
+    String? fechaInicio,
+    String? fechaFin,
+    bool useCache = true,
+  }) async {
+    try {
+      // Verificar cache primero
+      if (useCache) {
+        final cacheKey =
+            'evento_dashboard_${eventoId}_${fechaInicio}_${fechaFin}';
+        final cachedData = await CacheService.getCachedData(cacheKey);
+        if (cachedData != null) {
+          print('✅ Datos obtenidos del cache');
+          return cachedData;
+        }
+      }
+
+      String url = '${ApiConfig.baseUrl}/eventos/$eventoId/dashboard-completo';
+      final queryParams = <String, String>{};
+
+      if (fechaInicio != null && fechaInicio.isNotEmpty) {
+        queryParams['fecha_inicio'] = fechaInicio;
+      }
+      if (fechaFin != null && fechaFin.isNotEmpty) {
+        queryParams['fecha_fin'] = fechaFin;
+      }
+
+      if (queryParams.isNotEmpty) {
+        url += '?${Uri(queryParameters: queryParams).query}';
+      }
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: await _getHeaders(includeAuth: true),
+      );
+
+      final data = _parseJsonSafely(
+        response.body,
+        'getDashboardEventoCompleto',
+      );
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        final result = {'success': true, ...data};
+
+        // Guardar en cache
+        if (useCache) {
+          final cacheKey =
+              'evento_dashboard_${eventoId}_${fechaInicio}_${fechaFin}';
+          await CacheService.setCachedData(cacheKey, result);
+        }
+
+        return result;
+      }
+
+      return {
+        'success': false,
+        'error': data['error'] ?? 'Error al obtener dashboard del evento',
+      };
+    } catch (e) {
+      return {'success': false, 'error': 'Error de conexión: ${e.toString()}'};
+    }
+  }
+
+  /// Exportar dashboard ONG en PDF
+  /// Endpoint: /api/ong/dashboard/export-pdf
+  static Future<Map<String, dynamic>> exportarDashboardOngPdf({
+    String? fechaInicio,
+    String? fechaFin,
+    String? estadoEvento,
+    String? tipoParticipacion,
+    String? busquedaEvento,
+  }) async {
+    try {
+      String url = '${ApiConfig.baseUrl}/ong/dashboard/export-pdf';
+      final queryParams = <String, String>{};
+
+      if (fechaInicio != null && fechaInicio.isNotEmpty) {
+        queryParams['fecha_inicio'] = fechaInicio;
+      }
+      if (fechaFin != null && fechaFin.isNotEmpty) {
+        queryParams['fecha_fin'] = fechaFin;
+      }
+      if (estadoEvento != null && estadoEvento.isNotEmpty) {
+        queryParams['estado_evento'] = estadoEvento;
+      }
+      if (tipoParticipacion != null && tipoParticipacion.isNotEmpty) {
+        queryParams['tipo_participacion'] = tipoParticipacion;
+      }
+      if (busquedaEvento != null && busquedaEvento.isNotEmpty) {
+        queryParams['busqueda_evento'] = busquedaEvento;
+      }
+
+      if (queryParams.isNotEmpty) {
+        url += '?${Uri(queryParameters: queryParams).query}';
+      }
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: await _getHeaders(includeAuth: true),
+      );
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'pdfBytes': response.bodyBytes,
+          'contentType': response.headers['content-type'] ?? 'application/pdf',
+        };
+      }
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return {
+        'success': false,
+        'error': data['error'] ?? 'Error al exportar PDF',
+      };
+    } catch (e) {
+      return {'success': false, 'error': 'Error de conexión: ${e.toString()}'};
+    }
+  }
+
+  /// Exportar dashboard ONG en Excel
+  /// Endpoint: /api/ong/dashboard/export-excel
+  static Future<Map<String, dynamic>> exportarDashboardOngExcel({
+    String? fechaInicio,
+    String? fechaFin,
+    String? estadoEvento,
+    String? tipoParticipacion,
+    String? busquedaEvento,
+  }) async {
+    try {
+      String url = '${ApiConfig.baseUrl}/ong/dashboard/export-excel';
+      final queryParams = <String, String>{};
+
+      if (fechaInicio != null && fechaInicio.isNotEmpty) {
+        queryParams['fecha_inicio'] = fechaInicio;
+      }
+      if (fechaFin != null && fechaFin.isNotEmpty) {
+        queryParams['fecha_fin'] = fechaFin;
+      }
+      if (estadoEvento != null && estadoEvento.isNotEmpty) {
+        queryParams['estado_evento'] = estadoEvento;
+      }
+      if (tipoParticipacion != null && tipoParticipacion.isNotEmpty) {
+        queryParams['tipo_participacion'] = tipoParticipacion;
+      }
+      if (busquedaEvento != null && busquedaEvento.isNotEmpty) {
+        queryParams['busqueda_evento'] = busquedaEvento;
+      }
+
+      if (queryParams.isNotEmpty) {
+        url += '?${Uri(queryParameters: queryParams).query}';
+      }
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: await _getHeaders(includeAuth: true),
+      );
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'excelBytes': response.bodyBytes,
+          'contentType':
+              response.headers['content-type'] ??
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        };
+      }
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return {
+        'success': false,
+        'error': data['error'] ?? 'Error al exportar Excel',
+      };
+    } catch (e) {
+      return {'success': false, 'error': 'Error de conexión: ${e.toString()}'};
+    }
+  }
+
+  /// Exportar dashboard evento en PDF (endpoint completo)
+  /// Endpoint: /api/eventos/{id}/dashboard-completo/pdf
+  static Future<Map<String, dynamic>> exportarDashboardEventoPdfCompleto(
+    int eventoId, {
+    String? fechaInicio,
+    String? fechaFin,
+  }) async {
+    try {
+      String url =
+          '${ApiConfig.baseUrl}/eventos/$eventoId/dashboard-completo/pdf';
+      final queryParams = <String, String>{};
+
+      if (fechaInicio != null && fechaInicio.isNotEmpty) {
+        queryParams['fecha_inicio'] = fechaInicio;
+      }
+      if (fechaFin != null && fechaFin.isNotEmpty) {
+        queryParams['fecha_fin'] = fechaFin;
+      }
+
+      if (queryParams.isNotEmpty) {
+        url += '?${Uri(queryParameters: queryParams).query}';
+      }
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: await _getHeaders(includeAuth: true),
+      );
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'pdfBytes': response.bodyBytes,
+          'contentType': response.headers['content-type'] ?? 'application/pdf',
+        };
+      }
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return {
+        'success': false,
+        'error': data['error'] ?? 'Error al exportar PDF',
+      };
+    } catch (e) {
+      return {'success': false, 'error': 'Error de conexión: ${e.toString()}'};
+    }
+  }
+
+  /// Exportar dashboard evento en Excel (endpoint completo)
+  /// Endpoint: /api/eventos/{id}/dashboard-completo/excel
+  static Future<Map<String, dynamic>> exportarDashboardEventoExcelCompleto(
+    int eventoId, {
+    String? fechaInicio,
+    String? fechaFin,
+  }) async {
+    try {
+      String url =
+          '${ApiConfig.baseUrl}/eventos/$eventoId/dashboard-completo/excel';
+      final queryParams = <String, String>{};
+
+      if (fechaInicio != null && fechaInicio.isNotEmpty) {
+        queryParams['fecha_inicio'] = fechaInicio;
+      }
+      if (fechaFin != null && fechaFin.isNotEmpty) {
+        queryParams['fecha_fin'] = fechaFin;
+      }
+
+      if (queryParams.isNotEmpty) {
+        url += '?${Uri(queryParameters: queryParams).query}';
+      }
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: await _getHeaders(includeAuth: true),
+      );
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'excelBytes': response.bodyBytes,
+          'contentType':
+              response.headers['content-type'] ??
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        };
+      }
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return {
+        'success': false,
+        'error': data['error'] ?? 'Error al exportar Excel',
       };
     } catch (e) {
       return {'success': false, 'error': 'Error de conexión: ${e.toString()}'};
@@ -3329,6 +3911,42 @@ class ApiService {
       };
     } catch (e) {
       return {'success': false, 'error': 'Error de conexión: ${e.toString()}'};
+    }
+  }
+
+  // ========== EMPRESAS - EVENTOS PATROCINADOS ==========
+
+  // Obtener eventos patrocinados por la empresa
+  static Future<Map<String, dynamic>> getEventosPatrocinados() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/eventos/empresa/patrocinados'),
+        headers: await _getHeaders(includeAuth: true),
+      );
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return {
+          'success': true,
+          'eventos_patrocinados': data['eventos_patrocinados'] as List? ?? [],
+          'count': data['count'] as int? ?? 0,
+        };
+      }
+
+      return {
+        'success': false,
+        'error': data['error'] ?? 'Error al obtener eventos patrocinados',
+        'eventos_patrocinados': [],
+        'count': 0,
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Error de conexión: ${e.toString()}',
+        'eventos_patrocinados': [],
+        'count': 0,
+      };
     }
   }
 }

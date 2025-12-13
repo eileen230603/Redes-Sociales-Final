@@ -5,7 +5,7 @@ import '../screens/mis_eventos_screen.dart';
 import '../screens/notificaciones_screen.dart';
 import '../screens/perfil_screen.dart';
 import '../screens/ong/eventos_ong_screen.dart';
-import '../screens/ong/dashboard_ong_screen.dart';
+import '../screens/ong/dashboard_ong_completo_screen.dart';
 import '../screens/empresa/eventos_patrocinados_screen.dart';
 import '../screens/empresa/ayuda_eventos_screen.dart';
 import '../services/storage_service.dart';
@@ -60,7 +60,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
           targetScreen = const EventosOngScreen();
           break;
         case 2:
-          targetScreen = const DashboardOngScreen();
+          targetScreen = const DashboardOngCompletoScreen();
           break;
         case 3:
           targetScreen = const NotificacionesScreen();
@@ -193,13 +193,20 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
   @override
   Widget build(BuildContext context) {
-    return NavigationBar(
-      selectedIndex: _currentIndex,
-      onDestinationSelected: _onItemTapped,
-      destinations: _buildDestinations(),
-      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-      surfaceTintColor: Colors.transparent,
-      height: 72,
+    return NavigationBarTheme(
+      data: NavigationBarThemeData(
+        labelTextStyle: MaterialStateProperty.all(
+          const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+        ),
+      ),
+      child: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: _onItemTapped,
+        destinations: _buildDestinations(),
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        surfaceTintColor: Colors.transparent,
+        height: 72,
+      ),
     );
   }
 }

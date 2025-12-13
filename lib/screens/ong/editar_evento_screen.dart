@@ -80,7 +80,13 @@ class _EditarEventoScreenState extends State<EditarEventoScreen> {
   @override
   void initState() {
     super.initState();
-    _loadOngId();
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    // Cargar ONG ID primero
+    await _loadOngId();
+    // Luego cargar el resto de datos en paralelo
     _loadEvento();
     _loadEmpresasDisponibles();
     _loadInvitadosDisponibles();
@@ -89,9 +95,11 @@ class _EditarEventoScreenState extends State<EditarEventoScreen> {
 
   Future<void> _loadOngId() async {
     final ongId = await AuthHelper.getOngIdWithRetry();
-    setState(() {
-      _ongId = ongId;
-    });
+    if (mounted) {
+      setState(() {
+        _ongId = ongId;
+      });
+    }
   }
 
   Future<void> _loadEvento() async {
@@ -100,19 +108,39 @@ class _EditarEventoScreenState extends State<EditarEventoScreen> {
       _error = null;
     });
 
-    final result = await ApiService.getEventoDetalle(widget.eventoId);
+    try {
+      final result = await ApiService.getEventoDetalle(widget.eventoId);
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    if (result['success'] == true) {
-      final evento = result['evento'] as Evento;
-      _cargarDatosEvento(evento);
-    } else {
+      if (result['success'] == true) {
+        final evento = result['evento'] as Evento;
+        _cargarDatosEvento(evento);
+      } else {
+        setState(() {
+          _error = result['error'] as String? ?? 'Error al cargar evento';
+          _isLoadingEvento = false;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
       setState(() {
-        _error = result['error'] as String? ?? 'Error al cargar evento';
+        _error = 'Error al cargar evento: ${e.toString()}';
         _isLoadingEvento = false;
       });
     }
+  }
+
+  // Helper para parsear ID que puede venir como int o String
+  int? _parseId(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is String) {
+      final parsed = int.tryParse(value);
+      return parsed;
+    }
+    if (value is num) return value.toInt();
+    return null;
   }
 
   void _cargarDatosEvento(Evento evento) {
@@ -143,8 +171,14 @@ class _EditarEventoScreenState extends State<EditarEventoScreen> {
         final patrocinadores = evento.patrocinadores as List;
         _patrocinadoresSeleccionados =
             patrocinadores
-                .where((p) => p is int || (p is Map && p['id'] != null))
-                .map((p) => p is int ? p : (p as Map)['id'] as int)
+                .map((p) {
+                  if (p is int) return p;
+                  if (p is Map && p['id'] != null) {
+                    return _parseId(p['id']);
+                  }
+                  return _parseId(p);
+                })
+                .whereType<int>()
                 .toSet();
       }
 
@@ -152,8 +186,14 @@ class _EditarEventoScreenState extends State<EditarEventoScreen> {
         final invitados = evento.invitados as List;
         _invitadosSeleccionados =
             invitados
-                .where((i) => i is int || (i is Map && i['id'] != null))
-                .map((i) => i is int ? i : (i as Map)['id'] as int)
+                .map((i) {
+                  if (i is int) return i;
+                  if (i is Map && i['id'] != null) {
+                    return _parseId(i['id']);
+                  }
+                  return _parseId(i);
+                })
+                .whereType<int>()
                 .toSet();
       }
 
@@ -255,6 +295,9 @@ class _EditarEventoScreenState extends State<EditarEventoScreen> {
           'https://nominatim.openstreetmap.org/reverse?lat=$lat&lon=$lng&format=json',
         ),
       );
+      
+      if (!mounted) return;
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         final displayName = data['display_name'] as String? ?? '';
@@ -280,6 +323,9 @@ class _EditarEventoScreenState extends State<EditarEventoScreen> {
     } catch (e) {
       final coordenadasTexto =
           'Lat: ${lat.toStringAsFixed(7)}, Lng: ${lng.toStringAsFixed(7)}';
+      
+      if (!mounted) return;
+      
       setState(() {
         _direccionSeleccionada = coordenadasTexto;
         _direccionController.text = coordenadasTexto;
@@ -298,8 +344,8 @@ class _EditarEventoScreenState extends State<EditarEventoScreen> {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _fechaInicio ?? DateTime.now().add(const Duration(days: 1)),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      firstDate: DateTime(2020), // Permitir fechas pasadas para edición
+      lastDate: DateTime.now().add(const Duration(days: 730)), // 2 años futuro
     );
     if (picked != null) {
       final TimeOfDay? time = await showTimePicker(
@@ -331,8 +377,8 @@ class _EditarEventoScreenState extends State<EditarEventoScreen> {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _fechaFin ?? _fechaInicio!.add(const Duration(days: 1)),
-      firstDate: _fechaInicio!,
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 730)),
     );
     if (picked != null) {
       final TimeOfDay? time = await showTimePicker(
@@ -361,11 +407,22 @@ class _EditarEventoScreenState extends State<EditarEventoScreen> {
       return;
     }
 
+    final lastDate = _fechaInicio!.add(const Duration(days: 1));
+    var initialDate = _fechaLimiteInscripcion ?? DateTime.now();
+
+    // Validar que initialDate esté dentro del rango permitido
+    if (initialDate.isAfter(lastDate)) {
+      initialDate = lastDate;
+    }
+    if (initialDate.isBefore(DateTime(2020))) {
+      initialDate = DateTime(2020);
+    }
+
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _fechaLimiteInscripcion ?? DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: _fechaInicio!,
+      initialDate: initialDate,
+      firstDate: DateTime(2020),
+      lastDate: lastDate,
     );
     if (picked != null) {
       final TimeOfDay? time = await showTimePicker(
@@ -543,14 +600,29 @@ class _EditarEventoScreenState extends State<EditarEventoScreen> {
   Future<void> _actualizarEvento() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // Asegurar que el ONG ID esté cargado antes de actualizar
     if (_ongId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error: No se pudo identificar la ONG'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
+      setState(() {
+        _isLoading = true;
+      });
+      final ongId = await AuthHelper.getOngIdWithRetry();
+      if (!mounted) return;
+      setState(() {
+        _ongId = ongId;
+        _isLoading = false;
+      });
+
+      if (_ongId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Error: No se pudo identificar la ONG. Por favor, cierra sesión y vuelve a iniciar sesión.',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
     }
 
     if (_fechaInicio == null) {
@@ -620,75 +692,87 @@ class _EditarEventoScreenState extends State<EditarEventoScreen> {
       'lat': _selectedLocation?.latitude,
       'lng': _selectedLocation?.longitude,
       'inscripcion_abierta': _inscripcionAbierta,
-      if (_patrocinadoresSeleccionados.isNotEmpty)
-        'patrocinadores': _patrocinadoresSeleccionados.toList(),
-      if (_invitadosSeleccionados.isNotEmpty)
-        'invitados': _invitadosSeleccionados.toList(),
+      'patrocinadores': _patrocinadoresSeleccionados.toList(),
+      'invitados': _invitadosSeleccionados.toList(),
       // Incluir imágenes existentes que no se eliminaron
       if (_imagenesExistentes.isNotEmpty)
         'imagenes_existentes': _imagenesExistentes,
     };
 
-    final result = await ApiService.actualizarEvento(
-      widget.eventoId,
-      eventoData,
-      imagenes:
-          _imagenesSeleccionadas.isNotEmpty ? _imagenesSeleccionadas : null,
-    );
-
-    if (!mounted) return;
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (result['success'] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            result['message'] as String? ?? 'Evento actualizado exitosamente',
-          ),
-          backgroundColor: Colors.green,
-        ),
+    try {
+      final result = await ApiService.actualizarEvento(
+        widget.eventoId,
+        eventoData,
+        imagenes:
+            _imagenesSeleccionadas.isNotEmpty ? _imagenesSeleccionadas : null,
       );
-      Navigator.pop(context, true);
-    } else {
-      final errorMessage =
-          result['error'] as String? ?? 'Error al actualizar evento';
-      final errors = result['errors'];
 
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (result['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              result['message'] as String? ?? 'Evento actualizado exitosamente',
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context, true);
+      } else {
+        final errorMessage =
+            result['error'] as String? ?? 'Error al actualizar evento';
+        final errors = result['errors'];
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage, style: const TextStyle(fontSize: 14)),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 6),
+            action: SnackBarAction(
+              label: 'Ver detalles',
+              textColor: Colors.white,
+              onPressed: () {
+                if (errors != null) {
+                  showDialog(
+                    context: context,
+                    builder:
+                        (context) => AlertDialog(
+                          title: const Text('Errores de validación'),
+                          content: SingleChildScrollView(
+                            child: Text(
+                              errors.toString(),
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Cerrar'),
+                            ),
+                          ],
+                        ),
+                  );
+                }
+              },
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(errorMessage, style: const TextStyle(fontSize: 14)),
+          content: Text('Error inesperado: ${e.toString()}'),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 6),
-          action: SnackBarAction(
-            label: 'Ver detalles',
-            textColor: Colors.white,
-            onPressed: () {
-              if (errors != null) {
-                showDialog(
-                  context: context,
-                  builder:
-                      (context) => AlertDialog(
-                        title: const Text('Errores de validación'),
-                        content: SingleChildScrollView(
-                          child: Text(
-                            errors.toString(),
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('Cerrar'),
-                          ),
-                        ],
-                      ),
-                );
-              }
-            },
-          ),
         ),
       );
     }

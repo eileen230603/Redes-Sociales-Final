@@ -125,7 +125,6 @@ class _EditarMegaEventoScreenState extends State<EditarMegaEventoScreen> {
 
         if (megaEvento.lat != null && megaEvento.lng != null) {
           _selectedLocation = LatLng(megaEvento.lat!, megaEvento.lng!);
-          _mapController.move(_selectedLocation!, 13.0);
         }
 
         // Cargar imágenes existentes
@@ -136,10 +135,24 @@ class _EditarMegaEventoScreenState extends State<EditarMegaEventoScreen> {
                   .where((img) => img.isNotEmpty)
                   .toList();
         }
+
       } else {
         _error = result['error'] as String? ?? 'Error al cargar mega evento';
       }
     });
+
+    // Mover el mapa después de que se haya renderizado
+    if (_selectedLocation != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+           try {
+            _mapController.move(_selectedLocation!, 13.0);
+          } catch (e) {
+            print('Error al mover el mapa: $e');
+          }
+        }
+      });
+    }
   }
 
   Future<void> _onMapTap(TapPosition position, LatLng point) async {
@@ -560,49 +573,44 @@ class _EditarMegaEventoScreenState extends State<EditarMegaEventoScreen> {
               ),
               const SizedBox(height: 16),
 
-              Row(
+              Column(
                 children: [
-                  Expanded(
-                    flex: 2,
-                    child: TextFormField(
-                      controller: _tituloController,
-                      decoration: const InputDecoration(
-                        labelText: 'Título del mega evento *',
-                        border: OutlineInputBorder(),
-                        hintText: 'Ej: Festival de Verano 2025',
-                      ),
-                      maxLength: 200,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'El título es requerido';
-                        }
-                        return null;
-                      },
+                  TextFormField(
+                    controller: _tituloController,
+                    decoration: const InputDecoration(
+                      labelText: 'Título del mega evento *',
+                      border: OutlineInputBorder(),
+                      hintText: 'Ej: Festival de Verano 2025',
                     ),
+                    maxLength: 200,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'El título es requerido';
+                      }
+                      return null;
+                    },
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      value: _categoria,
-                      decoration: const InputDecoration(
-                        labelText: 'Categoría',
-                        border: OutlineInputBorder(),
-                      ),
-                      items:
-                          _categorias.map((cat) {
-                            return DropdownMenuItem<String>(
-                              value: cat['value'] as String,
-                              child: Text(cat['label'] as String),
-                            );
-                          }).toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() {
-                            _categoria = value;
-                          });
-                        }
-                      },
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: _categoria,
+                    decoration: const InputDecoration(
+                      labelText: 'Categoría',
+                      border: OutlineInputBorder(),
                     ),
+                    items:
+                        _categorias.map((cat) {
+                          return DropdownMenuItem<String>(
+                            value: cat['value'] as String,
+                            child: Text(cat['label'] as String),
+                          );
+                        }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _categoria = value;
+                        });
+                      }
+                    },
                   ),
                 ],
               ),
@@ -752,72 +760,66 @@ class _EditarMegaEventoScreenState extends State<EditarMegaEventoScreen> {
               ),
               const SizedBox(height: 16),
 
-              Row(
+              Column(
                 children: [
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      value: _estado,
-                      decoration: const InputDecoration(
-                        labelText: 'Estado',
-                        border: OutlineInputBorder(),
-                      ),
-                      items:
-                          _estados.map((estado) {
-                            return DropdownMenuItem<String>(
-                              value: estado['value'] as String,
-                              child: Text(estado['label'] as String),
-                            );
-                          }).toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() {
-                            _estado = value;
-                          });
-                        }
-                      },
+                  DropdownButtonFormField<String>(
+                    value: _estado,
+                    decoration: const InputDecoration(
+                      labelText: 'Estado',
+                      border: OutlineInputBorder(),
                     ),
+                    items:
+                        _estados.map((estado) {
+                          return DropdownMenuItem<String>(
+                            value: estado['value'] as String,
+                            child: Text(estado['label'] as String),
+                          );
+                        }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _estado = value;
+                        });
+                      }
+                    },
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: DropdownButtonFormField<bool>(
-                      value: _esPublico,
-                      decoration: const InputDecoration(
-                        labelText: 'Visibilidad',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: const [
-                        DropdownMenuItem(value: true, child: Text('Público')),
-                        DropdownMenuItem(value: false, child: Text('Privado')),
-                      ],
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() {
-                            _esPublico = value;
-                          });
-                        }
-                      },
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<bool>(
+                    value: _esPublico,
+                    decoration: const InputDecoration(
+                      labelText: 'Visibilidad',
+                      border: OutlineInputBorder(),
                     ),
+                    items: const [
+                      DropdownMenuItem(value: true, child: Text('Público')),
+                      DropdownMenuItem(value: false, child: Text('Privado')),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _esPublico = value;
+                        });
+                      }
+                    },
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: DropdownButtonFormField<bool>(
-                      value: _activo,
-                      decoration: const InputDecoration(
-                        labelText: 'Estado de Actividad',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: const [
-                        DropdownMenuItem(value: true, child: Text('Activo')),
-                        DropdownMenuItem(value: false, child: Text('Inactivo')),
-                      ],
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() {
-                            _activo = value;
-                          });
-                        }
-                      },
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<bool>(
+                    value: _activo,
+                    decoration: const InputDecoration(
+                      labelText: 'Estado de Actividad',
+                      border: OutlineInputBorder(),
                     ),
+                    items: const [
+                      DropdownMenuItem(value: true, child: Text('Activo')),
+                      DropdownMenuItem(value: false, child: Text('Inactivo')),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _activo = value;
+                        });
+                      }
+                    },
                   ),
                 ],
               ),

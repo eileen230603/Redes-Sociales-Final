@@ -4,7 +4,6 @@ import '../services/api_service.dart';
 import '../services/storage_service.dart';
 import '../screens/empresa/ayuda_eventos_screen.dart';
 import '../screens/empresa/eventos_patrocinados_screen.dart';
-import '../screens/empresa/reportes_empresa_screen.dart';
 import '../screens/eventos_list_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/login_screen.dart';
@@ -12,13 +11,14 @@ import '../screens/mis_eventos_screen.dart';
 import '../screens/notificaciones_screen.dart';
 import '../screens/ong/crear_evento_screen.dart';
 import '../screens/ong/crear_mega_evento_screen.dart';
-import '../screens/ong/dashboard_ong_screen.dart';
-import '../screens/ong/eventos_dashboard_screen.dart';
 import '../screens/ong/eventos_ong_screen.dart';
 import '../screens/ong/historial_eventos_screen.dart';
 import '../screens/ong/mega_eventos_list_screen.dart' as ong;
-import '../screens/ong/reportes_ong_screen.dart';
 import '../screens/ong/voluntarios_ong_screen.dart';
+import '../screens/ong/dashboard_ong_completo_screen.dart';
+import '../screens/ong/dashboard_evento_mejorado_screen.dart';
+import '../screens/externo/dashboard_externo_mejorado_screen.dart';
+import '../screens/empresa/dashboard_empresa_screen.dart';
 import '../screens/perfil_screen.dart';
 import '../screens/reportes_screen.dart';
 import '../screens/mega_eventos_list_screen.dart' as externo;
@@ -76,6 +76,7 @@ class _AppDrawerState extends State<AppDrawer> {
                     ),
                   ),
                   const Divider(height: 1),
+                  _buildAboutOption(context),
                   _buildLogoutSection(context),
                 ],
               ),
@@ -233,11 +234,6 @@ class _AppDrawerState extends State<AppDrawer> {
           selectedIcon: const Icon(Icons.person),
           label: const Text('Mi Perfil'),
         ),
-        NavigationDrawerDestination(
-          icon: const Icon(Icons.public_outlined),
-          selectedIcon: const Icon(Icons.public),
-          label: const Text('Ir a página pública'),
-        ),
       ],
     );
   }
@@ -298,11 +294,6 @@ class _AppDrawerState extends State<AppDrawer> {
           selectedIcon: const Icon(Icons.person),
           label: const Text('Mi Perfil'),
         ),
-        NavigationDrawerDestination(
-          icon: const Icon(Icons.public_outlined),
-          selectedIcon: const Icon(Icons.public),
-          label: const Text('Ir a página pública'),
-        ),
       ],
     );
   }
@@ -333,19 +324,19 @@ class _AppDrawerState extends State<AppDrawer> {
           label: const Text('Inicio'),
         ),
         NavigationDrawerDestination(
+          icon: const Icon(Icons.dashboard_customize_outlined),
+          selectedIcon: const Icon(Icons.dashboard_customize),
+          label: const Text('Dashboard'),
+        ),
+        NavigationDrawerDestination(
           icon: const Icon(Icons.event_outlined),
           selectedIcon: const Icon(Icons.event),
           label: const Text('Eventos'),
         ),
         NavigationDrawerDestination(
-          icon: const Icon(Icons.dashboard_outlined),
-          selectedIcon: const Icon(Icons.dashboard),
-          label: const Text('Dashboard Eventos'),
-        ),
-        NavigationDrawerDestination(
           icon: const Icon(Icons.history),
           selectedIcon: const Icon(Icons.history_rounded),
-          label: const Text('Historial de Eventos'),
+          label: const Text('Historial'),
         ),
         NavigationDrawerDestination(
           icon: const Icon(Icons.add_circle_outline),
@@ -368,16 +359,6 @@ class _AppDrawerState extends State<AppDrawer> {
           label: const Text('Voluntarios'),
         ),
         NavigationDrawerDestination(
-          icon: const Icon(Icons.dashboard_customize_outlined),
-          selectedIcon: const Icon(Icons.dashboard_customize),
-          label: const Text('Dashboard'),
-        ),
-        NavigationDrawerDestination(
-          icon: const Icon(Icons.bar_chart_outlined),
-          selectedIcon: const Icon(Icons.bar_chart),
-          label: const Text('Reportes'),
-        ),
-        NavigationDrawerDestination(
           icon: const Icon(Icons.notifications_outlined),
           selectedIcon: const Icon(Icons.notifications),
           label: const Text('Notificaciones'),
@@ -397,11 +378,6 @@ class _AppDrawerState extends State<AppDrawer> {
           icon: const Icon(Icons.person_outline),
           selectedIcon: const Icon(Icons.person),
           label: const Text('Mi Perfil'),
-        ),
-        NavigationDrawerDestination(
-          icon: const Icon(Icons.public_outlined),
-          selectedIcon: const Icon(Icons.public),
-          label: const Text('Ir a página pública'),
         ),
       ],
     );
@@ -435,6 +411,51 @@ class _AppDrawerState extends State<AppDrawer> {
           label: const Text('Inicio'),
         ),
       ],
+    );
+  }
+
+  Widget _buildAboutOption(BuildContext context) {
+    return ListTile(
+      leading: const Icon(Icons.info_outline),
+      title: const Text('Acerca de'),
+      onTap: () {
+        showAboutDialog(
+          context: context,
+          applicationName: 'Redes Sociales',
+          applicationVersion: '1.0.0',
+          applicationIcon: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.volunteer_activism,
+              color: Colors.white,
+              size: 32,
+            ),
+          ),
+          children: [
+            const SizedBox(height: 16),
+            const Text(
+              'Plataforma digital para conectar ONGs, Empresas y Voluntarios para transformar el mundo.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Desarrollado por estudiantes de Ingeniería de Sistemas.',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '© 2025 UNI2',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -538,11 +559,6 @@ class _AppDrawerState extends State<AppDrawer> {
           MaterialPageRoute(builder: (context) => const PerfilScreen()),
         );
         break;
-      case 6:
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Página pública - Próximamente')),
-        );
-        break;
     }
   }
 
@@ -577,7 +593,7 @@ class _AppDrawerState extends State<AppDrawer> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const ReportesEmpresaScreen(),
+            builder: (context) => const DashboardEmpresaScreen(),
           ),
         );
         break;
@@ -585,11 +601,6 @@ class _AppDrawerState extends State<AppDrawer> {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const PerfilScreen()),
-        );
-        break;
-      case 5:
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Página pública - Próximamente')),
         );
         break;
     }
@@ -611,15 +622,15 @@ class _AppDrawerState extends State<AppDrawer> {
       case 1:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const EventosOngScreen()),
+          MaterialPageRoute(
+            builder: (context) => const DashboardOngCompletoScreen(),
+          ),
         );
         break;
       case 2:
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => const EventosDashboardScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => const EventosOngScreen()),
         );
         break;
       case 3:
@@ -661,30 +672,13 @@ class _AppDrawerState extends State<AppDrawer> {
       case 8:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const DashboardOngScreen()),
+          MaterialPageRoute(builder: (context) => const NotificacionesScreen()),
         );
         break;
       case 9:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const ReportesOngScreen()),
-        );
-        break;
-      case 10:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const NotificacionesScreen()),
-        );
-        break;
-      case 11:
-        Navigator.push(
-          context,
           MaterialPageRoute(builder: (context) => const PerfilScreen()),
-        );
-        break;
-      case 12:
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Página pública - Próximamente')),
         );
         break;
     }

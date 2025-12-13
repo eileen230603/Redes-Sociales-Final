@@ -15,7 +15,7 @@ import '../utils/image_helper.dart';
 import '../utils/navigation_helper.dart';
 import '../config/api_config.dart';
 import 'ong/gestion_participantes_screen.dart';
-import 'ong/dashboard_evento_screen.dart';
+import 'ong/dashboard_evento_mejorado_screen.dart';
 import 'ong/editar_evento_screen.dart';
 
 class EventoDetailScreen extends StatefulWidget {
@@ -825,34 +825,38 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
                                 ),
                               ),
                             ),
-                          ] else if (_evento!.puedeInscribirse)
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton.icon(
-                                onPressed: _isProcessing ? null : _inscribirse,
-                                icon: const Icon(Icons.check_circle),
-                                label:
-                                    _isProcessing
-                                        ? const Text('Inscribiendo...')
-                                        : const Text('Inscribirse al Evento'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      Theme.of(context).primaryColor,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
+                          ] else if (_userType != 'ONG' &&
+                              _userType != 'empresa') ...[
+                            if (_evento!.puedeInscribirse)
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  onPressed:
+                                      _isProcessing ? null : _inscribirse,
+                                  icon: const Icon(Icons.check_circle),
+                                  label:
+                                      _isProcessing
+                                          ? const Text('Inscribiendo...')
+                                          : const Text('Inscribirse al Evento'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor:
+                                        Theme.of(context).primaryColor,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
                                   ),
                                 ),
+                              )
+                            else
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton(
+                                  onPressed: null,
+                                  child: const Text('Inscripciones Cerradas'),
+                                ),
                               ),
-                            )
-                          else
-                            SizedBox(
-                              width: double.infinity,
-                              child: OutlinedButton(
-                                onPressed: null,
-                                child: const Text('Inscripciones Cerradas'),
-                              ),
-                            ),
+                          ],
 
                           // Botón de compartir
                           const SizedBox(height: 16),
@@ -887,7 +891,7 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
                                       Navigator.push(
                                         context,
                                         NavigationHelper.slideRightRoute(
-                                          DashboardEventoScreen(
+                                          DashboardEventoMejoradoScreen(
                                             eventoId: widget.eventoId,
                                             eventoTitulo: _evento?.titulo,
                                           ),

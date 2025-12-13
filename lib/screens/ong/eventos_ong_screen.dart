@@ -9,6 +9,7 @@ import '../../models/evento.dart';
 import '../evento_detail_screen.dart';
 import '../../utils/image_helper.dart';
 import 'editar_evento_screen.dart';
+import '../../widgets/empty_state.dart';
 
 class EventosOngScreen extends StatefulWidget {
   const EventosOngScreen({super.key});
@@ -155,24 +156,11 @@ class _EventosOngScreenState extends State<EventosOngScreen> {
                 ),
               )
               : _eventos.isEmpty
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.event_busy, size: 64, color: Colors.grey[400]),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No tienes eventos creados',
-                      style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Crea tu primer evento',
-                      style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-                    ),
-                  ],
-                ),
-              )
+              ? const EmptyState(
+                  title: 'No tienes eventos creados',
+                  message: 'Crea tu primer evento desde el menú "Crear Evento"',
+                  icon: Icons.event_note_outlined,
+                )
               : RefreshIndicator(
                 onRefresh: _loadEventos,
                 child: ListView.builder(

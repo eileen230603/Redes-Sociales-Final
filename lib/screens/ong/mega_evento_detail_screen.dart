@@ -11,6 +11,7 @@ import '../../config/api_config.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'mega_evento_seguimiento_screen.dart';
+import 'editar_mega_evento_screen.dart';
 
 class MegaEventoDetailScreen extends StatefulWidget {
   final int megaEventoId;
@@ -271,13 +272,20 @@ class _MegaEventoDetailScreenState extends State<MegaEventoDetailScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
-            onPressed: () {
-              // TODO: Navegar a editar mega evento
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Funcionalidad de editar en desarrollo'),
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) => EditarMegaEventoScreen(
+                        megaEventoId: widget.megaEventoId,
+                      ),
                 ),
               );
+
+              if (result == true) {
+                _loadMegaEvento();
+              }
             },
             tooltip: 'Editar',
           ),
@@ -540,15 +548,19 @@ class _MegaEventoDetailScreenState extends State<MegaEventoDetailScreen> {
                               const SizedBox(width: 8),
                               Expanded(
                                 child: OutlinedButton.icon(
-                                  onPressed: () {
-                                    // TODO: Navegar a editar
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Funcionalidad de editar en desarrollo',
-                                        ),
+                                  onPressed: () async {
+                                    final result = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (context) => EditarMegaEventoScreen(
+                                              megaEventoId: widget.megaEventoId,
+                                            ),
                                       ),
                                     );
+                                    if (result == true) {
+                                      _loadMegaEvento();
+                                    }
                                   },
                                   icon: const Icon(Icons.edit),
                                   label: const Text('Editar'),

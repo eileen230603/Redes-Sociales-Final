@@ -7,7 +7,10 @@ import '../models/evento_participacion.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../utils/navigation_helper.dart';
+import '../widgets/bottom_nav_bar.dart';
+import '../utils/navigation_helper.dart';
 import 'evento_detail_screen.dart';
+import '../widgets/empty_state.dart';
 
 class MisEventosScreen extends StatefulWidget {
   const MisEventosScreen({super.key});
@@ -86,24 +89,11 @@ class _MisEventosScreenState extends State<MisEventosScreen> {
                 ),
               )
               : _participaciones.isEmpty
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.event_busy, size: 64, color: Colors.grey[400]),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No tienes eventos inscritos',
-                      style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Explora los eventos disponibles',
-                      style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-                    ),
-                  ],
-                ),
-              )
+              ? const EmptyState(
+                  title: 'No tienes eventos inscritos',
+                  message: 'Explora los eventos disponibles en la lista principal',
+                  icon: Icons.event_available_outlined,
+                )
               : RefreshIndicator(
                 onRefresh: _loadMisEventos,
                 child: ListView.builder(

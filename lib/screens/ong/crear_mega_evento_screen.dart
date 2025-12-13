@@ -421,49 +421,44 @@ class _CrearMegaEventoScreenState extends State<CrearMegaEventoScreen> {
               ),
               const SizedBox(height: 16),
 
-              Row(
+              Column(
                 children: [
-                  Expanded(
-                    flex: 2,
-                    child: TextFormField(
-                      controller: _tituloController,
-                      decoration: const InputDecoration(
-                        labelText: 'Título del mega evento *',
-                        border: OutlineInputBorder(),
-                        hintText: 'Ej: Festival de Verano 2025',
-                      ),
-                      maxLength: 200,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'El título es requerido';
-                        }
-                        return null;
-                      },
+                  TextFormField(
+                    controller: _tituloController,
+                    decoration: const InputDecoration(
+                      labelText: 'Título del mega evento *',
+                      border: OutlineInputBorder(),
+                      hintText: 'Ej: Festival de Verano 2025',
                     ),
+                    maxLength: 200,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'El título es requerido';
+                      }
+                      return null;
+                    },
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      value: _categoria,
-                      decoration: const InputDecoration(
-                        labelText: 'Categoría',
-                        border: OutlineInputBorder(),
-                      ),
-                      items:
-                          _categorias.map((cat) {
-                            return DropdownMenuItem<String>(
-                              value: cat['value'] as String,
-                              child: Text(cat['label'] as String),
-                            );
-                          }).toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() {
-                            _categoria = value;
-                          });
-                        }
-                      },
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: _categoria,
+                    decoration: const InputDecoration(
+                      labelText: 'Categoría',
+                      border: OutlineInputBorder(),
                     ),
+                    items:
+                        _categorias.map((cat) {
+                          return DropdownMenuItem<String>(
+                            value: cat['value'] as String,
+                            child: Text(cat['label'] as String),
+                          );
+                        }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _categoria = value;
+                        });
+                      }
+                    },
                   ),
                 ],
               ),
@@ -614,72 +609,66 @@ class _CrearMegaEventoScreenState extends State<CrearMegaEventoScreen> {
               ),
               const SizedBox(height: 16),
 
-              Row(
+              Column(
                 children: [
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      value: _estado,
-                      decoration: const InputDecoration(
-                        labelText: 'Estado',
-                        border: OutlineInputBorder(),
-                      ),
-                      items:
-                          _estados.map((estado) {
-                            return DropdownMenuItem<String>(
-                              value: estado['value'] as String,
-                              child: Text(estado['label'] as String),
-                            );
-                          }).toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() {
-                            _estado = value;
-                          });
-                        }
-                      },
+                  DropdownButtonFormField<String>(
+                    value: _estado,
+                    decoration: const InputDecoration(
+                      labelText: 'Estado',
+                      border: OutlineInputBorder(),
                     ),
+                    items:
+                        _estados.map((estado) {
+                          return DropdownMenuItem<String>(
+                            value: estado['value'] as String,
+                            child: Text(estado['label'] as String),
+                          );
+                        }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _estado = value;
+                        });
+                      }
+                    },
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: DropdownButtonFormField<bool>(
-                      value: _esPublico,
-                      decoration: const InputDecoration(
-                        labelText: 'Visibilidad',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: const [
-                        DropdownMenuItem(value: true, child: Text('Público')),
-                        DropdownMenuItem(value: false, child: Text('Privado')),
-                      ],
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() {
-                            _esPublico = value;
-                          });
-                        }
-                      },
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<bool>(
+                    value: _esPublico,
+                    decoration: const InputDecoration(
+                      labelText: 'Visibilidad',
+                      border: OutlineInputBorder(),
                     ),
+                    items: const [
+                      DropdownMenuItem(value: true, child: Text('Público')),
+                      DropdownMenuItem(value: false, child: Text('Privado')),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _esPublico = value;
+                        });
+                      }
+                    },
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: DropdownButtonFormField<bool>(
-                      value: _activo,
-                      decoration: const InputDecoration(
-                        labelText: 'Estado de Actividad',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: const [
-                        DropdownMenuItem(value: true, child: Text('Activo')),
-                        DropdownMenuItem(value: false, child: Text('Inactivo')),
-                      ],
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() {
-                            _activo = value;
-                          });
-                        }
-                      },
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<bool>(
+                    value: _activo,
+                    decoration: const InputDecoration(
+                      labelText: 'Estado de Actividad',
+                      border: OutlineInputBorder(),
                     ),
+                    items: const [
+                      DropdownMenuItem(value: true, child: Text('Activo')),
+                      DropdownMenuItem(value: false, child: Text('Inactivo')),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _activo = value;
+                        });
+                      }
+                    },
                   ),
                 ],
               ),

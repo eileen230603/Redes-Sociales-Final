@@ -6,6 +6,8 @@ class StorageService {
   static const String _userNameKey = 'user_name';
   static const String _userTypeKey = 'user_type';
   static const String _entityIdKey = 'entity_id';
+  static const String _rolesKey = 'user_roles';
+  static const String _permissionsKey = 'user_permissions';
 
   // Guardar token
   static Future<void> saveToken(String token) async {
@@ -25,6 +27,8 @@ class StorageService {
     required String userName,
     required String userType,
     int? entityId,
+    List<String> roles = const [],
+    List<String> permissions = const [],
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_userIdKey, userId);
@@ -33,6 +37,8 @@ class StorageService {
     if (entityId != null) {
       await prefs.setInt(_entityIdKey, entityId);
     }
+    await prefs.setStringList(_rolesKey, roles);
+    await prefs.setStringList(_permissionsKey, permissions);
   }
 
   // Obtener información del usuario
@@ -46,6 +52,8 @@ class StorageService {
       'user_name': prefs.getString(_userNameKey) ?? '',
       'user_type': prefs.getString(_userTypeKey) ?? '',
       'entity_id': prefs.getInt(_entityIdKey),
+      'roles': prefs.getStringList(_rolesKey) ?? [],
+      'permissions': prefs.getStringList(_permissionsKey) ?? [],
     };
   }
 
@@ -62,6 +70,9 @@ class StorageService {
     await prefs.remove(_userIdKey);
     await prefs.remove(_userNameKey);
     await prefs.remove(_userTypeKey);
+    await prefs.remove(_userTypeKey);
     await prefs.remove(_entityIdKey);
+    await prefs.remove(_rolesKey);
+    await prefs.remove(_permissionsKey);
   }
 }

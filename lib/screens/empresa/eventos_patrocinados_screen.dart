@@ -4,6 +4,7 @@ import '../../services/api_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../evento_detail_screen.dart';
 import '../../utils/image_helper.dart';
+import '../../widgets/empty_state.dart';
 
 class EventosPatrocinadosScreen extends StatefulWidget {
   const EventosPatrocinadosScreen({super.key});
@@ -38,12 +39,7 @@ class _EventosPatrocinadosScreenState extends State<EventosPatrocinadosScreen> {
       _isLoading = false;
       if (result['success'] == true) {
         final todosEventos = result['eventos'] as List<dynamic>? ?? [];
-        // Filtrar solo eventos donde la empresa es patrocinadora
-        _eventos =
-            todosEventos.where((eventoData) {
-              final tipoRelacion = eventoData['tipo_relacion'] as String? ?? '';
-              return tipoRelacion == 'patrocinadora';
-            }).toList();
+        _eventos = todosEventos;
       } else {
         _error = result['error'] as String? ?? 'Error al cargar eventos';
       }
@@ -88,24 +84,11 @@ class _EventosPatrocinadosScreenState extends State<EventosPatrocinadosScreen> {
                 ),
               )
               : _eventos.isEmpty
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.event_busy, size: 64, color: Colors.grey[400]),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No tienes eventos patrocinados',
-                      style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Explora eventos disponibles para patrocinar',
-                      style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-                    ),
-                  ],
-                ),
-              )
+              ? const EmptyState(
+                  title: 'No tienes eventos patrocinados',
+                  message: 'Visita la sección "Ayuda a Eventos" para iniciar un nuevo patrocinio',
+                  icon: Icons.volunteer_activism,
+                )
               : RefreshIndicator(
                 onRefresh: _loadEventos,
                 child: ListView.builder(

@@ -251,15 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
             },
             tooltip: 'Actualizar eventos',
           ),
-          IconButton(
-            icon: const Icon(Icons.public),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Página pública - Próximamente')),
-              );
-            },
-            tooltip: 'Ir a página pública',
-          ),
+
         ],
       ),
       body:

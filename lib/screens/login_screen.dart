@@ -79,55 +79,54 @@ class _LoginScreenState extends State<LoginScreen> {
   // Usamos el mismo Verde Esmeralda como tercer tono para mantener la coherencia
   Color get _brandVerde => const Color(0xFF00A36C);
 
-  Widget _buildRegisterButton({
-    required String label,
+  Widget _buildRegisterCompactButton({
     required IconData icon,
     required Color color,
     required String tipo,
+    required String label,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => RegisterFormScreen(tipoUsuario: tipo),
+    return Column(
+      children: [
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => RegisterFormScreen(tipoUsuario: tipo),
+                ),
+              );
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                   BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                   )
+                ]
+              ),
+              child: Icon(icon, color: color, size: 24),
             ),
-          );
-        },
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: color.withOpacity(0.2), width: 1.5),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: color, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                label,
-                style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15,
-                  letterSpacing: 0.2,
-                ),
-              ),
-            ],
           ),
         ),
-      ),
+        const SizedBox(height: 6),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 
@@ -176,82 +175,47 @@ class _LoginScreenState extends State<LoginScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Container(
                     constraints: const BoxConstraints(maxWidth: 420),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.96),
-                      borderRadius: BorderRadius.circular(28),
-                      border: Border.all(color: Colors.white.withOpacity(0.2)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 25,
-                          offset: const Offset(0, 15),
-                        ),
-                      ],
-                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 40,
-                            horizontal: 24,
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [_brandProfundo, _brandCyan],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(28),
-                            ),
-                          ),
+                          padding: const EdgeInsets.only(top: 20, bottom: 10),
                           child: Column(
                             children: [
                               Container(
-                                width: 80,
-                                height: 80,
+                                width: 50,
+                                height: 50,
                                 decoration: BoxDecoration(
                                   color: Colors.white,
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(12),
                                   boxShadow: [
                                     BoxShadow(
                                       color: Colors.black.withOpacity(0.15),
-                                      blurRadius: 20,
-                                      offset: const Offset(0, 8),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
                                     ),
                                   ],
                                 ),
                                 child: const Icon(
                                   Icons.groups_2,
-                                  size: 40,
+                                  size: 28,
                                   color: Color(0xFF3883D3),
                                 ),
                               ),
-                              const SizedBox(height: 20),
+                              const SizedBox(height: 10),
                               const Text(
                                 'Bienvenido',
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: -0.5,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Inicia sesión en tu cuenta',
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.9),
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w400,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ],
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.all(28.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 0),
                           child: Form(
                             key: _formKey,
                             child: Column(
@@ -261,7 +225,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   'Correo electrónico',
                                   style: TextStyle(
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.grey[800],
+                                    color: Colors.white,
                                     fontSize: 14,
                                   ),
                                 ),
@@ -290,7 +254,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ),
                                     ),
                                     filled: true,
-                                    fillColor: Colors.grey[50],
+                                    fillColor: Colors.white,
                                     contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 16,
                                       vertical: 16,
@@ -339,7 +303,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   'Contraseña',
                                   style: TextStyle(
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.grey[800],
+                                    color: Colors.white,
                                     fontSize: 14,
                                   ),
                                 ),
@@ -382,7 +346,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       },
                                     ),
                                     filled: true,
-                                    fillColor: Colors.grey[50],
+                                    fillColor: Colors.white,
                                     contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 16,
                                       vertical: 16,
@@ -429,15 +393,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                 const SizedBox(height: 24),
                                 Container(
                                   decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [_brandProfundo, _brandCyan],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
+                                    color: Colors.white,
                                     borderRadius: BorderRadius.circular(14),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: _brandProfundo.withOpacity(0.3),
+                                        color: Colors.black.withOpacity(0.2),
                                         blurRadius: 12,
                                         offset: const Offset(0, 6),
                                       ),
@@ -456,40 +416,39 @@ class _LoginScreenState extends State<LoginScreen> {
                                       backgroundColor: Colors.transparent,
                                       shadowColor: Colors.transparent,
                                     ),
-                                    child:
-                                        _isLoading
-                                            ? const SizedBox(
-                                              height: 22,
-                                              width: 22,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2.5,
-                                                valueColor:
-                                                    AlwaysStoppedAnimation<
-                                                      Color
-                                                    >(Colors.white),
+                                    child: _isLoading
+                                        ? SizedBox(
+                                            height: 22,
+                                            width: 22,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2.5,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                _brandProfundo,
                                               ),
-                                            )
-                                            : const Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Icon(
-                                                  Icons.arrow_forward_rounded,
-                                                  color: Colors.white,
-                                                  size: 20,
-                                                ),
-                                                SizedBox(width: 10),
-                                                Text(
-                                                  'Iniciar Sesión',
-                                                  style: TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w700,
-                                                    color: Colors.white,
-                                                    letterSpacing: 0.3,
-                                                  ),
-                                                ),
-                                              ],
                                             ),
+                                          )
+                                        : Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                Icons.arrow_forward_rounded,
+                                                color: _brandProfundo,
+                                                size: 20,
+                                              ),
+                                              const SizedBox(width: 10),
+                                              Text(
+                                                'Iniciar Sesión',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: _brandProfundo,
+                                                  letterSpacing: 0.3,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                   ),
                                 ),
                                 const SizedBox(height: 28),
@@ -497,7 +456,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   children: [
                                     Expanded(
                                       child: Divider(
-                                        color: Colors.grey[300],
+                                        color: Colors.white24,
                                         thickness: 1,
                                       ),
                                     ),
@@ -508,7 +467,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       child: Text(
                                         'o',
                                         style: TextStyle(
-                                          color: Colors.grey[500],
+                                          color: Colors.white70,
                                           fontSize: 13,
                                           fontWeight: FontWeight.w500,
                                         ),
@@ -516,7 +475,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                     Expanded(
                                       child: Divider(
-                                        color: Colors.grey[300],
+                                        color: Colors.white24,
                                         thickness: 1,
                                       ),
                                     ),
@@ -526,7 +485,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Text(
                                   '¿No tienes una cuenta?',
                                   style: TextStyle(
-                                    color: Colors.grey[700],
+                                    color: Colors.white,
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -536,31 +495,30 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Text(
                                   'Regístrate como:',
                                   style: TextStyle(
-                                    color: Colors.grey[600],
+                                    color: Colors.white70,
                                     fontSize: 13,
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
-                                const SizedBox(height: 18),
-                                Column(
+                                const SizedBox(height: 12),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                   children: [
-                                    _buildRegisterButton(
-                                      label: 'Usuario Individual',
-                                      icon: Icons.person_outline_rounded,
+                                    _buildRegisterCompactButton(
+                                      label: 'Usuario',
+                                      icon: Icons.person,
                                       color: _brandProfundo,
                                       tipo: 'Integrante externo',
                                     ),
-                                    const SizedBox(height: 12),
-                                    _buildRegisterButton(
-                                      label: 'Organización (ONG)',
-                                      icon: Icons.favorite_outline_rounded,
+                                    _buildRegisterCompactButton(
+                                      label: 'ONG',
+                                      icon: Icons.favorite,
                                       color: _brandCyan,
                                       tipo: 'ONG',
                                     ),
-                                    const SizedBox(height: 12),
-                                    _buildRegisterButton(
+                                    _buildRegisterCompactButton(
                                       label: 'Empresa',
-                                      icon: Icons.business_outlined,
+                                      icon: Icons.business,
                                       color: _brandVerde,
                                       tipo: 'Empresa',
                                     ),
@@ -575,17 +533,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             vertical: 20,
                             horizontal: 24,
                           ),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[50],
-                            borderRadius: const BorderRadius.vertical(
-                              bottom: Radius.circular(28),
-                            ),
-                          ),
                           child: Text(
                             '© 2025 UNI2. Conectando comunidades, transformando vidas.',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: Colors.grey[500],
+                              color: Colors.white54,
                               fontSize: 11,
                               fontWeight: FontWeight.w400,
                             ),

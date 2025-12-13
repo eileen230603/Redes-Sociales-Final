@@ -9,11 +9,12 @@ class ApiRouteServiceProvider extends ServiceProvider
 {
     /**
      * Register API routes manually (forcing Laravel to load routes/api.php).
+     * NOTA: Las rutas API ahora se cargan desde bootstrap/app.php
+     * Este método se mantiene vacío para evitar duplicación
      */
     public function boot(): void
     {
-        Route::middleware('api')
-            ->prefix('api')
-            ->group(base_path('routes/api.php'));
+        // Las rutas API se cargan desde bootstrap/app.php con withRouting()
+        // No cargar aquí para evitar duplicación
     }
 }
