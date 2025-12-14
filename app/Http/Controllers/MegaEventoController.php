@@ -86,11 +86,11 @@ class MegaEventoController extends Controller
                             copy($fullPath, $publicPath);
                         }
                         
-                        // Obtener la URL pública (ruta relativa)
-                        $url = Storage::disk('public')->url($path);
-                        $imagenes[] = $url;
-                        
-                        \Log::info("Imagen guardada: $url -> $fullPath (también copiada a $publicPath)");
+                        // Guardar SOLO el path relativo en BD (sin dominio)
+                        // El accessor del modelo construirá la URL completa al servir la API
+                        $imagenes[] = $path;
+
+                        \Log::info("Imagen guardada (path relativo): $path -> $fullPath (también copiada a $publicPath)");
                     }
                 } catch (\Exception $e) {
                     \Log::error("Error al guardar imagen: " . $e->getMessage());
