@@ -868,7 +868,7 @@ async function descargarQRTicket(ticketCodigo, tituloEvento) {
 
     try {
         // Primero registrar la descarga en el backend
-        const apiUrl = window.API_BASE_URL || 'http://10.26.5.12:8000';
+        const apiUrl = window.API_BASE_URL || 'http://192.168.0.7:8000';
         const res = await fetch(`${apiUrl}/api/registrar-descarga-qr`, {
             method: 'POST',
             headers: {
@@ -1054,7 +1054,7 @@ async function descargarQRTicketMega(ticketCodigo, tituloMegaEvento) {
 
     try {
         // Primero registrar la descarga en el backend (endpoint de mega eventos)
-        const apiUrl = window.API_BASE_URL || 'http://10.26.5.12:8000';
+        const apiUrl = window.API_BASE_URL || 'http://192.168.0.7:8000';
         const res = await fetch(`${apiUrl}/api/mega-eventos/registrar-descarga-qr`, {
             method: 'POST',
             headers: {

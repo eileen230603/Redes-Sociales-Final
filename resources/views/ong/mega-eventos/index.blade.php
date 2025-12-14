@@ -418,12 +418,12 @@ function buildImageUrl(imgUrl) {
     // Si ya es una URL completa, reemplazar IPs antiguas y retornarla
     if (esUrlCompleta) {
         // Reemplazar IPs antiguas
-        imgUrl = imgUrl.replace(/http:\/\/127\.0\.0\.1:8000/g, 'http://10.26.5.12:8000');
-        imgUrl = imgUrl.replace(/https:\/\/127\.0\.0\.1:8000/g, 'https://10.26.5.12:8000');
-        imgUrl = imgUrl.replace(/http:\/\/192\.168\.0\.6:8000/g, 'http://10.26.5.12:8000');
-        imgUrl = imgUrl.replace(/https:\/\/192\.168\.0\.6:8000/g, 'https://10.26.5.12:8000');
-        imgUrl = imgUrl.replace(/http:\/\/10\.26\.15\.110:8000/g, 'http://10.26.5.12:8000');
-        imgUrl = imgUrl.replace(/https:\/\/10\.26\.15\.110:8000/g, 'https://10.26.5.12:8000');
+        imgUrl = imgUrl.replace(/http:\/\/127\.0\.0\.1:8000/g, 'http://192.168.0.7:8000');
+        imgUrl = imgUrl.replace(/https:\/\/127\.0\.0\.1:8000/g, 'https://192.168.0.7:8000');
+        imgUrl = imgUrl.replace(/http:\/\/192\.168\.0\.6:8000/g, 'http://192.168.0.7:8000');
+        imgUrl = imgUrl.replace(/https:\/\/192\.168\.0\.6:8000/g, 'https://192.168.0.7:8000');
+        imgUrl = imgUrl.replace(/http:\/\/192.168.0.7:8000/g, 'http://192.168.0.7:8000');
+        imgUrl = imgUrl.replace(/https:\/\/192.168.0.7:8000/g, 'https://192.168.0.7:8000');
         
         // Validar que la URL completa no contenga arrays JSON
         if (!imgUrl.includes('[') && !imgUrl.includes(']')) {
@@ -439,9 +439,9 @@ function buildImageUrl(imgUrl) {
                     const baseUrl = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) 
                         ? API_BASE_URL 
                         : window.location.origin;
-                    const correctedBaseUrl = baseUrl.replace(/127\.0\.0\.1:8000/g, '10.26.5.12:8000')
-                                                     .replace(/192\.168\.0\.6:8000/g, '10.26.5.12:8000')
-                                                     .replace(/10\.26\.15\.110:8000/g, '10.26.5.12:8000');
+                    const correctedBaseUrl = baseUrl.replace(/127\.0\.0\.1:8000/g, '192.168.0.7:8000')
+                                                     .replace(/192\.168\.0\.6:8000/g, '192.168.0.7:8000')
+                                                     .replace(/192.168.0.7:8000/g, '192.168.0.7:8000');
                     return `${correctedBaseUrl}/api/image-proxy?url=${encodeURIComponent(imgUrl)}`;
                 }
             } catch (e) {
@@ -468,9 +468,9 @@ function buildImageUrl(imgUrl) {
         const baseUrl = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) 
             ? API_BASE_URL 
             : window.location.origin;
-        const correctedBaseUrl = baseUrl.replace(/127\.0\.0\.1:8000/g, '10.26.5.12:8000')
-                                         .replace(/192\.168\.0\.6:8000/g, '10.26.5.12:8000')
-                                         .replace(/10\.26\.15\.110:8000/g, '10.26.5.12:8000');
+        const correctedBaseUrl = baseUrl.replace(/127\.0\.0\.1:8000/g, '192.168.0.7:8000')
+                                         .replace(/192\.168\.0\.6:8000/g, '192.168.0.7:8000')
+                                         .replace(/192.168.0.7:8000/g, '192.168.0.7:8000');
         const finalUrl = `${correctedBaseUrl}${imgUrl}`;
         if (!finalUrl.includes('[') && !finalUrl.includes(']')) {
             return finalUrl;
@@ -484,9 +484,9 @@ function buildImageUrl(imgUrl) {
         const baseUrl = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) 
             ? API_BASE_URL 
             : window.location.origin;
-        const correctedBaseUrl = baseUrl.replace(/127\.0\.0\.1:8000/g, '10.26.5.12:8000')
-                                         .replace(/192\.168\.0\.6:8000/g, '10.26.5.12:8000')
-                                         .replace(/10\.26\.15\.110:8000/g, '10.26.5.12:8000');
+        const correctedBaseUrl = baseUrl.replace(/127\.0\.0\.1:8000/g, '192.168.0.7:8000')
+                                         .replace(/192\.168\.0\.6:8000/g, '192.168.0.7:8000')
+                                         .replace(/192.168.0.7:8000/g, '192.168.0.7:8000');
         const finalUrl = `${correctedBaseUrl}/${imgUrl}`;
         if (!finalUrl.includes('[') && !finalUrl.includes(']')) {
             return finalUrl;
@@ -503,9 +503,9 @@ function buildImageUrl(imgUrl) {
         const baseUrl = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) 
             ? API_BASE_URL 
             : window.location.origin;
-        const correctedBaseUrl = baseUrl.replace(/127\.0\.0\.1:8000/g, '10.26.5.12:8000')
-                                         .replace(/192\.168\.0\.6:8000/g, '10.26.5.12:8000')
-                                         .replace(/10\.26\.15\.110:8000/g, '10.26.5.12:8000');
+        const correctedBaseUrl = baseUrl.replace(/127\.0\.0\.1:8000/g, '192.168.0.7:8000')
+                                         .replace(/192\.168\.0\.6:8000/g, '192.168.0.7:8000')
+                                         .replace(/192.168.0.7:8000/g, '192.168.0.7:8000');
         const finalUrl = `${correctedBaseUrl}/storage/${imgUrl.replace(/^\//, '')}`;
         if (!finalUrl.includes('[') && !finalUrl.includes(']')) {
             return finalUrl;

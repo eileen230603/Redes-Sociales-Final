@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
@@ -206,6 +207,10 @@ class OngDashboardController extends Controller
      * Generar PDF del Dashboard General de la ONG
      * Ruta: /api/ong/dashboard/pdf
      */
+    /**
+     * Generar PDF del Dashboard General de la ONG
+     * Ruta: /api/ong/dashboard/pdf
+     */
     public function generarPDFDashboard(Request $request)
     {
         try {
@@ -219,114 +224,240 @@ class OngDashboardController extends Controller
                 return response()->json(['error' => 'Usuario no pertenece a ninguna ONG'], 403);
             }
 
-            $ong = $user->ong;
+            // Obtener ID de ONG desde auth()->user()->id_entidad o auth()->id()
+            $ongIdInicial = $user->id_entidad ?? $user->id_usuario ?? auth()->id();
+            
+            // Cargar modelo Ong con relaciones (usar Ong directamente ya que Entidad no existe)
+            $ong = Ong::with(['usuario'])->find($ongIdInicial);
+            if (!$ong) {
+                // Si no existe por id_usuario, buscar por user_id
+                $ong = Ong::where('user_id', $ongIdInicial)->with(['usuario'])->first();
+            }
+            
             if (!$ong) {
                 return response()->json(['error' => 'ONG no encontrada'], 403);
             }
 
-            $ongId = $ong->user_id ?? $user->id_usuario;
-            Log::info('Generando PDF dashboard para ONG: ' . $ongId);
+            // Asegurar que usamos el user_id de la ONG cargada (clave primaria)
+            $ongId = $ong->user_id;
+            
+            // Obtener filtros de fecha
+            $fechaInicio = $request->input('fecha_inicio') 
+                ? Carbon::parse($request->input('fecha_inicio')) 
+                : null;
+            
+            $fechaFin = $request->input('fecha_fin') 
+                ? Carbon::parse($request->input('fecha_fin')) 
+                : null;
+
+            // Usar servicio compartido
+            $pdf = \App\Services\DashboardPDFService::generarPDFOng($ongId, $fechaInicio, $fechaFin);
+            
+            $filename = 'dashboard-ong-' . $ongId . '-' . now()->format('Y-m-d-His') . '.pdf';
+            return $pdf->stream($filename);
+            
+        } catch (\Throwable $e) {
+            Log::error('Error en generarPDFDashboard: ' . $e->getMessage(), [
+                'ong_id' => $request->user()->id_usuario ?? null,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al generar PDF: ' . $e->getMessage()
+            ], 500)->header('Content-Type', 'application/json');
+        }
+    }
+    
+    /**
+     * Método anterior - DEPRECADO - usar DashboardPDFService
+     */
+    public function generarPDFDashboardOld(Request $request)
+    {
+        try {
+            // 1) Verificar autenticación y obtener ONG del usuario
+            if (!auth()->check()) {
+                return response()->json(['error' => 'No autenticado'], 401);
+            }
+
+            $user = auth()->user();
+            if ($user->tipo_usuario !== 'ONG') {
+                return response()->json(['error' => 'Usuario no pertenece a ninguna ONG'], 403);
+            }
+
+            // Obtener ID de ONG desde auth()->user()->id_entidad o auth()->id()
+            $ongIdInicial = $user->id_entidad ?? $user->id_usuario ?? auth()->id();
+            
+            // Cargar modelo Ong con relaciones (usar Ong directamente ya que Entidad no existe)
+            $ong = Ong::with(['usuario'])->find($ongIdInicial);
+            if (!$ong) {
+                // Si no existe por id_usuario, buscar por user_id
+                $ong = Ong::where('user_id', $ongIdInicial)->with(['usuario'])->first();
+            }
+            
+            if (!$ong) {
+                return response()->json(['error' => 'ONG no encontrada'], 403);
+            }
+
+            // Asegurar que usamos el user_id de la ONG cargada (clave primaria)
+            $ongId = $ong->user_id;
+
+            Log::info('Generando PDF dashboard para ONG:', [
+                'ong_id_inicial' => $ongIdInicial,
+                'ong_id_final' => $ongId,
+                'ong_nombre' => $ong->nombre_ong ?? 'N/A'
+            ]);
 
             // Aumentar límites de memoria y tiempo
             ini_set('memory_limit', '512M');
             set_time_limit(120);
+            
+            // Obtener filtros de la request
+            $fechaInicio = $request->input('fecha_inicio') 
+                ? Carbon::parse($request->input('fecha_inicio')) 
+                : Carbon::now()->subMonths(6);
+            
+            $fechaFin = $request->input('fecha_fin') 
+                ? Carbon::parse($request->input('fecha_fin')) 
+                : Carbon::now();
+            
+            $fecha_generacion = Carbon::now()->setTimezone('America/La_Paz');
 
-            // 2) Obtener TODAS las estadísticas necesarias con queries Eloquent optimizadas
-            $totalEventos = Evento::where('ong_id', $ongId)->count();
-            
+            // 2) Obtener TODAS las estadísticas necesarias con queries optimizadas usando DB::raw
+            // Eventos activos (estado 'activo' o 'publicado')
             $eventosActivos = Evento::where('ong_id', $ongId)
-                ->where('estado', 'Publicado')
-                ->whereDate('fecha_fin', '>=', now())
+                ->where(function($q) {
+                    $q->where('estado', 'activo')
+                      ->orWhere('estado', 'Publicado')
+                      ->orWhere('estado', 'publicado');
+                })
                 ->count();
             
-            $eventosFinalizados = Evento::where('ong_id', $ongId)
-                ->where('estado', 'Publicado')
-                ->whereDate('fecha_fin', '<', now())
+            // Total reacciones (sum de EventoReaccion donde id_ong = $ongId)
+            $totalReacciones = DB::table('evento_reacciones')
+                ->join('eventos', 'evento_reacciones.evento_id', '=', 'eventos.id')
+                ->where('eventos.ong_id', $ongId)
                 ->count();
             
-            $totalReacciones = EventoReaccion::whereHas('evento', function($q) use ($ongId) {
-                $q->where('ong_id', $ongId);
-            })->count();
+            // Total compartidos (sum de EventoCompartido)
+            $totalCompartidos = DB::table('evento_compartidos')
+                ->join('eventos', 'evento_compartidos.evento_id', '=', 'eventos.id')
+                ->where('eventos.ong_id', $ongId)
+                ->count();
             
-            $totalCompartidos = EventoCompartido::whereHas('evento', function($q) use ($ongId) {
-                $q->where('ong_id', $ongId);
-            })->count();
-            
-            // Contar voluntarios únicos (todos los participantes se consideran voluntarios en este contexto)
+            // Total voluntarios (count de EventoParticipacion con externo_id no nulo)
             $totalVoluntarios = EventoParticipacion::whereHas('evento', function($q) use ($ongId) {
                 $q->where('ong_id', $ongId);
             })
-              ->distinct('externo_id')
-              ->count('externo_id');
+            ->whereNotNull('externo_id')
+            ->distinct('externo_id')
+            ->count('externo_id');
             
+            // Total participantes (count total de EventoParticipacion)
             $totalParticipantes = EventoParticipacion::whereHas('evento', function($q) use ($ongId) {
                 $q->where('ong_id', $ongId);
             })->count();
             
-            $participantesAprobados = EventoParticipacion::whereHas('evento', function($q) use ($ongId) {
-                $q->where('ong_id', $ongId);
-            })->where('estado', 'aprobado')->count();
+            // Eventos finalizados (count de eventos con estado 'finalizado')
+            $eventosFinalizados = Evento::where('ong_id', $ongId)
+                ->where('estado', 'finalizado')
+                ->count();
+
+            // 3) Obtener datos para gráficos y actividad reciente
+            // Detectar si es MySQL o PostgreSQL
+            $isPostgreSQL = DB::getDriverName() === 'pgsql';
+            $dateFormat = $isPostgreSQL ? "TO_CHAR(created_at, 'YYYY-MM')" : "DATE_FORMAT(created_at, '%Y-%m')";
             
-            $participantesPendientes = EventoParticipacion::whereHas('evento', function($q) use ($ongId) {
-                $q->where('ong_id', $ongId);
-            })->where('estado', 'pendiente')->count();
-
-            // 3) Obtener datos para gráficos
-            // Usar TO_CHAR para PostgreSQL en lugar de DATE_FORMAT de MySQL
-            $reaccionesPorMes = EventoReaccion::whereHas('evento', function($q) use ($ongId) {
+            // Tendencias mensuales (participantes por mes)
+            $tendenciasMensuales = EventoParticipacion::whereHas('evento', function($q) use ($ongId) {
                 $q->where('ong_id', $ongId);
             })
-            ->select(DB::raw("TO_CHAR(created_at, 'YYYY-MM') as mes"), DB::raw('COUNT(*) as total'))
-            ->groupBy(DB::raw("TO_CHAR(created_at, 'YYYY-MM')"))
-            ->orderBy('mes')
+            ->select(DB::raw("{$dateFormat} as mes"), DB::raw('COUNT(*) as total'))
+            ->groupBy(DB::raw($dateFormat))
+            ->orderBy('mes', 'desc')
             ->limit(12)
             ->get()
             ->pluck('total', 'mes')
             ->toArray();
-
-            $compartidosPorMes = EventoCompartido::whereHas('evento', function($q) use ($ongId) {
-                $q->where('ong_id', $ongId);
-            })
-            ->select(DB::raw("TO_CHAR(created_at, 'YYYY-MM') as mes"), DB::raw('COUNT(*) as total'))
-            ->groupBy(DB::raw("TO_CHAR(created_at, 'YYYY-MM')"))
-            ->orderBy('mes')
-            ->limit(12)
-            ->get()
-            ->pluck('total', 'mes')
-            ->toArray();
-
-            $inscripcionesPorMes = EventoParticipacion::whereHas('evento', function($q) use ($ongId) {
-                $q->where('ong_id', $ongId);
-            })
-            ->select(DB::raw("TO_CHAR(created_at, 'YYYY-MM') as mes"), DB::raw('COUNT(*) as total'))
-            ->groupBy(DB::raw("TO_CHAR(created_at, 'YYYY-MM')"))
-            ->orderBy('mes')
-            ->limit(12)
-            ->get()
-            ->pluck('total', 'mes')
-            ->toArray();
-
+            
+            // Distribución de estados
             $eventosPorEstado = Evento::where('ong_id', $ongId)
                 ->select('estado', DB::raw('COUNT(*) as total'))
                 ->groupBy('estado')
                 ->get()
                 ->pluck('total', 'estado')
                 ->toArray();
-
-            // Top eventos con conteos manuales
-            $topEventos = Evento::where('ong_id', $ongId)
+            
+            // Top 8 eventos para comparativa
+            $top8Eventos = Evento::where('ong_id', $ongId)
+                ->withCount(['reacciones', 'compartidos', 'participantes'])
                 ->get()
                 ->map(function($evento) {
-                    $evento->reacciones_count = EventoReaccion::where('evento_id', $evento->id)->count();
-                    $evento->compartidos_count = EventoCompartido::where('evento_id', $evento->id)->count();
-                    $evento->participantes_count = EventoParticipacion::where('evento_id', $evento->id)->count();
+                    $evento->engagement = ($evento->reacciones_count ?? 0) + 
+                                         ($evento->compartidos_count ?? 0) + 
+                                         ($evento->participantes_count ?? 0);
                     return $evento;
                 })
-                ->sortByDesc('reacciones_count')
+                ->sortByDesc('engagement')
+                ->take(8)
+                ->values();
+            
+            // Actividad semanal (últimas 8 semanas)
+            $actividadSemanal = [];
+            for ($i = 7; $i >= 0; $i--) {
+                $semanaInicio = Carbon::now()->subWeeks($i)->startOfWeek();
+                $semanaFin = Carbon::now()->subWeeks($i)->endOfWeek();
+                $semanaLabel = $semanaInicio->format('d/m') . '-' . $semanaFin->format('d/m');
+                
+                $actividadSemanal[$semanaLabel] = EventoParticipacion::whereHas('evento', function($q) use ($ongId) {
+                    $q->where('ong_id', $ongId);
+                })
+                ->whereBetween('created_at', [$semanaInicio, $semanaFin])
+                ->count();
+            }
+            
+            // Actividad reciente (últimos 20 días con detalle)
+            $actividadReciente = [];
+            for ($i = 19; $i >= 0; $i--) {
+                $fecha = Carbon::now()->subDays($i)->format('Y-m-d');
+                $fechaFormato = Carbon::now()->subDays($i)->format('d/m/Y');
+                
+                $reacciones = EventoReaccion::whereHas('evento', function($q) use ($ongId) {
+                    $q->where('ong_id', $ongId);
+                })->whereDate('created_at', $fecha)->count();
+                
+                $compartidos = EventoCompartido::whereHas('evento', function($q) use ($ongId) {
+                    $q->where('ong_id', $ongId);
+                })->whereDate('created_at', $fecha)->count();
+                
+                $inscripciones = EventoParticipacion::whereHas('evento', function($q) use ($ongId) {
+                    $q->where('ong_id', $ongId);
+                })->whereDate('created_at', $fecha)->count();
+                
+                $actividadReciente[] = [
+                    'fecha' => $fechaFormato,
+                    'reacciones' => $reacciones,
+                    'compartidos' => $compartidos,
+                    'inscripciones' => $inscripciones,
+                    'total' => $reacciones + $compartidos + $inscripciones
+                ];
+            }
+
+            // Top 10 eventos ordenados por engagement (reacciones + compartidos + participantes)
+            $topEventos = Evento::where('ong_id', $ongId)
+                ->withCount(['reacciones', 'compartidos', 'participantes'])
+                ->get()
+                ->map(function($evento) {
+                    $evento->engagement = ($evento->reacciones_count ?? 0) + 
+                                         ($evento->compartidos_count ?? 0) + 
+                                         ($evento->participantes_count ?? 0);
+                    return $evento;
+                })
+                ->sortByDesc('engagement')
                 ->take(10)
                 ->values();
 
-            // Top voluntarios
+            // Top 10 voluntarios con horas estimadas
             $topVoluntarios = EventoParticipacion::whereHas('evento', function($q) use ($ongId) {
                 $q->where('ong_id', $ongId);
             })
@@ -340,40 +471,53 @@ class OngDashboardController extends Controller
                 $user = \App\Models\User::find($item->externo_id);
                 if ($user) {
                     $user->participaciones_count = $item->participaciones_count;
+                    $user->horas_contribuidas = $item->participaciones_count * 2; // 2 horas por evento
                     return $user;
                 }
                 return null;
             })
             ->filter();
 
-            // 4) Generar URLs de gráficos con QuickChart API
-            $chartReacciones = 'https://quickchart.io/chart?c=' . urlencode(json_encode([
-                'type' => 'line',
-                'data' => [
-                    'labels' => array_keys($reaccionesPorMes),
-                    'datasets' => [[
-                        'label' => 'Reacciones',
-                        'data' => array_values($reaccionesPorMes),
-                        'borderColor' => '#dc3545',
-                        'backgroundColor' => 'rgba(220,53,69,0.1)',
-                        'fill' => true,
-                        'tension' => 0.4
-                    ]]
-                ],
-                'options' => [
-                    'responsive' => false,
-                    'maintainAspectRatio' => false,
-                    'scales' => ['y' => ['beginAtZero' => true]]
-                ]
-            ])) . '&width=700&height=300&backgroundColor=white&devicePixelRatio=2';
+            // 4) Obtener número de exportación y folio
+            $numeroExportacion = DB::table('ong_exportaciones_pdf')
+                ->where('ong_id', $ongId)
+                ->whereDate('created_at', now()->toDateString())
+                ->count() + 1;
+            
+            $folio = 'DASH-' . str_pad($numeroExportacion, 6, '0', STR_PAD_LEFT);
+            
+            // Registrar exportación en base de datos
+            try {
+                DB::table('ong_exportaciones_pdf')->insert([
+                    'ong_id' => $ongId,
+                    'tipo' => 'pdf',
+                    'fecha_inicio' => $fechaInicio->toDateString(),
+                    'fecha_fin' => $fechaFin->toDateString(),
+                    'numero_exportacion' => $numeroExportacion,
+                    'folio' => $folio,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning('No se pudo registrar exportación PDF en BD: ' . $e->getMessage());
+            }
 
-            $chartCompartidos = 'https://quickchart.io/chart?c=' . urlencode(json_encode([
+            // 5) Generar URLs de gráficos con QuickChart API
+            // Gráfica 1: Tendencias mensuales (line chart)
+            $tendenciasLabels = array_keys($tendenciasMensuales);
+            $tendenciasData = array_values($tendenciasMensuales);
+            if (empty($tendenciasLabels)) {
+                $tendenciasLabels = ['Sin datos'];
+                $tendenciasData = [0];
+            }
+            
+            $grafica_tendencias = 'https://quickchart.io/chart?c=' . urlencode(json_encode([
                 'type' => 'line',
                 'data' => [
-                    'labels' => array_keys($compartidosPorMes),
+                    'labels' => $tendenciasLabels,
                     'datasets' => [[
-                        'label' => 'Compartidos',
-                        'data' => array_values($compartidosPorMes),
+                        'label' => 'Participantes',
+                        'data' => $tendenciasData,
                         'borderColor' => '#00A36C',
                         'backgroundColor' => 'rgba(0,163,108,0.1)',
                         'fill' => true,
@@ -383,19 +527,98 @@ class OngDashboardController extends Controller
                 'options' => [
                     'responsive' => false,
                     'maintainAspectRatio' => false,
+                    'plugins' => [
+                        'title' => ['display' => true, 'text' => 'Tendencias Mensuales de Participantes', 'font' => ['size' => 14]]
+                    ],
                     'scales' => ['y' => ['beginAtZero' => true]]
                 ]
-            ])) . '&width=700&height=300&backgroundColor=white&devicePixelRatio=2';
-
-            $chartInscripciones = 'https://quickchart.io/chart?c=' . urlencode(json_encode([
+            ])) . '&width=680&height=300&backgroundColor=white&devicePixelRatio=2';
+            
+            // Gráfica 2: Distribución de estados (doughnut chart)
+            $estadosLabels = array_keys($eventosPorEstado);
+            $estadosData = array_values($eventosPorEstado);
+            if (empty($estadosLabels)) {
+                $estadosLabels = ['Sin datos'];
+                $estadosData = [1];
+            }
+            
+            $grafica_distribucion = 'https://quickchart.io/chart?c=' . urlencode(json_encode([
+                'type' => 'doughnut',
+                'data' => [
+                    'labels' => $estadosLabels,
+                    'datasets' => [[
+                        'data' => $estadosData,
+                        'backgroundColor' => ['#00A36C', '#0C2B44', '#dc3545', '#17a2b8', '#ffc107']
+                    ]]
+                ],
+                'options' => [
+                    'responsive' => false,
+                    'maintainAspectRatio' => false,
+                    'plugins' => [
+                        'title' => ['display' => true, 'text' => 'Distribución de Estados de Eventos', 'font' => ['size' => 14]],
+                        'legend' => ['display' => true, 'position' => 'right']
+                    ]
+                ]
+            ])) . '&width=680&height=300&backgroundColor=white&devicePixelRatio=2';
+            
+            // Gráfica 3: Comparativa top 8 eventos (bar chart)
+            $top8Labels = $top8Eventos->pluck('titulo')->map(function($titulo) {
+                return Str::limit($titulo, 20);
+            })->toArray();
+            $top8Reacciones = $top8Eventos->pluck('reacciones_count')->toArray();
+            $top8Compartidos = $top8Eventos->pluck('compartidos_count')->toArray();
+            
+            if (empty($top8Labels)) {
+                $top8Labels = ['Sin datos'];
+                $top8Reacciones = [0];
+                $top8Compartidos = [0];
+            }
+            
+            $grafica_comparativa = 'https://quickchart.io/chart?c=' . urlencode(json_encode([
+                'type' => 'bar',
+                'data' => [
+                    'labels' => $top8Labels,
+                    'datasets' => [
+                        [
+                            'label' => 'Reacciones',
+                            'data' => $top8Reacciones,
+                            'backgroundColor' => '#dc3545'
+                        ],
+                        [
+                            'label' => 'Compartidos',
+                            'data' => $top8Compartidos,
+                            'backgroundColor' => '#00A36C'
+                        ]
+                    ]
+                ],
+                'options' => [
+                    'responsive' => false,
+                    'maintainAspectRatio' => false,
+                    'plugins' => [
+                        'title' => ['display' => true, 'text' => 'Comparativa Top 8 Eventos', 'font' => ['size' => 14]],
+                        'legend' => ['display' => true, 'position' => 'top']
+                    ],
+                    'scales' => ['y' => ['beginAtZero' => true]]
+                ]
+            ])) . '&width=680&height=300&backgroundColor=white&devicePixelRatio=2';
+            
+            // Gráfica 4: Actividad semanal (area chart)
+            $semanalLabels = array_keys($actividadSemanal);
+            $semanalData = array_values($actividadSemanal);
+            if (empty($semanalLabels)) {
+                $semanalLabels = ['Sin datos'];
+                $semanalData = [0];
+            }
+            
+            $grafica_actividad_semanal = 'https://quickchart.io/chart?c=' . urlencode(json_encode([
                 'type' => 'line',
                 'data' => [
-                    'labels' => array_keys($inscripcionesPorMes),
+                    'labels' => $semanalLabels,
                     'datasets' => [[
-                        'label' => 'Inscripciones',
-                        'data' => array_values($inscripcionesPorMes),
-                        'borderColor' => '#0C2B44',
-                        'backgroundColor' => 'rgba(12,43,68,0.1)',
+                        'label' => 'Actividad Semanal',
+                        'data' => $semanalData,
+                        'borderColor' => '#17a2b8',
+                        'backgroundColor' => 'rgba(23, 162, 184, 0.3)',
                         'fill' => true,
                         'tension' => 0.4
                     ]]
@@ -403,59 +626,116 @@ class OngDashboardController extends Controller
                 'options' => [
                     'responsive' => false,
                     'maintainAspectRatio' => false,
+                    'plugins' => [
+                        'title' => ['display' => true, 'text' => 'Actividad Semanal Agregada', 'font' => ['size' => 14]]
+                    ],
                     'scales' => ['y' => ['beginAtZero' => true]]
                 ]
-            ])) . '&width=700&height=300&backgroundColor=white&devicePixelRatio=2';
+            ])) . '&width=680&height=300&backgroundColor=white&devicePixelRatio=2';
 
-            // 5) Preparar array de datos
-            $estadisticas = compact(
-                'totalEventos', 'eventosActivos', 'eventosFinalizados',
-                'totalReacciones', 'totalCompartidos', 'totalVoluntarios',
-                'totalParticipantes', 'participantesAprobados', 'participantesPendientes'
-            );
-
-            $data = [
-                'ong' => $ong,
-                'fecha_generacion' => Carbon::now()->format('d/m/Y H:i:s'),
-                'estadisticas' => $estadisticas,
-                'topEventos' => $topEventos,
-                'topVoluntarios' => $topVoluntarios,
-                'graficos' => compact('chartReacciones', 'chartCompartidos', 'chartInscripciones')
+            // 6) Preparar array de datos completo
+            $datos = [
+                'eventos_activos' => $eventosActivos,
+                'total_reacciones' => $totalReacciones,
+                'total_compartidos' => $totalCompartidos,
+                'total_voluntarios' => $totalVoluntarios,
+                'total_participantes' => $totalParticipantes,
+                'eventos_finalizados' => $eventosFinalizados,
+                'top_eventos' => $topEventos,
+                'top_voluntarios' => $topVoluntarios,
+                'tendencias_mensuales' => $tendenciasMensuales,
+                'actividad_reciente' => $actividadReciente,
+                'distribucion_estados' => $eventosPorEstado
             ];
 
-            Log::info('Estadísticas calculadas: ' . json_encode($estadisticas));
+            // Logging para debugging - verificar todas las variables antes de generar PDF
+            Log::info('Variables para PDF Dashboard:', [
+                'ong_id' => $ongId,
+                'ong_existe' => $ong ? 'si' : 'no',
+                'fecha_inicio' => $fechaInicio ? $fechaInicio->format('Y-m-d') : 'null',
+                'fecha_fin' => $fechaFin ? $fechaFin->format('Y-m-d') : 'null',
+                'fecha_generacion' => $fecha_generacion ? $fecha_generacion->format('Y-m-d H:i:s') : 'null',
+                'folio' => $folio ?? 'null',
+                'numero_exportacion' => $numeroExportacion ?? 'null',
+                'graficas_definidas' => [
+                    'tendencias' => isset($grafica_tendencias),
+                    'distribucion' => isset($grafica_distribucion),
+                    'comparativa' => isset($grafica_comparativa),
+                    'actividad_semanal' => isset($grafica_actividad_semanal)
+                ],
+                'datos_keys' => array_keys($datos)
+            ]);
 
-            // 6) Generar PDF con try-catch robusto
+            // 7) Generar PDF con try-catch robusto
+            // Usar array explícito en lugar de compact() para evitar errores de variables indefinidas
             try {
-                $pdf = Pdf::loadView('ong.dashboard.dashboard-pdf', $data);
-                $pdf->setPaper('A4', 'portrait');
+                // Preparar todas las variables con nombres consistentes para la vista
+                $variablesParaVista = [
+                    'ong' => $ong,
+                    'datos' => $datos,
+                    'fecha_inicio' => $fechaInicio, // Usar snake_case para la vista
+                    'fecha_fin' => $fechaFin, // Usar snake_case para la vista
+                    'fecha_generacion' => $fecha_generacion,
+                    'folio' => $folio,
+                    'numero_exportacion' => $numeroExportacion, // snake_case para consistencia
+                    'grafica_tendencias' => $grafica_tendencias,
+                    'grafica_distribucion' => $grafica_distribucion,
+                    'grafica_comparativa' => $grafica_comparativa,
+                    'grafica_actividad_semanal' => $grafica_actividad_semanal
+                ];
+
+                // Validar que todas las variables requeridas estén definidas
+                $variablesRequeridas = [
+                    'ong', 'datos', 'fecha_inicio', 'fecha_fin', 
+                    'fecha_generacion', 'folio', 'numero_exportacion'
+                ];
+                
+                foreach ($variablesRequeridas as $var) {
+                    if (!isset($variablesParaVista[$var])) {
+                        throw new \Exception("Variable requerida '$var' no está definida");
+                    }
+                }
+
+                $pdf = Pdf::loadView('pdf.dashboard-ong', $variablesParaVista);
+                $pdf->setPaper('letter', 'portrait');
                 $pdf->setOptions([
                     'isRemoteEnabled' => true,
                     'isHtml5ParserEnabled' => true,
-                    'enable-local-file-access' => true
+                    'enable-local-file-access' => true,
+                    'defaultFont' => 'Arial'
                 ]);
                 
-                $filename = 'dashboard-ong-' . $ongId . '-' . date('Ymd') . '.pdf';
-                return $pdf->download($filename);
+                $filename = 'dashboard-ong-' . $ongId . '-' . now()->format('Y-m-d-His') . '.pdf';
+                return $pdf->stream($filename);
                 
             } catch (\Exception $e) {
                 Log::error('Error generando PDF dashboard ONG: ' . $e->getMessage(), [
-                    'trace' => $e->getTraceAsString()
+                    'ong_id' => $ongId,
+                    'trace' => $e->getTraceAsString(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
                 ]);
+                
+                // Retornar JSON en lugar de HTML para errores
                 return response()->json([
                     'success' => false,
-                    'error' => 'Error al generar PDF: ' . $e->getMessage()
-                ], 500);
+                    'error' => 'Error al generar PDF: ' . $e->getMessage(),
+                    'message' => 'Error al generar el reporte PDF'
+                ], 500)->header('Content-Type', 'application/json');
             }
 
         } catch (\Throwable $e) {
             Log::error('Error en generarPDFDashboard: ' . $e->getMessage(), [
+                'ong_id' => $request->user()->id_usuario ?? null,
                 'trace' => $e->getTraceAsString()
             ]);
+            
+            // Retornar JSON en lugar de HTML para errores
             return response()->json([
                 'success' => false,
-                'error' => 'Error al generar PDF: ' . $e->getMessage()
-            ], 500);
+                'error' => 'Error al generar PDF: ' . $e->getMessage(),
+                'message' => 'Error al generar el reporte PDF'
+            ], 500)->header('Content-Type', 'application/json');
         }
     }
 
@@ -491,37 +771,150 @@ class OngDashboardController extends Controller
             $tipoParticipacion = $request->input('tipo_participacion');
             $busquedaEvento = $request->input('busqueda_evento');
 
-            // Cache key para Excel (30 minutos)
+            // OPTIMIZACIÓN: Aumentar límites de recursos para generación de Excel
+            ini_set('memory_limit', '1G');
+            set_time_limit(300); // 5 minutos
+            
+            // OPTIMIZACIÓN: Cache key para Excel (30 minutos)
             $cacheKey = 'excel_dashboard_ong_' . $ongId . '_' . md5($fechaInicio->format('Y-m-d') . $fechaFin->format('Y-m-d') . ($estadoEvento ?? '') . ($tipoParticipacion ?? '') . ($busquedaEvento ?? ''));
             
-            // Obtener datos con cache
+            // OPTIMIZACIÓN: Obtener datos con cache y logging
+            $cacheHit = Cache::has($cacheKey);
+            Log::info('Excel export cache', [
+                'ong_id' => $ongId,
+                'cache_key' => $cacheKey,
+                'cache_hit' => $cacheHit
+            ]);
+            
             $datos = Cache::remember($cacheKey, 1800, function() use ($ongId, $fechaInicio, $fechaFin, $estadoEvento, $tipoParticipacion, $busquedaEvento) {
+                Log::info('Generando datos dashboard para Excel (cache miss)', ['ong_id' => $ongId]);
                 return $this->obtenerDatosDashboard($ongId, $fechaInicio, $fechaFin, $estadoEvento, $tipoParticipacion, $busquedaEvento);
             });
 
+            // Obtener número de exportación (si existe registro en base de datos)
+            // Usar la misma tabla que se usa para PDF pero con tipo 'excel'
             try {
-                // Verificar que la clase existe
-                if (!class_exists(\App\Exports\OngDashboardExport::class)) {
-                    throw new \Exception('La clase de exportación no está disponible');
+                // Verificar si la columna 'tipo' existe en la tabla (PostgreSQL)
+                $hasTipoColumn = DB::select("
+                    SELECT column_name 
+                    FROM information_schema.columns 
+                    WHERE table_schema = 'public'
+                    AND table_name = 'ong_exportaciones_pdf' 
+                    AND column_name = 'tipo'
+                ");
+                
+                if (!empty($hasTipoColumn)) {
+                    // Si existe la columna tipo, filtrar por ella
+                    $numeroExportacion = DB::table('ong_exportaciones_pdf')
+                ->where('ong_id', $ongId)
+                        ->where('tipo', 'excel')
+                ->whereDate('created_at', now()->toDateString())
+                ->count() + 1;
+                } else {
+                    // Si no existe, contar todos los registros del día (compatibilidad temporal)
+                    $numeroExportacion = DB::table('ong_exportaciones_pdf')
+                        ->where('ong_id', $ongId)
+                        ->whereDate('created_at', now()->toDateString())
+                        ->count() + 1;
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Error al obtener número de exportación: ' . $e->getMessage());
+                $numeroExportacion = 1; // Valor por defecto
+            }
+            
+            $folio = 'EXCEL-' . str_pad($numeroExportacion, 6, '0', STR_PAD_LEFT);
+
+            // Registrar exportación en base de datos
+            try {
+                // Verificar si la columna 'tipo' existe antes de insertar (PostgreSQL)
+                $hasTipoColumn = DB::select("
+                    SELECT column_name 
+                    FROM information_schema.columns 
+                    WHERE table_schema = 'public'
+                    AND table_name = 'ong_exportaciones_pdf' 
+                    AND column_name = 'tipo'
+                ");
+                
+                $hasFolioColumn = DB::select("
+                    SELECT column_name 
+                    FROM information_schema.columns 
+                    WHERE table_schema = 'public'
+                    AND table_name = 'ong_exportaciones_pdf' 
+                    AND column_name = 'folio'
+                ");
+                
+                $insertData = [
+                    'ong_id' => $ongId,
+                    'fecha_inicio' => $fechaInicio->toDateString(),
+                    'fecha_fin' => $fechaFin->toDateString(),
+                    'numero_exportacion' => $numeroExportacion,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ];
+                
+                // Agregar tipo y folio solo si las columnas existen
+                if (!empty($hasTipoColumn)) {
+                    $insertData['tipo'] = 'excel';
+                }
+                if (!empty($hasFolioColumn)) {
+                    $insertData['folio'] = $folio;
                 }
                 
-                $export = new \App\Exports\OngDashboardExport($ong, $datos, $fechaInicio, $fechaFin);
+                DB::table('ong_exportaciones_pdf')->insert($insertData);
+            } catch (\Throwable $e) {
+                Log::warning('No se pudo registrar exportación Excel en BD: ' . $e->getMessage());
+                // Continuar sin el registro en BD si falla
+            }
+
+            // Validar que la clase de exportación existe
+                if (!class_exists(\App\Exports\OngDashboardExport::class)) {
+                throw new \Exception('La clase de exportación OngDashboardExport no está disponible. Verifique que el archivo existe.');
+                }
                 
+            // Validar datos antes de exportar
+            if (empty($datos) || !is_array($datos)) {
+                throw new \Exception('No se pudieron obtener los datos del dashboard. Por favor, verifique los filtros aplicados.');
+            }
+                
+            // Generar nombre de archivo
                 $filename = 'dashboard-ong-' . $ongId . '-' . now()->format('Y-m-d_H-i-s') . '.xlsx';
                 
-                // Forzar descarga automática
-                return Excel::download($export, $filename, \Maatwebsite\Excel\Excel::XLSX, [
-                    'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                ]);
-            } catch (\Throwable $e) {
-                Log::error('Error creando export Excel:', [
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine()
+            // OPTIMIZACIÓN: Medir tiempo de generación
+            $startTime = microtime(true);
+            $startMemory = memory_get_usage();
+            
+            try {
+                // Exportar usando Maatwebsite Excel
+                $response = Excel::download(
+                    new \App\Exports\OngDashboardExport($ong, $datos, $fechaInicio, $fechaFin, $numeroExportacion),
+                    $filename,
+                    \Maatwebsite\Excel\Excel::XLSX
+                );
+                
+                // OPTIMIZACIÓN: Logging de rendimiento
+                $endTime = microtime(true);
+                $endMemory = memory_get_usage();
+                $executionTime = round($endTime - $startTime, 2);
+                $memoryUsed = round(($endMemory - $startMemory) / 1024 / 1024, 2);
+                
+                Log::info('Excel export completado exitosamente', [
+                    'ong_id' => $ongId,
+                    'filename' => $filename,
+                    'execution_time_seconds' => $executionTime,
+                    'memory_used_mb' => $memoryUsed,
+                    'cache_used' => $cacheHit
                 ]);
                 
-                throw new \Exception('Error al generar Excel: ' . $e->getMessage());
+                return $response;
+                
+            } catch (\OutOfMemoryError $e) {
+                Log::error('Error de memoria al generar Excel', [
+                    'ong_id' => $ongId,
+                    'error' => $e->getMessage(),
+                    'memory_limit' => ini_get('memory_limit')
+                ]);
+                
+                throw new \Exception('El archivo Excel es demasiado grande para generar. Intente con un rango de fechas más pequeño o contacte al administrador.');
             }
 
         } catch (\Throwable $e) {

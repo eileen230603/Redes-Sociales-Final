@@ -513,67 +513,500 @@ class ReportService
      */
     public function getParticipacionColaboracion(int $ongId, array $filtros = []): array
     {
-        // Query base para mega eventos
-        $query = MegaEvento::where('ong_organizadora_principal', $ongId)
-            ->select('mega_evento_id', 'titulo', 'fecha_creacion');
+        try {
+            \Illuminate\Support\Facades\Log::info('Iniciando getParticipacionColaboracion', ['ong_id' => $ongId, 'filtros' => $filtros]);
+            
+            // Verificar primero cuántos eventos tiene la ONG sin filtros
+            $totalEventosOng = Evento::where('ong_id', $ongId)->count();
+            \Illuminate\Support\Facades\Log::info('Total eventos de la ONG (sin filtros)', ['count' => $totalEventosOng]);
+            
+            // ========== EVENTOS REGULARES ==========
+            // Obtener TODOS los eventos de la ONG primero para asegurar que tengamos datos
+            $queryEventos = Evento::where('ong_id', $ongId)
+                ->select('id', 'titulo', 'fecha_inicio', 'tipo_evento');
 
-        $query = $this->aplicarFiltros($query, $filtros);
-        $megaEventosIds = $query->pluck('mega_evento_id');
+            // Aplicar filtros opcionales a eventos regulares (pero si no hay filtros, obtener todos)
+            $tieneFiltros = false;
+            if (isset($filtros['fecha_inicio']) && !empty($filtros['fecha_inicio'])) {
+                $queryEventos->where('fecha_inicio', '>=', $filtros['fecha_inicio']);
+                $tieneFiltros = true;
+            }
+            if (isset($filtros['fecha_fin']) && !empty($filtros['fecha_fin'])) {
+                $queryEventos->where('fecha_inicio', '<=', $filtros['fecha_fin']);
+                $tieneFiltros = true;
+            }
+            if (isset($filtros['categoria']) && !empty($filtros['categoria'])) {
+                $queryEventos->where('tipo_evento', $filtros['categoria']);
+                $tieneFiltros = true;
+            }
 
-        // Top empresas patrocinadoras (query optimizado con join)
-        $topEmpresas = DB::table('mega_evento_patrocinadores')
-            ->join('empresas', 'mega_evento_patrocinadores.empresa_id', '=', 'empresas.user_id')
-            ->whereIn('mega_evento_patrocinadores.mega_evento_id', $megaEventosIds)
-            ->select(
-                'empresas.user_id',
-                'empresas.nombre',
-                DB::raw('COUNT(DISTINCT mega_evento_patrocinadores.mega_evento_id) as total_eventos'),
-                DB::raw('COUNT(mega_evento_patrocinadores.empresa_id) as total_patrocinios')
-            )
-            ->groupBy('empresas.user_id', 'empresas.nombre')
-            ->orderByDesc('total_eventos')
-            ->limit(10)
-            ->get();
+            $eventosIds = $queryEventos->pluck('id')->toArray();
+            \Illuminate\Support\Facades\Log::info('Eventos encontrados (con filtros)', ['eventos_ids' => $eventosIds, 'count' => count($eventosIds), 'tiene_filtros' => $tieneFiltros]);
+            
+            // Si no hay eventos con filtros O no se aplicaron filtros, obtener todos los eventos de la ONG
+            if (empty($eventosIds) || !$tieneFiltros) {
+                if (empty($eventosIds) && $tieneFiltros) {
+                    \Illuminate\Support\Facades\Log::info('No hay eventos con filtros aplicados, usando todos los eventos de la ONG');
+                }
+                $eventosIds = Evento::where('ong_id', $ongId)->pluck('id')->toArray();
+                \Illuminate\Support\Facades\Log::info('Total eventos de la ONG (usando todos):', ['count' => count($eventosIds), 'eventos_ids' => array_slice($eventosIds, 0, 10)]);
+            }
 
-        // Voluntarios más activos (participaciones)
-        $topVoluntarios = DB::table('mega_evento_participantes_externos')
-            ->join('users', 'mega_evento_participantes_externos.user_id', '=', 'users.id_usuario')
-            ->whereIn('mega_evento_participantes_externos.mega_evento_id', $megaEventosIds)
-            ->select(
-                'users.id_usuario',
-                'users.nombre',
-                'users.email',
-                DB::raw('COUNT(DISTINCT mega_evento_participantes_externos.mega_evento_id) as total_eventos'),
-                DB::raw('COUNT(mega_evento_participantes_externos.user_id) as total_participaciones')
-            )
-            ->groupBy('users.id_usuario', 'users.nombre', 'users.email')
-            ->orderByDesc('total_eventos')
-            ->limit(10)
-            ->get();
+            // ========== MEGA EVENTOS ==========
+            $totalMegaEventosOng = MegaEvento::where('ong_organizadora_principal', $ongId)->count();
+            \Illuminate\Support\Facades\Log::info('Total mega eventos de la ONG (sin filtros)', ['count' => $totalMegaEventosOng]);
+            
+            $queryMega = MegaEvento::where('ong_organizadora_principal', $ongId)
+                ->select('mega_evento_id', 'titulo', 'fecha_creacion');
 
-        // Eventos con más colaboradores (patrocinadores + participantes)
-        $eventosColaboracion = DB::table('mega_eventos')
-            ->leftJoin('mega_evento_patrocinadores', 'mega_eventos.mega_evento_id', '=', 'mega_evento_patrocinadores.mega_evento_id')
-            ->leftJoin('mega_evento_participantes_externos', 'mega_eventos.mega_evento_id', '=', 'mega_evento_participantes_externos.mega_evento_id')
-            ->whereIn('mega_eventos.mega_evento_id', $megaEventosIds)
-            ->select(
-                'mega_eventos.mega_evento_id',
-                'mega_eventos.titulo',
-                DB::raw('COUNT(DISTINCT mega_evento_patrocinadores.empresa_id) as total_patrocinadores'),
-                DB::raw('COUNT(DISTINCT mega_evento_participantes_externos.user_id) as total_participantes'),
-                DB::raw('(COUNT(DISTINCT mega_evento_patrocinadores.empresa_id) + COUNT(DISTINCT mega_evento_participantes_externos.user_id)) as total_colaboradores')
-            )
-            ->groupBy('mega_eventos.mega_evento_id', 'mega_eventos.titulo')
-            ->orderByDesc('total_colaboradores')
-            ->limit(10)
-            ->get();
+            // Aplicar filtros opcionales (solo si se proporcionan y tienen valor)
+            $tieneFiltrosMega = false;
+            if (isset($filtros['fecha_inicio']) && !empty($filtros['fecha_inicio']) || 
+                isset($filtros['fecha_fin']) && !empty($filtros['fecha_fin']) ||
+                isset($filtros['categoria']) && !empty($filtros['categoria'])) {
+                $queryMega = $this->aplicarFiltros($queryMega, $filtros);
+                $tieneFiltrosMega = true;
+            }
+            
+            $megaEventosIds = $queryMega->pluck('mega_evento_id')->toArray();
+            \Illuminate\Support\Facades\Log::info('Mega eventos encontrados (con filtros)', ['mega_eventos_ids' => $megaEventosIds, 'count' => count($megaEventosIds), 'tiene_filtros' => $tieneFiltrosMega]);
+            
+            // Si no hay mega eventos con filtros O no se aplicaron filtros, obtener todos
+            if (empty($megaEventosIds) || !$tieneFiltrosMega) {
+                if (empty($megaEventosIds) && $tieneFiltrosMega) {
+                    \Illuminate\Support\Facades\Log::info('No hay mega eventos con filtros aplicados, usando todos los mega eventos de la ONG');
+                }
+                $megaEventosIds = MegaEvento::where('ong_organizadora_principal', $ongId)->pluck('mega_evento_id')->toArray();
+                \Illuminate\Support\Facades\Log::info('Total mega eventos de la ONG (usando todos):', ['count' => count($megaEventosIds)]);
+            }
+            \Illuminate\Support\Facades\Log::info('Mega eventos encontrados', ['mega_eventos_ids' => $megaEventosIds, 'count' => count($megaEventosIds)]);
+            
+            // Si no hay mega eventos con filtros, obtener todos
+            if (empty($megaEventosIds)) {
+                $megaEventosIds = MegaEvento::where('ong_organizadora_principal', $ongId)->pluck('mega_evento_id')->toArray();
+                \Illuminate\Support\Facades\Log::info('Total mega eventos de la ONG (sin filtros):', ['count' => count($megaEventosIds)]);
+            }
 
-        return [
-            'top_empresas' => $topEmpresas,
-            'top_voluntarios' => $topVoluntarios,
-            'eventos_colaboracion' => $eventosColaboracion,
-            'filtros_aplicados' => $filtros,
-        ];
+            // ========== TOP EMPRESAS PATROCINADORAS ==========
+            // De eventos regulares - Obtener TODAS las empresas patrocinadoras
+            $empresasEventos = collect();
+            if (!empty($eventosIds)) {
+                try {
+                    \Illuminate\Support\Facades\Log::info('Buscando empresas patrocinadoras en eventos regulares', ['eventos_count' => count($eventosIds)]);
+                    $empresasEventos = DB::table('evento_empresas_participantes')
+                        ->join('empresas', 'evento_empresas_participantes.empresa_id', '=', 'empresas.user_id')
+                        ->whereIn('evento_empresas_participantes.evento_id', $eventosIds)
+                        ->where('evento_empresas_participantes.activo', true)
+                        ->select(
+                            'empresas.user_id',
+                            'empresas.nombre_empresa as nombre',
+                            DB::raw('COUNT(DISTINCT evento_empresas_participantes.evento_id) as eventos_count')
+                        )
+                        ->groupBy('empresas.user_id', 'empresas.nombre_empresa')
+                        ->get();
+                    \Illuminate\Support\Facades\Log::info('Empresas patrocinadoras encontradas en eventos regulares', ['count' => $empresasEventos->count()]);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('Error al obtener empresas de eventos regulares: ' . $e->getMessage(), [
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine()
+                    ]);
+                    $empresasEventos = collect();
+                }
+            }
+
+            // De mega eventos - Obtener TODAS las empresas patrocinadoras
+            $empresasMega = collect();
+            if (!empty($megaEventosIds)) {
+                try {
+                    \Illuminate\Support\Facades\Log::info('Buscando empresas patrocinadoras en mega eventos', ['mega_eventos_count' => count($megaEventosIds)]);
+                    $empresasMega = DB::table('mega_evento_patrocinadores')
+                        ->join('empresas', 'mega_evento_patrocinadores.empresa_id', '=', 'empresas.user_id')
+                        ->whereIn('mega_evento_patrocinadores.mega_evento_id', $megaEventosIds)
+                        ->where('mega_evento_patrocinadores.activo', true)
+                        ->select(
+                            'empresas.user_id',
+                            'empresas.nombre_empresa as nombre',
+                            DB::raw('COUNT(DISTINCT mega_evento_patrocinadores.mega_evento_id) as eventos_count')
+                        )
+                        ->groupBy('empresas.user_id', 'empresas.nombre_empresa')
+                        ->get();
+                    \Illuminate\Support\Facades\Log::info('Empresas patrocinadoras encontradas en mega eventos', ['count' => $empresasMega->count()]);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('Error al obtener empresas de mega eventos: ' . $e->getMessage(), [
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine()
+                    ]);
+                    $empresasMega = collect();
+                }
+            }
+
+            // Consolidar empresas
+            $empresasConsolidadas = collect();
+            foreach ($empresasEventos as $emp) {
+                $empresasConsolidadas->put($emp->user_id, [
+                    'user_id' => $emp->user_id,
+                    'nombre' => $emp->nombre ?? 'Empresa #' . $emp->user_id,
+                    'eventos_count' => $emp->eventos_count ?? 0,
+                    'monto_total' => 0
+                ]);
+            }
+            foreach ($empresasMega as $emp) {
+                if ($empresasConsolidadas->has($emp->user_id)) {
+                    $empresasConsolidadas[$emp->user_id]['eventos_count'] += ($emp->eventos_count ?? 0);
+                } else {
+                    $empresasConsolidadas->put($emp->user_id, [
+                        'user_id' => $emp->user_id,
+                        'nombre' => $emp->nombre ?? 'Empresa #' . $emp->user_id,
+                        'eventos_count' => $emp->eventos_count ?? 0,
+                        'monto_total' => 0
+                    ]);
+                }
+            }
+
+            $topEmpresas = $empresasConsolidadas
+                ->sortByDesc('eventos_count')
+                ->take(10)
+                ->values()
+                ->map(function($emp) {
+                    return (object)$emp;
+                });
+            
+            \Illuminate\Support\Facades\Log::info('Empresas consolidadas', ['count' => $topEmpresas->count()]);
+
+            // ========== TOP VOLUNTARIOS MÁS ACTIVOS ==========
+            // De eventos regulares
+            $voluntariosEventos = collect();
+            \Illuminate\Support\Facades\Log::info('Buscando voluntarios en eventos', ['eventos_ids' => $eventosIds, 'count' => count($eventosIds)]);
+            if (!empty($eventosIds)) {
+                try {
+                    // Consulta optimizada con fallback para PostgreSQL/MySQL
+                    $isPostgreSQL = DB::getDriverName() === 'pgsql';
+                    
+                    if ($isPostgreSQL) {
+                        $voluntariosEventos = DB::table('evento_participaciones as ep')
+                            ->whereIn('ep.evento_id', $eventosIds)
+                            ->whereNotNull('ep.externo_id')
+                            ->leftJoin('usuarios as u', 'ep.externo_id', '=', 'u.id_usuario')
+                            ->leftJoin('integrantes_externos as ie', 'u.id_usuario', '=', 'ie.user_id')
+                            ->select(
+                                'u.id_usuario',
+                                DB::raw("COALESCE(NULLIF(TRIM(COALESCE(ie.nombres, '') || ' ' || COALESCE(ie.apellidos, '')), ''), u.nombre_usuario, 'Usuario') as nombre"),
+                                DB::raw("COALESCE(NULLIF(ie.email, ''), u.correo_electronico) as email"),
+                                DB::raw('COUNT(DISTINCT ep.evento_id) as eventos_count'),
+                                DB::raw('COUNT(*) as participaciones_count')
+                            )
+                            ->groupBy('u.id_usuario', 'u.nombre_usuario', 'ie.nombres', 'ie.apellidos', 'ie.email', 'u.correo_electronico')
+                            ->get();
+                    } else {
+                        $voluntariosEventos = DB::table('evento_participaciones as ep')
+                            ->whereIn('ep.evento_id', $eventosIds)
+                            ->whereNotNull('ep.externo_id')
+                            ->leftJoin('usuarios as u', 'ep.externo_id', '=', 'u.id_usuario')
+                            ->leftJoin('integrantes_externos as ie', 'u.id_usuario', '=', 'ie.user_id')
+                            ->select(
+                                'u.id_usuario',
+                                DB::raw("COALESCE(NULLIF(TRIM(CONCAT(COALESCE(ie.nombres, ''), ' ', COALESCE(ie.apellidos, ''))), ''), u.nombre_usuario, 'Usuario') as nombre"),
+                                DB::raw("COALESCE(NULLIF(ie.email, ''), u.correo_electronico) as email"),
+                                DB::raw('COUNT(DISTINCT ep.evento_id) as eventos_count'),
+                                DB::raw('COUNT(*) as participaciones_count')
+                            )
+                            ->groupBy('u.id_usuario', 'u.nombre_usuario', 'ie.nombres', 'ie.apellidos', 'ie.email', 'u.correo_electronico')
+                            ->get();
+                    }
+                    \Illuminate\Support\Facades\Log::info('Voluntarios encontrados en eventos regulares', ['count' => $voluntariosEventos->count()]);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('Error al obtener voluntarios de eventos regulares: ' . $e->getMessage(), [
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine()
+                    ]);
+                    // Intentar con consulta más simple
+                    try {
+                        $voluntariosEventos = DB::table('evento_participaciones')
+                            ->whereIn('evento_id', $eventosIds)
+                            ->whereNotNull('externo_id')
+                            ->select(
+                                'externo_id as id_usuario',
+                                DB::raw('COUNT(DISTINCT evento_id) as eventos_count'),
+                                DB::raw('COUNT(*) as participaciones_count')
+                            )
+                            ->groupBy('externo_id')
+                            ->get()
+                            ->map(function($item) {
+                                $user = \App\Models\User::find($item->id_usuario);
+                                $externo = \App\Models\IntegranteExterno::where('user_id', $item->id_usuario)->first();
+                                return (object)[
+                                    'id_usuario' => $item->id_usuario,
+                                    'nombre' => $externo ? trim($externo->nombres . ' ' . ($externo->apellidos ?? '')) : ($user->nombre_usuario ?? 'Usuario'),
+                                    'email' => $externo ? ($externo->email ?? '') : ($user->correo_electronico ?? ''),
+                                    'eventos_count' => $item->eventos_count,
+                                    'participaciones_count' => $item->participaciones_count
+                                ];
+                            });
+                    } catch (\Throwable $e2) {
+                        \Illuminate\Support\Facades\Log::error('Error en fallback de voluntarios: ' . $e2->getMessage());
+                        $voluntariosEventos = collect();
+                    }
+                }
+            }
+
+            // De mega eventos
+            $voluntariosMega = collect();
+            if (!empty($megaEventosIds)) {
+                try {
+                    // Consulta optimizada con fallback para PostgreSQL/MySQL
+                    $isPostgreSQL = DB::getDriverName() === 'pgsql';
+                    
+                    if ($isPostgreSQL) {
+                        $voluntariosMega = DB::table('mega_evento_participantes_externos as mepe')
+                            ->whereIn('mepe.mega_evento_id', $megaEventosIds)
+                            ->where('mepe.activo', true)
+                            ->leftJoin('usuarios as u', 'mepe.user_id', '=', 'u.id_usuario')
+                            ->leftJoin('integrantes_externos as ie', 'u.id_usuario', '=', 'ie.user_id')
+                            ->select(
+                                'u.id_usuario',
+                                DB::raw("COALESCE(NULLIF(TRIM(COALESCE(ie.nombres, '') || ' ' || COALESCE(ie.apellidos, '')), ''), u.nombre_usuario, 'Usuario') as nombre"),
+                                DB::raw("COALESCE(NULLIF(ie.email, ''), u.correo_electronico) as email"),
+                                DB::raw('COUNT(DISTINCT mepe.mega_evento_id) as eventos_count'),
+                                DB::raw('COUNT(*) as participaciones_count')
+                            )
+                            ->groupBy('u.id_usuario', 'u.nombre_usuario', 'ie.nombres', 'ie.apellidos', 'ie.email', 'u.correo_electronico')
+                            ->get();
+                    } else {
+                        $voluntariosMega = DB::table('mega_evento_participantes_externos as mepe')
+                            ->whereIn('mepe.mega_evento_id', $megaEventosIds)
+                            ->where('mepe.activo', true)
+                            ->leftJoin('usuarios as u', 'mepe.user_id', '=', 'u.id_usuario')
+                            ->leftJoin('integrantes_externos as ie', 'u.id_usuario', '=', 'ie.user_id')
+                            ->select(
+                                'u.id_usuario',
+                                DB::raw("COALESCE(NULLIF(TRIM(CONCAT(COALESCE(ie.nombres, ''), ' ', COALESCE(ie.apellidos, ''))), ''), u.nombre_usuario, 'Usuario') as nombre"),
+                                DB::raw("COALESCE(NULLIF(ie.email, ''), u.correo_electronico) as email"),
+                                DB::raw('COUNT(DISTINCT mepe.mega_evento_id) as eventos_count'),
+                                DB::raw('COUNT(*) as participaciones_count')
+                            )
+                            ->groupBy('u.id_usuario', 'u.nombre_usuario', 'ie.nombres', 'ie.apellidos', 'ie.email', 'u.correo_electronico')
+                            ->get();
+                    }
+                    \Illuminate\Support\Facades\Log::info('Voluntarios encontrados en mega eventos', ['count' => $voluntariosMega->count()]);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('Error al obtener voluntarios de mega eventos: ' . $e->getMessage(), [
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine()
+                    ]);
+                    // Intentar con consulta más simple
+                    try {
+                        $voluntariosMega = DB::table('mega_evento_participantes_externos')
+                            ->whereIn('mega_evento_id', $megaEventosIds)
+                            ->where('activo', true)
+                            ->select(
+                                'user_id as id_usuario',
+                                DB::raw('COUNT(DISTINCT mega_evento_id) as eventos_count'),
+                                DB::raw('COUNT(*) as participaciones_count')
+                            )
+                            ->groupBy('user_id')
+                            ->get()
+                            ->map(function($item) {
+                                $user = \App\Models\User::find($item->id_usuario);
+                                $externo = \App\Models\IntegranteExterno::where('user_id', $item->id_usuario)->first();
+                                return (object)[
+                                    'id_usuario' => $item->id_usuario,
+                                    'nombre' => $externo ? trim($externo->nombres . ' ' . ($externo->apellidos ?? '')) : ($user->nombre_usuario ?? 'Usuario'),
+                                    'email' => $externo ? ($externo->email ?? '') : ($user->correo_electronico ?? ''),
+                                    'eventos_count' => $item->eventos_count,
+                                    'participaciones_count' => $item->participaciones_count
+                                ];
+                            });
+                    } catch (\Throwable $e2) {
+                        \Illuminate\Support\Facades\Log::error('Error en fallback de voluntarios mega: ' . $e2->getMessage());
+                        $voluntariosMega = collect();
+                    }
+                }
+            }
+
+            // Consolidar voluntarios
+            $voluntariosConsolidados = collect();
+            foreach ($voluntariosEventos as $vol) {
+                $voluntariosConsolidados->put($vol->id_usuario, [
+                    'user_id' => $vol->id_usuario,
+                    'nombre' => $vol->nombre ?? 'Usuario',
+                    'email' => $vol->email ?? '',
+                    'eventos_count' => $vol->eventos_count,
+                    'participaciones_count' => $vol->participaciones_count,
+                    'horas_contribuidas' => $vol->participaciones_count * 2
+                ]);
+            }
+            foreach ($voluntariosMega as $vol) {
+                if ($voluntariosConsolidados->has($vol->id_usuario)) {
+                    $voluntariosConsolidados[$vol->id_usuario]['eventos_count'] += $vol->eventos_count;
+                    $voluntariosConsolidados[$vol->id_usuario]['participaciones_count'] += $vol->participaciones_count;
+                    $voluntariosConsolidados[$vol->id_usuario]['horas_contribuidas'] = $voluntariosConsolidados[$vol->id_usuario]['participaciones_count'] * 2;
+                } else {
+                    $voluntariosConsolidados->put($vol->id_usuario, [
+                        'user_id' => $vol->id_usuario,
+                        'nombre' => $vol->nombre ?? 'Usuario',
+                        'email' => $vol->email ?? '',
+                        'eventos_count' => $vol->eventos_count,
+                        'participaciones_count' => $vol->participaciones_count,
+                        'horas_contribuidas' => $vol->participaciones_count * 2
+                    ]);
+                }
+            }
+
+            $topVoluntarios = $voluntariosConsolidados
+                ->sortByDesc('eventos_count')
+                ->take(10)
+                ->values()
+                ->map(function($vol) {
+                    return (object)$vol;
+                });
+            
+            \Illuminate\Support\Facades\Log::info('Voluntarios consolidados', ['count' => $topVoluntarios->count()]);
+
+            // ========== EVENTOS CON MÁS COLABORADORES ==========
+            $eventosColaboracion = collect();
+
+            // Eventos regulares - Obtener todos los eventos (incluyendo los que no pasaron los filtros si no hay resultados)
+            $isPostgreSQL = DB::getDriverName() === 'pgsql';
+            
+            // Obtener todos los eventos de la ONG para el cálculo de colaboradores
+            $eventosParaColaboracion = Evento::where('ong_id', $ongId)
+                ->select('id', 'titulo', 'fecha_inicio')
+                ->get();
+            
+            \Illuminate\Support\Facades\Log::info('Procesando eventos regulares para colaboración', ['count' => $eventosParaColaboracion->count()]);
+            
+            foreach ($eventosParaColaboracion as $evento) {
+                if ($isPostgreSQL) {
+                    $participantes = DB::table('evento_participaciones')
+                        ->where('evento_id', $evento->id)
+                        ->whereNotNull('externo_id')
+                        ->select(DB::raw('COUNT(DISTINCT externo_id) as total'))
+                        ->first()
+                        ->total ?? 0;
+                    
+                    $empresas = DB::table('evento_empresas_participantes')
+                        ->where('evento_id', $evento->id)
+                        ->where('activo', true)
+                        ->select(DB::raw('COUNT(DISTINCT empresa_id) as total'))
+                        ->first()
+                        ->total ?? 0;
+                } else {
+                    $participantes = DB::table('evento_participaciones')
+                        ->where('evento_id', $evento->id)
+                        ->whereNotNull('externo_id')
+                        ->distinct('externo_id')
+                        ->count('externo_id');
+                    
+                    $empresas = DB::table('evento_empresas_participantes')
+                        ->where('evento_id', $evento->id)
+                        ->where('activo', true)
+                        ->distinct('empresa_id')
+                        ->count('empresa_id');
+                }
+
+                $eventosColaboracion->push([
+                    'evento_id' => $evento->id,
+                    'titulo' => $evento->titulo,
+                    'fecha_inicio' => $evento->fecha_inicio ? Carbon::parse($evento->fecha_inicio)->format('d/m/Y') : 'N/A',
+                    'voluntarios_count' => $participantes,
+                    'empresas_count' => $empresas,
+                    'total_colaboradores' => $participantes + $empresas
+                ]);
+            }
+
+            // Obtener TODOS los mega eventos de la ONG para calcular colaboradores
+            $megaEventosParaColaboracion = MegaEvento::where('ong_organizadora_principal', $ongId)
+                ->select('mega_evento_id', 'titulo', 'fecha_creacion')
+                ->get();
+            
+            \Illuminate\Support\Facades\Log::info('Procesando mega eventos para colaboración', ['count' => $megaEventosParaColaboracion->count()]);
+            
+            foreach ($megaEventosParaColaboracion as $megaEvento) {
+                try {
+                    if ($isPostgreSQL) {
+                        $participantes = DB::table('mega_evento_participantes_externos')
+                            ->where('mega_evento_id', $megaEvento->mega_evento_id)
+                            ->where('activo', true)
+                            ->select(DB::raw('COUNT(DISTINCT user_id) as total'))
+                            ->first()
+                            ->total ?? 0;
+                        
+                        $empresas = DB::table('mega_evento_patrocinadores')
+                            ->where('mega_evento_id', $megaEvento->mega_evento_id)
+                            ->where('activo', true)
+                            ->select(DB::raw('COUNT(DISTINCT empresa_id) as total'))
+                            ->first()
+                            ->total ?? 0;
+                    } else {
+                        $participantes = DB::table('mega_evento_participantes_externos')
+                            ->where('mega_evento_id', $megaEvento->mega_evento_id)
+                            ->where('activo', true)
+                            ->distinct('user_id')
+                            ->count('user_id');
+                        
+                        $empresas = DB::table('mega_evento_patrocinadores')
+                            ->where('mega_evento_id', $megaEvento->mega_evento_id)
+                            ->where('activo', true)
+                            ->distinct('empresa_id')
+                            ->count('empresa_id');
+                    }
+
+                    $eventosColaboracion->push([
+                        'evento_id' => $megaEvento->mega_evento_id,
+                        'titulo' => $megaEvento->titulo,
+                        'fecha_inicio' => $megaEvento->fecha_creacion ? Carbon::parse($megaEvento->fecha_creacion)->format('d/m/Y') : 'N/A',
+                        'voluntarios_count' => $participantes,
+                        'empresas_count' => $empresas,
+                        'total_colaboradores' => $participantes + $empresas
+                    ]);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('Error al procesar mega evento para colaboración: ' . $e->getMessage(), [
+                        'mega_evento_id' => $megaEvento->mega_evento_id
+                    ]);
+                }
+            }
+
+            $eventosColaboracion = $eventosColaboracion
+                ->sortByDesc('total_colaboradores')
+                ->take(10)
+                ->values()
+                ->map(function($evt) {
+                    return (object)$evt;
+                });
+            
+            \Illuminate\Support\Facades\Log::info('Eventos con colaboradores', ['count' => $eventosColaboracion->count()]);
+
+            $resultado = [
+                'top_empresas' => $topEmpresas->toArray(),
+                'top_voluntarios' => $topVoluntarios->toArray(),
+                'eventos_colaboracion' => $eventosColaboracion->toArray(),
+                'filtros_aplicados' => $filtros,
+            ];
+            
+            \Illuminate\Support\Facades\Log::info('getParticipacionColaboracion completado', [
+                'empresas_count' => count($resultado['top_empresas']),
+                'voluntarios_count' => count($resultado['top_voluntarios']),
+                'eventos_count' => count($resultado['eventos_colaboracion']),
+                'eventos_ids_usados' => $eventosIds,
+                'mega_eventos_ids_usados' => $megaEventosIds
+            ]);
+            
+            return $resultado;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Error en getParticipacionColaboracion: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            
+            return [
+                'top_empresas' => [],
+                'top_voluntarios' => [],
+                'eventos_colaboracion' => [],
+                'filtros_aplicados' => $filtros,
+                'error' => $e->getMessage()
+            ];
+        }
     }
 
     /**

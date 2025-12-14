@@ -13,7 +13,10 @@ use App\Models\Notificacion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
+use Carbon\Carbon;
 
 class DashboardExternoController extends Controller
 {
@@ -889,6 +892,470 @@ class DashboardExternoController extends Controller
                 'error' => 'Error al obtener notificaciones: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Exportar dashboard en PDF
+     */
+    public function exportarPdf(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            if (!$user || $user->tipo_usuario !== 'EXTERNO') {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Solo usuarios externos pueden exportar reportes',
+                    'message' => 'Acceso denegado'
+                ], 403);
+            }
+
+            $externoId = $user->id_usuario;
+            $integranteExterno = IntegranteExterno::where('user_id', $externoId)->first();
+
+            if (!$integranteExterno) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Usuario externo no encontrado',
+                    'message' => 'Usuario no encontrado'
+                ], 404);
+            }
+
+            // Obtener filtros
+            $fechaInicio = $request->input('fecha_inicio') 
+                ? Carbon::parse($request->input('fecha_inicio')) 
+                : Carbon::now()->subMonths(6);
+            
+            $fechaFin = $request->input('fecha_fin') 
+                ? Carbon::parse($request->input('fecha_fin')) 
+                : Carbon::now();
+
+            // Aumentar límites para generación de PDF
+            ini_set('memory_limit', '256M');
+            set_time_limit(120);
+            
+            // Cache key para PDF (30 minutos)
+            $cacheKey = 'pdf_dashboard_externo_' . $externoId . '_' . md5($fechaInicio->format('Y-m-d') . $fechaFin->format('Y-m-d'));
+            
+            // Obtener datos con cache
+            $datos = Cache::remember($cacheKey, 1800, function() use ($externoId, $integranteExterno, $fechaInicio, $fechaFin) {
+                return $this->obtenerDatosDashboardExterno($externoId, $integranteExterno, $fechaInicio, $fechaFin);
+            });
+            
+            // Cache para URLs de gráficos (30 minutos)
+            $graficosCacheKey = 'pdf_graficos_externo_' . $externoId . '_' . md5($fechaInicio->format('Y-m-d') . $fechaFin->format('Y-m-d'));
+            $graficosUrls = Cache::remember($graficosCacheKey, 1800, function() use ($datos) {
+                return $this->generarUrlsGraficos($datos);
+            });
+            
+            // Cache para logos (1 hora)
+            $logoUni2 = Cache::remember('logo_uni2_path', 3600, function() {
+                $path = public_path('assets/img/UNI2 - copia.png');
+                return file_exists($path) ? $path : null;
+            });
+
+            $pdf = Pdf::loadView('pdf.dashboard-externo', [
+                'integrante' => $integranteExterno,
+                'datos' => $datos,
+                'graficos_urls' => $graficosUrls,
+                'logo_uni2' => $logoUni2,
+                'fecha_inicio' => $fechaInicio,
+                'fecha_fin' => $fechaFin,
+                'fecha_generacion' => now()->format('d/m/Y H:i:s')
+            ])->setPaper('a4', 'portrait')
+              ->setOption('enable-local-file-access', true)
+              ->setOption('isRemoteEnabled', true)
+              ->setOption('isHtml5ParserEnabled', true)
+              ->setOption('defaultFont', 'Arial')
+              ->setOption('dpi', 96);
+
+            $filename = 'dashboard-externo-' . $externoId . '-' . now()->format('Y-m-d_H-i-s') . '.pdf';
+            
+            // Generar PDF una sola vez
+            $pdfContent = $pdf->output();
+            
+            // Retornar PDF como respuesta binaria con headers correctos
+            return response($pdfContent, 200)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+                ->header('Content-Length', strlen($pdfContent))
+                ->header('Cache-Control', 'no-cache, must-revalidate')
+                ->header('Pragma', 'no-cache');
+
+        } catch (\Throwable $e) {
+            Log::error('Error generando PDF del dashboard Externo:', [
+                'externo_id' => $request->user()->id_usuario ?? null,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al generar PDF: ' . $e->getMessage(),
+                'message' => 'Error al generar el reporte PDF'
+            ], 500);
+        }
+    }
+
+    /**
+     * Exportar dashboard en Excel
+     */
+    public function exportarExcel(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            if (!$user || $user->tipo_usuario !== 'EXTERNO') {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Solo usuarios externos pueden exportar reportes',
+                    'message' => 'Acceso denegado'
+                ], 403);
+            }
+
+            $externoId = $user->id_usuario;
+            $integranteExterno = IntegranteExterno::where('user_id', $externoId)->first();
+
+            if (!$integranteExterno) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Usuario externo no encontrado',
+                    'message' => 'Usuario no encontrado'
+                ], 404);
+            }
+
+            // Obtener filtros
+            $fechaInicio = $request->input('fecha_inicio') 
+                ? Carbon::parse($request->input('fecha_inicio')) 
+                : Carbon::now()->subMonths(6);
+            
+            $fechaFin = $request->input('fecha_fin') 
+                ? Carbon::parse($request->input('fecha_fin')) 
+                : Carbon::now();
+
+            // Cache key para Excel (30 minutos)
+            $cacheKey = 'excel_dashboard_externo_' . $externoId . '_' . md5($fechaInicio->format('Y-m-d') . $fechaFin->format('Y-m-d'));
+            
+            // Obtener datos con cache
+            $datos = Cache::remember($cacheKey, 1800, function() use ($externoId, $integranteExterno, $fechaInicio, $fechaFin) {
+                return $this->obtenerDatosDashboardExterno($externoId, $integranteExterno, $fechaInicio, $fechaFin);
+            });
+
+            try {
+                // Verificar que la clase existe
+                if (!class_exists(\App\Exports\DashboardExternoExport::class)) {
+                    throw new \Exception('La clase de exportación no está disponible');
+                }
+                
+                $export = new \App\Exports\DashboardExternoExport($integranteExterno, $datos, $fechaInicio, $fechaFin);
+                
+                $filename = 'dashboard-externo-' . $externoId . '-' . now()->format('Y-m-d_H-i-s') . '.xlsx';
+                
+                // Forzar descarga automática
+                return Excel::download($export, $filename, \Maatwebsite\Excel\Excel::XLSX, [
+                    'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('Error creando export Excel:', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ]);
+                
+                throw new \Exception('Error al generar Excel: ' . $e->getMessage());
+            }
+
+        } catch (\Throwable $e) {
+            Log::error('Error generando Excel del dashboard Externo:', [
+                'externo_id' => $request->user()->id_usuario ?? null,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al generar Excel: ' . $e->getMessage(),
+                'message' => 'Error al generar el reporte Excel'
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener datos completos del dashboard externo
+     */
+    private function obtenerDatosDashboardExterno($externoId, $integranteExterno, $fechaInicio, $fechaFin)
+    {
+        // Obtener participaciones en el rango de fechas
+        $participaciones = EventoParticipacion::where('externo_id', $externoId)
+            ->whereBetween('created_at', [$fechaInicio, $fechaFin])
+            ->with('evento')
+            ->get();
+
+        // Obtener participaciones en mega eventos
+        $participacionesMega = MegaEventoParticipanteExterno::where('integrante_externo_id', $externoId)
+            ->whereBetween('fecha_registro', [$fechaInicio, $fechaFin])
+            ->where('activo', true)
+            ->get();
+
+        // Métricas principales
+        $metricas = [
+            'total_eventos_inscritos' => $participaciones->count(),
+            'total_eventos_asistidos' => $participaciones->where('asistio', true)->count(),
+            'total_mega_eventos_inscritos' => $participacionesMega->count(),
+            'total_reacciones' => EventoReaccion::where(function($query) use ($externoId, $integranteExterno) {
+                    $query->where('externo_id', $externoId);
+                    if ($integranteExterno) {
+                        $query->orWhere(function($q) use ($integranteExterno) {
+                            $q->whereNull('externo_id')
+                              ->where('nombres', $integranteExterno->nombres)
+                              ->where('apellidos', $integranteExterno->apellidos ?? '');
+                        });
+                    }
+                })
+                ->whereBetween('created_at', [$fechaInicio, $fechaFin])
+                ->count(),
+            'total_compartidos' => EventoCompartido::where(function($query) use ($externoId, $integranteExterno) {
+                    $query->where('externo_id', $externoId);
+                    if ($integranteExterno) {
+                        $query->orWhere(function($q) use ($integranteExterno) {
+                            $q->whereNull('externo_id')
+                              ->where('nombres', $integranteExterno->nombres)
+                              ->where('apellidos', $integranteExterno->apellidos ?? '');
+                        });
+                    }
+                })
+                ->whereBetween('created_at', [$fechaInicio, $fechaFin])
+                ->count(),
+            'horas_acumuladas' => $participaciones->where('asistio', true)->count() * 2
+        ];
+
+        // Historial de participación por mes
+        $historialParticipacion = [];
+        $fechaActual = $fechaInicio->copy();
+        while ($fechaActual <= $fechaFin) {
+            $mes = $fechaActual->format('Y-m');
+            $inicioMes = $fechaActual->copy()->startOfMonth();
+            $finMes = $fechaActual->copy()->endOfMonth();
+            
+            $inscritos = $participaciones->filter(function($p) use ($inicioMes, $finMes) {
+                return $p->created_at >= $inicioMes && $p->created_at <= $finMes;
+            })->count();
+            
+            $asistidos = $participaciones->filter(function($p) use ($inicioMes, $finMes) {
+                return $p->asistio && $p->created_at >= $inicioMes && $p->created_at <= $finMes;
+            })->count();
+            
+            $historialParticipacion[$mes] = [
+                'inscritos' => $inscritos,
+                'asistidos' => $asistidos
+            ];
+            
+            $fechaActual->addMonth();
+        }
+
+        // Estado de participaciones
+        $estadoParticipaciones = [
+            'activos' => 0,
+            'finalizados' => 0,
+            'pendientes' => 0,
+            'cancelados' => 0
+        ];
+
+        foreach ($participaciones as $p) {
+            if ($p->evento) {
+                $fechaFin = $p->evento->fecha_fin ? Carbon::parse($p->evento->fecha_fin) : null;
+                $estado = $p->evento->estado;
+                
+                if ($estado === 'cancelado') {
+                    $estadoParticipaciones['cancelados']++;
+                } elseif ($estado === 'finalizado' || ($fechaFin && $fechaFin < now())) {
+                    $estadoParticipaciones['finalizados']++;
+                } elseif ($p->estado === 'pendiente') {
+                    $estadoParticipaciones['pendientes']++;
+                } else {
+                    $estadoParticipaciones['activos']++;
+                }
+            }
+        }
+
+        // Tipo de eventos participados
+        $tipoEventos = [];
+        foreach ($participaciones as $p) {
+            if ($p->evento && $p->evento->tipo_evento) {
+                $tipo = $p->evento->tipo_evento;
+                $tipoEventos[$tipo] = ($tipoEventos[$tipo] ?? 0) + 1;
+            }
+        }
+
+        // Top eventos por interacción
+        $eventosInteracciones = [];
+        foreach ($participaciones as $p) {
+            if ($p->evento) {
+                $eventoId = $p->evento->id;
+                $reacciones = EventoReaccion::where('evento_id', $eventoId)->count();
+                $compartidos = EventoCompartido::where('evento_id', $eventoId)->count();
+                $totalInteracciones = $reacciones + $compartidos;
+                
+                if (!isset($eventosInteracciones[$eventoId])) {
+                    $eventosInteracciones[$eventoId] = [
+                        'titulo' => $p->evento->titulo,
+                        'reacciones' => 0,
+                        'compartidos' => 0,
+                        'total' => 0
+                    ];
+                }
+                $eventosInteracciones[$eventoId]['reacciones'] = $reacciones;
+                $eventosInteracciones[$eventoId]['compartidos'] = $compartidos;
+                $eventosInteracciones[$eventoId]['total'] = $totalInteracciones;
+            }
+        }
+        
+        usort($eventosInteracciones, function($a, $b) {
+            return $b['total'] - $a['total'];
+        });
+        $topEventos = array_slice($eventosInteracciones, 0, 10);
+
+        // Listado de eventos inscritos
+        $listadoEventos = $participaciones->map(function($p) {
+            if (!$p->evento) return null;
+            return [
+                'id' => $p->evento_id,
+                'titulo' => $p->evento->titulo,
+                'fecha_inicio' => $p->evento->fecha_inicio,
+                'fecha_fin' => $p->evento->fecha_fin,
+                'ciudad' => $p->evento->ciudad,
+                'tipo_evento' => $p->evento->tipo_evento,
+                'estado' => $p->asistio ? 'asistido' : 'inscrito',
+                'asistio' => $p->asistio,
+                'fecha_inscripcion' => $p->created_at
+            ];
+        })->filter()->toArray();
+
+        return [
+            'metricas' => $metricas,
+            'historial_participacion' => $historialParticipacion,
+            'estado_participaciones' => $estadoParticipaciones,
+            'tipo_eventos' => $tipoEventos,
+            'top_eventos' => $topEventos,
+            'listado_eventos' => $listadoEventos
+        ];
+    }
+
+    /**
+     * Generar URLs de gráficos usando QuickChart
+     */
+    private function generarUrlsGraficos($datos)
+    {
+        $baseUrl = 'https://quickchart.io/chart?c=';
+        $params = '&width=700&height=350&backgroundColor=white&devicePixelRatio=1.5';
+        
+        // Gráfico de líneas - Historial de participación
+        $historial = $datos['historial_participacion'] ?? [];
+        if (empty($historial)) {
+            $historial = ['Sin datos' => ['inscritos' => 0, 'asistidos' => 0]];
+        }
+        $chartHistorial = [
+            'type' => 'line',
+            'data' => [
+                'labels' => array_keys($historial),
+                'datasets' => [
+                    [
+                        'label' => 'Inscritos',
+                        'data' => array_column($historial, 'inscritos'),
+                        'borderColor' => '#00A36C',
+                        'backgroundColor' => 'rgba(0, 163, 108, 0.1)',
+                        'fill' => true,
+                        'tension' => 0.4
+                    ],
+                    [
+                        'label' => 'Asistidos',
+                        'data' => array_column($historial, 'asistidos'),
+                        'borderColor' => '#0C2B44',
+                        'backgroundColor' => 'rgba(12, 43, 68, 0.1)',
+                        'fill' => true,
+                        'tension' => 0.4
+                    ]
+                ]
+            ],
+            'options' => [
+                'responsive' => false,
+                'maintainAspectRatio' => false,
+                'plugins' => [
+                    'title' => ['display' => true, 'text' => 'Historial de Participación', 'font' => ['size' => 16]]
+                ],
+                'scales' => [
+                    'y' => ['beginAtZero' => true, 'grid' => ['display' => false]],
+                    'x' => ['grid' => ['display' => false]]
+                ]
+            ]
+        ];
+        
+        // Gráfico de dona - Estado de participaciones
+        $estados = $datos['estado_participaciones'] ?? [];
+        if (empty($estados)) {
+            $estados = ['Sin datos' => 1];
+        }
+        $chartEstados = [
+            'type' => 'doughnut',
+            'data' => [
+                'labels' => array_keys($estados),
+                'datasets' => [[
+                    'data' => array_values($estados),
+                    'backgroundColor' => ['#00A36C', '#0C2B44', '#dc3545', '#17a2b8']
+                ]]
+            ],
+            'options' => [
+                'responsive' => false,
+                'maintainAspectRatio' => false,
+                'plugins' => [
+                    'title' => ['display' => true, 'text' => 'Estado de Participaciones', 'font' => ['size' => 16]],
+                    'legend' => ['display' => true, 'position' => 'right']
+                ]
+            ]
+        ];
+        
+        // Gráfico de barras - Top eventos
+        $topEventos = array_slice($datos['top_eventos'] ?? [], 0, 10);
+        if (empty($topEventos)) {
+            $topEventos = [['titulo' => 'Sin datos', 'reacciones' => 0, 'compartidos' => 0]];
+        }
+        $chartTopEventos = [
+            'type' => 'bar',
+            'data' => [
+                'labels' => array_column($topEventos, 'titulo'),
+                'datasets' => [
+                    [
+                        'label' => 'Reacciones',
+                        'data' => array_column($topEventos, 'reacciones'),
+                        'backgroundColor' => '#dc3545'
+                    ],
+                    [
+                        'label' => 'Compartidos',
+                        'data' => array_column($topEventos, 'compartidos'),
+                        'backgroundColor' => '#00A36C'
+                    ]
+                ]
+            ],
+            'options' => [
+                'responsive' => false,
+                'maintainAspectRatio' => false,
+                'plugins' => [
+                    'title' => ['display' => true, 'text' => 'Top Eventos por Interacción', 'font' => ['size' => 16]],
+                    'legend' => ['display' => true, 'position' => 'top']
+                ],
+                'scales' => [
+                    'y' => ['beginAtZero' => true, 'grid' => ['display' => false]],
+                    'x' => ['grid' => ['display' => false]]
+                ]
+            ]
+        ];
+
+        return [
+            'historial_participacion' => $baseUrl . urlencode(json_encode($chartHistorial)) . $params,
+            'estado_participaciones' => $baseUrl . urlencode(json_encode($chartEstados)) . $params,
+            'top_eventos' => $baseUrl . urlencode(json_encode($chartTopEventos)) . $params
+        ];
     }
 }
 

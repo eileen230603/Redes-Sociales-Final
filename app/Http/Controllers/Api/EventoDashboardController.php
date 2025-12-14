@@ -9,6 +9,8 @@ use App\Models\EventoCompartido;
 use App\Models\EventoParticipacion;
 use App\Models\EventoParticipanteNoRegistrado;
 use App\Models\Ong;
+use App\Models\IntegranteExterno;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -149,44 +151,60 @@ class EventoDashboardController extends Controller
     }
 
     /**
-     * Exportar dashboard en PDF
-     */
-    /**
-     * Generar PDF profesional del dashboard del evento
+     * Generar PDF del Dashboard del Evento (usando EXACTAMENTE la misma estructura que el dashboard general)
      */
     public function exportarPdf(Request $request, $id)
     {
-        // Optimización: límites mínimos necesarios
-        ini_set('memory_limit', '128M');
-        set_time_limit(30);
-        
         try {
-            $user = $request->user();
-            
-            if (!$user || $user->tipo_usuario !== 'ONG') {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Solo usuarios ONG pueden exportar reportes'
-                ], 403);
+            // 1) Verificar autenticación y obtener ONG del usuario (igual que dashboard general)
+            if (!auth()->check()) {
+                return response()->json(['error' => 'No autenticado'], 401);
+            }
+
+            $user = auth()->user();
+            if ($user->tipo_usuario !== 'ONG') {
+                return response()->json(['error' => 'Usuario no pertenece a ninguna ONG'], 403);
             }
 
             $evento = Evento::with('ong')->find($id);
             
             if (!$evento) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Evento no encontrado'
-                ], 404);
+                return response()->json(['error' => 'Evento no encontrado'], 404);
             }
 
             if ($evento->ong_id != $user->id_usuario) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'No tienes permiso para exportar este reporte'
-                ], 403);
+                return response()->json(['error' => 'No tienes permiso para exportar este reporte'], 403);
             }
 
-            // Obtener filtros
+            // Obtener ID de ONG (igual que dashboard general)
+            $ongIdInicial = $evento->ong_id;
+            
+            // Cargar modelo Ong con relaciones (igual que dashboard general)
+            $ong = Ong::with(['usuario'])->find($ongIdInicial);
+            if (!$ong) {
+                // Si no existe por id_usuario, buscar por user_id
+                $ong = Ong::where('user_id', $ongIdInicial)->with(['usuario'])->first();
+            }
+            
+            if (!$ong) {
+                return response()->json(['error' => 'ONG no encontrada'], 403);
+            }
+
+            // Asegurar que usamos el user_id de la ONG cargada (clave primaria)
+            $ongId = $ong->user_id;
+
+            Log::info('Generando PDF dashboard para evento:', [
+                'evento_id' => $id,
+                'ong_id_inicial' => $ongIdInicial,
+                'ong_id_final' => $ongId,
+                'ong_nombre' => $ong->nombre_ong ?? 'N/A'
+            ]);
+
+            // Aumentar límites de memoria y tiempo
+            ini_set('memory_limit', '512M');
+            set_time_limit(120);
+            
+            // Obtener filtros de la request (igual que dashboard general)
             $fechaInicio = $request->input('fecha_inicio') 
                 ? Carbon::parse($request->input('fecha_inicio')) 
                 : Carbon::parse($evento->fecha_inicio ?? $evento->created_at)->subDays(30);
@@ -195,101 +213,383 @@ class EventoDashboardController extends Controller
                 ? Carbon::parse($request->input('fecha_fin')) 
                 : Carbon::now();
 
-            // Cache key para los datos (30 minutos para PDF)
-            $cacheKey = "pdf_dashboard_evento_{$id}_" . md5($fechaInicio->format('Y-m-d') . $fechaFin->format('Y-m-d'));
-            
-            // Obtener datos completos con cache extendido
-            $datos = Cache::remember($cacheKey, 1800, function() use ($id, $fechaInicio, $fechaFin, $evento) {
-                return $this->obtenerDatosCompletosParaPdf($id, $fechaInicio, $fechaFin, $evento);
-            });
-            
-            // Cache para URLs de gráficos (30 minutos)
-            $graficosCacheKey = "pdf_graficos_evento_{$id}_" . md5($fechaInicio->format('Y-m-d') . $fechaFin->format('Y-m-d'));
-            $graficosUrls = Cache::remember($graficosCacheKey, 1800, function() use ($datos) {
-                return $this->generarUrlsGraficosProfesionales($datos);
-            });
-            
-            // Obtener logo de ONG (cache extendido)
-            $logoOng = Cache::remember("logo_ong_{$evento->ong_id}", 7200, function() use ($evento) {
-                return $this->obtenerLogoOng($evento->ong_id);
-            });
-            
-            // Ruta del logo UNI2 (cachear existencia)
-            $logoUni2Key = "logo_uni2_exists";
-            $logoUni2 = Cache::remember($logoUni2Key, 3600, function() {
-                $path = public_path('assets/img/UNI2 - copia.png');
-                return file_exists($path) ? $path : null;
-            });
+            $fecha_generacion = Carbon::now()->setTimezone('America/La_Paz');
 
-            // Cache para métricas adicionales e insights (30 minutos)
-            $metricasCacheKey = "pdf_metricas_evento_{$id}_" . md5($fechaInicio->format('Y-m-d') . $fechaFin->format('Y-m-d'));
-            $metricasEInsights = Cache::remember($metricasCacheKey, 1800, function() use ($datos) {
-                $metricasAdicionales = $this->calcularMetricasAdicionales($datos);
-                $insights = $this->generarInsights($datos, $metricasAdicionales);
-                return [
-                    'metricas_adicionales' => $metricasAdicionales,
-                    'insights' => $insights
+            // 2) Obtener TODAS las estadísticas necesarias (adaptado para un solo evento)
+            // Eventos activos (solo este evento)
+            $eventosActivos = (in_array($evento->estado, ['activo', 'Publicado', 'publicado']) && 
+                              (!$evento->fecha_fin || Carbon::parse($evento->fecha_fin)->isFuture())) ? 1 : 0;
+            
+            // Total reacciones del evento
+            $totalReacciones = EventoReaccion::where('evento_id', $id)->count();
+            
+            // Total compartidos del evento
+            $totalCompartidos = EventoCompartido::where('evento_id', $id)->count();
+            
+            // Total voluntarios (count de EventoParticipacion con externo_id no nulo) - igual que dashboard general
+            $totalVoluntarios = EventoParticipacion::where('evento_id', $id)
+                ->whereNotNull('externo_id')
+                ->distinct('externo_id')
+                ->count('externo_id');
+            
+            // Total participantes (count total de EventoParticipacion)
+            $totalParticipantes = EventoParticipacion::where('evento_id', $id)->count();
+            
+            // Eventos finalizados (solo este evento)
+            $eventosFinalizados = ($evento->estado === 'finalizado') ? 1 : 0;
+            
+            // 3) Obtener datos para gráficos y actividad reciente (igual que dashboard general)
+            // Detectar si es MySQL o PostgreSQL
+            $isPostgreSQL = DB::getDriverName() === 'pgsql';
+            $dateFormat = $isPostgreSQL ? "TO_CHAR(created_at, 'YYYY-MM')" : "DATE_FORMAT(created_at, '%Y-%m')";
+            
+            // Tendencias mensuales (participantes por mes del evento)
+            $tendenciasMensuales = EventoParticipacion::where('evento_id', $id)
+                ->select(DB::raw("{$dateFormat} as mes"), DB::raw('COUNT(*) as total'))
+                ->groupBy(DB::raw($dateFormat))
+                ->orderBy('mes', 'desc')
+                ->limit(12)
+                ->get()
+                ->pluck('total', 'mes')
+                ->toArray();
+            
+            // Distribución de estados (solo este evento)
+            $eventosPorEstado = [$evento->estado => 1];
+            
+            // Top 8 eventos (solo este evento, pero con el mismo formato)
+            $eventoConConteos = Evento::where('id', $id)
+                ->withCount(['reacciones', 'compartidos', 'participantes'])
+                ->first();
+            
+            if ($eventoConConteos) {
+                // Calcular participaciones_count (igual que dashboard general)
+                $eventoConConteos->participaciones_count = $eventoConConteos->participantes_count ?? 0;
+                $eventoConConteos->engagement = ($eventoConConteos->reacciones_count ?? 0) + 
+                                                ($eventoConConteos->compartidos_count ?? 0) + 
+                                                ($eventoConConteos->participantes_count ?? 0);
+            }
+            
+            $top8Eventos = collect([$eventoConConteos])->filter();
+            
+            // Actividad semanal (últimas 8 semanas) - igual que dashboard general
+            $actividadSemanal = [];
+            for ($i = 7; $i >= 0; $i--) {
+                $semanaInicio = Carbon::now()->subWeeks($i)->startOfWeek();
+                $semanaFin = Carbon::now()->subWeeks($i)->endOfWeek();
+                $semanaLabel = $semanaInicio->format('d/m') . '-' . $semanaFin->format('d/m');
+                
+                $actividadSemanal[$semanaLabel] = EventoParticipacion::where('evento_id', $id)
+                    ->whereBetween('created_at', [$semanaInicio, $semanaFin])
+                    ->count();
+            }
+            
+            // Actividad reciente (últimos 20 días con detalle) - igual que dashboard general
+            $actividadReciente = [];
+            for ($i = 19; $i >= 0; $i--) {
+                $fecha = Carbon::now()->subDays($i)->format('Y-m-d');
+                $fechaFormato = Carbon::now()->subDays($i)->format('d/m/Y');
+                
+                $reacciones = EventoReaccion::where('evento_id', $id)
+                    ->whereDate('created_at', $fecha)->count();
+                
+                $compartidos = EventoCompartido::where('evento_id', $id)
+                    ->whereDate('created_at', $fecha)->count();
+                
+                $inscripciones = EventoParticipacion::where('evento_id', $id)
+                    ->whereDate('created_at', $fecha)->count();
+                
+                $actividadReciente[] = [
+                    'fecha' => $fechaFormato,
+                    'reacciones' => $reacciones,
+                    'compartidos' => $compartidos,
+                    'inscripciones' => $inscripciones,
+                    'total' => $reacciones + $compartidos + $inscripciones
                 ];
-            });
+            }
             
-            $metricasAdicionales = $metricasEInsights['metricas_adicionales'];
-            $insights = $metricasEInsights['insights'];
+            // Top 10 eventos (solo este evento, igual que dashboard general)
+            $topEventos = Evento::where('id', $id)
+                ->withCount(['reacciones', 'compartidos', 'participantes'])
+                ->get()
+                ->map(function($evento) {
+                    $evento->participaciones_count = $evento->participantes_count ?? 0;
+                    $evento->engagement = ($evento->reacciones_count ?? 0) + 
+                                         ($evento->compartidos_count ?? 0) + 
+                                         ($evento->participantes_count ?? 0);
+                    return $evento;
+                })
+                ->sortByDesc('engagement')
+                ->take(10)
+                ->values();
             
-            // Preparar datos para la vista
-            $datosVista = [
-                'evento' => $evento,
-                'datos' => $datos,
-                'metricas_adicionales' => $metricasAdicionales,
-                'insights' => $insights,
-                'graficos_urls' => $graficosUrls,
-                'logo_ong' => $logoOng,
-                'logo_uni2' => $logoUni2,
-                'fecha_inicio' => $fechaInicio,
-                'fecha_fin' => $fechaFin,
-                'fecha_generacion' => now(),
-                'ong' => $evento->ong
+            // Top 10 voluntarios con horas estimadas - igual que dashboard general
+            $topVoluntarios = EventoParticipacion::where('evento_id', $id)
+                ->whereNotNull('externo_id')
+                ->select('externo_id', DB::raw('COUNT(*) as participaciones_count'))
+                ->groupBy('externo_id')
+                ->orderByDesc('participaciones_count')
+                ->limit(10)
+                ->get()
+                ->map(function($item) {
+                    $user = \App\Models\User::find($item->externo_id);
+                    if ($user) {
+                        $user->participaciones_count = $item->participaciones_count;
+                        $user->horas_contribuidas = $item->participaciones_count * 2; // 2 horas por evento
+                        return $user;
+                    }
+                    return null;
+                })
+                ->filter();
+
+            // 4) Obtener número de exportación y folio - igual que dashboard general
+            $numeroExportacion = DB::table('ong_exportaciones_pdf')
+                ->where('ong_id', $ongId)
+                ->whereDate('created_at', now()->toDateString())
+                ->count() + 1;
+            
+            $folio = 'EVT-' . str_pad($id, 4, '0', STR_PAD_LEFT) . '-' . str_pad($numeroExportacion, 4, '0', STR_PAD_LEFT);
+            
+            // Registrar exportación en base de datos - igual que dashboard general
+            try {
+                DB::table('ong_exportaciones_pdf')->insert([
+                    'ong_id' => $ongId,
+                    'tipo' => 'pdf',
+                    'fecha_inicio' => $fechaInicio->toDateString(),
+                    'fecha_fin' => $fechaFin->toDateString(),
+                    'numero_exportacion' => $numeroExportacion,
+                    'folio' => $folio,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning('No se pudo registrar exportación PDF en BD: ' . $e->getMessage());
+            }
+
+            // Generar URLs de gráficos con QuickChart API (igual que dashboard general)
+            // Gráfica 1: Tendencias mensuales
+            $tendenciasLabels = array_keys($tendenciasMensuales);
+            $tendenciasData = array_values($tendenciasMensuales);
+            if (empty($tendenciasLabels)) {
+                $tendenciasLabels = ['Sin datos'];
+                $tendenciasData = [0];
+            }
+            
+            $grafica_tendencias = 'https://quickchart.io/chart?c=' . urlencode(json_encode([
+                'type' => 'line',
+                'data' => [
+                    'labels' => $tendenciasLabels,
+                    'datasets' => [[
+                        'label' => 'Participantes',
+                        'data' => $tendenciasData,
+                        'borderColor' => '#00A36C',
+                        'backgroundColor' => 'rgba(0,163,108,0.1)',
+                        'fill' => true,
+                        'tension' => 0.4
+                    ]]
+                ],
+                'options' => [
+                    'responsive' => false,
+                    'maintainAspectRatio' => false,
+                    'plugins' => [
+                        'title' => ['display' => true, 'text' => 'Tendencias Mensuales de Participantes', 'font' => ['size' => 14]]
+                    ],
+                    'scales' => ['y' => ['beginAtZero' => true]]
+                ]
+            ])) . '&width=680&height=300&backgroundColor=white&devicePixelRatio=2';
+            
+            // Gráfica 2: Distribución de estados
+            $estadosLabels = array_keys($eventosPorEstado);
+            $estadosData = array_values($eventosPorEstado);
+            if (empty($estadosLabels)) {
+                $estadosLabels = ['Sin datos'];
+                $estadosData = [1];
+            }
+            
+            $grafica_distribucion = 'https://quickchart.io/chart?c=' . urlencode(json_encode([
+                'type' => 'doughnut',
+                'data' => [
+                    'labels' => $estadosLabels,
+                    'datasets' => [[
+                        'data' => $estadosData,
+                        'backgroundColor' => ['#00A36C', '#0C2B44', '#dc3545', '#17a2b8', '#ffc107']
+                    ]]
+                ],
+                'options' => [
+                    'responsive' => false,
+                    'maintainAspectRatio' => false,
+                    'plugins' => [
+                        'title' => ['display' => true, 'text' => 'Distribución de Estados de Eventos', 'font' => ['size' => 14]],
+                        'legend' => ['display' => true, 'position' => 'right']
+                    ]
+                ]
+            ])) . '&width=680&height=300&backgroundColor=white&devicePixelRatio=2';
+            
+            // Gráfica 3: Comparativa (reacciones vs compartidos del evento)
+            $grafica_comparativa = 'https://quickchart.io/chart?c=' . urlencode(json_encode([
+                'type' => 'bar',
+                'data' => [
+                    'labels' => [Str::limit($evento->titulo, 30)],
+                    'datasets' => [
+                        [
+                            'label' => 'Reacciones',
+                            'data' => [$totalReacciones],
+                            'backgroundColor' => '#dc3545'
+                        ],
+                        [
+                            'label' => 'Compartidos',
+                            'data' => [$totalCompartidos],
+                            'backgroundColor' => '#00A36C'
+                        ]
+                    ]
+                ],
+                'options' => [
+                    'responsive' => false,
+                    'maintainAspectRatio' => false,
+                    'plugins' => [
+                        'title' => ['display' => true, 'text' => 'Comparativa de Engagement', 'font' => ['size' => 14]],
+                        'legend' => ['display' => true, 'position' => 'top']
+                    ],
+                    'scales' => ['y' => ['beginAtZero' => true]]
+                ]
+            ])) . '&width=680&height=300&backgroundColor=white&devicePixelRatio=2';
+            
+            // Gráfica 4: Actividad semanal
+            $semanalLabels = array_keys($actividadSemanal);
+            $semanalData = array_values($actividadSemanal);
+            if (empty($semanalLabels)) {
+                $semanalLabels = ['Sin datos'];
+                $semanalData = [0];
+            }
+            
+            $grafica_actividad_semanal = 'https://quickchart.io/chart?c=' . urlencode(json_encode([
+                'type' => 'line',
+                'data' => [
+                    'labels' => $semanalLabels,
+                    'datasets' => [[
+                        'label' => 'Actividad Semanal',
+                        'data' => $semanalData,
+                        'borderColor' => '#17a2b8',
+                        'backgroundColor' => 'rgba(23, 162, 184, 0.3)',
+                        'fill' => true,
+                        'tension' => 0.4
+                    ]]
+                ],
+                'options' => [
+                    'responsive' => false,
+                    'maintainAspectRatio' => false,
+                    'plugins' => [
+                        'title' => ['display' => true, 'text' => 'Actividad Semanal Agregada', 'font' => ['size' => 14]]
+                    ],
+                    'scales' => ['y' => ['beginAtZero' => true]]
+                ]
+            ])) . '&width=680&height=300&backgroundColor=white&devicePixelRatio=2';
+
+            // 6) Preparar array de datos completo (igual que dashboard general)
+            $datos = [
+                'eventos_activos' => $eventosActivos,
+                'total_reacciones' => $totalReacciones,
+                'total_compartidos' => $totalCompartidos,
+                'total_voluntarios' => $totalVoluntarios,
+                'total_participantes' => $totalParticipantes,
+                'eventos_finalizados' => $eventosFinalizados,
+                'top_eventos' => $topEventos,
+                'top_voluntarios' => $topVoluntarios,
+                'tendencias_mensuales' => $tendenciasMensuales,
+                'actividad_reciente' => $actividadReciente,
+                'distribucion_estados' => $eventosPorEstado
             ];
 
-            // Generar PDF con configuración optimizada para velocidad
-            $pdf = Pdf::loadView('ong.eventos.dashboard-pdf', $datosVista)
-                ->setPaper('a4', 'portrait')
-                ->setOption('enable-local-file-access', true)
-                ->setOption('isRemoteEnabled', true) // Necesario para QuickChart
-                ->setOption('isHtml5ParserEnabled', true)
-                ->setOption('defaultFont', 'Arial')
-                ->setOption('dpi', 96) // Reducir DPI para velocidad (96 es suficiente para PDF)
-                ->setOption('fontDir', storage_path('fonts/'))
-                ->setOption('fontCache', storage_path('fonts/'))
-                ->setOption('enable-font-subsetting', false)
-                ->setOption('enable-javascript', false) // Deshabilitar JS para velocidad
-                ->setOption('enable-php', false); // Deshabilitar PHP embebido para velocidad
-
-            // Generar nombre de archivo descriptivo
-            $tituloSlug = \Str::slug($evento->titulo, '-');
-            $fechaArchivo = now()->format('Ymd');
-            $filename = "dashboard-evento-{$evento->id}-{$tituloSlug}-{$fechaArchivo}.pdf";
-            
-            // Log de auditoría
-            Log::info('PDF generado exitosamente', [
+            // Logging para debugging - verificar todas las variables antes de generar PDF (igual que dashboard general)
+            Log::info('Variables para PDF Dashboard Evento:', [
                 'evento_id' => $id,
-                'usuario_id' => $user->id_usuario,
-                'fecha_generacion' => now()->toDateTimeString(),
-                'archivo' => $filename
+                'ong_id' => $ongId,
+                'ong_existe' => $ong ? 'si' : 'no',
+                'fecha_inicio' => $fechaInicio ? $fechaInicio->format('Y-m-d') : 'null',
+                'fecha_fin' => $fechaFin ? $fechaFin->format('Y-m-d') : 'null',
+                'fecha_generacion' => $fecha_generacion ? $fecha_generacion->format('Y-m-d H:i:s') : 'null',
+                'folio' => $folio ?? 'null',
+                'numero_exportacion' => $numeroExportacion ?? 'null',
+                'graficas_definidas' => [
+                    'tendencias' => isset($grafica_tendencias),
+                    'distribucion' => isset($grafica_distribucion),
+                    'comparativa' => isset($grafica_comparativa),
+                    'actividad_semanal' => isset($grafica_actividad_semanal)
+                ],
+                'datos_keys' => array_keys($datos)
             ]);
             
-            return $pdf->download($filename);
+            // 7) Generar PDF con try-catch robusto (igual que dashboard general)
+            // Usar array explícito en lugar de compact() para evitar errores de variables indefinidas
+            try {
+                // Preparar todas las variables con nombres consistentes para la vista
+            $variablesParaVista = [
+                'ong' => $ong,
+                'datos' => $datos,
+                'fecha_inicio' => $fechaInicio ?? now()->subDays(30),
+                'fecha_fin' => $fechaFin ?? now(),
+                'fecha_generacion' => $fecha_generacion ?? now(),
+                'folio' => $folio ?? 'EVT-0000-0001',
+                'numero_exportacion' => $numeroExportacion ?? 1,
+                'grafica_tendencias' => $grafica_tendencias ?? '',
+                'grafica_distribucion' => $grafica_distribucion ?? '',
+                'grafica_comparativa' => $grafica_comparativa ?? '',
+                'grafica_actividad_semanal' => $grafica_actividad_semanal ?? ''
+            ];
+
+            // Validar que todas las variables requeridas estén definidas
+            $variablesRequeridas = [
+                'ong', 'datos', 'fecha_inicio', 'fecha_fin', 
+                'fecha_generacion', 'folio', 'numero_exportacion'
+            ];
+            
+            foreach ($variablesRequeridas as $var) {
+                if (!isset($variablesParaVista[$var])) {
+                    throw new \Exception("Variable requerida '$var' no está definida");
+                }
+            }
+
+            // Generar PDF usando la misma vista que el dashboard general
+            $pdf = Pdf::loadView('pdf.dashboard-ong', $variablesParaVista);
+            $pdf->setPaper('letter', 'portrait');
+            $pdf->setOptions([
+                'isRemoteEnabled' => true,
+                'isHtml5ParserEnabled' => true,
+                'enable-local-file-access' => true,
+                'defaultFont' => 'Arial'
+            ]);
+            
+                $filename = 'dashboard-evento-' . $id . '-' . now()->format('Y-m-d-His') . '.pdf';
+                return $pdf->stream($filename);
+                
+            } catch (\Exception $e) {
+                Log::error('Error generando PDF dashboard evento: ' . $e->getMessage(), [
+                'evento_id' => $id,
+                    'ong_id' => $ongId,
+                    'trace' => $e->getTraceAsString(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ]);
+                
+                // Retornar JSON en lugar de HTML para errores
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Error al generar PDF: ' . $e->getMessage(),
+                    'message' => 'Error al generar el reporte PDF'
+                ], 500)->header('Content-Type', 'application/json');
+            }
 
         } catch (\Throwable $e) {
-            Log::error('Error generando PDF del dashboard:', [
+            Log::error('Error en exportarPdf evento: ' . $e->getMessage(), [
                 'evento_id' => $id,
-                'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
             
+            // Retornar JSON en lugar de HTML para errores
             return response()->json([
                 'success' => false,
-                'error' => 'Error al generar PDF: ' . $e->getMessage()
-            ], 500);
+                'error' => 'Error al generar PDF: ' . $e->getMessage(),
+                'message' => 'Error al generar el reporte PDF'
+            ], 500)->header('Content-Type', 'application/json');
         }
     }
 
@@ -987,7 +1287,7 @@ class EventoDashboardController extends Controller
             return $ong->logo_url;
         }
 
-        $baseUrl = request()->getSchemeAndHttpHost() ?? env('APP_URL', 'http://10.26.5.12:8000');
+        $baseUrl = request()->getSchemeAndHttpHost() ?? env('APP_URL', 'http://192.168.0.7:8000');
         
         if (filter_var($ong->foto_perfil, FILTER_VALIDATE_URL)) {
             return $ong->foto_perfil;

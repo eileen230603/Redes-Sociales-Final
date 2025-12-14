@@ -335,19 +335,50 @@ async function cargarEventos() {
             // Formatear fecha de inicio para mostrar en el card
             const fechaInicio = formatearFechaPostgreSQL(ev.fecha_inicio);
 
-            // Formatear fecha de finalización para el overlay (día y mes)
+            // Formatear fecha de inicio para el overlay (día y mes)
             let fechaOverlay = '';
-            if (ev.fecha_fin) {
-                const fechaFin = new Date(ev.fecha_fin);
-                const dia = fechaFin.getDate();
-                const meses = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
-                const mes = meses[fechaFin.getMonth()];
-                fechaOverlay = `
-                    <div class="position-absolute" style="top: 12px; left: 12px; background: white; border-radius: 8px; padding: 0.5rem 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10;">
-                        <div style="font-size: 1.5rem; font-weight: 700; color: #0C2B44; line-height: 1;">${dia}</div>
-                        <div style="font-size: 0.75rem; font-weight: 600; color: #00A36C; line-height: 1; margin-top: 2px;">${mes}</div>
-                    </div>
-                `;
+            if (ev.fecha_inicio) {
+                // Usar la misma función de formateo para parsear correctamente la fecha
+                let fechaInicioObj;
+                try {
+                    if (typeof ev.fecha_inicio === 'string') {
+                        const fechaStr = ev.fecha_inicio.trim();
+                        const mysqlPattern = /^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+                        const isoPattern = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+                        
+                        let match = fechaStr.match(mysqlPattern) || fechaStr.match(isoPattern);
+                        
+                        if (match) {
+                            const [, year, month, day, hour, minute, second] = match;
+                            fechaInicioObj = new Date(
+                                parseInt(year, 10),
+                                parseInt(month, 10) - 1,
+                                parseInt(day, 10),
+                                parseInt(hour, 10),
+                                parseInt(minute, 10),
+                                parseInt(second || 0, 10)
+                            );
+                        } else {
+                            fechaInicioObj = new Date(ev.fecha_inicio);
+                        }
+                    } else {
+                        fechaInicioObj = new Date(ev.fecha_inicio);
+                    }
+                    
+                    if (!isNaN(fechaInicioObj.getTime())) {
+                        const dia = fechaInicioObj.getDate();
+                        const meses = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+                        const mes = meses[fechaInicioObj.getMonth()];
+                        fechaOverlay = `
+                            <div class="position-absolute" style="top: 12px; left: 12px; background: white; border-radius: 8px; padding: 0.5rem 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10;">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: #0C2B44; line-height: 1;">${dia}</div>
+                                <div style="font-size: 0.75rem; font-weight: 600; color: #00A36C; line-height: 1; margin-top: 2px;">${mes}</div>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('Error formateando fecha para overlay:', error);
+                }
             }
 
             // Estado badge - usar estado_dinamico si está disponible (se actualizará en el HTML)

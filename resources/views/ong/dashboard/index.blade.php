@@ -8,9 +8,14 @@
         <h3 class="mb-0" style="color: #0C2B44; font-weight: 700;">
             <i class="far fa-chart-line mr-2" style="color: #00A36C;"></i>Dashboard de Análisis
         </h3>
-        <button class="btn" onclick="cargarDatos()" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 500; transition: all 0.3s;">
-            <i class="far fa-sync mr-2"></i> Actualizar
-        </button>
+        <div>
+            <button id="btnDescargarPDFDashboard" class="btn btn-danger mr-2" onclick="descargarPDFDashboard()" style="border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 500;">
+                <i class="fas fa-file-pdf mr-2"></i> PDF
+            </button>
+            <button class="btn" onclick="cargarDatos()" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 500; transition: all 0.3s;">
+                <i class="far fa-sync mr-2"></i> Actualizar
+            </button>
+        </div>
     </div>
 
     <!-- Tabs de Navegación -->
@@ -958,6 +963,129 @@ async function rechazarParticipacion(participacionId) {
             });
         }
     }
+    }
+    
+    // ========== DESCARGA PDF DASHBOARD ==========
+    async function descargarPDFDashboard() {
+        const btn = event?.target?.closest('button') || document.querySelector('#btnDescargarPDFDashboard');
+        if (!btn) return;
+        
+        const originalHTML = btn.innerHTML;
+        const originalDisabled = btn.disabled;
+        
+        try {
+            // Deshabilitar botón y mostrar loading
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generando PDF...';
+            
+            // Obtener token
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('Debes iniciar sesión para descargar el PDF');
+            }
+            
+            // Obtener filtros del formulario
+            const fechaInicio = document.getElementById('fechaInicio')?.value || '';
+            const fechaFin = document.getElementById('fechaFin')?.value || '';
+            const estadoEvento = document.getElementById('estadoEvento')?.value || '';
+            const tipoParticipacion = document.getElementById('tipoParticipacion')?.value || '';
+            const busquedaEvento = document.getElementById('busquedaEvento')?.value || '';
+            
+            // Construir URL con parámetros
+            const apiUrl = window.API_BASE_URL || 'http://192.168.0.7:8000';
+            const params = new URLSearchParams();
+            if (fechaInicio) params.append('fecha_inicio', fechaInicio);
+            if (fechaFin) params.append('fecha_fin', fechaFin);
+            if (estadoEvento) params.append('estado_evento', estadoEvento);
+            if (tipoParticipacion) params.append('tipo_participacion', tipoParticipacion);
+            if (busquedaEvento) params.append('busqueda_evento', busquedaEvento);
+            
+            const url = `${apiUrl}/api/ong/dashboard/pdf?${params.toString()}`;
+            
+            // Hacer fetch
+            const res = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/pdf'
+                }
+            });
+            
+            // Validar respuesta
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || `Error ${res.status}: ${res.statusText}`);
+            }
+            
+            // Obtener blob
+            const blob = await res.blob();
+            
+            // Validar tamaño del blob
+            if (blob.size === 0) {
+                throw new Error('El archivo PDF generado está vacío');
+            }
+            
+            // Crear URL temporal
+            const blobUrl = window.URL.createObjectURL(blob);
+            
+            // Crear elemento anchor
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            
+            // Generar nombre de archivo con fecha/hora actual
+            const now = new Date();
+            const fechaHora = now.getFullYear() + '-' + 
+                            String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                            String(now.getDate()).padStart(2, '0') + '-' + 
+                            String(now.getHours()).padStart(2, '0') + 
+                            String(now.getMinutes()).padStart(2, '0') + 
+                            String(now.getSeconds()).padStart(2, '0');
+            link.download = `dashboard-ong-${fechaHora}.pdf`;
+            
+            // Agregar al body, disparar click y limpiar
+            document.body.appendChild(link);
+            link.click();
+            
+            // Cleanup
+            setTimeout(() => {
+                window.URL.revokeObjectURL(blobUrl);
+                document.body.removeChild(link);
+            }, 100);
+            
+            // Mostrar notificación de éxito
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'PDF Descargado',
+                    text: 'El dashboard se ha descargado correctamente',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } else {
+                alert('PDF descargado correctamente');
+            }
+            
+        } catch (error) {
+            console.error('Error al descargar PDF:', error);
+            
+            // Mostrar mensaje de error
+            const errorMessage = error.message || 'Error al generar el PDF. Por favor, intenta nuevamente.';
+            
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error al Descargar PDF',
+                    text: errorMessage,
+                    confirmButtonText: 'Aceptar'
+                });
+            } else {
+                alert('Error: ' + errorMessage);
+            }
+        } finally {
+            // Restaurar botón
+            btn.disabled = originalDisabled;
+            btn.innerHTML = originalHTML;
+        }
     }
 </script>
 @endpush

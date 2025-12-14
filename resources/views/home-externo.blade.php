@@ -147,6 +147,38 @@
         </div>
     </div>
 
+    <!-- Sección: Mega Eventos Recomendados -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm" style="border: none; border-radius: 12px; background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); overflow: hidden;">
+                <div class="card-header border-0" style="background: transparent; padding: 1.5rem 1.5rem 1rem;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="card-title mb-0" style="color: white; font-weight: 700; font-size: 1.3rem;">
+                            <i class="fas fa-star mr-2"></i>
+                            ⭐ Mega Eventos Recomendados para Ti
+                        </h3>
+                        <a href="/externo/mega-eventos" class="btn btn-sm" style="background: rgba(255,255,255,0.3); color: white; border: none; border-radius: 20px; padding: 0.5rem 1rem; font-weight: 600; backdrop-filter: blur(10px);">
+                            Ver Todos <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                    <p class="text-white mb-0 mt-2" style="opacity: 0.95; font-size: 0.95rem;">
+                        Descubre los mega eventos más importantes y únete a la transformación
+                    </p>
+                </div>
+                <div class="card-body p-4" style="background: white;">
+                    <div id="megaEventosRecomendados" class="row">
+                        <div class="col-12 text-center py-4">
+                            <div class="spinner-border text-warning" role="status" style="width: 2rem; height: 2rem;">
+                                <span class="sr-only">Cargando...</span>
+                            </div>
+                            <p class="text-muted mt-3 mb-0">Cargando mega eventos recomendados...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 @stop
 
@@ -718,11 +750,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Cargar eventos activos para marcar asistencia
     cargarEventosActivos();
     
+    // Cargar mega eventos recomendados
+    cargarMegaEventosRecomendados();
+    
     // Actualizar estadísticas cada 5 minutos
     setInterval(cargarEstadisticas, 300000);
     
     // Actualizar eventos activos cada 2 minutos
     setInterval(cargarEventosActivos, 120000);
+    
+    // Actualizar mega eventos recomendados cada 5 minutos
+    setInterval(cargarMegaEventosRecomendados, 300000);
 });
 
 // =======================================================
@@ -913,6 +951,170 @@ async function marcarAsistencia(eventoId, participacionId) {
         alert('Error al marcar asistencia. Por favor, intenta nuevamente.');
         btnMarcar.disabled = false;
         btnMarcar.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Marcar Asistencia';
+    }
+}
+
+// =======================================================
+//   ⭐ Cargar Mega Eventos Recomendados
+// =======================================================
+async function cargarMegaEventosRecomendados() {
+    const token = localStorage.getItem('token');
+    const container = document.getElementById('megaEventosRecomendados');
+    
+    if (!container) return;
+
+    try {
+        const url = `${API_BASE_URL}/api/mega-eventos/publicos`;
+        const res = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            }
+        });
+
+        const data = await res.json();
+        
+        if (data.success && data.mega_eventos && data.mega_eventos.length > 0) {
+            // Filtrar solo los próximos y ordenar por fecha
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            
+            const proximos = data.mega_eventos
+                .filter(mega => {
+                    if (!mega.fecha_inicio) return false;
+                    const fechaInicio = new Date(mega.fecha_inicio);
+                    fechaInicio.setHours(0, 0, 0, 0);
+                    return fechaInicio >= hoy;
+                })
+                .sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio))
+                .slice(0, 3); // Solo los 3 próximos
+
+            if (proximos.length > 0) {
+                let html = '';
+                proximos.forEach(mega => {
+                    const fechaInicio = new Date(mega.fecha_inicio);
+                    const fechaStr = fechaInicio.toLocaleDateString('es-ES', { 
+                        day: 'numeric', 
+                        month: 'long', 
+                        year: 'numeric' 
+                    });
+                    
+                    // Obtener primera imagen
+                    let imagenUrl = null;
+                    if (mega.imagenes && Array.isArray(mega.imagenes) && mega.imagenes.length > 0) {
+                        imagenUrl = mega.imagenes[0];
+                    } else if (typeof mega.imagenes === 'string' && mega.imagenes.trim()) {
+                        try {
+                            const parsed = JSON.parse(mega.imagenes);
+                            if (Array.isArray(parsed) && parsed.length > 0) {
+                                imagenUrl = parsed[0];
+                            }
+                        } catch (e) {
+                            imagenUrl = mega.imagenes;
+                        }
+                    }
+                    
+                    if (imagenUrl && !imagenUrl.startsWith('http')) {
+                        const apiUrl = window.API_BASE_URL || 'http://192.168.0.7:8000';
+                        if (imagenUrl.startsWith('/storage/')) {
+                            imagenUrl = `${apiUrl}${imagenUrl}`;
+                        } else {
+                            imagenUrl = `${apiUrl}/storage/${imagenUrl}`;
+                        }
+                    }
+                    
+                    html += `
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden; transition: all 0.3s; cursor: pointer;" 
+                                 onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.15)';" 
+                                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)';"
+                                 onclick="window.location.href='/externo/mega-eventos/${mega.mega_evento_id}/detalle'">
+                                ${imagenUrl ? `
+                                    <div style="height: 180px; overflow: hidden; position: relative;">
+                                        <img src="${imagenUrl}" alt="${mega.titulo}" class="w-100 h-100" style="object-fit: cover;"
+                                             onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div style="display: none; height: 180px; background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); align-items: center; justify-content: center;">
+                                            <i class="fas fa-star text-white" style="font-size: 3rem; opacity: 0.5;"></i>
+                                        </div>
+                                        <div class="position-absolute" style="top: 10px; right: 10px;">
+                                            <span class="badge" style="background: rgba(255, 215, 0, 0.95); color: #0C2B44; font-weight: 700; padding: 0.4rem 0.7rem; border-radius: 20px;">
+                                                <i class="fas fa-star mr-1"></i>Mega
+                                            </span>
+                                        </div>
+                                    </div>
+                                ` : `
+                                    <div style="height: 180px; background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); display: flex; align-items: center; justify-content: center; position: relative;">
+                                        <i class="fas fa-star text-white" style="font-size: 3rem; opacity: 0.5;"></i>
+                                        <div class="position-absolute" style="top: 10px; right: 10px;">
+                                            <span class="badge" style="background: rgba(255, 255, 255, 0.95); color: #0C2B44; font-weight: 700; padding: 0.4rem 0.7rem; border-radius: 20px;">
+                                                <i class="fas fa-star mr-1"></i>Mega
+                                            </span>
+                                        </div>
+                                    </div>
+                                `}
+                                <div class="card-body p-4">
+                                    <h5 class="card-title mb-3" style="font-weight: 700; color: #0C2B44; font-size: 1.1rem; line-height: 1.4; min-height: 3rem;">
+                                        <i class="fas fa-star mr-2" style="color: #FFD700; font-size: 0.9rem;"></i>${mega.titulo || 'Mega Evento'}
+                                    </h5>
+                                    <p class="text-muted mb-3" style="font-size: 0.9rem; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.5rem;">
+                                        ${mega.descripcion || 'Descubre este increíble mega evento que está transformando comunidades.'}
+                                    </p>
+                                    <div class="mb-3">
+                                        <p class="mb-1" style="font-size: 0.85rem; color: #666;">
+                                            <i class="far fa-calendar mr-2" style="color: #FFD700;"></i>${fechaStr}
+                                        </p>
+                                        ${mega.ubicacion ? `
+                                            <p class="mb-0" style="font-size: 0.85rem; color: #666;">
+                                                <i class="far fa-map-marker-alt mr-2" style="color: #FFD700;"></i>${mega.ubicacion}
+                                            </p>
+                                        ` : ''}
+                                    </div>
+                                    <a href="/externo/mega-eventos/${mega.mega_evento_id}/detalle" 
+                                       class="btn btn-block" 
+                                       style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: white; border: none; border-radius: 8px; padding: 0.75rem; font-weight: 600;">
+                                        <i class="fas fa-star mr-2"></i>Ver Detalle
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = `
+                    <div class="col-12">
+                        <div class="text-center py-4">
+                            <i class="fas fa-star fa-3x mb-3" style="color: #FFD700; opacity: 0.3;"></i>
+                            <p class="text-muted mb-0">No hay mega eventos próximos disponibles</p>
+                            <a href="/externo/mega-eventos" class="btn btn-sm mt-3" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: white; border: none; border-radius: 8px; padding: 0.5rem 1.5rem;">
+                                <i class="fas fa-search mr-2"></i>Explorar Mega Eventos
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }
+        } else {
+            container.innerHTML = `
+                <div class="col-12">
+                    <div class="text-center py-4">
+                        <i class="fas fa-star fa-3x mb-3" style="color: #FFD700; opacity: 0.3;"></i>
+                        <p class="text-muted mb-0">No hay mega eventos disponibles</p>
+                    </div>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error cargando mega eventos recomendados:', error);
+        container.innerHTML = `
+            <div class="col-12">
+                <div class="text-center py-4">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-2 text-warning"></i>
+                    <p class="text-muted mb-0">Error al cargar mega eventos. Por favor, intenta más tarde.</p>
+                </div>
+            </div>
+        `;
     }
 }
 </script>

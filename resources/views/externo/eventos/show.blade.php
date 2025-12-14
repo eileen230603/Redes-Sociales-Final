@@ -850,7 +850,7 @@
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs2@0.0.2/qrcode.min.js"></script>
 <script>
     // Definir PUBLIC_BASE_URL desde variable de entorno
-    window.PUBLIC_BASE_URL = "{{ env('PUBLIC_APP_URL', 'http://10.26.5.12:8000') }}";
+    window.PUBLIC_BASE_URL = "{{ env('PUBLIC_APP_URL', 'http://192.168.0.7:8000') }}";
     console.log("🌐 PUBLIC_BASE_URL desde .env:", window.PUBLIC_BASE_URL);
 </script>
 <script src="{{ asset('assets/js/config.js') }}"></script>
@@ -1045,7 +1045,7 @@
         btnVerificar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Verificando...';
 
         try {
-            const apiUrl = window.API_BASE_URL || 'http://10.26.5.12:8000';
+            const apiUrl = window.API_BASE_URL || 'http://192.168.0.7:8000';
             const res = await fetch(`${apiUrl}/api/verificar-ticket-welcome`, {
                 method: 'POST',
                 headers: {
@@ -1131,7 +1131,7 @@
         btnConfirmar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Confirmando...';
 
         try {
-            const apiUrl = window.API_BASE_URL || 'http://10.26.5.12:8000';
+            const apiUrl = window.API_BASE_URL || 'http://192.168.0.7:8000';
             const body = {
                 ticket_codigo: infoEventoDetalleActual.ticket_codigo,
                 modo_validacion: 'Manual'

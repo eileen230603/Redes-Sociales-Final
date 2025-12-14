@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\ConfiguracionController;
 use App\Http\Controllers\Api\ParametrizacionController;
 use App\Http\Controllers\Api\EventoEmpresaParticipacionController;
 use App\Http\Controllers\Api\EventoMetricaController;
+use App\Http\Controllers\Api\ReportesOngController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MegaEventoController;
 use App\Http\Controllers\StorageController;
@@ -70,7 +71,7 @@ Route::middleware('auth:sanctum')->group(function () {
         
         // DASHBOARD COMPLETO CON EXPORTACIÓN (nuevo sistema mejorado) - El controlador ya valida permisos
         Route::get('/{id}/dashboard-completo', [\App\Http\Controllers\Api\EventoDashboardController::class, 'dashboard'])->where('id', '[0-9]+');
-        Route::get('/{id}/dashboard-completo/pdf', [\App\Http\Controllers\Api\EventoDashboardController::class, 'exportarPdf'])->where('id', '[0-9]+')->middleware('permission:eventos.exportar-reportes');
+        Route::get('/{id}/dashboard-completo/pdf', [\App\Http\Controllers\EventoController::class, 'exportarDashboardPDF'])->where('id', '[0-9]+')->middleware('auth:sanctum');
         Route::get('/{id}/dashboard-completo/excel', [\App\Http\Controllers\Api\EventoDashboardController::class, 'exportarExcel'])->where('id', '[0-9]+')->middleware('permission:eventos.exportar-reportes');
         
         // PATROCINADORES - Requiere permiso de patrocinar
@@ -178,10 +179,23 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/export-excel', [\App\Http\Controllers\Ong\OngDashboardController::class, 'exportarExcel']);
         Route::get('/pdf', [\App\Http\Controllers\Ong\OngDashboardController::class, 'generarPDFDashboard']);
     });
+    
+    // Ruta alternativa para compatibilidad
+    Route::get('/api/ong/dashboard/pdf', [\App\Http\Controllers\Ong\OngDashboardController::class, 'generarPDFDashboard']);
 
     // ----------- REPORTES ONG -----------
     // Nota: El controlador ya valida que el usuario sea tipo ONG, 
     // por lo que no necesitamos middleware de Spatie aquí
+    Route::prefix('ong/reportes')->group(function () {
+        Route::get('/datos', [\App\Http\Controllers\ReportController::class, 'getDatosReportes']);
+        Route::get('/export-pdf', [\App\Http\Controllers\ReportController::class, 'exportarResumenEjecutivoPDF']);
+        Route::get('/export-excel', [\App\Http\Controllers\ReportController::class, 'exportarResumenEjecutivoExcel']);
+    });
+    
+    Route::prefix('ong/voluntarios')->group(function () {
+        Route::get('/lista', [\App\Http\Controllers\ReportController::class, 'getVoluntariosLista']);
+    });
+    
     Route::prefix('reportes-ong')->group(function () {
         // APIs existentes para mega eventos
         Route::get('/kpis-destacados', [\App\Http\Controllers\ReportController::class, 'apiKPIsDestacados']);
@@ -192,7 +206,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/analisis-temporal/exportar/pdf', [\App\Http\Controllers\ReportController::class, 'exportarAnalisisTemporalPDF']);
         Route::get('/analisis-temporal/exportar/excel', [\App\Http\Controllers\ReportController::class, 'exportarAnalisisTemporalExcel']);
         Route::get('/analisis-temporal/exportar/csv', [\App\Http\Controllers\ReportController::class, 'exportarAnalisisTemporalCSV']);
-        Route::get('/participacion-colaboracion', [\App\Http\Controllers\ReportController::class, 'apiParticipacionColaboracion']);
+        // Endpoint mejorado usando el nuevo controlador
+        Route::get('/participacion-colaboracion', [ReportesOngController::class, 'participacionColaboracion']);
+        // Mantener endpoints antiguos por compatibilidad
+        Route::get('/participacion-colaboracion/legacy', [\App\Http\Controllers\ReportController::class, 'apiParticipacionColaboracion']);
         Route::get('/participacion-colaboracion/exportar/pdf', [\App\Http\Controllers\ReportController::class, 'exportarParticipacionColaboracionPDF']);
         Route::get('/participacion-colaboracion/exportar/excel', [\App\Http\Controllers\ReportController::class, 'exportarParticipacionColaboracionExcel']);
         Route::get('/analisis-geografico', [\App\Http\Controllers\ReportController::class, 'apiAnalisisGeografico']);
@@ -235,6 +252,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/datos-detallados', [DashboardExternoController::class, 'datosDetallados']);
         Route::get('/eventos-disponibles', [DashboardExternoController::class, 'eventosDisponibles']);
         Route::get('/descargar-pdf-completo', [DashboardExternoController::class, 'descargarPdfCompleto']);
+        Route::get('/export-pdf', [DashboardExternoController::class, 'exportarPdf']);
+        Route::get('/export-excel', [DashboardExternoController::class, 'exportarExcel']);
     });
 
     // ----------- VOLUNTARIOS -----------

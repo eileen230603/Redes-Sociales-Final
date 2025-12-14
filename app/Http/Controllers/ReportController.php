@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use App\Exports\MegaEventosResumenExport;
 use App\Exports\AnalisisTemporalExport;
 use App\Exports\ParticipacionColaboracionExport;
@@ -121,7 +122,7 @@ class ReportController extends Controller
                             $logoUrl = $publicPath;
                         } else {
                             // Si no existe, construir URL para intentar más tarde
-                            $baseUrl = request()->getSchemeAndHttpHost() ?? env('APP_URL', 'http://10.26.5.12:8000');
+                            $baseUrl = request()->getSchemeAndHttpHost() ?? env('APP_URL', 'http://192.168.0.7:8000');
                             $logoUrl = rtrim($baseUrl, '/') . '/storage/' . $fotoPath;
                         }
                     }
@@ -204,7 +205,7 @@ class ReportController extends Controller
                 // Si es una URL externa, intentar convertirla a base64 o usar ruta local
                 if (filter_var($logoUrl, FILTER_VALIDATE_URL)) {
                     // Intentar obtener la ruta local si es una URL del mismo dominio
-                    $baseUrl = request()->getSchemeAndHttpHost() ?? env('APP_URL', 'http://10.26.5.12:8000');
+                    $baseUrl = request()->getSchemeAndHttpHost() ?? env('APP_URL', 'http://192.168.0.7:8000');
                     if (strpos($logoUrl, $baseUrl) === 0) {
                         // Es una URL del mismo dominio, convertir a ruta local
                         $path = str_replace($baseUrl . '/storage/', '', $logoUrl);
@@ -885,8 +886,25 @@ class ReportController extends Controller
 
             $filtros = $this->validarFiltros($request);
             $cacheKey = "reporte_participacion_{$user->id_usuario}_" . md5(json_encode($filtros));
+            
             $datos = Cache::remember($cacheKey, 300, function () use ($user, $filtros) {
+                try {
                 return $this->reportService->getParticipacionColaboracion($user->id_usuario, $filtros);
+                } catch (\Throwable $e) {
+                    Log::error('Error en getParticipacionColaboracion: ' . $e->getMessage(), [
+                        'trace' => $e->getTraceAsString(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine()
+                    ]);
+                    // Retornar estructura vacía en caso de error
+                    return [
+                        'top_empresas' => [],
+                        'top_voluntarios' => [],
+                        'eventos_colaboracion' => [],
+                        'filtros_aplicados' => $filtros,
+                        'error' => $e->getMessage()
+                    ];
+                }
             });
 
             return response()->json([
@@ -894,9 +912,15 @@ class ReportController extends Controller
                 'datos' => $datos
             ]);
         } catch (\Throwable $e) {
+            Log::error('Error en apiParticipacionColaboracion: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            
             return response()->json([
                 'success' => false,
-                'error' => 'Error: ' . $e->getMessage()
+                'error' => 'Error al obtener datos: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -1140,6 +1164,519 @@ class ReportController extends Controller
             new \App\Exports\ConsolidadoExport($user->id_usuario, $filtros),
             'reporte-consolidado-' . date('Y-m-d') . '.xlsx'
         );
+    }
+
+    /**
+     * API: Obtener datos completos para reportes interactivos
+     * Endpoint principal para el dashboard de reportes mejorado
+     */
+    public function getDatosReportes(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            if (!$user || $user->tipo_usuario !== 'ONG') {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Solo usuarios tipo ONG pueden acceder a los reportes'
+                ], 403);
+            }
+
+            $ongId = $user->id_usuario;
+            
+            // Obtener y validar filtros
+            $fechaInicio = $request->input('fecha_inicio') 
+                ? \Carbon\Carbon::parse($request->input('fecha_inicio'))
+                : \Carbon\Carbon::now()->subMonths(6);
+            
+            $fechaFin = $request->input('fecha_fin') 
+                ? \Carbon\Carbon::parse($request->input('fecha_fin'))
+                : \Carbon\Carbon::now();
+            
+            $estadoEvento = $request->input('estado_evento', 'Todos');
+            $tipoEvento = $request->input('tipo_evento', 'Todos');
+            $voluntarioId = $request->input('voluntario_id');
+
+            // Cache key
+            $cacheKey = "reportes_datos_{$ongId}_" . md5(json_encode([
+                $fechaInicio->format('Y-m-d'),
+                $fechaFin->format('Y-m-d'),
+                $estadoEvento,
+                $tipoEvento,
+                $voluntarioId
+            ]));
+
+            $datos = Cache::remember($cacheKey, 900, function() use ($ongId, $fechaInicio, $fechaFin, $estadoEvento, $tipoEvento, $voluntarioId) {
+                return $this->calcularDatosReportes($ongId, $fechaInicio, $fechaFin, $estadoEvento, $tipoEvento, $voluntarioId);
+            });
+
+            return response()->json([
+                'success' => true,
+                ...$datos
+            ]);
+
+        } catch (\Throwable $e) {
+            Log::error('Error en getDatosReportes: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al obtener datos: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Calcular todos los datos de reportes
+     */
+    private function calcularDatosReportes($ongId, $fechaInicio, $fechaFin, $estadoEvento, $tipoEvento, $voluntarioId = null)
+    {
+        // Query base de eventos
+        $queryEventos = \App\Models\Evento::where('ong_id', $ongId)
+            ->whereBetween('created_at', [$fechaInicio, $fechaFin]);
+
+        // Aplicar filtros
+        if ($estadoEvento !== 'Todos') {
+            if ($estadoEvento === 'Activo') {
+                $queryEventos->where(function($q) {
+                    $q->where('estado', 'publicado')
+                      ->where(function($q2) {
+                          $q2->whereNull('fecha_fin')
+                             ->orWhere('fecha_fin', '>', \Carbon\Carbon::now());
+                      });
+                });
+            } elseif ($estadoEvento === 'Finalizado') {
+                $queryEventos->where(function($q) {
+                    $q->where('estado', 'finalizado')
+                      ->orWhere(function($q2) {
+                          $q2->whereNotNull('fecha_fin')
+                             ->where('fecha_fin', '<=', \Carbon\Carbon::now());
+                      });
+                });
+            } else {
+                $queryEventos->where('estado', strtolower($estadoEvento));
+            }
+        }
+
+        if ($tipoEvento !== 'Todos') {
+            $queryEventos->where('tipo_evento', $tipoEvento);
+        }
+
+        $eventos = $queryEventos->get();
+        $eventosIds = $eventos->pluck('id')->toArray();
+
+        // Filtrar por voluntario si se especifica
+        if ($voluntarioId) {
+            $participacionesVoluntario = \App\Models\EventoParticipacion::where('externo_id', $voluntarioId)
+                ->whereIn('evento_id', $eventosIds)
+                ->pluck('evento_id')
+                ->toArray();
+            $eventosIds = array_intersect($eventosIds, $participacionesVoluntario);
+            $eventos = $eventos->whereIn('id', $eventosIds);
+        }
+
+        // === MÉTRICAS PRINCIPALES ===
+        $totalEventos = $eventos->count();
+        
+        $eventosActivos = $eventos->filter(function($e) {
+            return $e->estado === 'publicado' && 
+                   (!$e->fecha_fin || \Carbon\Carbon::parse($e->fecha_fin)->isFuture());
+        })->count();
+
+        // Total voluntarios únicos
+        $totalVoluntariosUnicos = \App\Models\EventoParticipacion::whereIn('evento_id', $eventosIds)
+            ->whereNotNull('externo_id')
+            ->distinct('externo_id')
+            ->count('externo_id');
+
+        // Total participaciones
+        $totalParticipaciones = \App\Models\EventoParticipacion::whereIn('evento_id', $eventosIds)->count() +
+                               \App\Models\EventoParticipanteNoRegistrado::whereIn('evento_id', $eventosIds)->count();
+
+        // Tasa de asistencia
+        $asistieron = \App\Models\EventoParticipacion::whereIn('evento_id', $eventosIds)
+            ->where('asistio', true)
+            ->count();
+        $tasaAsistencia = $totalParticipaciones > 0 ? round(($asistieron / $totalParticipaciones) * 100, 1) : 0;
+
+        // Promedio participantes por evento
+        $promedioParticipantes = $totalEventos > 0 ? round($totalParticipaciones / $totalEventos, 1) : 0;
+
+        // === GRÁFICOS ===
+        // 1. Eventos por estado
+        $eventosPorEstado = $eventos->groupBy('estado')->map->count()->toArray();
+        $estadosLabels = array_keys($eventosPorEstado);
+        $estadosData = array_values($eventosPorEstado);
+
+        // 2. Participaciones por evento (Top 15)
+        $participacionesPorEvento = \App\Models\EventoParticipacion::whereIn('evento_id', $eventosIds)
+            ->selectRaw('evento_id, COUNT(*) as total')
+            ->groupBy('evento_id')
+            ->orderByDesc('total')
+            ->limit(15)
+            ->get()
+            ->map(function($item) use ($eventos) {
+                $evento = $eventos->find($item->evento_id);
+                return [
+                    'titulo' => $evento ? ($evento->titulo ?? 'Sin título') : 'Evento #' . $item->evento_id,
+                    'total' => $item->total
+                ];
+            });
+
+        // 3. Tendencia mensual
+        $isPostgreSQL = \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql';
+        $dateFormat = $isPostgreSQL ? "TO_CHAR(created_at, 'YYYY-MM')" : "DATE_FORMAT(created_at, '%Y-%m')";
+        
+        $tendenciasMensuales = \App\Models\EventoParticipacion::whereIn('evento_id', $eventosIds)
+            ->selectRaw("{$dateFormat} as mes, COUNT(*) as total")
+            ->groupBy(\Illuminate\Support\Facades\DB::raw($dateFormat))
+            ->orderBy('mes')
+            ->get();
+
+        $inscripciones = [];
+        $asistencias = [];
+        $inasistencias = [];
+        $mesesLabels = [];
+
+        foreach ($tendenciasMensuales as $tendencia) {
+            $mesesLabels[] = $tendencia->mes;
+            $inscripciones[] = $tendencia->total;
+            
+            // Asistencias e inasistencias del mes
+            $mesInicio = \Carbon\Carbon::parse($tendencia->mes . '-01')->startOfMonth();
+            $mesFin = \Carbon\Carbon::parse($tendencia->mes . '-01')->endOfMonth();
+            
+            $asistieronMes = \App\Models\EventoParticipacion::whereIn('evento_id', $eventosIds)
+                ->where('asistio', true)
+                ->whereBetween('created_at', [$mesInicio, $mesFin])
+                ->count();
+            
+            $asistencias[] = $asistieronMes;
+            $inasistencias[] = $tendencia->total - $asistieronMes;
+        }
+
+        // 4. Distribución por tipo de evento
+        $distribucionTipo = $eventos->groupBy('tipo_evento')->map->count()->toArray();
+
+        // 5. Engagement (radar)
+        $totalReacciones = \App\Models\EventoReaccion::whereIn('evento_id', $eventosIds)->count();
+        $totalCompartidos = \App\Models\EventoCompartido::whereIn('evento_id', $eventosIds)->count();
+        
+        // Normalizar para escala 0-100
+        $maxValor = max($totalReacciones, $totalCompartidos, $totalParticipaciones, $asistieron, 1);
+        $engagement = [
+            'reacciones' => round(($totalReacciones / $maxValor) * 100, 1),
+            'compartidos' => round(($totalCompartidos / $maxValor) * 100, 1),
+            'inscripciones' => round(($totalParticipaciones / $maxValor) * 100, 1),
+            'asistencias' => round(($asistieron / $maxValor) * 100, 1)
+        ];
+
+        // 6. Top 10 voluntarios
+        $topVoluntarios = \App\Models\EventoParticipacion::whereIn('evento_id', $eventosIds)
+            ->whereNotNull('externo_id')
+            ->selectRaw('externo_id, COUNT(*) as participaciones')
+            ->groupBy('externo_id')
+            ->orderByDesc('participaciones')
+            ->limit(10)
+            ->get()
+            ->map(function($item) {
+                $externo = \App\Models\IntegranteExterno::where('user_id', $item->externo_id)->first();
+                return [
+                    'user_id' => $item->externo_id,
+                    'nombre' => $externo ? trim($externo->nombres . ' ' . ($externo->apellidos ?? '')) : 'Usuario',
+                    'participaciones' => $item->participaciones,
+                    'avatar' => $externo ? ($externo->foto_perfil_url ?? null) : null
+                ];
+            });
+
+        // === EVENTOS DETALLE ===
+        $eventosDetalle = $eventos->map(function($evento) use ($eventosIds) {
+            $participantes = \App\Models\EventoParticipacion::where('evento_id', $evento->id)->count() +
+                           \App\Models\EventoParticipanteNoRegistrado::where('evento_id', $evento->id)->count();
+            $asistieronEvento = \App\Models\EventoParticipacion::where('evento_id', $evento->id)
+                ->where('asistio', true)->count();
+            $reacciones = \App\Models\EventoReaccion::where('evento_id', $evento->id)->count();
+            $compartidos = \App\Models\EventoCompartido::where('evento_id', $evento->id)->count();
+            
+            return [
+                'id' => $evento->id,
+                'titulo' => $evento->titulo ?? 'Sin título',
+                'tipo' => $evento->tipo_evento ?? 'N/A',
+                'estado' => $evento->estado ?? 'N/A',
+                'fecha_inicio' => $evento->fecha_inicio ? \Carbon\Carbon::parse($evento->fecha_inicio)->format('d/m/Y') : 'N/A',
+                'ubicacion' => ($evento->direccion ?? '') . ($evento->ciudad ? ', ' . $evento->ciudad : ''),
+                'participantes_count' => $participantes,
+                'asistieron_count' => $asistieronEvento,
+                'reacciones_count' => $reacciones,
+                'compartidos_count' => $compartidos,
+                'tasa_asistencia' => $participantes > 0 ? round(($asistieronEvento / $participantes) * 100, 1) : 0,
+                'imagen' => !empty($evento->imagenes) ? (is_array($evento->imagenes) ? ($evento->imagenes[0] ?? null) : $evento->imagenes) : null
+            ];
+        });
+
+        // === VOLUNTARIOS ACTIVOS ===
+        $voluntariosActivos = \App\Models\EventoParticipacion::whereIn('evento_id', $eventosIds)
+            ->whereNotNull('externo_id')
+            ->selectRaw('externo_id, COUNT(*) as eventos_count, SUM(CASE WHEN asistio = true THEN 1 ELSE 0 END) as asistencias_count')
+            ->groupBy('externo_id')
+            ->get()
+            ->map(function($item) {
+                $externo = \App\Models\IntegranteExterno::where('user_id', $item->externo_id)->first();
+                $user = \App\Models\User::find($item->externo_id);
+                $tasa = $item->eventos_count > 0 ? round(($item->asistencias_count / $item->eventos_count) * 100, 1) : 0;
+                
+                return [
+                    'user_id' => $item->externo_id,
+                    'nombre' => $externo ? trim($externo->nombres . ' ' . ($externo->apellidos ?? '')) : ($user->nombre_usuario ?? 'Usuario'),
+                    'email' => $externo ? ($externo->email ?? '') : ($user->correo_electronico ?? ''),
+                    'eventos_count' => $item->eventos_count,
+                    'asistencias_count' => $item->asistencias_count,
+                    'tasa_asistencia' => $tasa
+                ];
+            });
+
+        // === ALERTAS ===
+        $alertas = [];
+        $ahora = \Carbon\Carbon::now();
+        
+        // Alertas: eventos próximos (7 días o menos)
+        $eventosProximos = $eventos->filter(function($e) use ($ahora) {
+            if (!$e->fecha_inicio) return false;
+            $fechaInicio = \Carbon\Carbon::parse($e->fecha_inicio);
+            return $fechaInicio->isFuture() && $fechaInicio->diffInDays($ahora) <= 7;
+        });
+        
+        if ($eventosProximos->count() > 0) {
+            $alertas[] = [
+                'tipo' => 'eventos_proximos',
+                'severidad' => 'warning',
+                'mensaje' => "Tienes {$eventosProximos->count()} evento(s) que iniciarán en los próximos 7 días",
+                'eventos_afectados' => $eventosProximos->map(function($e) {
+                    return [
+                        'id' => $e->id,
+                        'titulo' => $e->titulo,
+                        'fecha_inicio' => $e->fecha_inicio ? \Carbon\Carbon::parse($e->fecha_inicio)->format('d/m/Y') : 'N/A'
+                    ];
+                })->values()->toArray()
+            ];
+        }
+
+        // Alertas: baja participación
+        $eventosBajaParticipacion = $eventos->filter(function($e) use ($eventosIds, $ahora) {
+            if (!$e->fecha_inicio) return false;
+            $fechaInicio = \Carbon\Carbon::parse($e->fecha_inicio);
+            if (!$fechaInicio->isFuture() || $fechaInicio->diffInDays($ahora) <= 3) return false;
+            
+            $participantes = \App\Models\EventoParticipacion::where('evento_id', $e->id)->count() +
+                           \App\Models\EventoParticipanteNoRegistrado::where('evento_id', $e->id)->count();
+            return $participantes < 10;
+        });
+        
+        if ($eventosBajaParticipacion->count() > 0) {
+            $alertas[] = [
+                'tipo' => 'baja_participacion',
+                'severidad' => 'danger',
+                'mensaje' => "Tienes {$eventosBajaParticipacion->count()} evento(s) con menos de 10 inscritos",
+                'eventos_afectados' => $eventosBajaParticipacion->map(function($e) {
+                    $participantes = \App\Models\EventoParticipacion::where('evento_id', $e->id)->count() +
+                                   \App\Models\EventoParticipanteNoRegistrado::where('evento_id', $e->id)->count();
+                    return [
+                        'id' => $e->id,
+                        'titulo' => $e->titulo,
+                        'participantes' => $participantes
+                    ];
+                })->values()->toArray()
+            ];
+        }
+
+        // Alertas: voluntarios inactivos (últimos 30 días)
+        $hace30Dias = $ahora->copy()->subDays(30);
+        $voluntariosInactivos = \App\Models\EventoParticipacion::whereIn('evento_id', $eventosIds)
+            ->whereNotNull('externo_id')
+            ->where('created_at', '<', $hace30Dias)
+            ->distinct('externo_id')
+            ->pluck('externo_id')
+            ->toArray();
+        
+        if (count($voluntariosInactivos) > 0) {
+            $alertas[] = [
+                'tipo' => 'voluntarios_inactivos',
+                'severidad' => 'info',
+                'mensaje' => count($voluntariosInactivos) . " voluntario(s) no han participado en los últimos 30 días",
+                'eventos_afectados' => []
+            ];
+        }
+
+        // Alertas: participaciones pendientes de aprobar
+        $pendientes = \App\Models\EventoParticipacion::whereIn('evento_id', $eventosIds)
+            ->where('estado', 'pendiente')
+            ->count();
+        
+        if ($pendientes > 0) {
+            $alertas[] = [
+                'tipo' => 'tareas_pendientes',
+                'severidad' => 'warning',
+                'mensaje' => "Tienes {$pendientes} participación(es) pendiente(s) de aprobar",
+                'eventos_afectados' => []
+            ];
+        }
+
+        // === COMPARATIVA TEMPORAL ===
+        // Calcular período anterior basado en la duración del período actual
+        $duracion = $fechaInicio->diffInDays($fechaFin);
+        $periodoAnteriorInicio = $fechaInicio->copy()->subDays($duracion + 1);
+        $periodoAnteriorFin = $fechaInicio->copy()->subDay();
+
+        $eventosAnterioresIds = \App\Models\Evento::where('ong_id', $ongId)
+            ->whereBetween('created_at', [$periodoAnteriorInicio, $periodoAnteriorFin])
+            ->pluck('id')
+            ->toArray();
+
+        $participacionesAnterior = \App\Models\EventoParticipacion::whereIn('evento_id', $eventosAnterioresIds)->count() +
+                                  \App\Models\EventoParticipanteNoRegistrado::whereIn('evento_id', $eventosAnterioresIds)->count();
+        
+        $reaccionesAnterior = \App\Models\EventoReaccion::whereIn('evento_id', $eventosAnterioresIds)->count();
+        $compartidosAnterior = \App\Models\EventoCompartido::whereIn('evento_id', $eventosAnterioresIds)->count();
+        
+        $eventosAnterior = count($eventosAnterioresIds);
+        $asistieronAnterior = \App\Models\EventoParticipacion::whereIn('evento_id', $eventosAnterioresIds)
+            ->where('asistio', true)->count();
+        $tasaAsistenciaAnterior = $participacionesAnterior > 0 ? round(($asistieronAnterior / $participacionesAnterior) * 100, 1) : 0;
+
+        $calcularVariacion = function($actual, $anterior) {
+            if ($anterior == 0) return $actual > 0 ? 100 : 0;
+            return round((($actual - $anterior) / $anterior) * 100, 1);
+        };
+
+        return [
+            'metricas' => [
+                'total_eventos' => $totalEventos,
+                'eventos_activos' => $eventosActivos,
+                'total_voluntarios_unicos' => $totalVoluntariosUnicos,
+                'total_participaciones' => $totalParticipaciones,
+                'tasa_asistencia_promedio' => $tasaAsistencia,
+                'promedio_participantes_evento' => $promedioParticipantes,
+                'total_reacciones' => $totalReacciones,
+                'total_compartidos' => $totalCompartidos,
+                'engagement_rate' => $totalEventos > 0 ? round((($totalReacciones + $totalCompartidos) / $totalEventos), 1) : 0,
+                'tasa_conversion' => $totalReacciones > 0 ? round(($totalParticipaciones / ($totalReacciones * 0.3)) * 100, 1) : 0,
+                'indice_satisfaccion' => 0 // Calcular si hay campo de calificaciones en eventos
+            ],
+            'graficos' => [
+                'eventos_por_estado' => [
+                    'labels' => $estadosLabels,
+                    'data' => $estadosData
+                ],
+                'participaciones_por_evento' => [
+                    'labels' => $participacionesPorEvento->pluck('titulo')->toArray(),
+                    'data' => $participacionesPorEvento->pluck('total')->toArray()
+                ],
+                'tendencia_mensual' => [
+                    'labels' => $mesesLabels,
+                    'inscripciones' => $inscripciones,
+                    'asistencias' => $asistencias,
+                    'inasistencias' => $inasistencias
+                ],
+                'distribucion_tipo' => [
+                    'labels' => array_keys($distribucionTipo),
+                    'data' => array_values($distribucionTipo)
+                ],
+                'engagement' => [
+                    'labels' => ['Reacciones', 'Compartidos', 'Inscripciones', 'Asistencias'],
+                    'data' => [
+                        $engagement['reacciones'],
+                        $engagement['compartidos'],
+                        $engagement['inscripciones'],
+                        $engagement['asistencias']
+                    ]
+                ],
+                'top_voluntarios' => $topVoluntarios->toArray()
+            ],
+            'eventos_detalle' => $eventosDetalle->values()->toArray(),
+            'voluntarios_activos' => $voluntariosActivos->values()->toArray(),
+            'alertas' => $alertas,
+            'comparativa_temporal' => [
+                'actual' => [
+                    'eventos_realizados' => $totalEventos,
+                    'nuevas_inscripciones' => $totalParticipaciones,
+                    'tasa_asistencia' => $tasaAsistencia,
+                    'promedio_participantes' => $promedioParticipantes,
+                    'total_reacciones' => $totalReacciones,
+                    'total_compartidos' => $totalCompartidos
+                ],
+                'anterior' => [
+                    'eventos_realizados' => $eventosAnterior,
+                    'nuevas_inscripciones' => $participacionesAnterior,
+                    'tasa_asistencia' => $tasaAsistenciaAnterior,
+                    'promedio_participantes' => $eventosAnterior > 0 ? round($participacionesAnterior / $eventosAnterior, 1) : 0,
+                    'total_reacciones' => $reaccionesAnterior,
+                    'total_compartidos' => $compartidosAnterior
+                ],
+                'variaciones' => [
+                    'eventos_realizados' => $calcularVariacion($totalEventos, $eventosAnterior),
+                    'nuevas_inscripciones' => $calcularVariacion($totalParticipaciones, $participacionesAnterior),
+                    'tasa_asistencia' => $calcularVariacion($tasaAsistencia, $tasaAsistenciaAnterior),
+                    'promedio_participantes' => $calcularVariacion($promedioParticipantes, $eventosAnterior > 0 ? round($participacionesAnterior / $eventosAnterior, 1) : 0),
+                    'total_reacciones' => $calcularVariacion($totalReacciones, $reaccionesAnterior),
+                    'total_compartidos' => $calcularVariacion($totalCompartidos, $compartidosAnterior)
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * API: Obtener lista de voluntarios únicos para filtro
+     */
+    public function getVoluntariosLista(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            if (!$user || $user->tipo_usuario !== 'ONG') {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Solo usuarios tipo ONG pueden acceder'
+                ], 403);
+            }
+
+            $ongId = $user->id_usuario;
+            
+            $eventosIds = \App\Models\Evento::where('ong_id', $ongId)->pluck('id')->toArray();
+            
+            $voluntarios = \App\Models\EventoParticipacion::whereIn('evento_id', $eventosIds)
+                ->whereNotNull('externo_id')
+                ->with('externo')
+                ->distinct('externo_id')
+                ->get()
+                ->map(function($participacion) {
+                    $externo = \App\Models\IntegranteExterno::where('user_id', $participacion->externo_id)->first();
+                    $nombreCompleto = $externo 
+                        ? trim($externo->nombres . ' ' . ($externo->apellidos ?? ''))
+                        : 'Usuario #' . $participacion->externo_id;
+                    
+                    return [
+                        'user_id' => $participacion->externo_id,
+                        'nombre_completo' => $nombreCompleto,
+                        'email' => $externo ? ($externo->email ?? '') : ''
+                    ];
+                })
+                ->sortBy('nombre_completo')
+                ->values();
+
+            return response()->json([
+                'success' => true,
+                'voluntarios' => $voluntarios
+            ]);
+
+        } catch (\Throwable $e) {
+            Log::error('Error en getVoluntariosLista: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al obtener voluntarios: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
 

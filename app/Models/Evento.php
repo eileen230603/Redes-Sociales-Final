@@ -54,6 +54,12 @@ class Evento extends Model
         return $this->hasMany(EventoReaccion::class, 'evento_id');
     }
 
+    // Compartidos
+    public function compartidos()
+    {
+        return $this->hasMany(EventoCompartido::class, 'evento_id');
+    }
+
     // Usuarios que reaccionaron
     public function usuariosQueReaccionaron()
     {
@@ -205,7 +211,7 @@ class Evento extends Model
         
         // Si aún no hay baseUrl, usar un valor por defecto
         if (empty($baseUrl)) {
-            $baseUrl = 'http://10.26.5.12:8000';
+            $baseUrl = 'http://192.168.0.7:8000';
         }
         
         // Generar URLs completas para cada imagen
@@ -219,10 +225,10 @@ class Evento extends Model
                 // Reemplazar IPs antiguas con la nueva si están presentes
                 $imagen = str_replace('http://192.168.0.6:8000', $baseUrl, $imagen);
                 $imagen = str_replace('https://192.168.0.6:8000', $baseUrl, $imagen);
-                $imagen = str_replace('http://10.26.15.110:8000', $baseUrl, $imagen);
-                $imagen = str_replace('https://10.26.15.110:8000', $baseUrl, $imagen);
-                $imagen = str_replace('http://10.26.5.12:8000', $baseUrl, $imagen);
-                $imagen = str_replace('https://10.26.5.12:8000', $baseUrl, $imagen);
+                $imagen = str_replace('http://127.0.0.1:8000', $baseUrl, $imagen);
+                $imagen = str_replace('https://127.0.0.1:8000', $baseUrl, $imagen);
+                $imagen = str_replace('http://192.168.0.7:8000', $baseUrl, $imagen);
+                $imagen = str_replace('https://192.168.0.7:8000', $baseUrl, $imagen);
                 return $imagen;
             }
 

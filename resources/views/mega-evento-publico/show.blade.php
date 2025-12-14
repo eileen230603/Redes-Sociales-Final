@@ -673,8 +673,8 @@
         const megaEventoId = {{ $megaEventoId }};
         const API_BASE_URL = '{{ url("/") }}';
         const PUBLIC_BASE_URL = typeof getPublicUrl !== 'undefined' 
-            ? (window.PUBLIC_BASE_URL || 'http://10.26.5.12:8000')
-            : 'http://10.26.5.12:8000';
+            ? (window.PUBLIC_BASE_URL || 'http://192.168.0.7:8000')
+            : 'http://192.168.0.7:8000';
         
         // Almacenar datos del mega evento para compartir
         window.megaEventoParaCompartir = {
@@ -1177,7 +1177,7 @@
         }
 
         // Helper para construir URL de imagen con IP fija
-        const IMAGE_BASE_URL = 'http://10.26.5.12:8000';
+        const IMAGE_BASE_URL = 'http://192.168.0.7:8000';
         function buildImageUrl(imgUrl) {
             if (!imgUrl || imgUrl.trim() === '') return null;
             // Si ya es una URL completa, retornarla directamente
@@ -1311,11 +1311,11 @@
             $bannerUrl = $bannerImg;
             if (strpos($bannerImg, 'http://') !== 0 && strpos($bannerImg, 'https://') !== 0) {
                 if (strpos($bannerImg, '/storage/') === 0) {
-                    $bannerUrl = 'http://10.26.5.12:8000' . $bannerImg;
+                    $bannerUrl = 'http://192.168.0.7:8000' . $bannerImg;
                 } elseif (strpos($bannerImg, 'storage/') === 0) {
-                    $bannerUrl = 'http://10.26.5.12:8000/storage/' . $bannerImg;
+                    $bannerUrl = 'http://192.168.0.7:8000/storage/' . $bannerImg;
                 } else {
-                    $bannerUrl = 'http://10.26.5.12:8000/storage/' . ltrim($bannerImg, '/');
+                    $bannerUrl = 'http://192.168.0.7:8000/storage/' . ltrim($bannerImg, '/');
                 }
             }
         @endphp

@@ -120,7 +120,7 @@ class MegaEvento extends Model
         
         // Si aún no hay baseUrl, usar un valor por defecto
         if (empty($baseUrl)) {
-            $baseUrl = 'http://10.26.5.12:8000';
+            $baseUrl = 'http://192.168.0.7:8000';
         }
         
         // Generar URLs completas para cada imagen
@@ -155,12 +155,12 @@ class MegaEvento extends Model
             // Si ya es una URL completa, verificar si necesita actualización del host
             if ($esUrlExterna) {
                 // Reemplazar IPs antiguas explícitamente
+                $imagen = str_replace('http://192.168.0.6:8000', $baseUrl, $imagen);
+                $imagen = str_replace('https://192.168.0.6:8000', $baseUrl, $imagen);
                 $imagen = str_replace('http://127.0.0.1:8000', $baseUrl, $imagen);
                 $imagen = str_replace('https://127.0.0.1:8000', $baseUrl, $imagen);
-                $imagen = str_replace('http://192.168.0.6:8000', $baseUrl, $imagen);
-                $imagen = str_replace('https://192.168.0.6:8000', $baseUrl, $imagen);
-                $imagen = str_replace('http://192.168.0.6:8000', $baseUrl, $imagen);
-                $imagen = str_replace('https://192.168.0.6:8000', $baseUrl, $imagen);
+                $imagen = str_replace('http://192.168.0.7:8000', $baseUrl, $imagen);
+                $imagen = str_replace('https://192.168.0.7:8000', $baseUrl, $imagen);
                 
                 $parsedUrl = parse_url($imagen);
                 $currentHost = parse_url($baseUrl, PHP_URL_HOST);
@@ -169,7 +169,7 @@ class MegaEvento extends Model
                 if (isset($parsedUrl['host']) && $parsedUrl['host'] !== $currentHost) {
                     // Si es una URL externa de internet, mantenerla (no es del mismo dominio)
                     if ($parsedUrl['host'] !== 'localhost' && 
-                        $parsedUrl['host'] !== '127.0.0.1' && 
+                        $parsedUrl['host'] !== '192.168.0.7' && 
                         !str_starts_with($parsedUrl['host'], '192.168.') &&
                         strpos($parsedUrl['host'], '192.168.') !== 0 &&
                         strpos($parsedUrl['host'], '10.26.') !== 0) {

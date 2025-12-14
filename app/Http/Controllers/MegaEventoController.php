@@ -303,7 +303,7 @@ class MegaEventoController extends Controller
                 })));
                         
                         // Obtener base URL del request o configuración
-                        $baseUrl = $request->getSchemeAndHttpHost() ?: env('APP_URL', 'http://10.26.5.12:8000');
+                        $baseUrl = $request->getSchemeAndHttpHost() ?: env('APP_URL', 'http://192.168.0.7:8000');
                         
                 // Procesar cada imagen para construir URLs completas
                 $imagenesProcesadas = [];
@@ -322,14 +322,12 @@ class MegaEventoController extends Controller
                             // Si ya es URL completa, reemplazar IPs antiguas y usar directamente
                     if ($esUrlCompleta) {
                                 // Reemplazar IPs antiguas explícitamente
-                                $img = str_replace('http://127.0.0.1:8000', $baseUrl, $img);
-                                $img = str_replace('https://127.0.0.1:8000', $baseUrl, $img);
                                 $img = str_replace('http://192.168.0.6:8000', $baseUrl, $img);
                                 $img = str_replace('https://192.168.0.6:8000', $baseUrl, $img);
-                                $img = str_replace('http://10.26.15.110:8000', $baseUrl, $img);
-                                $img = str_replace('https://10.26.15.110:8000', $baseUrl, $img);
-                                $img = str_replace('http://10.26.5.12:8000', $baseUrl, $img);
-                                $img = str_replace('https://10.26.5.12:8000', $baseUrl, $img);
+                                $img = str_replace('http://127.0.0.1:8000', $baseUrl, $img);
+                                $img = str_replace('https://127.0.0.1:8000', $baseUrl, $img);
+                                $img = str_replace('http://192.168.0.7:8000', $baseUrl, $img);
+                                $img = str_replace('https://192.168.0.7:8000', $baseUrl, $img);
                                 
                                 // Si es una URL externa de internet, mantenerla
                                 $parsedUrl = parse_url($img);
@@ -338,8 +336,7 @@ class MegaEventoController extends Controller
                                 if (isset($parsedUrl['host']) && $parsedUrl['host'] !== $currentHost) {
                                     // Si no es localhost ni IP local, es URL externa - mantenerla
                                     if ($parsedUrl['host'] !== 'localhost' && 
-                                        $parsedUrl['host'] !== '127.0.0.1' &&
-                                        $parsedUrl['host'] !== '10.26.5.12' && 
+                                        $parsedUrl['host'] !== '192.168.0.7' && 
                                         strpos($parsedUrl['host'], '192.168.') !== 0 &&
                                         strpos($parsedUrl['host'], '10.26.') !== 0) {
                                 $imagenesProcesadas[] = $img;
@@ -469,7 +466,7 @@ class MegaEventoController extends Controller
                                         // Usar el origen de la petición
                                         $origin = $request->header('Origin') 
                                             ?? $request->getSchemeAndHttpHost() 
-                                            ?? env('PUBLIC_APP_URL', env('APP_URL', 'http://10.26.5.12:8000'));
+                                            ?? env('PUBLIC_APP_URL', env('APP_URL', 'http://192.168.0.7:8000'));
                                         $fotoPerfilUrl = rtrim($origin, '/') . '/storage/' . ltrim($fotoPerfil, '/');
                                     }
                                 }
@@ -749,7 +746,7 @@ class MegaEventoController extends Controller
             ]);
             
             // Procesar cada imagen para construir URLs completas
-            $baseUrl = request()->getSchemeAndHttpHost() ?? env('PUBLIC_APP_URL', env('APP_URL', 'http://10.26.5.12:8000'));
+            $baseUrl = request()->getSchemeAndHttpHost() ?? env('PUBLIC_APP_URL', env('APP_URL', 'http://192.168.0.7:8000'));
             
             $imagenesFinales = [];
             foreach ($imagenesProcesadas as $img) {
@@ -777,14 +774,12 @@ class MegaEventoController extends Controller
                 // Si ya es URL completa, mantenerla (pero actualizar host si es necesario)
                 if ($esUrlCompleta) {
                     // Reemplazar IPs antiguas explícitamente
-                    $img = str_replace('http://127.0.0.1:8000', $baseUrl, $img);
-                    $img = str_replace('https://127.0.0.1:8000', $baseUrl, $img);
                     $img = str_replace('http://192.168.0.6:8000', $baseUrl, $img);
                     $img = str_replace('https://192.168.0.6:8000', $baseUrl, $img);
-                    $img = str_replace('http://10.26.15.110:8000', $baseUrl, $img);
-                    $img = str_replace('https://10.26.15.110:8000', $baseUrl, $img);
-                    $img = str_replace('http://10.26.5.12:8000', $baseUrl, $img);
-                    $img = str_replace('https://10.26.5.12:8000', $baseUrl, $img);
+                    $img = str_replace('http://127.0.0.1:8000', $baseUrl, $img);
+                    $img = str_replace('https://127.0.0.1:8000', $baseUrl, $img);
+                    $img = str_replace('http://192.168.0.7:8000', $baseUrl, $img);
+                    $img = str_replace('https://192.168.0.7:8000', $baseUrl, $img);
                     
                     // Actualizar host si es diferente (solo para IPs locales antiguas)
                     $parsedUrl = parse_url($img);
@@ -792,7 +787,7 @@ class MegaEventoController extends Controller
                     
                     if (isset($parsedUrl['host']) && $parsedUrl['host'] !== $currentHost) {
                         // Solo actualizar si es una IP local antigua
-                        $hostsAntiguos = ['127.0.0.1', '192.168.0.6', '10.26.15.110'];
+                        $hostsAntiguos = ['192.168.0.7'];
                         if (in_array($parsedUrl['host'], $hostsAntiguos) || 
                             strpos($parsedUrl['host'], 'localhost') !== false) {
                             $parsedUrl['scheme'] = parse_url($baseUrl, PHP_URL_SCHEME) ?? 'http';
@@ -930,7 +925,7 @@ class MegaEventoController extends Controller
                         } else {
                             // Construir URL completa si no lo es
                             if (!str_starts_with($fotoPerfil, 'http://') && !str_starts_with($fotoPerfil, 'https://')) {
-                                $baseUrl = request()->getSchemeAndHttpHost() ?? env('PUBLIC_APP_URL', env('APP_URL', 'http://10.26.5.12:8000'));
+                                $baseUrl = request()->getSchemeAndHttpHost() ?? env('PUBLIC_APP_URL', env('APP_URL', 'http://192.168.0.7:8000'));
                                 
                                 // Si ya empieza con /storage/, solo agregar el dominio
                                 if (str_starts_with($fotoPerfil, '/storage/')) {
@@ -1245,7 +1240,7 @@ class MegaEventoController extends Controller
                         
                         // Si el host no es localhost ni el dominio actual, es URL de internet
                         if (!empty($host) && 
-                            !in_array($host, ['localhost', '127.0.0.1', '192.168.0.6', '10.26.15.110', '10.26.5.12']) && 
+                            !in_array($host, ['localhost', '192.168.0.7']) && 
                             $host !== $appHost &&
                             strpos($host, $appHost) === false &&
                             strpos($appHost, $host) === false) {
@@ -2252,7 +2247,7 @@ class MegaEventoController extends Controller
             // Obtener el origen de la petición para generar URLs correctas
             $origin = $request->header('Origin') 
                 ?? $request->getSchemeAndHttpHost() 
-                ?? env('PUBLIC_APP_URL', env('APP_URL', 'http://10.26.5.12:8000'));
+                ?? env('PUBLIC_APP_URL', env('APP_URL', 'http://192.168.0.7:8000'));
             
             // Procesar imágenes para usar URLs completas
             foreach ($megaEventos as $mega) {

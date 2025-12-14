@@ -18,9 +18,6 @@
                     <button id="btnDescargarPDF" class="btn btn-sm" onclick="descargarPDF()" style="background: #dc3545; border: none; color: #ffffff; border-radius: 6px; font-weight: 600;">
                         <i class="fas fa-file-pdf mr-2"></i> Descargar PDF
                     </button>
-                    <button id="btnDescargarExcel" class="btn btn-sm" onclick="descargarExcel()" style="background: #00A36C; border: none; color: #ffffff; border-radius: 6px; font-weight: 600;">
-                        <i class="fas fa-file-excel mr-2"></i> Descargar Excel
-                    </button>
                     <a href="#" id="btnVolver" class="btn btn-sm btn-light" style="border: 1px solid #dee2e6; border-radius: 6px; color: #0C2B44; font-weight: 600;">
                         <i class="fas fa-arrow-left mr-2"></i> Volver
                     </a>
@@ -892,129 +889,119 @@ function actualizarTablaResumen(estadisticas) {
     `;
 }
 
-// Función para descargar PDF
+// Función para descargar PDF (igual que dashboard general)
 async function descargarPDF() {
+    const btnPDF = document.getElementById('btnDescargarPDF');
+    const token = localStorage.getItem('token') || (window.token ? window.token : null);
+    
+    if (!token) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sin autenticación',
+                text: 'No hay token de autenticación'
+            });
+        } else {
+            alert('No hay token de autenticación');
+        }
+        return;
+    }
+    
+    if (!btnPDF) return;
+    if (btnPDF.disabled) return;
+    
+    if (!eventoId || isNaN(eventoId) || eventoId <= 0) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'ID de evento inválido'
+            });
+        } else {
+            alert('ID de evento inválido');
+        }
+        return;
+    }
+    
+    btnPDF.disabled = true;
+    btnPDF.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generando PDF...';
+    
     try {
-        const btnPDF = document.getElementById('btnDescargarPDF');
-        if (btnPDF) {
-            btnPDF.disabled = true;
-            btnPDF.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generando PDF...';
-        }
-
-        // Obtener filtros de fecha
-        const fechaInicio = document.getElementById('fechaInicio')?.value || '';
-        const fechaFin = document.getElementById('fechaFin')?.value || '';
+        const apiUrl = window.API_BASE_URL || (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : `${window.location.protocol}//${window.location.host}`);
+        const url = `${apiUrl.replace(/\/$/, '')}/api/eventos/${parseInt(eventoId, 10)}/dashboard-completo/pdf`;
         
-        let url = `${API_BASE_URL}/api/eventos/${eventoId}/dashboard-completo/pdf`;
-        if (fechaInicio || fechaFin) {
-            const params = new URLSearchParams();
-            if (fechaInicio) params.append('fecha_inicio', fechaInicio);
-            if (fechaFin) params.append('fecha_fin', fechaFin);
-            url += '?' + params.toString();
-        }
-
+        console.log('📄 Generando PDF del evento:', eventoId);
+        console.log('📄 URL:', url);
+        
         const res = await fetch(url, {
+            method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Accept': 'application/pdf'
             }
         });
-
+        
         if (!res.ok) {
-            const errorData = await res.json().catch(() => ({}));
-            throw new Error(errorData.error || 'Error al generar PDF');
-        }
-
-        // Obtener el blob del PDF
-        const blob = await res.blob();
-        const urlBlob = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = urlBlob;
-        a.download = `dashboard-evento-${eventoId}-${new Date().toISOString().split('T')[0]}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(urlBlob);
-        document.body.removeChild(a);
-
-        if (btnPDF) {
-            btnPDF.disabled = false;
-            btnPDF.innerHTML = '<i class="fas fa-file-pdf mr-2"></i> Descargar PDF';
-        }
-        
-        // Mostrar notificación de éxito
-        mostrarNotificacion('PDF generado exitosamente', 'success');
-    } catch (error) {
-        console.error('Error al descargar PDF:', error);
-        mostrarNotificacion('Error al generar el PDF: ' + error.message, 'error');
-        
-        const btnPDF = document.getElementById('btnDescargarPDF');
-        if (btnPDF) {
-            btnPDF.disabled = false;
-            btnPDF.innerHTML = '<i class="fas fa-file-pdf mr-2"></i> Descargar PDF';
-        }
-    }
-}
-
-// Función para descargar Excel
-async function descargarExcel() {
-    try {
-        const btnExcel = document.getElementById('btnDescargarExcel');
-        if (btnExcel) {
-            btnExcel.disabled = true;
-            btnExcel.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generando Excel...';
-        }
-
-        // Obtener filtros de fecha
-        const fechaInicio = document.getElementById('fechaInicio')?.value || '';
-        const fechaFin = document.getElementById('fechaFin')?.value || '';
-        
-        let url = `${API_BASE_URL}/api/eventos/${eventoId}/dashboard-completo/excel`;
-        if (fechaInicio || fechaFin) {
-            const params = new URLSearchParams();
-            if (fechaInicio) params.append('fecha_inicio', fechaInicio);
-            if (fechaFin) params.append('fecha_fin', fechaFin);
-            url += '?' + params.toString();
-        }
-
-        const res = await fetch(url, {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            const contentType = res.headers.get('content-type');
+            let errorMessage = 'Error al generar PDF';
+            
+            if (contentType && contentType.includes('application/json')) {
+                const errorData = await res.json();
+                errorMessage = errorData.error || errorData.message || errorMessage;
+            } else {
+                const text = await res.text();
+                errorMessage = `Error ${res.status}: ${res.statusText}`;
+                console.error('Respuesta de error (HTML):', text.substring(0, 200));
+                // Si es HTML, significa error 500 del servidor
+                errorMessage = 'Error del servidor. Contacta soporte técnico.';
             }
-        });
-
-        if (!res.ok) {
-            const errorData = await res.json().catch(() => ({}));
-            throw new Error(errorData.error || 'Error al generar Excel');
+            
+            throw new Error(errorMessage);
         }
-
-        // Obtener el blob del Excel
+        
         const blob = await res.blob();
+        
+        // Verificar que el blob no esté vacío
+        if (blob.size === 0) {
+            throw new Error('El PDF está vacío');
+        }
+        
         const urlBlob = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = urlBlob;
-        a.download = `dashboard-evento-${eventoId}-${new Date().toISOString().split('T')[0]}.xlsx`;
+        const fecha = new Date().toISOString().split('T')[0];
+        a.download = `dashboard-evento-${eventoId}-${fecha}.pdf`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(urlBlob);
         document.body.removeChild(a);
-
-        if (btnExcel) {
-            btnExcel.disabled = false;
-            btnExcel.innerHTML = '<i class="fas fa-file-excel mr-2"></i> Descargar Excel';
+        
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'success',
+                title: '¡PDF Generado!',
+                text: 'El archivo se ha descargado correctamente',
+                timer: 3000
+            });
+        } else {
+            alert('PDF descargado correctamente');
         }
         
-        // Mostrar notificación de éxito
-        mostrarNotificacion('Excel generado exitosamente', 'success');
+        console.log('✅ PDF descargado exitosamente');
     } catch (error) {
-        console.error('Error al descargar Excel:', error);
-        mostrarNotificacion('Error al generar el Excel: ' + error.message, 'error');
-        
-        const btnExcel = document.getElementById('btnDescargarExcel');
-        if (btnExcel) {
-            btnExcel.disabled = false;
-            btnExcel.innerHTML = '<i class="fas fa-file-excel mr-2"></i> Descargar Excel';
+        console.error('❌ Error completo:', error);
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Error al generar el PDF'
+            });
+        } else {
+            alert('Error: ' + (error.message || 'Error al generar el PDF'));
         }
+    } finally {
+        btnPDF.disabled = false;
+        btnPDF.innerHTML = '<i class="fas fa-file-pdf mr-2"></i> Descargar PDF';
     }
 }
 
@@ -1149,4 +1136,3 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 @stop
-

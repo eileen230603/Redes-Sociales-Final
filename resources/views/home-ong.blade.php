@@ -197,15 +197,35 @@
         
         <!-- Calendario y Detalles (Derecha - Todo Vertical) -->
         <div class="col-lg-4">
+            <!-- Widget de Próximos Mega Eventos -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); overflow: hidden;">
+                <div class="card-header border-0 pt-4 pb-3 px-4 d-flex justify-content-between align-items-center" style="background: transparent;">
+                    <h3 class="card-title mb-0" style="font-size: 1.3rem; font-weight: 700; color: white;">
+                        <i class="fas fa-star mr-2"></i>Próximos Mega Eventos
+                    </h3>
+                    <a href="/ong/mega-eventos/crear" class="btn btn-sm" style="background: rgba(255,255,255,0.3); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+                        <i class="fas fa-plus" style="font-size: 0.9rem;"></i>
+                    </a>
+                </div>
+                <div class="card-body px-4 pb-4" style="background: white; max-height: 300px; overflow-y: auto;" id="proximosMegaEventos">
+                    <div class="text-center py-3">
+                        <div class="spinner-border text-warning" role="status" style="width: 2rem; height: 2rem;">
+                            <span class="sr-only">Cargando...</span>
+                        </div>
+                        <p class="text-muted mt-2 mb-0" style="font-size: 0.85rem;">Cargando mega eventos...</p>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Calendario de Eventos -->
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; background: white;">
                 <div class="card-header bg-white border-0 pt-4 pb-3 px-4 d-flex justify-content-between align-items-center">
                     <h3 class="card-title mb-0" style="font-size: 1.3rem; font-weight: 700; color: #0C2B44;">
                         Eventos
                     </h3>
-                    <button class="btn btn-sm" style="background: #f0f0f0; color: #0C2B44; border: none; border-radius: 50%; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                    <a href="/ong/eventos/crear" class="btn btn-sm" style="background: #f0f0f0; color: #0C2B44; border: none; border-radius: 50%; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
                         <i class="fas fa-plus" style="font-size: 0.9rem;"></i>
-                    </button>
+                    </a>
                 </div>
                 <div class="card-body px-4 pb-4">
                     <div id="calendarioContainer">
@@ -737,6 +757,115 @@ function crearGraficas(graficas, data) {
 }
 
 // =======================================================
+//   ⭐ Cargar Próximos Mega Eventos
+// =======================================================
+async function cargarProximosMegaEventos() {
+    const token = localStorage.getItem('token');
+    const ongId = parseInt(localStorage.getItem('id_entidad') || localStorage.getItem('id_usuario'), 10);
+    const container = document.getElementById('proximosMegaEventos');
+
+    if (!token || isNaN(ongId) || ongId <= 0 || !container) {
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/mega-eventos`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            }
+        });
+
+        const data = await res.json();
+        
+        if (data.success && data.mega_eventos && data.mega_eventos.length > 0) {
+            // Filtrar solo los próximos (fecha_inicio >= hoy) y ordenar por fecha
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            
+            const proximos = data.mega_eventos
+                .filter(mega => {
+                    if (!mega.fecha_inicio) return false;
+                    const fechaInicio = new Date(mega.fecha_inicio);
+                    fechaInicio.setHours(0, 0, 0, 0);
+                    return fechaInicio >= hoy;
+                })
+                .sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio))
+                .slice(0, 3); // Solo los 3 próximos
+
+            if (proximos.length > 0) {
+                let html = '';
+                proximos.forEach(mega => {
+                    const fechaInicio = new Date(mega.fecha_inicio);
+                    const fechaStr = fechaInicio.toLocaleDateString('es-ES', { 
+                        day: 'numeric', 
+                        month: 'short', 
+                        year: 'numeric' 
+                    });
+                    const horaStr = fechaInicio.toLocaleTimeString('es-ES', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    });
+                    
+                    html += `
+                        <div class="card mb-2 border-0 shadow-sm" style="border-radius: 12px; cursor: pointer; transition: all 0.3s; background: white;" 
+                             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)';" 
+                             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';"
+                             onclick="window.location.href='/ong/mega-eventos/${mega.mega_evento_id}/detalle'">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-start">
+                                    <div class="mr-3" style="width: 35px; height: 35px; background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-star text-white" style="font-size: 0.85rem;"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1" style="font-weight: 600; color: #0C2B44; font-size: 0.9rem; line-height: 1.3;">
+                                            ${mega.titulo || 'Mega Evento'}
+                                        </h6>
+                                        <p class="mb-0" style="font-size: 0.75rem; color: #666;">
+                                            <i class="far fa-calendar mr-1"></i>${fechaStr}
+                                            <i class="far fa-clock ml-2 mr-1"></i>${horaStr}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = `
+                    <div class="text-center py-3">
+                        <i class="fas fa-star" style="font-size: 2rem; color: #FFD700; margin-bottom: 0.5rem; opacity: 0.3;"></i>
+                        <p class="text-muted mb-2" style="font-size: 0.85rem;">No hay mega eventos próximos</p>
+                        <a href="/ong/mega-eventos/crear" class="btn btn-sm" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: white; border: none; border-radius: 8px; padding: 0.4rem 1rem; font-size: 0.8rem;">
+                            <i class="fas fa-plus mr-1"></i>Crear Mega Evento
+                        </a>
+                    </div>
+                `;
+            }
+        } else {
+            container.innerHTML = `
+                <div class="text-center py-3">
+                    <i class="fas fa-star" style="font-size: 2rem; color: #FFD700; margin-bottom: 0.5rem; opacity: 0.3;"></i>
+                    <p class="text-muted mb-2" style="font-size: 0.85rem;">No hay mega eventos registrados</p>
+                    <a href="/ong/mega-eventos/crear" class="btn btn-sm" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: white; border: none; border-radius: 8px; padding: 0.4rem 1rem; font-size: 0.8rem;">
+                        <i class="fas fa-plus mr-1"></i>Crear Mega Evento
+                    </a>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error cargando próximos mega eventos:', error);
+        container.innerHTML = `
+            <div class="text-center py-3">
+                <p class="text-muted mb-0" style="font-size: 0.85rem;">Error al cargar mega eventos</p>
+            </div>
+        `;
+    }
+}
+
+// =======================================================
 //   🟢 Inicialización Automática
 // =======================================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -744,8 +873,10 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(actualizarReloj, 1000);
 
     cargarEstadisticas();
+    cargarProximosMegaEventos();
     // Actualizar estadísticas cada 2 minutos (tiempo real)
     setInterval(cargarEstadisticas, 120000);
+    setInterval(cargarProximosMegaEventos, 120000);
 });
 
 // =======================================================
@@ -834,7 +965,7 @@ const mesesEspanol = [
 const diasSemanaEspanol = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 const diasSemanaCompleto = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
-// Cargar TODOS los eventos desde la API (sin duplicados)
+// Cargar TODOS los eventos y mega eventos desde la API (sin duplicados)
 async function cargarEventosCalendario() {
     const token = localStorage.getItem('token');
     const ongId = parseInt(localStorage.getItem('id_entidad') || localStorage.getItem('id_usuario'), 10);
@@ -846,26 +977,35 @@ async function cargarEventosCalendario() {
 
     try {
         // Cargar TODOS los eventos (incluyendo finalizados) - pasar explícitamente excluir_finalizados=false
-        const res = await fetch(`${API_BASE_URL}/api/eventos/ong/${ongId}?excluir_finalizados=false`, {
+        const resEventos = await fetch(`${API_BASE_URL}/api/eventos/ong/${ongId}?excluir_finalizados=false`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Accept': 'application/json'
             }
         });
 
-        const data = await res.json();
+        const dataEventos = await resEventos.json();
         
-        if (data.success && data.eventos) {
-            // Crear un Map para eliminar duplicados por ID
-            const eventosUnicos = new Map();
-            
-            // Obtener TODOS los eventos sin filtrar (incluyendo finalizados y cancelados)
-            data.eventos
+        // Cargar TODOS los mega eventos
+        const resMegaEventos = await fetch(`${API_BASE_URL}/api/mega-eventos`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            }
+        });
+
+        const dataMegaEventos = await resMegaEventos.json();
+        
+        // Crear un Map para eliminar duplicados por ID
+        const eventosUnicos = new Map();
+        
+        // Procesar eventos regulares
+        if (dataEventos.success && dataEventos.eventos) {
+            dataEventos.eventos
                 .filter(evento => evento.fecha_inicio) // Solo filtrar eventos sin fecha
                 .forEach(evento => {
-                    // Si el evento ya existe, no lo agregamos (evitar duplicados)
-                    if (!eventosUnicos.has(evento.id)) {
-                        eventosUnicos.set(evento.id, {
+                    if (!eventosUnicos.has(`evento-${evento.id}`)) {
+                        eventosUnicos.set(`evento-${evento.id}`, {
                             id: evento.id,
                             titulo: evento.titulo,
                             fecha_inicio: evento.fecha_inicio,
@@ -874,38 +1014,60 @@ async function cargarEventosCalendario() {
                             estado: evento.estado || evento.estado_dinamico || 'activo',
                             descripcion: evento.descripcion || '',
                             ciudad: evento.ciudad || '',
-                            direccion: evento.direccion || ''
+                            direccion: evento.direccion || '',
+                            es_mega_evento: false
                         });
                     }
                 });
-            
-            // Convertir Map a Array
-            eventosCalendario = Array.from(eventosUnicos.values());
-            
-            console.log(`Eventos cargados en calendario: ${eventosCalendario.length} (sin duplicados)`);
-            
-            // Si no hay eventos, mostrar mensaje informativo
-            if (eventosCalendario.length === 0) {
-                const container = document.getElementById('detalleEventos');
-                if (container) {
-                    container.innerHTML = `
-                        <div class="text-center py-4">
-                            <i class="fas fa-calendar-plus" style="font-size: 3rem; color: #00A36C; margin-bottom: 1rem; opacity: 0.5;"></i>
-                            <p class="text-muted mb-2" style="font-size: 0.95rem;">No tienes eventos registrados</p>
-                            <a href="/ong/eventos/crear" class="btn btn-sm" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-size: 0.9rem;">
-                                <i class="fas fa-plus mr-2"></i>Crear tu primer evento
-                            </a>
-                        </div>
-                    `;
-                }
-            }
-            
-            renderizarCalendario();
-        } else {
-            // Si la respuesta no tiene eventos, asegurar que se muestre algo
-            eventosCalendario = [];
-            renderizarCalendario();
         }
+        
+        // Procesar mega eventos
+        if (dataMegaEventos.success && dataMegaEventos.mega_eventos) {
+            dataMegaEventos.mega_eventos
+                .filter(mega => mega.fecha_inicio) // Solo filtrar mega eventos sin fecha
+                .forEach(mega => {
+                    if (!eventosUnicos.has(`mega-${mega.mega_evento_id}`)) {
+                        eventosUnicos.set(`mega-${mega.mega_evento_id}`, {
+                            id: mega.mega_evento_id,
+                            titulo: mega.titulo,
+                            fecha_inicio: mega.fecha_inicio,
+                            fecha_fin: mega.fecha_fin,
+                            tipo_evento: 'Mega Evento',
+                            estado: mega.estado || 'activo',
+                            descripcion: mega.descripcion || '',
+                            ciudad: mega.ubicacion || '',
+                            direccion: mega.ubicacion || '',
+                            es_mega_evento: true
+                        });
+                    }
+                });
+        }
+        
+        // Convertir Map a Array
+        eventosCalendario = Array.from(eventosUnicos.values());
+        
+        console.log(`Eventos y mega eventos cargados en calendario: ${eventosCalendario.length} (sin duplicados)`);
+        
+        // Si no hay eventos, mostrar mensaje informativo
+        if (eventosCalendario.length === 0) {
+            const container = document.getElementById('detalleEventos');
+            if (container) {
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="fas fa-calendar-plus" style="font-size: 3rem; color: #00A36C; margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <p class="text-muted mb-2" style="font-size: 0.95rem;">No tienes eventos registrados</p>
+                        <a href="/ong/eventos/crear" class="btn btn-sm mb-2" style="background: linear-gradient(135deg, #0C2B44 0%, #00A36C 100%); color: white; border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-size: 0.9rem; display: block;">
+                            <i class="fas fa-plus mr-2"></i>Crear tu primer evento
+                        </a>
+                        <a href="/ong/mega-eventos/crear" class="btn btn-sm" style="background: linear-gradient(135deg, #00A36C 0%, #0C2B44 100%); color: white; border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-size: 0.9rem; display: block;">
+                            <i class="fas fa-star mr-2"></i>Crear mega evento
+                        </a>
+                    </div>
+                `;
+            }
+        }
+        
+        renderizarCalendario();
     } catch (error) {
         console.error('Error cargando eventos:', error);
         eventosCalendario = [];
@@ -982,6 +1144,8 @@ function renderizarCalendario() {
         });
         const tieneFinalizados = eventosDelDia.some(e => e.estado === 'finalizado' || e.estado === 'cancelado');
         const tieneActivos = eventosDelDia.some(e => e.estado !== 'finalizado' && e.estado !== 'cancelado');
+        const tieneMegaEventos = eventosDelDia.some(e => e.es_mega_evento);
+        const tieneEventosRegulares = eventosDelDia.some(e => !e.es_mega_evento);
         
         let estilo = 'padding: 1rem 0.5rem; border: 1px solid #e0e0e0; cursor: pointer; transition: all 0.2s; position: relative; min-height: 70px; vertical-align: top;';
         
@@ -997,22 +1161,38 @@ function renderizarCalendario() {
             estilo += 'background: #f0f8ff;';
         }
         
-        // Determinar el color del punto
-        let puntoColor = '';
+        // Determinar los puntos/iconos a mostrar
+        let puntosHTML = '';
         if (tieneEventos) {
-            if (tieneActivos && !tieneFinalizados) {
-                puntoColor = '#00A36C'; // Verde para eventos activos
-            } else if (tieneFinalizados && !tieneActivos) {
-                puntoColor = '#9e9e9e'; // Gris para solo eventos finalizados
+            if (tieneMegaEventos && tieneEventosRegulares) {
+                // Mostrar ambos: estrella para mega eventos y punto para eventos regulares
+                puntosHTML = `
+                    <div style="position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; align-items: center;">
+                        <i class="fas fa-star" style="font-size: 10px; color: #FFD700; text-shadow: 0 1px 2px rgba(0,0,0,0.3);"></i>
+                        <div style="width: 6px; height: 6px; background: #00A36C; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2);"></div>
+                    </div>
+                `;
+            } else if (tieneMegaEventos) {
+                // Solo mega eventos - estrella dorada
+                puntosHTML = `
+                    <div style="position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%);">
+                        <i class="fas fa-star" style="font-size: 12px; color: #FFD700; text-shadow: 0 1px 2px rgba(0,0,0,0.3);"></i>
+                    </div>
+                `;
             } else {
-                puntoColor = '#00A36C'; // Verde si hay ambos (preferencia por activos)
+                // Solo eventos regulares - punto verde
+                const puntoColor = tieneActivos && !tieneFinalizados ? '#00A36C' : 
+                                  (tieneFinalizados && !tieneActivos ? '#9e9e9e' : '#00A36C');
+                puntosHTML = `
+                    <div style="position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); width: 8px; height: 8px; background: ${puntoColor}; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2);"></div>
+                `;
             }
         }
         
         html += `
             <td class="text-center" style="${estilo}" onclick="seleccionarFecha('${fechaStr}')">
                 <div style="font-size: 1rem; margin-bottom: 6px; position: relative; z-index: 1;">${dia}</div>
-                ${tieneEventos ? `<div style="position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); width: 8px; height: 8px; background: ${puntoColor}; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2);"></div>` : ''}
+                ${puntosHTML}
             </td>
         `;
         
@@ -1089,22 +1269,30 @@ function mostrarDetalleEventos(fecha) {
                         const fechaInicio = new Date(evento.fecha_inicio);
                         const fechaStr = fechaInicio.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
                         const esFinalizado = evento.estado === 'finalizado' || evento.estado === 'cancelado';
-                        const bgColor = esFinalizado ? '#9e9e9e' : 'linear-gradient(135deg, #0C2B44 0%, #00A36C 100%)';
+                        const esMegaEvento = evento.es_mega_evento || false;
+                        const bgColor = esMegaEvento 
+                            ? (esFinalizado ? '#9e9e9e' : 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)')
+                            : (esFinalizado ? '#9e9e9e' : 'linear-gradient(135deg, #0C2B44 0%, #00A36C 100%)');
                         const textColor = esFinalizado ? '#999' : '#0C2B44';
-                        const badgeColor = esFinalizado ? '#9e9e9e' : '#00A36C';
+                        const badgeColor = esMegaEvento 
+                            ? (esFinalizado ? '#9e9e9e' : '#FFD700')
+                            : (esFinalizado ? '#9e9e9e' : '#00A36C');
                         const opacity = esFinalizado ? '0.7' : '1';
+                        const icono = esMegaEvento ? 'fa-star' : 'fa-calendar-check';
                         return `
                             <div class="card mb-2 border-0 shadow-sm" style="border-radius: 12px; cursor: pointer; transition: all 0.3s; opacity: ${opacity};" 
                                  onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)';" 
                                  onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';"
-                                 onclick="verDetalleEvento(${evento.id})">
+                                 onclick="verDetalleEvento(${evento.id}, ${esMegaEvento})">
                                 <div class="card-body p-3">
                                     <div class="d-flex align-items-start">
                                         <div class="mr-3" style="width: 40px; height: 40px; background: ${bgColor}; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-                                            <i class="fas fa-calendar-check text-white" style="font-size: 0.9rem;"></i>
+                                            <i class="fas ${icono} text-white" style="font-size: 0.9rem;"></i>
                                         </div>
                                         <div class="flex-grow-1">
-                                            <h6 class="mb-1" style="font-weight: 600; color: ${textColor}; font-size: 0.9rem;">${evento.titulo}</h6>
+                                            <h6 class="mb-1" style="font-weight: 600; color: ${textColor}; font-size: 0.9rem;">
+                                                ${esMegaEvento ? '<i class="fas fa-star mr-1" style="color: #FFD700; font-size: 0.75rem;"></i>' : ''}${evento.titulo}
+                                            </h6>
                                             <p class="mb-0" style="font-size: 0.8rem; color: ${textColor};">
                                                 <i class="far fa-calendar mr-1"></i>${fechaStr}
                                             </p>
@@ -1132,12 +1320,19 @@ function mostrarDetalleEventos(fecha) {
         return;
     }
     
-    // Ordenar eventos: primero los activos, luego los finalizados
+    // Ordenar eventos: primero mega eventos, luego eventos regulares, y dentro de cada grupo primero activos
     eventosDelDia.sort((a, b) => {
+        // Primero por tipo: mega eventos primero
+        if (a.es_mega_evento && !b.es_mega_evento) return -1;
+        if (!a.es_mega_evento && b.es_mega_evento) return 1;
+        
+        // Luego por estado: activos primero
         const aFinalizado = a.estado === 'finalizado' || a.estado === 'cancelado';
         const bFinalizado = b.estado === 'finalizado' || b.estado === 'cancelado';
         if (aFinalizado && !bFinalizado) return 1;
         if (!aFinalizado && bFinalizado) return -1;
+        
+        // Finalmente por fecha
         return new Date(a.fecha_inicio) - new Date(b.fecha_inicio);
     });
     
@@ -1146,23 +1341,36 @@ function mostrarDetalleEventos(fecha) {
         const fechaInicio = new Date(evento.fecha_inicio);
         const fechaFin = evento.fecha_fin ? new Date(evento.fecha_fin) : null;
         const esFinalizado = evento.estado === 'finalizado' || evento.estado === 'cancelado';
-        const bgColor = esFinalizado ? '#9e9e9e' : 'linear-gradient(135deg, #0C2B44 0%, #00A36C 100%)';
+        const esMegaEvento = evento.es_mega_evento || false;
+        
+        // Colores diferentes para mega eventos
+        const bgColor = esMegaEvento 
+            ? (esFinalizado ? '#9e9e9e' : 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)')
+            : (esFinalizado ? '#9e9e9e' : 'linear-gradient(135deg, #0C2B44 0%, #00A36C 100%)');
         const textColor = esFinalizado ? '#999' : '#0C2B44';
-        const badgeColor = esFinalizado ? '#9e9e9e' : '#00A36C';
+        const badgeColor = esMegaEvento 
+            ? (esFinalizado ? '#9e9e9e' : '#FFD700')
+            : (esFinalizado ? '#9e9e9e' : '#00A36C');
         const opacity = esFinalizado ? '0.7' : '1';
+        const icono = esMegaEvento ? 'fa-star' : 'fa-calendar-check';
+        const urlDetalle = esMegaEvento 
+            ? `/ong/mega-eventos/${evento.id}/detalle`
+            : `/ong/eventos/${evento.id}/detalle`;
         
         html += `
             <div class="card mb-3 border-0 shadow-sm" style="border-radius: 12px; cursor: pointer; transition: all 0.3s; opacity: ${opacity};" 
                  onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)';" 
                  onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';"
-                 onclick="verDetalleEvento(${evento.id})">
+                 onclick="verDetalleEvento(${evento.id}, ${esMegaEvento})">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-start">
                         <div class="mr-3" style="width: 40px; height: 40px; background: ${bgColor}; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-calendar-check text-white"></i>
+                            <i class="fas ${icono} text-white"></i>
                         </div>
                         <div class="flex-grow-1">
-                            <h6 class="mb-1" style="font-weight: 600; color: ${textColor}; font-size: 0.95rem;">${evento.titulo}</h6>
+                            <h6 class="mb-1" style="font-weight: 600; color: ${textColor}; font-size: 0.95rem;">
+                                ${esMegaEvento ? '<i class="fas fa-star mr-1" style="color: #FFD700; font-size: 0.8rem;"></i>' : ''}${evento.titulo}
+                            </h6>
                             <p class="mb-1" style="font-size: 0.85rem; color: ${textColor};">
                                 <i class="far fa-clock mr-1"></i>
                                 ${fechaInicio.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
@@ -1193,9 +1401,13 @@ function mesSiguiente() {
     renderizarCalendario();
 }
 
-// Ver detalle completo del evento
-function verDetalleEvento(eventoId) {
-    window.location.href = `/ong/eventos/${eventoId}`;
+// Ver detalle completo del evento o mega evento
+function verDetalleEvento(eventoId, esMegaEvento = false) {
+    if (esMegaEvento) {
+        window.location.href = `/ong/mega-eventos/${eventoId}/detalle`;
+    } else {
+        window.location.href = `/ong/eventos/${eventoId}/detalle`;
+    }
 }
 
 // Inicializar calendario

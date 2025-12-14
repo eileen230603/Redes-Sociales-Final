@@ -58,16 +58,16 @@ class Ong extends Model
                 }
             }
             if (empty($baseUrl)) {
-                $baseUrl = 'http://10.26.5.12:8000';
+                $baseUrl = 'http://192.168.0.7:8000';
             }
             
             // Reemplazar IPs antiguas con la URL actual
             $fotoPerfil = str_replace('http://192.168.0.6:8000', $baseUrl, $this->foto_perfil);
             $fotoPerfil = str_replace('https://192.168.0.6:8000', $baseUrl, $fotoPerfil);
-            $fotoPerfil = str_replace('http://10.26.15.110:8000', $baseUrl, $fotoPerfil);
-            $fotoPerfil = str_replace('https://10.26.15.110:8000', $baseUrl, $fotoPerfil);
-            $fotoPerfil = str_replace('http://10.26.5.12:8000', $baseUrl, $fotoPerfil);
-            $fotoPerfil = str_replace('https://10.26.5.12:8000', $baseUrl, $fotoPerfil);
+            $fotoPerfil = str_replace('http://127.0.0.1:8000', $baseUrl, $fotoPerfil);
+            $fotoPerfil = str_replace('https://127.0.0.1:8000', $baseUrl, $fotoPerfil);
+            $fotoPerfil = str_replace('http://192.168.0.7:8000', $baseUrl, $fotoPerfil);
+            $fotoPerfil = str_replace('https://192.168.0.7:8000', $baseUrl, $fotoPerfil);
             
             return $fotoPerfil;
         }
@@ -85,7 +85,7 @@ class Ong extends Model
             }
         }
         if (empty($baseUrl)) {
-            $baseUrl = 'http://10.26.5.12:8000';
+            $baseUrl = 'http://192.168.0.7:8000';
         }
 
         // Normalizar la ruta
@@ -126,7 +126,7 @@ class Ong extends Model
             }
         }
         if (empty($baseUrl)) {
-            $baseUrl = 'http://10.26.5.12:8000';
+            $baseUrl = 'http://192.168.0.7:8000';
         }
 
         // Normalizar la ruta

@@ -55,16 +55,16 @@ class EventController extends Controller
                 }
             }
             if (empty($baseUrl)) {
-                $baseUrl = 'http://10.26.5.12:8000';
+                $baseUrl = 'http://192.168.0.7:8000';
             }
             
             // Reemplazar IPs antiguas con la URL actual
             $avatar = str_replace('http://192.168.0.6:8000', $baseUrl, $avatar);
             $avatar = str_replace('https://192.168.0.6:8000', $baseUrl, $avatar);
-            $avatar = str_replace('http://10.26.15.110:8000', $baseUrl, $avatar);
-            $avatar = str_replace('https://10.26.15.110:8000', $baseUrl, $avatar);
-            $avatar = str_replace('http://10.26.5.12:8000', $baseUrl, $avatar);
-            $avatar = str_replace('https://10.26.5.12:8000', $baseUrl, $avatar);
+            $avatar = str_replace('http://127.0.0.1:8000', $baseUrl, $avatar);
+            $avatar = str_replace('https://127.0.0.1:8000', $baseUrl, $avatar);
+            $avatar = str_replace('http://192.168.0.7:8000', $baseUrl, $avatar);
+            $avatar = str_replace('https://192.168.0.7:8000', $baseUrl, $avatar);
             
             return $avatar;
         }
@@ -82,7 +82,7 @@ class EventController extends Controller
             }
         }
         if (empty($baseUrl)) {
-            $baseUrl = 'http://10.26.5.12:8000';
+            $baseUrl = 'http://192.168.0.7:8000';
         }
         
         // Normalizar la ruta
@@ -765,7 +765,7 @@ class EventController extends Controller
                 $rawValue = $evento->getRawOriginal('fecha_finalizacion');
                 $eventoArray['fecha_finalizacion'] = is_string($rawValue) ? $rawValue : ($evento->fecha_finalizacion ? $evento->fecha_finalizacion->format('Y-m-d H:i:s') : null);
             }
-
+            
             // Preparar datos para JSON
             $datos = [
                 "success" => true,
@@ -1604,7 +1604,7 @@ class EventController extends Controller
                     // Construir URL completa de la foto de perfil
                     $fotoPerfil = null;
                     if ($empresa->foto_perfil) {
-                        $baseUrl = env('PUBLIC_APP_URL', env('APP_URL', 'http://10.26.5.12:8000'));
+                        $baseUrl = env('PUBLIC_APP_URL', env('APP_URL', 'http://192.168.0.7:8000'));
                         if (strpos($empresa->foto_perfil, 'http://') === 0 || strpos($empresa->foto_perfil, 'https://') === 0) {
                             $fotoPerfil = $empresa->foto_perfil;
                         } else {

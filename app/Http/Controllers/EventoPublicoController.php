@@ -37,7 +37,7 @@ class EventoPublicoController extends Controller
             $evento->makeVisible('imagenes');
 
             // Procesar imágenes para usar IP fija (accesible desde cualquier dispositivo)
-            $baseUrl = 'http://10.26.5.12:8000';
+            $baseUrl = 'http://192.168.0.7:8000';
             if ($evento->imagenes && is_array($evento->imagenes)) {
                 $evento->imagenes = array_map(function($imagen) use ($baseUrl) {
                     if (empty($imagen) || !is_string($imagen)) {

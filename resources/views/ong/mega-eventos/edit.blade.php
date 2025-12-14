@@ -1095,9 +1095,9 @@ document.getElementById('editMegaEventoForm').addEventListener('submit', async (
                         const host = urlObj.hostname;
                         const currentHost = window.location.hostname;
                         
-                        // Si es un dominio externo (no localhost, 127.0.0.1, ni 10.26.x.x), mantener URL completa
+                        // Si es un dominio externo (no localhost, 192.168.0.7, ni 10.26.x.x), mantener URL completa
                         if (host !== 'localhost' && 
-                            host !== '127.0.0.1' && 
+                            host !== '192.168.0.7' && 
                             !host.startsWith('10.26.') && 
                             host !== currentHost) {
                             return trimmed; // URL externa completa

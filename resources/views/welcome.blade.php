@@ -572,6 +572,37 @@
         </div>
     </section>
 
+    <!-- Mega Eventos Destacados -->
+    <section id="mega-eventos" class="py-24 bg-gradient-to-b from-brand-gris-suave to-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 scroll-animate">
+                <div class="inline-block mb-4">
+                    <span class="px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-full text-sm font-semibold">
+                        <i class="fas fa-star mr-2"></i> Mega Eventos
+                    </span>
+                </div>
+                <h2 class="text-4xl md:text-5xl font-bold text-brand-gris-oscuro mb-4">
+                    Mega Eventos <span class="bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">Destacados</span>
+                </h2>
+                <p class="text-xl text-brand-gris-oscuro/70 max-w-2xl mx-auto">
+                    Descubre los eventos más importantes que están transformando comunidades
+                </p>
+            </div>
+            
+            <div id="megaEventosContainer" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Los mega eventos se cargarán dinámicamente aquí -->
+                <div class="col-span-full text-center py-8">
+                    <div class="inline-block">
+                        <div class="spinner-border text-warning" role="status" style="width: 3rem; height: 3rem;">
+                            <span class="sr-only">Cargando...</span>
+                        </div>
+                        <p class="text-brand-gris-oscuro/70 mt-4">Cargando mega eventos destacados...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Beneficios -->
     <section id="beneficios" class="py-24 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -998,7 +1029,7 @@
             mensajeDiv.innerHTML = '';
 
             try {
-                const apiUrl = window.API_BASE_URL || 'http://10.26.5.12:8000';
+                const apiUrl = window.API_BASE_URL || 'http://192.168.0.7:8000';
                 const res = await fetch(`${apiUrl}/api/auth/login`, {
                     method: 'POST',
                     headers: {
@@ -1095,7 +1126,7 @@
             btnVerificar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Verificando...';
 
             try {
-                const apiUrl = window.API_BASE_URL || 'http://10.26.5.12:8000';
+                const apiUrl = window.API_BASE_URL || 'http://192.168.0.7:8000';
                 const res = await fetch(`${apiUrl}/api/verificar-ticket-welcome`, {
                     method: 'POST',
                     headers: {
@@ -1179,7 +1210,7 @@
             btnConfirmar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Confirmando...';
 
             try {
-                const apiUrl = window.API_BASE_URL || 'http://10.26.5.12:8000';
+                const apiUrl = window.API_BASE_URL || 'http://192.168.0.7:8000';
                 const res = await fetch(`${apiUrl}/api/validar-asistencia-welcome`, {
                     method: 'POST',
                     headers: {
@@ -1315,7 +1346,7 @@
             if (!token) return;
 
             try {
-                const apiUrl = window.API_BASE_URL || 'http://10.26.5.12:8000';
+                const apiUrl = window.API_BASE_URL || 'http://192.168.0.7:8000';
                 const res = await fetch(`${apiUrl}/api/eventos/alertas-5-minutos`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -1415,8 +1446,157 @@
             }
         }
 
+        // ========== CARGAR MEGA EVENTOS DESTACADOS ==========
+        async function cargarMegaEventosDestacados() {
+            const container = document.getElementById('megaEventosContainer');
+            if (!container) return;
+
+            try {
+                const apiUrl = window.API_BASE_URL || 'http://192.168.0.7:8000';
+                const res = await fetch(`${apiUrl}/api/mega-eventos/publicos`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await res.json();
+                
+                if (data.success && data.mega_eventos && data.mega_eventos.length > 0) {
+                    // Filtrar solo los próximos y ordenar por fecha
+                    const hoy = new Date();
+                    hoy.setHours(0, 0, 0, 0);
+                    
+                    const proximos = data.mega_eventos
+                        .filter(mega => {
+                            if (!mega.fecha_inicio) return false;
+                            const fechaInicio = new Date(mega.fecha_inicio);
+                            fechaInicio.setHours(0, 0, 0, 0);
+                            return fechaInicio >= hoy;
+                        })
+                        .sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio))
+                        .slice(0, 6); // Mostrar hasta 6 mega eventos
+
+                    if (proximos.length > 0) {
+                        let html = '';
+                        proximos.forEach(mega => {
+                            const fechaInicio = new Date(mega.fecha_inicio);
+                            const fechaStr = fechaInicio.toLocaleDateString('es-ES', { 
+                                day: 'numeric', 
+                                month: 'long', 
+                                year: 'numeric' 
+                            });
+                            
+                            // Obtener primera imagen si existe
+                            let imagenUrl = null;
+                            if (mega.imagenes && Array.isArray(mega.imagenes) && mega.imagenes.length > 0) {
+                                imagenUrl = mega.imagenes[0];
+                            } else if (typeof mega.imagenes === 'string' && mega.imagenes.trim()) {
+                                try {
+                                    const parsed = JSON.parse(mega.imagenes);
+                                    if (Array.isArray(parsed) && parsed.length > 0) {
+                                        imagenUrl = parsed[0];
+                                    }
+                                } catch (e) {
+                                    imagenUrl = mega.imagenes;
+                                }
+                            }
+                            
+                            // Construir URL de imagen
+                            if (imagenUrl && !imagenUrl.startsWith('http')) {
+                                if (imagenUrl.startsWith('/storage/')) {
+                                    imagenUrl = `${apiUrl}${imagenUrl}`;
+                                } else {
+                                    imagenUrl = `${apiUrl}/storage/${imagenUrl}`;
+                                }
+                            }
+                            
+                            html += `
+                                <div class="bg-white rounded-2xl shadow-lg hover-lift scroll-animate overflow-hidden" style="transition: all 0.3s;">
+                                    ${imagenUrl ? `
+                                        <div class="relative h-48 overflow-hidden">
+                                            <img src="${imagenUrl}" alt="${mega.titulo}" class="w-full h-full object-cover" 
+                                                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'200\\'%3E%3Crect fill=\\'%23FFD700\\' width=\\'400\\' height=\\'200\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\' fill=\\'white\\' font-family=\\'Arial\\' font-size=\\'16\\' font-weight=\\'bold\\'%3EMega Evento%3C/text%3E%3C/svg%3E';">
+                                            <div class="absolute top-4 right-4">
+                                                <span class="px-3 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-full text-xs font-bold shadow-lg">
+                                                    <i class="fas fa-star mr-1"></i>Mega Evento
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ` : `
+                                        <div class="h-48 bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                                            <i class="fas fa-star text-white text-6xl opacity-50"></i>
+                                            <div class="absolute top-4 right-4">
+                                                <span class="px-3 py-1 bg-white/30 backdrop-blur-md text-white rounded-full text-xs font-bold">
+                                                    <i class="fas fa-star mr-1"></i>Mega Evento
+                                                </span>
+                                            </div>
+                                        </div>
+                                    `}
+                                    <div class="p-6">
+                                        <h3 class="text-xl font-bold text-brand-gris-oscuro mb-3 line-clamp-2" style="min-height: 3rem;">
+                                            ${mega.titulo || 'Mega Evento'}
+                                        </h3>
+                                        <p class="text-brand-gris-oscuro/70 mb-4 line-clamp-2" style="min-height: 3rem;">
+                                            ${mega.descripcion || 'Descubre este increíble mega evento que está transformando comunidades.'}
+                                        </p>
+                                        <div class="flex items-center text-brand-gris-oscuro/70 mb-4">
+                                            <i class="far fa-calendar mr-2 text-brand-acento"></i>
+                                            <span class="text-sm">${fechaStr}</span>
+                                        </div>
+                                        ${mega.ubicacion ? `
+                                            <div class="flex items-center text-brand-gris-oscuro/70 mb-4">
+                                                <i class="far fa-map-marker-alt mr-2 text-brand-acento"></i>
+                                                <span class="text-sm">${mega.ubicacion}</span>
+                                            </div>
+                                        ` : ''}
+                                        <a href="/mega-evento/${mega.mega_evento_id}/qr" 
+                                           class="inline-flex items-center justify-center w-full px-6 py-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-xl font-semibold hover:shadow-xl transition-all transform hover:scale-105">
+                                            <i class="fas fa-star mr-2"></i>Ver Detalle
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                        container.innerHTML = html;
+                    } else {
+                        container.innerHTML = `
+                            <div class="col-span-full text-center py-12">
+                                <i class="fas fa-star text-yellow-400 text-6xl mb-4 opacity-30"></i>
+                                <p class="text-brand-gris-oscuro/70 text-lg">No hay mega eventos próximos disponibles</p>
+                                <p class="text-brand-gris-oscuro/50 text-sm mt-2">Vuelve pronto para ver los próximos mega eventos</p>
+                            </div>
+                        `;
+                    }
+                } else {
+                    container.innerHTML = `
+                        <div class="col-span-full text-center py-12">
+                            <i class="fas fa-star text-yellow-400 text-6xl mb-4 opacity-30"></i>
+                            <p class="text-brand-gris-oscuro/70 text-lg">No hay mega eventos disponibles</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error cargando mega eventos:', error);
+                const container = document.getElementById('megaEventosContainer');
+                if (container) {
+                    container.innerHTML = `
+                        <div class="col-span-full text-center py-12">
+                            <i class="fas fa-exclamation-triangle text-yellow-400 text-4xl mb-4"></i>
+                            <p class="text-brand-gris-oscuro/70">Error al cargar mega eventos</p>
+                        </div>
+                    `;
+                }
+            }
+        }
+
         // Iniciar verificación periódica de alertas (cada minuto)
         document.addEventListener('DOMContentLoaded', function() {
+            // Cargar mega eventos destacados
+            cargarMegaEventosDestacados();
+            
             const validacionAsistencia = document.getElementById('validacionAsistencia');
             if (validacionAsistencia) {
                 // Solo si el usuario está autenticado

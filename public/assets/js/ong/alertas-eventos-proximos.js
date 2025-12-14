@@ -22,7 +22,7 @@
      */
     async function obtenerAlertasEventosProximos() {
         try {
-            const API_BASE_URL = window.API_BASE_URL || 'http://10.26.5.12:8000';
+            const API_BASE_URL = window.API_BASE_URL || 'http://192.168.0.7:8000';
             
             // Para ONG
             if (tipoUsuario === 'ONG') {
@@ -277,7 +277,7 @@
      */
     window.marcarAlertaComoLeida = async function(alertaId) {
         try {
-            const API_BASE_URL = window.API_BASE_URL || 'http://10.26.5.12:8000';
+            const API_BASE_URL = window.API_BASE_URL || 'http://192.168.0.7:8000';
             let endpoint = '';
             
             // Determinar endpoint según tipo de usuario

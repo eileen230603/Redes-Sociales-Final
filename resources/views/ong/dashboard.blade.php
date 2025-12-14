@@ -4,48 +4,51 @@
 
 @section('content_body')
 <div class="container-fluid">
-    <!-- Header -->
-    <div class="card mb-4 border-0 shadow-sm">
-        <div class="card-header border-0" style="background: #0C2B44;">
+    <!-- Header Minimalista -->
+    <div class="dashboard-header mb-4">
             <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <div>
-                    <h3 class="card-title mb-0" style="font-weight: 700; font-size: 2rem; letter-spacing: 0.5px; color: #ffffff;">
+            <div class="header-content">
+                <h1 class="dashboard-title">
+                    <i class="fas fa-chart-line mr-3"></i>
                         Dashboard General
-                    </h3>
-                    <p class="mb-0 mt-1" style="color: rgba(255,255,255,0.9); font-size: 1.1rem; font-weight: 500;">Panel centralizado de estadísticas</p>
+                </h1>
+                <p class="dashboard-subtitle">Panel centralizado de estadísticas y métricas</p>
                 </div>
-                <div class="d-flex mt-2 mt-md-0" style="gap: 0.5rem;">
-                    <button id="btnDescargarPDF" class="btn btn-sm" onclick="descargarPDFDashboard()" style="background: #dc3545; border: none; color: #ffffff; border-radius: 6px; font-weight: 600;">
-                        <i class="fas fa-file-pdf mr-2"></i> PDF
+            <div class="header-actions">
+                <button id="btnDescargarPDF" class="btn-pdf" onclick="descargarPDFDashboard()">
+                    <i class="fas fa-file-pdf mr-2"></i>
+                    <span>Exportar PDF</span>
                     </button>
-                    <button id="btnDescargarExcel" class="btn btn-sm" onclick="descargarExcel()" style="background: #00A36C; border: none; color: #ffffff; border-radius: 6px; font-weight: 600;">
-                        <i class="fas fa-file-excel mr-2"></i> Excel
-                    </button>
-                </div>
             </div>
         </div>
     </div>
 
-    <!-- Filtros -->
-    <div class="card mb-4 border-0 shadow-sm">
-        <div class="card-header border-0" style="background: #f8f9fa; border-bottom: 1px solid #e9ecef !important;">
-            <h5 class="card-title mb-0" style="color: #0C2B44; font-weight: 600; font-size: 1rem;">
-                <i class="fas fa-filter mr-2" style="color: #00A36C;"></i> Filtros
-            </h5>
+    <!-- Filtros Minimalistas -->
+    <div class="filters-card mb-4">
+        <div class="filters-header">
+            <div class="d-flex align-items-center">
+                <div class="filter-icon-wrapper">
+                    <i class="fas fa-filter"></i>
         </div>
-        <div class="card-body" style="padding: 1.25rem;">
-            <div class="row">
-                <div class="col-md-3 mb-2">
-                    <label for="fechaInicio" style="font-size: 1rem; color: #0C2B44; font-weight: 600;">Fecha Inicio</label>
-                    <input type="date" id="fechaInicio" class="form-control" style="border-radius: 6px; border: 1px solid #dee2e6;" />
+                <h5 class="filter-title mb-0">Filtros</h5>
                 </div>
-                <div class="col-md-3 mb-2">
-                    <label for="fechaFin" style="font-size: 1rem; color: #0C2B44; font-weight: 600;">Fecha Fin</label>
-                    <input type="date" id="fechaFin" class="form-control" style="border-radius: 6px; border: 1px solid #dee2e6;" />
+            <button class="filter-toggle" onclick="toggleFilters()">
+                <i class="fas fa-chevron-up" id="filterToggleIcon"></i>
+            </button>
                 </div>
-                <div class="col-md-2 mb-2">
-                    <label for="estadoEvento" style="font-size: 1rem; color: #0C2B44; font-weight: 600;">Estado</label>
-                    <select id="estadoEvento" class="form-control" style="border-radius: 6px; border: 1px solid #dee2e6;">
+        <div class="filters-body" id="filtersBody">
+            <div class="row g-3">
+                <div class="col-lg-2 col-md-4 col-sm-6">
+                    <label class="filter-label">Fecha Inicio</label>
+                    <input type="date" id="fechaInicio" class="form-control-modern" />
+                </div>
+                <div class="col-lg-2 col-md-4 col-sm-6">
+                    <label class="filter-label">Fecha Fin</label>
+                    <input type="date" id="fechaFin" class="form-control-modern" />
+                </div>
+                <div class="col-lg-2 col-md-4 col-sm-6">
+                    <label class="filter-label">Estado</label>
+                    <select id="estadoEvento" class="form-control-modern">
                         <option value="">Todos</option>
                         <option value="activo">Activo</option>
                         <option value="inactivo">Inactivo</option>
@@ -53,28 +56,28 @@
                         <option value="cancelado">Cancelado</option>
                     </select>
                 </div>
-                <div class="col-md-2 mb-2">
-                    <label for="tipoParticipacion" style="font-size: 1rem; color: #0C2B44; font-weight: 600;">Tipo</label>
-                    <select id="tipoParticipacion" class="form-control" style="border-radius: 6px; border: 1px solid #dee2e6;">
+                <div class="col-lg-2 col-md-4 col-sm-6">
+                    <label class="filter-label">Tipo</label>
+                    <select id="tipoParticipacion" class="form-control-modern">
                         <option value="">Todos</option>
                         <option value="voluntario">Voluntario</option>
                         <option value="asistente">Asistente</option>
                         <option value="colaborador">Colaborador</option>
                     </select>
                 </div>
-                <div class="col-md-2 mb-2">
-                    <label for="busquedaEvento" style="font-size: 1rem; color: #0C2B44; font-weight: 600;">Buscar</label>
-                    <input type="text" id="busquedaEvento" class="form-control" placeholder="Nombre..." style="border-radius: 6px; border: 1px solid #dee2e6;" />
+                <div class="col-lg-2 col-md-4 col-sm-6">
+                    <label class="filter-label">Buscar</label>
+                    <input type="text" id="busquedaEvento" class="form-control-modern" placeholder="Nombre..." />
                 </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-12">
-                    <button class="btn btn-sm" onclick="aplicarFiltros()" style="background: #0C2B44; border: none; color: #ffffff; border-radius: 6px; padding: 0.5rem 1.5rem; font-weight: 600;">
-                        <i class="fas fa-search mr-2"></i> Aplicar
+                <div class="col-lg-2 col-md-4 col-sm-6 d-flex align-items-end">
+                    <div class="filter-buttons">
+                        <button class="btn-filter-primary" onclick="aplicarFiltros()">
+                            <i class="fas fa-search mr-2"></i>Aplicar
                     </button>
-                    <button class="btn btn-sm ml-2" onclick="resetearFiltros()" style="background: #6c757d; border: none; color: #ffffff; border-radius: 6px; padding: 0.5rem 1.5rem; font-weight: 600;">
-                        <i class="fas fa-redo mr-2"></i> Resetear
+                        <button class="btn-filter-secondary" onclick="resetearFiltros()">
+                            <i class="fas fa-redo mr-2"></i>Resetear
                     </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -86,97 +89,73 @@
     <!-- Tarjetas de Métricas -->
     <div class="row mb-4">
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card border-0 shadow-sm" style="border-radius: 8px; border-left: 4px solid #dc3545 !important;">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3 id="totalEventosActivos" class="mb-0" style="font-size: 2.5rem; font-weight: 800; color: #0C2B44; letter-spacing: -1px;">0</h3>
-                            <p class="mb-0 mt-2" style="color: #0C2B44; font-size: 1rem; font-weight: 600;">Eventos Activos</p>
-                        </div>
-                        <div style="color: #dc3545; opacity: 0.2; font-size: 3rem;">
+            <div class="info-box metric-card" data-animation="fadeInUp" data-delay="0.1s">
+                <span class="info-box-icon bg-danger elevation-1">
                             <i class="fas fa-calendar-alt"></i>
-                        </div>
-                    </div>
+                </span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Eventos Activos</span>
+                    <span class="info-box-number" id="totalEventosActivos">0</span>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card border-0 shadow-sm" style="border-radius: 8px; border-left: 4px solid #00A36C !important;">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3 id="totalReacciones" class="mb-0" style="font-size: 2.5rem; font-weight: 800; color: #0C2B44; letter-spacing: -1px;">0</h3>
-                            <p class="mb-0 mt-2" style="color: #0C2B44; font-size: 1rem; font-weight: 600;">Total Reacciones</p>
-                        </div>
-                        <div style="color: #00A36C; opacity: 0.2; font-size: 3rem;">
+            <div class="info-box metric-card" data-animation="fadeInUp" data-delay="0.2s">
+                <span class="info-box-icon bg-success elevation-1">
                             <i class="fas fa-heart"></i>
-                        </div>
-                    </div>
+                </span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Total Reacciones</span>
+                    <span class="info-box-number" id="totalReacciones">0</span>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card border-0 shadow-sm" style="border-radius: 8px; border-left: 4px solid #17a2b8 !important;">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3 id="totalCompartidos" class="mb-0" style="font-size: 2.5rem; font-weight: 800; color: #0C2B44; letter-spacing: -1px;">0</h3>
-                            <p class="mb-0 mt-2" style="color: #0C2B44; font-size: 1rem; font-weight: 600;">Total Compartidos</p>
-                        </div>
-                        <div style="color: #17a2b8; opacity: 0.2; font-size: 3rem;">
+            <div class="info-box metric-card" data-animation="fadeInUp" data-delay="0.3s">
+                <span class="info-box-icon bg-info elevation-1">
                             <i class="fas fa-share-alt"></i>
-                        </div>
-                    </div>
+                </span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Total Compartidos</span>
+                    <span class="info-box-number" id="totalCompartidos">0</span>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card border-0 shadow-sm" style="border-radius: 8px; border-left: 4px solid #ffc107 !important;">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3 id="totalVoluntarios" class="mb-0" style="font-size: 2.5rem; font-weight: 800; color: #0C2B44; letter-spacing: -1px;">0</h3>
-                            <p class="mb-0 mt-2" style="color: #0C2B44; font-size: 1rem; font-weight: 600;">Total Voluntarios</p>
-                        </div>
-                        <div style="color: #ffc107; opacity: 0.2; font-size: 3rem;">
+            <div class="info-box metric-card" data-animation="fadeInUp" data-delay="0.4s">
+                <span class="info-box-icon bg-warning elevation-1">
                             <i class="fas fa-users"></i>
-                        </div>
-                    </div>
+                </span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Total Voluntarios</span>
+                    <span class="info-box-number" id="totalVoluntarios">0</span>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card border-0 shadow-sm" style="border-radius: 8px; border-left: 4px solid #00A36C !important;">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3 id="totalParticipantes" class="mb-0" style="font-size: 2.5rem; font-weight: 800; color: #0C2B44; letter-spacing: -1px;">0</h3>
-                            <p class="mb-0 mt-2" style="color: #0C2B44; font-size: 1rem; font-weight: 600;">Total Participantes</p>
-                        </div>
-                        <div style="color: #00A36C; opacity: 0.2; font-size: 3rem;">
+            <div class="info-box metric-card" data-animation="fadeInUp" data-delay="0.5s">
+                <span class="info-box-icon bg-success elevation-1">
                             <i class="fas fa-user-check"></i>
-                        </div>
-                    </div>
+                </span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Total Participantes</span>
+                    <span class="info-box-number" id="totalParticipantes">0</span>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card border-0 shadow-sm" style="border-radius: 8px; border-left: 4px solid #6c757d !important;">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3 id="totalEventosFinalizados" class="mb-0" style="font-size: 2.5rem; font-weight: 800; color: #0C2B44; letter-spacing: -1px;">0</h3>
-                            <p class="mb-0 mt-2" style="color: #0C2B44; font-size: 1rem; font-weight: 600;">Eventos Finalizados</p>
-                        </div>
-                        <div style="color: #6c757d; opacity: 0.2; font-size: 3rem;">
+            <div class="info-box metric-card" data-animation="fadeInUp" data-delay="0.6s">
+                <span class="info-box-icon bg-secondary elevation-1">
                             <i class="fas fa-check-circle"></i>
-                        </div>
-                    </div>
+                </span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Eventos Finalizados</span>
+                    <span class="info-box-number" id="totalEventosFinalizados">0</span>
                 </div>
             </div>
         </div>
@@ -469,6 +448,224 @@
 
 @push('css')
 <style>
+    /* Variables CSS */
+    :root {
+        --color-primary: #0C2B44;
+        --color-success: #00A36C;
+        --color-info: #17a2b8;
+        --color-warning: #ffc107;
+        --color-danger: #dc3545;
+        --color-secondary: #6c757d;
+        --color-proximos: #6366f1;
+        --color-bg: #f8f9fa;
+        --color-border: #e9ecef;
+        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+        --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+        --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+        --radius: 12px;
+        --radius-sm: 8px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Header Minimalista */
+    .dashboard-header {
+        background: linear-gradient(135deg, var(--color-primary) 0%, #0a2338 100%);
+        border-radius: var(--radius);
+        padding: 2rem 2.5rem;
+        box-shadow: var(--shadow-md);
+        margin-bottom: 2rem;
+        animation: fadeInDown 0.6s ease-out;
+    }
+
+    .dashboard-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #ffffff;
+        margin: 0;
+        letter-spacing: -0.5px;
+        display: flex;
+        align-items: center;
+    }
+
+    .dashboard-title i {
+        color: var(--color-success);
+        font-size: 1.8rem;
+    }
+
+    .dashboard-subtitle {
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 0.95rem;
+        margin: 0.5rem 0 0 3rem;
+        font-weight: 400;
+    }
+
+    .btn-pdf {
+        background: var(--color-danger);
+        color: #ffffff;
+        border: none;
+        border-radius: var(--radius-sm);
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+    }
+
+    .btn-pdf:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+        background: #c82333;
+    }
+
+    /* Filtros Minimalistas */
+    .filters-card {
+        background: #ffffff;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--color-border);
+        overflow: hidden;
+        transition: var(--transition);
+        animation: fadeInUp 0.6s ease-out 0.1s both;
+    }
+
+    .filters-card:hover {
+        box-shadow: var(--shadow-md);
+    }
+
+    .filters-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        padding: 1.25rem 2rem;
+        border-bottom: 1px solid var(--color-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .filter-icon-wrapper {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--color-success) 0%, #008a5a 100%);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        color: #ffffff;
+        font-size: 1.1rem;
+        box-shadow: 0 4px 12px rgba(0, 163, 108, 0.2);
+    }
+
+    .filter-title {
+        color: var(--color-primary);
+        font-weight: 700;
+        font-size: 1.1rem;
+        letter-spacing: -0.3px;
+    }
+
+    .filter-toggle {
+        background: transparent;
+        border: 2px solid var(--color-border);
+        border-radius: 8px;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--color-primary);
+        transition: var(--transition);
+        cursor: pointer;
+    }
+
+    .filter-toggle:hover {
+        border-color: var(--color-success);
+        color: var(--color-success);
+        transform: scale(1.1);
+    }
+
+    .filters-body {
+        padding: 2rem;
+        transition: all 0.4s ease;
+    }
+
+    .filter-label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--color-primary);
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .form-control-modern {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid var(--color-border);
+        border-radius: var(--radius-sm);
+        font-size: 0.95rem;
+        transition: var(--transition);
+        background: #ffffff;
+        color: var(--color-primary);
+    }
+
+    .form-control-modern:focus {
+        outline: none;
+        border-color: var(--color-success);
+        box-shadow: 0 0 0 4px rgba(0, 163, 108, 0.1);
+        transform: translateY(-1px);
+    }
+
+    .filter-buttons {
+        display: flex;
+        gap: 0.75rem;
+        width: 100%;
+    }
+
+    .btn-filter-primary {
+        flex: 1;
+        background: var(--color-primary);
+        color: #ffffff;
+        border: none;
+        border-radius: var(--radius-sm);
+        padding: 0.75rem 1.25rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-filter-primary:hover {
+        background: #0a2338;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(12, 43, 68, 0.3);
+    }
+
+    .btn-filter-secondary {
+        flex: 1;
+        background: var(--color-secondary);
+        color: #ffffff;
+        border: none;
+        border-radius: var(--radius-sm);
+        padding: 0.75rem 1.25rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-filter-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+    }
+</style>
+<style>
     /* Estilo Minimalista con Paleta Corporativa */
     body {
         background-color: #f8f9fa;
@@ -507,29 +704,352 @@
         font-weight: 500;
     }
 
+    /* Animaciones Mejoradas */
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(40px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-40px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.05);
+            opacity: 0.9;
+        }
+    }
+
+    @keyframes shimmer {
+        0% {
+            background-position: -1000px 0;
+        }
+        100% {
+            background-position: 1000px 0;
+        }
+    }
+
+    @keyframes bounceIn {
+        0% {
+            opacity: 0;
+            transform: scale(0.3);
+        }
+        50% {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+        70% {
+            transform: scale(0.9);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    @keyframes float {
+        0%, 100% {
+            transform: translateY(0px);
+        }
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+
+    /* Tarjetas de métricas mejoradas */
+    .metric-card {
+        opacity: 0;
+        animation-fill-mode: forwards;
+        transition: var(--transition);
+        transform-style: preserve-3d;
+    }
+
+    .metric-card[data-animation="fadeInUp"] {
+        animation: fadeInUp 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    .metric-card[data-delay="0.1s"] { animation-delay: 0.1s; }
+    .metric-card[data-delay="0.2s"] { animation-delay: 0.2s; }
+    .metric-card[data-delay="0.3s"] { animation-delay: 0.3s; }
+    .metric-card[data-delay="0.4s"] { animation-delay: 0.4s; }
+    .metric-card[data-delay="0.5s"] { animation-delay: 0.5s; }
+    .metric-card[data-delay="0.6s"] { animation-delay: 0.6s; }
+
+    .metric-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: var(--shadow-lg) !important;
+    }
+
+    /* Info Box estilo AdminLTE mejorado */
+    .info-box {
+        display: flex;
+        min-height: 110px;
+        background: #ffffff;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        transition: var(--transition);
+        border: 1px solid var(--color-border);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .info-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--color-success);
+        transform: scaleY(0);
+        transition: transform 0.3s ease;
+    }
+
+    .info-box:hover::before {
+        transform: scaleY(1);
+    }
+
+    .info-box:hover {
+        box-shadow: var(--shadow-md);
+        border-color: var(--color-success);
+    }
+
+    .info-box-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100px;
+        font-size: 2.2rem;
+        color: #ffffff;
+        transition: var(--transition);
+        position: relative;
+    }
+
+    .info-box-icon::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+
+    .info-box:hover .info-box-icon::after {
+        width: 200px;
+        height: 200px;
+    }
+
+    .info-box:hover .info-box-icon {
+        transform: scale(1.15) rotate(5deg);
+    }
+
+    .info-box-content {
+        flex: 1;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+        z-index: 1;
+    }
+
+    .info-box-text {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--color-secondary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.75rem;
+        opacity: 0.8;
+    }
+
+    .info-box-number {
+        display: block;
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--color-primary);
+        line-height: 1;
+        transition: var(--transition);
+        letter-spacing: -1px;
+    }
+
+    .info-box:hover .info-box-number {
+        color: var(--color-success);
+        transform: scale(1.05);
+    }
+
+    /* Cards de gráficos mejoradas */
+    .card {
+        opacity: 0;
+        animation: fadeIn 1s ease-out 0.4s forwards;
+        transition: var(--transition);
+        border-radius: var(--radius);
+        border: 1px solid var(--color-border);
+        overflow: hidden;
+        background: #ffffff;
+        box-shadow: var(--shadow-sm);
+        position: relative;
+    }
+
+    .card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--color-success), var(--color-info));
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+    }
+
+    .card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg) !important;
+        border-color: var(--color-success);
+    }
+
+    /* Alertas mejoradas con colores específicos */
     .alert {
-        border-radius: 8px;
-        border-left: 4px solid;
+        border-radius: 12px;
+        border-left: 5px solid;
         border: none;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1rem;
+        animation: slideInRight 0.5s ease-out;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .alert::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 5px;
+        height: 100%;
+        background: inherit;
+        border-left-color: inherit;
+    }
+
+    .alert:hover {
+        transform: translateX(5px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
     }
 
     .alert-danger {
         border-left-color: #dc3545;
-        background-color: #fff5f5;
+        background: linear-gradient(135deg, #fff5f5 0%, #ffe0e0 100%);
         color: #721c24;
     }
 
     .alert-warning {
         border-left-color: #ffc107;
-        background-color: #fffbf0;
+        background: linear-gradient(135deg, #fffbf0 0%, #fff3cd 100%);
         color: #856404;
+    }
+
+    /* Color especial para eventos próximos - Índigo/Violeta */
+    .alert-proximos {
+        border-left-color: var(--color-proximos);
+        background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+        color: #4338ca;
+        animation: slideInRight 0.6s ease-out, pulse 3s ease-in-out infinite 1.5s;
+        box-shadow: 0 4px 16px rgba(99, 102, 241, 0.2);
+    }
+
+    .alert-proximos:hover {
+        box-shadow: 0 6px 24px rgba(99, 102, 241, 0.3);
+        transform: translateX(8px);
+    }
+
+    .alert-proximos i {
+        color: var(--color-proximos);
+        animation: float 3s ease-in-out infinite;
+    }
+
+    .alert-proximos::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+        border-radius: 50%;
+        transform: translate(30%, -30%);
+        pointer-events: none;
     }
 
     .alert-info {
         border-left-color: #17a2b8;
-        background-color: #f0f9fa;
+        background: linear-gradient(135deg, #f0f9fa 0%, #d1ecf1 100%);
         color: #0c5460;
+    }
+
+    .alert-success {
+        border-left-color: #00A36C;
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        color: #166534;
     }
 
     .table {
@@ -562,19 +1082,69 @@
         background-color: #f8f9fa;
     }
 
-    .table-hover tbody tr:hover {
-        background-color: #f0f7ff;
-    }
-
-    .btn {
-        border-radius: 6px;
-        font-weight: 500;
+    .table-hover tbody tr {
         transition: all 0.2s ease;
     }
 
+    .table-hover tbody tr:hover {
+        background-color: #f0f7ff;
+        transform: scale(1.01);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Animación para números que cambian */
+    @keyframes numberUpdate {
+        0% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.1);
+            color: #00A36C;
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .info-box-number.updating {
+        animation: numberUpdate 0.6s ease-out;
+    }
+
+    /* Botones mejorados */
+    .btn {
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 0.5rem 1.25rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+
+    .btn:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+
     .btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn:active {
+        transform: translateY(0);
     }
 
     .form-control {
@@ -603,6 +1173,167 @@
 
     .bg-success-custom {
         background-color: #00A36C !important;
+    }
+
+    /* Mejoras adicionales AdminLTE */
+    .card-header {
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+
+    /* Efecto de carga suave */
+    @keyframes shimmer {
+        0% {
+            background-position: -1000px 0;
+        }
+        100% {
+            background-position: 1000px 0;
+        }
+    }
+
+    .loading-shimmer {
+        animation: shimmer 2s infinite linear;
+        background: linear-gradient(
+            to right,
+            #f6f7f8 0%,
+            #edeef1 20%,
+            #f6f7f8 40%,
+            #f6f7f8 100%
+        );
+        background-size: 1000px 100%;
+    }
+
+    /* Header mejorado */
+    .card-header.bg-primary {
+        background: linear-gradient(135deg, #0C2B44 0%, #0a2338 100%) !important;
+    }
+
+    /* Mejoras en filtros */
+    .card-header[style*="background: #f8f9fa"] {
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%) !important;
+    }
+
+    /* Scrollbar personalizado */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #00A36C;
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #008a5a;
+    }
+
+    /* Transiciones globales */
+    * {
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Loading spinner mejorado */
+    .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        border-width: 0.3em;
+        color: #00A36C;
+    }
+
+    /* Mejoras en badges */
+    .badge {
+        padding: 0.4rem 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        transition: all 0.3s ease;
+    }
+
+    .badge:hover {
+        transform: scale(1.05);
+    }
+
+    /* Responsive mejorado */
+    @media (max-width: 768px) {
+        .dashboard-header {
+            padding: 1.5rem;
+        }
+
+        .dashboard-title {
+            font-size: 1.5rem;
+        }
+
+        .dashboard-subtitle {
+            font-size: 0.85rem;
+            margin-left: 0;
+        }
+
+        .info-box {
+            min-height: 100px;
+        }
+
+        .info-box-icon {
+            width: 80px;
+            font-size: 1.8rem;
+        }
+
+        .info-box-number {
+            font-size: 2rem;
+        }
+
+        .filters-body {
+            padding: 1.5rem;
+        }
+
+        .filter-buttons {
+            flex-direction: column;
+        }
+    }
+
+    /* Mejoras adicionales de accesibilidad */
+    .btn:focus,
+    .form-control-modern:focus,
+    .filter-toggle:focus {
+        outline: 3px solid rgba(0, 163, 108, 0.3);
+        outline-offset: 2px;
+    }
+
+    /* Smooth scrolling */
+    html {
+        scroll-behavior: smooth;
+    }
+
+    /* Loading state mejorado */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.95);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid var(--color-border);
+        border-top-color: var(--color-success);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
     }
 </style>
 @endpush
@@ -733,12 +1464,28 @@ async function cargarDashboard() {
 }
 
 function actualizarMetricas(metricas) {
-    document.getElementById('totalEventosActivos').textContent = metricas?.eventos_activos || 0;
-    document.getElementById('totalReacciones').textContent = formatNumber(metricas?.total_reacciones || 0);
-    document.getElementById('totalCompartidos').textContent = formatNumber(metricas?.total_compartidos || 0);
-    document.getElementById('totalVoluntarios').textContent = formatNumber(metricas?.total_voluntarios || 0);
-    document.getElementById('totalParticipantes').textContent = formatNumber(metricas?.total_participantes || 0);
-    document.getElementById('totalEventosFinalizados').textContent = metricas?.eventos_finalizados || 0;
+    const elementos = [
+        { id: 'totalEventosActivos', valor: metricas?.eventos_activos || 0 },
+        { id: 'totalReacciones', valor: formatNumber(metricas?.total_reacciones || 0) },
+        { id: 'totalCompartidos', valor: formatNumber(metricas?.total_compartidos || 0) },
+        { id: 'totalVoluntarios', valor: formatNumber(metricas?.total_voluntarios || 0) },
+        { id: 'totalParticipantes', valor: formatNumber(metricas?.total_participantes || 0) },
+        { id: 'totalEventosFinalizados', valor: metricas?.eventos_finalizados || 0 }
+    ];
+
+    elementos.forEach(({ id, valor }) => {
+        const elemento = document.getElementById(id);
+        if (elemento) {
+            // Agregar clase de animación
+            elemento.classList.add('updating');
+            elemento.textContent = valor;
+            
+            // Remover clase después de la animación
+            setTimeout(() => {
+                elemento.classList.remove('updating');
+            }, 600);
+        }
+    });
 }
 
 function crearGraficos(data) {
@@ -1089,9 +1836,21 @@ function actualizarTablaListadoEventos(eventos) {
         return;
     }
 
+    console.log('📊 Actualizando tabla de eventos. Total:', eventos.length);
+    if (eventos.length > 0) {
+        console.log('📊 Primer evento (ejemplo) - Estructura completa:', eventos[0]);
+        console.log('📊 Campos disponibles en primer evento:', Object.keys(eventos[0]));
+    }
+    
+    // ERROR #4 CORREGIDO: Agregar manejo de errores con fallback visual
+    try {
+
     // Separar eventos por tipo
     const eventosRegulares = eventos.filter(e => e.tipo === 'evento' || !e.tipo);
     const megaEventos = eventos.filter(e => e.tipo === 'mega_evento');
+    
+    console.log('📊 Eventos regulares:', eventosRegulares.length);
+    console.log('📊 Mega eventos:', megaEventos.length);
     
     let html = '';
     
@@ -1105,9 +1864,50 @@ function actualizarTablaListadoEventos(eventos) {
             </tr>
         `;
         
-        eventosRegulares.forEach(evento => {
+        eventosRegulares.forEach((evento, index) => {
+            // ERROR #1 CORREGIDO: Intentar obtener el ID de múltiples campos posibles
+            let eventoId = null;
+            
+            // Intentar obtener el ID de diferentes campos posibles (prioridad: id > evento_id > id_evento)
+            if (evento.id !== undefined && evento.id !== null && evento.id !== '') {
+                eventoId = parseInt(evento.id, 10);
+            } else if (evento.evento_id !== undefined && evento.evento_id !== null && evento.evento_id !== '') {
+                eventoId = parseInt(evento.evento_id, 10);
+            } else if (evento.id_evento !== undefined && evento.id_evento !== null && evento.id_evento !== '') {
+                eventoId = parseInt(evento.id_evento, 10);
+            }
+            
+            // ERROR #2 CORREGIDO: No hacer return, mostrar evento con mensaje de error si no hay ID
+            if (!eventoId || isNaN(eventoId) || eventoId <= 0) {
+                console.error(`❌ ERROR #1: Evento ${index} con ID inválido o faltante:`, {
+                    evento: evento,
+                    id: evento.id,
+                    evento_id: evento.evento_id,
+                    id_evento: evento.id_evento,
+                    titulo: evento.titulo
+                });
+                
+                // ERROR #4 CORREGIDO: Mostrar fallback visual en lugar de omitir
+                html += `
+                    <tr style="background: #fff3cd !important;">
+                        <td><span class="badge" style="background: #dc3545; color: #ffffff;">Error</span></td>
+                        <td style="font-weight: 700; color: #dc3545;" title="ID de evento inválido o faltante">${evento.titulo || 'Sin título'} <small>(ID inválido)</small></td>
+                        <td colspan="4" style="color: #dc3545; font-style: italic;">⚠️ No se pudo cargar la información del evento</td>
+                        <td class="text-center">
+                            <span class="badge badge-warning" style="padding: 0.4rem 0.9rem;">N/A</span>
+                        </td>
+                    </tr>
+                `;
+                return; // Continuar con el siguiente evento
+            }
+            
+            console.log(`✅ Evento ${index} procesado correctamente - ID: ${eventoId}, Título: ${evento.titulo}`);
+            
             const fechaInicio = evento.fecha_inicio ? new Date(evento.fecha_inicio).toLocaleDateString('es-ES') : 'N/A';
-            const estadoBadge = getEstadoBadge(evento.estado);
+            const estadoBadge = getEstadoBadge(evento.estado || evento.estado_dinamico || 'activo');
+            
+            // ERROR #3 CORREGIDO: Ruta correcta verificada contra routes/web.php (línea 70: /ong/eventos/{id}/dashboard)
+            const rutaDashboard = `/ong/eventos/${eventoId}/dashboard`;
             
             html += `
                 <tr>
@@ -1118,8 +1918,14 @@ function actualizarTablaListadoEventos(eventos) {
                     <td class="text-center"><span class="badge" style="background: #17a2b8; color: #ffffff; font-size: 1rem; font-weight: 700; padding: 0.5rem 0.75rem;">${formatNumber(evento.total_participantes || 0)}</span></td>
                     <td>${estadoBadge}</td>
                     <td class="text-center">
-                        <a href="/ong/eventos/${evento.id}/dashboard" class="btn btn-sm" title="Ver Dashboard" style="background: #0C2B44; border: none; color: #ffffff; padding: 0.4rem 0.9rem; font-weight: 600;">
-                            <i class="fas fa-chart-bar"></i>
+                        <a href="/ong/eventos/${eventoId}/dashboard" 
+                           class="btn btn-sm btn-dashboard-event" 
+                           title="Ver Estadísticas del Evento: ${(evento.titulo || 'Sin título').substring(0, 50)}" 
+                           data-event-id="${eventoId}"
+                           data-evento-titulo="${(evento.titulo || '').replace(/"/g, '&quot;')}"
+                           onclick="event.preventDefault(); event.stopPropagation(); const eventId = parseInt('${eventoId}', 10); console.log('🔗🔗🔗 NAVEGANDO al dashboard del evento #' + eventId + ' desde botón de acciones'); if (!isNaN(eventId) && eventId > 0) { const ruta = '/ong/eventos/' + eventId + '/dashboard'; console.log('📍 Ruta final:', ruta); window.location.href = ruta; } else { console.error('❌ ID inválido:', eventId); alert('Error: ID de evento inválido: ' + eventId); } return false;"
+                           style="background: #0C2B44; border: none; color: #ffffff; padding: 0.4rem 0.9rem; font-weight: 600; border-radius: 8px; transition: all 0.3s ease; cursor: pointer; text-decoration: none; display: inline-block;">
+                            <i class="fas fa-chart-bar mr-1"></i> Estadísticas
                         </a>
                     </td>
                 </tr>
@@ -1160,6 +1966,143 @@ function actualizarTablaListadoEventos(eventos) {
     }
     
     tbody.innerHTML = html;
+    
+    // ERROR #5 CORREGIDO: Prevenir listeners duplicados usando una bandera global
+    if (window.dashboardListenersConfigurados) {
+        // Limpiar listeners anteriores si ya fueron configurados
+        const botonesAntiguos = document.querySelectorAll('.btn-dashboard-event');
+        botonesAntiguos.forEach(btn => {
+            const nuevoBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(nuevoBtn, btn);
+        });
+    }
+    
+    // Agregar listeners a los botones de dashboard después de renderizar
+    setTimeout(() => {
+        const botones = document.querySelectorAll('.btn-dashboard-event');
+        console.log(`🔧 Configurando ${botones.length} botones de dashboard...`);
+        
+        botones.forEach((btn, index) => {
+            // ERROR #5 CORREGIDO: Verificar si el botón ya tiene listener antes de agregar uno nuevo
+            if (btn.hasAttribute('data-listener-added')) {
+                return; // Ya tiene listener, saltar
+            }
+            
+            // Marcar que este botón ya tiene listener
+            btn.setAttribute('data-listener-added', 'true');
+            
+            // Agregar listener al botón
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const eventId = this.getAttribute('data-event-id');
+                const href = this.getAttribute('href');
+                const eventoTitulo = this.getAttribute('data-evento-titulo') || 'Evento';
+                
+                console.log(`🔍 Clic en botón Dashboard #${index + 1}:`, {
+                    eventId: eventId,
+                    href: href,
+                    eventoTitulo: eventoTitulo,
+                    eventIdType: typeof eventId
+                });
+                
+                if (eventId) {
+                    // Verificar que el ID sea válido antes de navegar
+                    const idNum = parseInt(eventId, 10);
+                    if (!isNaN(idNum) && idNum > 0) {
+                        // Construir la ruta correcta
+                        const ruta = `/ong/eventos/${idNum}/dashboard`;
+                        console.log('✅ ID válido:', idNum);
+                        console.log('✅ Ruta construida:', ruta);
+                        console.log(`✅ Navegando al dashboard del evento: "${eventoTitulo}" (ID: ${idNum})`);
+                        
+                        // Navegar a la ruta
+                        window.location.href = ruta;
+                    } else {
+                        console.error('❌ ID de evento inválido:', eventId);
+                        const mensaje = `ID de evento inválido: ${eventId}`;
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: mensaje
+                            });
+                        } else {
+                            alert('Error: ' + mensaje);
+                        }
+                    }
+                } else {
+                    console.error('❌ No se encontró data-event-id en el botón');
+                    console.error('❌ Elemento HTML:', this);
+                    console.error('❌ HREF disponible:', href);
+                    
+                    // Intentar extraer el ID del href si está disponible
+                    if (href) {
+                        const match = href.match(/\/eventos\/(\d+)\/dashboard/);
+                        if (match && match[1]) {
+                            const idExtraido = parseInt(match[1], 10);
+                            console.log('✅ ID extraído del href:', idExtraido);
+                            window.location.href = `/ong/eventos/${idExtraido}/dashboard`;
+                            return;
+                        }
+                    }
+                    
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'No se pudo identificar el evento. Por favor, intenta de nuevo.'
+                        });
+                    } else {
+                        alert('Error: No se pudo identificar el evento.');
+                    }
+                }
+            });
+            
+            console.log(`✅ Botón #${index + 1} configurado - Evento ID: ${btn.getAttribute('data-event-id')}`);
+        });
+        
+        console.log(`✅ ${document.querySelectorAll('.btn-dashboard-event').length} botones de dashboard configurados correctamente`);
+        
+        // Marcar que los listeners ya fueron configurados
+        window.dashboardListenersConfigurados = true;
+    }, 300);
+    
+    } catch (error) {
+        // ERROR #4 CORREGIDO: Mostrar error visual en la tabla si algo falla
+        console.error('❌ ERROR al actualizar tabla de eventos:', error);
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-4" style="background: #f8d7da; color: #721c24;">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    <strong>Error al cargar eventos:</strong> ${error.message || 'Error desconocido'}
+                    <br><small>Por favor, recarga la página o contacta al soporte.</small>
+                </td>
+            </tr>
+        `;
+        
+        // Mostrar notificación con SweetAlert si está disponible
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error al Cargar Eventos',
+                text: error.message || 'Ocurrió un error al cargar la tabla de eventos. Por favor, intenta recargar la página.',
+                confirmButtonText: 'Reintentar',
+                showCancelButton: true,
+                cancelButtonText: 'Cerrar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Reintentar cargar el dashboard
+                    if (typeof cargarDashboard === 'function') {
+                        cargarDashboard();
+                    } else {
+                        location.reload();
+                    }
+                }
+            });
+        }
+    }
 }
 
 function actualizarTablaActividadReciente(actividad) {
@@ -1263,22 +2206,69 @@ function mostrarAlertas(alertas) {
     }
 
     let html = '';
-    alertas.forEach(alerta => {
-        const alertClass = alerta.severidad === 'danger' ? 'alert-danger' : 
-                          alerta.severidad === 'warning' ? 'alert-warning' : 'alert-info';
+    alertas.forEach((alerta, index) => {
+        // Detectar si es alerta de eventos próximos (mejorado)
+        const mensajeLower = (alerta.mensaje || '').toLowerCase();
+        const esEventosProximos = mensajeLower.includes('próximo') ||
+                                  mensajeLower.includes('proximo') ||
+                                  mensajeLower.includes('inicia pronto') ||
+                                  mensajeLower.includes('iniciar') ||
+                                  mensajeLower.includes('menos de') ||
+                                  alerta.tipo === 'eventos_proximos' ||
+                                  alerta.tipo === 'eventos_proximo';
+
+        let alertClass = '';
+        let icon = 'fa-info-circle';
+        
+        if (esEventosProximos) {
+            // Color especial índigo/violeta para eventos próximos
+            alertClass = 'alert-proximos';
+            icon = 'fa-calendar-day';
+        } else {
+            alertClass = alerta.severidad === 'danger' ? 'alert-danger' : 
+                        alerta.severidad === 'warning' ? 'alert-warning' : 
+                        alerta.severidad === 'success' ? 'alert-success' : 'alert-info';
+            icon = alerta.severidad === 'danger' ? 'fa-exclamation-circle' :
+                   alerta.severidad === 'warning' ? 'fa-exclamation-triangle' :
+                   alerta.severidad === 'success' ? 'fa-check-circle' : 'fa-info-circle';
+        }
         
         html += `
-            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-triangle mr-2"></i>
-                <strong>${alerta.mensaje}</strong>
-                <button type="button" class="close" data-dismiss="alert">
-                    <span>&times;</span>
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert" style="animation-delay: ${index * 0.15}s;">
+                <div class="d-flex align-items-center">
+                    <i class="fas ${icon} mr-3" style="font-size: 1.5rem; flex-shrink: 0;"></i>
+                    <div class="flex-grow-1">
+                        <strong style="font-size: 1rem; line-height: 1.5;">${alerta.mensaje}</strong>
+                    </div>
+                    <button type="button" class="close ml-3" data-dismiss="alert" aria-label="Close" style="flex-shrink: 0; opacity: 0.7; transition: opacity 0.3s;">
+                        <span aria-hidden="true" style="font-size: 1.5rem;">&times;</span>
                 </button>
+                </div>
             </div>
         `;
     });
     
     container.innerHTML = html;
+}
+
+// Función para toggle de filtros
+function toggleFilters() {
+    const filtersBody = document.getElementById('filtersBody');
+    const toggleIcon = document.getElementById('filterToggleIcon');
+    
+    if (filtersBody && toggleIcon) {
+        const isVisible = filtersBody.style.display !== 'none';
+        
+        if (isVisible) {
+            filtersBody.style.display = 'none';
+            toggleIcon.classList.remove('fa-chevron-up');
+            toggleIcon.classList.add('fa-chevron-down');
+        } else {
+            filtersBody.style.display = 'block';
+            toggleIcon.classList.remove('fa-chevron-down');
+            toggleIcon.classList.add('fa-chevron-up');
+        }
+    }
 }
 
 function mostrarComparativas(comparativas) {
@@ -1342,7 +2332,7 @@ async function descargarPDFDashboard() {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generando PDF...';
     
     try {
-        const apiUrl = window.API_BASE_URL || 'http://10.26.5.12:8000';
+        const apiUrl = window.API_BASE_URL || 'http://192.168.0.7:8000';
         const res = await fetch(`${apiUrl}/api/ong/dashboard/pdf`, {
             method: 'GET',
             headers: {
@@ -1390,76 +2380,6 @@ async function descargarPDFDashboard() {
     } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-file-pdf mr-2"></i> PDF';
-    }
-}
-
-async function descargarExcel() {
-    const btnExcel = document.getElementById('btnDescargarExcel');
-    if (!btnExcel) return;
-    
-    if (btnExcel.disabled) return; // Evitar múltiples clics
-    
-    try {
-        btnExcel.disabled = true;
-        btnExcel.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generando Excel...';
-
-        const apiUrl = window.API_BASE_URL || "{{ env('APP_URL', 'http://localhost:8000') }}";
-        const params = obtenerParametrosFiltros();
-        const url = `${apiUrl}/api/ong/dashboard/export-excel?${params.toString()}`;
-
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 segundos
-
-        const res = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            },
-            credentials: 'include',
-            signal: controller.signal
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!res.ok) {
-            const contentType = res.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                const errorData = await res.json();
-                throw new Error(errorData.error || errorData.message || 'Error al generar Excel');
-            }
-            throw new Error(`Error HTTP: ${res.status}`);
-        }
-
-        const blob = await res.blob();
-        if (blob.size === 0) {
-            throw new Error('El Excel generado está vacío');
-        }
-
-        const urlBlob = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = urlBlob;
-        a.download = `dashboard-ong-${new Date().toISOString().split('T')[0]}.xlsx`;
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
-        
-        setTimeout(() => {
-            window.URL.revokeObjectURL(urlBlob);
-            document.body.removeChild(a);
-        }, 100);
-
-        btnExcel.disabled = false;
-        btnExcel.innerHTML = '<i class="fas fa-file-excel mr-2"></i> Excel';
-        mostrarNotificacion('Excel generado exitosamente', 'success');
-    } catch (error) {
-        console.error('Error al descargar Excel:', error);
-        const errorMessage = error.name === 'AbortError' 
-            ? 'La descarga tardó demasiado. Por favor, intente nuevamente.' 
-            : (error.message || 'Error al generar el Excel');
-        mostrarNotificacion(errorMessage, 'error');
-        btnExcel.disabled = false;
-        btnExcel.innerHTML = '<i class="fas fa-file-excel mr-2"></i> Excel';
     }
 }
 
