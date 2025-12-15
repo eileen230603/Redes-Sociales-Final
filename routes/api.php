@@ -63,9 +63,10 @@ Route::middleware('auth:sanctum')->group(function () {
         // DETALLE
         Route::get('/detalle/{id}', [EventController::class, 'show']);
 
-        // DASHBOARD DEL EVENTO (ruta específica con restricción numérica)
+        // DASHBOARD DEL EVENTO
         Route::get('/{id}/dashboard', [EventController::class, 'dashboard'])->where('id', '[0-9]+');
         Route::get('/{id}/dashboard/pdf', [EventController::class, 'dashboardPdf'])->where('id', '[0-9]+');
+        Route::get('/{id}/dashboard-completo', [EventController::class, 'dashboard'])->where('id', '[0-9]+');
 
         // DASHBOARD COMPLETO DEL EVENTO (endpoints que Flutter está llamando)
         Route::get('/{id}/dashboard-completo', [EventController::class, 'dashboard'])->where('id', '[0-9]+');
@@ -176,10 +177,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/verificar', [EventoEmpresaParticipacionController::class, 'verificarParticipacion']);
     });
 
-    // ----------- EMPRESAS: MIS EVENTOS -----------
     Route::prefix('empresas')->group(function () {
         Route::post('/eventos/{eventoId}/confirmar', [EventoEmpresaParticipacionController::class, 'confirmarParticipacion']);
         Route::get('/mis-eventos', [EventoEmpresaParticipacionController::class, 'misEventos']);
+    });
+
+    Route::prefix('eventos/empresa')->group(function () {
+        Route::get('/patrocinados', [EventoEmpresaParticipacionController::class, 'eventosPatrocinados']);
     });
 
     // ----------- EMPRESAS: DASHBOARD -----------
