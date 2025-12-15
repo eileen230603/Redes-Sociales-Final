@@ -18,7 +18,7 @@ import '../screens/ong/voluntarios_ong_screen.dart';
 import '../screens/ong/dashboard_ong_completo_screen.dart';
 import '../screens/empresa/dashboard_empresa_screen.dart';
 import '../screens/perfil_screen.dart';
-import '../screens/reportes_screen.dart';
+import '../screens/externo/dashboard_externo_mejorado_screen.dart';
 import '../screens/mega_eventos_list_screen.dart' as externo;
 
 /// Drawer principal de la app con diseño Material 3 moderno
@@ -548,7 +548,7 @@ class _AppDrawerState extends State<AppDrawer> {
       case 4:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const ReportesScreen()),
+          MaterialPageRoute(builder: (context) => const DashboardExternoMejoradoScreen()),
         );
         break;
       case 5:

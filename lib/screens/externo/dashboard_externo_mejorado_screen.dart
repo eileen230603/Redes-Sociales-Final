@@ -263,22 +263,38 @@ class _DashboardExternoMejoradoScreenState
         _estadisticas!['total_eventos_inscritos'] as int? ?? 0;
     final eventosAsistidos =
         _estadisticas!['total_eventos_asistidos'] as int? ?? 0;
+    final eventosNoAsistidos = eventosInscritos - eventosAsistidos;
     final reaccionesTotales = _estadisticas!['total_reacciones'] as int? ?? 0;
     final compartidosTotales = _estadisticas!['total_compartidos'] as int? ?? 0;
     final horasAcumuladas = _estadisticas!['horas_acumuladas'] as int? ?? 0;
     final megaEventosInscritos =
         _estadisticas!['total_mega_eventos_inscritos'] as int? ?? 0;
+    
+    String mesMasActivo = 'N/A';
+    int maxParticipaciones = 0;
+    if (_graficas != null && _graficas!['historial_participacion'] != null) {
+      final historial = _graficas!['historial_participacion'] as Map;
+      historial.forEach((mes, data) {
+        if (data is Map && data['inscritos'] != null) {
+          final inscritos = data['inscritos'] is int 
+              ? data['inscritos'] 
+              : int.tryParse(data['inscritos'].toString()) ?? 0;
+          if (inscritos > maxParticipaciones) {
+            maxParticipaciones = inscritos;
+            mesMasActivo = mes.toString();
+          }
+        }
+      });
+    }
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Información del usuario
           if (_usuario != null) _buildUserInfo(),
           const SizedBox(height: 24),
 
-          // Métricas principales
           Text('Mis estadísticas', style: AppTypography.titleLarge),
           const SizedBox(height: AppSpacing.md),
 
@@ -321,73 +337,155 @@ class _DashboardExternoMejoradoScreenState
                 icon: Icons.access_time,
                 color: AppColors.accentDark,
               ),
-              MetricCard(
-                label: 'Tasa Asistencia',
-                value:
-                    eventosInscritos > 0
-                        ? '${((eventosAsistidos / eventosInscritos) * 100).toStringAsFixed(0)}%'
-                        : '0%',
-                icon: Icons.analytics,
-                color: AppColors.accent,
-              ),
             ],
           ),
 
           const SizedBox(height: 24),
 
-          // Tasa de asistencia
+          AppCard(
+            elevated: true,
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: AppColors.accent.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                  ),
+                  child: Icon(Icons.calendar_month, color: AppColors.accent, size: 32),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Mes más activo', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: AppSpacing.xxs),
+                      Text(
+                        mesMasActivo != 'N/A' ? '$mesMasActivo ($maxParticipaciones eventos)' : 'Aún sin participaciones',
+                        style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
           AppCard(
             elevated: true,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Tasa de asistencia', style: AppTypography.titleLarge),
-                const SizedBox(height: AppSpacing.md),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Tasa de asistencia', style: AppTypography.titleLarge),
+                    AppBadge.success(
+                      label: eventosInscritos > 0 ? '${((eventosAsistidos / eventosInscritos) * 100).toStringAsFixed(0)}%' : '0%',
+                      icon: Icons.trending_up,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.lg),
                 Center(
                   child: SizedBox(
-                    height: 150,
-                    width: 150,
+                    height: 120,
+                    width: 120,
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
                         CircularProgressIndicator(
-                          value:
-                              eventosInscritos > 0
-                                  ? eventosAsistidos / eventosInscritos
-                                  : 0,
-                          strokeWidth: 12,
+                          value: eventosInscritos > 0 ? eventosAsistidos / eventosInscritos : 0,
+                          strokeWidth: 10,
                           backgroundColor: AppColors.borderLight,
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            AppColors.success,
-                          ),
+                          valueColor: const AlwaysStoppedAnimation<Color>(AppColors.success),
                         ),
                         Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              eventosInscritos > 0
-                                  ? '${((eventosAsistidos / eventosInscritos) * 100).toStringAsFixed(1)}%'
-                                  : '0%',
-                              style: AppTypography.headlineSmall.copyWith(
-                                color: AppColors.success,
-                                fontWeight: FontWeight.w700,
-                              ),
+                              eventosInscritos > 0 ? '${((eventosAsistidos / eventosInscritos) * 100).toStringAsFixed(1)}%' : '0%',
+                              style: AppTypography.headlineMedium.copyWith(color: AppColors.success, fontWeight: FontWeight.w700),
                             ),
-                            Text('Asistencia', style: AppTypography.bodySecondary),
+                            Text('Asistencia', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
                           ],
                         ),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  '$eventosAsistidos de $eventosInscritos eventos asistidos',
-                  style: AppTypography.bodySecondary,
+                const SizedBox(height: AppSpacing.lg),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          border: Border.all(color: AppColors.success.withOpacity(0.3), width: 1),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.check_circle, color: AppColors.success, size: 20),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(eventosAsistidos.toString(), style: AppTypography.titleMedium.copyWith(color: AppColors.success, fontWeight: FontWeight.bold)),
+                                  Text('Asistidos', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: AppColors.warning.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          border: Border.all(color: AppColors.warning.withOpacity(0.3), width: 1),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.cancel, color: AppColors.warning, size: 20),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(eventosNoAsistidos.toString(), style: AppTypography.titleMedium.copyWith(color: AppColors.warning, fontWeight: FontWeight.bold)),
+                                  Text('No asistidos', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
+          
+          const SizedBox(height: 24),
+          
+          if (_graficas != null && _graficas!['historial_participacion'] != null && (_graficas!['historial_participacion'] as Map).isNotEmpty)
+            PieChartWidget(
+              title: 'Distribución de Asistencia',
+              subtitle: 'Eventos asistidos vs no asistidos',
+              data: {'Asistidos': eventosAsistidos, 'No asistidos': eventosNoAsistidos},
+              colors: const [AppColors.success, AppColors.warning],
+            ),
         ],
       ),
     );

@@ -37,15 +37,6 @@ class ApiService {
       // Limpiar la respuesta
       String cleanedBody = body.trim();
 
-      // Verificar si la respuesta está vacía
-      if (cleanedBody.isEmpty) {
-        print('❌ Error: Respuesta vacía para $endpoint');
-        return {
-          'success': false,
-          'error': 'El servidor no devolvió ninguna respuesta',
-        };
-      }
-
       // Verificar si contiene HTML (error de Laravel)
       if (cleanedBody.contains('<!DOCTYPE') ||
           cleanedBody.contains('<html') ||
@@ -53,29 +44,18 @@ class ApiService {
         print(
           '❌ Error: La respuesta contiene HTML en lugar de JSON para $endpoint',
         );
-        
         // Intentar extraer JSON si está dentro de un script tag o similar
         final jsonMatch = RegExp(
           r'\{[\s\S]*\}',
           dotAll: true,
         ).firstMatch(cleanedBody);
-        
         if (jsonMatch != null) {
           cleanedBody = jsonMatch.group(0)!;
           print('✅ JSON extraído del HTML');
         } else {
-          // NO lanzar excepción, retornar error controlado
-          print('❌ No se pudo extraer JSON del HTML');
-          final preview = cleanedBody.length > 200 
-              ? cleanedBody.substring(0, 200) 
-              : cleanedBody;
-          print('📄 Preview HTML: $preview...');
-          
-          return {
-            'success': false,
-            'error': 'Respuesta inválida del servidor',
-            '_debug_html': preview,
-          };
+          throw FormatException(
+            'La respuesta del servidor contiene HTML en lugar de JSON',
+          );
         }
       }
 
@@ -84,7 +64,7 @@ class ApiService {
       if (jsonStart > 0) {
         cleanedBody = cleanedBody.substring(jsonStart);
         print(
-          '⚠️ Se encontraron $jsonStart caracteres antes del JSON, limpiados',
+          '⚠️ Se encontraron ${jsonStart} caracteres antes del JSON, limpiados',
         );
       }
 
@@ -101,32 +81,23 @@ class ApiService {
         }
       }
 
+      // Verificar que el body no esté vacío
+      if (cleanedBody.isEmpty) {
+        throw FormatException('La respuesta del servidor está vacía');
+      }
+
       // Intentar parsear el JSON
       return jsonDecode(cleanedBody) as Map<String, dynamic>;
     } on FormatException catch (e) {
       print('❌ Error parseando JSON para $endpoint: ${e.message}');
-      if (body.isNotEmpty) {
+      if (body.length > 0) {
         final preview = body.length > 500 ? body.substring(0, 500) : body;
         print('📄 Primeros caracteres de la respuesta: $preview...');
-      }
-      
-      // NO relanzar excepción, retornar error controlado
-      return {
-        'success': false,
-        'error': 'Error al procesar la respuesta del servidor',
-        '_debug_message': e.message,
-      };
-    } catch (e) {
-      print('❌ Error inesperado parseando JSON para $endpoint: $e');
-      
-      // Cualquier otro error, retornar objeto controlado
-      return {
-        'success': false,
-        'error': 'Error inesperado al procesar la respuesta',
-        '_debug_error': e.toString(),
-      };
-    }
-  }
+        if (body.length > 500) {
+          final lastChars =
+              body.length > 1000
+                  ? body.substring(body.length - 500)
+                  : body.substring(500);
           print('📄 Últimos caracteres: ...$lastChars');
         }
       }
@@ -3938,7 +3909,7 @@ class ApiService {
         headers: await _getHeaders(includeAuth: true),
       );
 
-      final data = _parseJsonSafely(response.body, 'getEventosPatrocinados');
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
 
       if (response.statusCode == 200 && data['success'] == true) {
         return {
