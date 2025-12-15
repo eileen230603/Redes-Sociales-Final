@@ -3,7 +3,7 @@
 @section('title', 'Eventos ONG')
 
 @section('content_header')
-    <h1><i class="fas fa-calendar"></i> Eventos</h1>
+<h1><i class="fas fa-calendar"></i> Eventos</h1>
 @stop
 
 @section('content')
@@ -47,7 +47,8 @@
                 <div class="col-md-4">
                     <label for="buscador" class="form-label"><i class="fas fa-search mr-2"></i>Buscar</label>
                     <div class="input-group">
-                        <input type="text" id="buscador" class="form-control" placeholder="Buscar por título o descripción...">
+                        <input type="text" id="buscador" class="form-control"
+                            placeholder="Buscar por título o descripción...">
                         <div class="input-group-append">
                             <button class="btn btn-outline-secondary" type="button" id="btnLimpiar">
                                 <i class="fas fa-times"></i>
@@ -71,144 +72,150 @@
 <script src="{{ asset('assets/js/config.js') }}"></script>
 
 <script>
-let filtrosActuales = {
-    tipo_evento: 'todos',
-    estado: 'todos',
-    buscar: ''
-};
+    let filtrosActuales = {
+        tipo_evento: 'todos',
+        estado: 'todos',
+        buscar: ''
+    };
 
-async function cargarEventos() {
-    const cont = document.getElementById('eventosContainer');
-    const token = localStorage.getItem('token');
-    const ongId = parseInt(localStorage.getItem("id_entidad") || localStorage.getItem("id_usuario"), 10);
+    async function cargarEventos() {
+        const cont = document.getElementById('eventosContainer');
+        const token = localStorage.getItem('token');
+        const ongId = parseInt(localStorage.getItem("id_entidad") || localStorage.getItem("id_usuario"), 10);
 
-    if (!token || isNaN(ongId) || ongId <= 0) {
-        cont.innerHTML = "<p class='text-danger'>Debe iniciar sesión correctamente.</p>";
-        return;
-    }
-
-    cont.innerHTML = '<div class="col-12 text-center py-3"><div class="spinner-border text-primary" role="status"><span class="sr-only">Cargando...</span></div><p class="mt-2 text-muted">Cargando eventos...</p></div>';
-
-    try {
-        // Construir URL con parámetros de filtro
-        const params = new URLSearchParams();
-        if (filtrosActuales.tipo_evento !== 'todos') {
-            params.append('tipo_evento', filtrosActuales.tipo_evento);
-        }
-        if (filtrosActuales.estado !== 'todos') {
-            params.append('estado', filtrosActuales.estado);
-        }
-        if (filtrosActuales.buscar.trim() !== '') {
-            params.append('buscar', filtrosActuales.buscar.trim());
+        if (!token || isNaN(ongId) || ongId <= 0) {
+            cont.innerHTML = "<p class='text-danger'>Debe iniciar sesión correctamente.</p>";
+            return;
         }
 
-        const url = `${API_BASE_URL}/api/eventos/ong/${ongId}${params.toString() ? '?' + params.toString() : ''}`;
+        cont.innerHTML = '<div class="col-12 text-center py-3"><div class="spinner-border text-primary" role="status"><span class="sr-only">Cargando...</span></div><p class="mt-2 text-muted">Cargando eventos...</p></div>';
 
-        const res = await fetch(url, {
-            method: 'GET',
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Accept": "application/json",
-                "Content-Type": "application/json"
+        try {
+            // Construir URL con parámetros de filtro
+            const params = new URLSearchParams();
+            if (filtrosActuales.tipo_evento !== 'todos') {
+                params.append('tipo_evento', filtrosActuales.tipo_evento);
             }
-        });
+            if (filtrosActuales.estado !== 'todos') {
+                params.append('estado', filtrosActuales.estado);
+            }
+            if (filtrosActuales.buscar.trim() !== '') {
+                params.append('buscar', filtrosActuales.buscar.trim());
+            }
 
-        console.log("Response status:", res.status);
-        console.log("Response ok:", res.ok);
+            const url = `${API_BASE_URL}/api/eventos/ong/${ongId}${params.toString() ? '?' + params.toString() : ''}`;
 
-        if (!res.ok) {
-            const errorData = await res.json().catch(() => ({}));
-            console.error("Error response:", errorData);
-            cont.innerHTML = `<p class='text-danger'>Error cargando eventos (${res.status}): ${errorData.error || 'Error del servidor'}</p>`;
-            return;
-        }
+            const res = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
 
-        const data = await res.json();
-        console.log("Eventos recibidos:", data);
+            console.log("Response status:", res.status);
+            console.log("Response ok:", res.ok);
 
-        if (!data.success) {
-            console.error("Error en respuesta:", data);
-            cont.innerHTML = `<p class='text-danger'>Error cargando eventos: ${data.error || 'Error desconocido'}</p>`;
-            return;
-        }
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                console.error("Error response:", errorData);
+                cont.innerHTML = `<p class='text-danger'>Error cargando eventos (${res.status}): ${errorData.error || 'Error del servidor'}</p>`;
+                return;
+            }
 
-        if (!data.eventos || data.eventos.length === 0) {
-            cont.innerHTML = `
+            const data = await res.json();
+            console.log("Eventos recibidos:", data);
+
+            if (!data.success) {
+                console.error("Error en respuesta:", data);
+                cont.innerHTML = `<p class='text-danger'>Error cargando eventos: ${data.error || 'Error desconocido'}</p>`;
+                return;
+            }
+
+            if (!data.eventos || data.eventos.length === 0) {
+                cont.innerHTML = `
                 <div class="alert alert-info">
                     <p class='text-muted mb-2'>No hay eventos registrados para esta ONG.</p>
                     <small class='text-muted'>ONG ID usado: ${data.ong_id || ongId} | Total encontrados: ${data.count || 0}</small>
                 </div>
             `;
-            return;
-        }
-
-        cont.innerHTML = "";
-
-        // Función helper para construir URL de imagen
-        function buildImageUrl(imgUrl) {
-            if (!imgUrl || imgUrl.trim() === '') return null;
-            
-            if (imgUrl.startsWith('http://') || imgUrl.startsWith('https://')) {
-                return imgUrl;
+                return;
             }
-            
-            if (imgUrl.startsWith('/storage/')) {
-                return `${window.location.origin}${imgUrl}`;
-            }
-            
-            if (imgUrl.startsWith('storage/')) {
-                return `${window.location.origin}/${imgUrl}`;
-            }
-            
-            return `${window.location.origin}/storage/${imgUrl}`;
-        }
 
-        data.eventos.forEach(ev => {
-            // Procesar imágenes
-            let imagenes = [];
-            if (Array.isArray(ev.imagenes) && ev.imagenes.length > 0) {
-                imagenes = ev.imagenes.filter(img => img && typeof img === 'string' && img.trim().length > 0);
-            } else if (typeof ev.imagenes === 'string' && ev.imagenes.trim()) {
-                try {
-                    const parsed = JSON.parse(ev.imagenes);
-                    if (Array.isArray(parsed)) {
-                        imagenes = parsed.filter(img => img && typeof img === 'string' && img.trim().length > 0);
-                    }
-                } catch (err) {
-                    console.warn('Error parseando imágenes:', err);
+            cont.innerHTML = "";
+
+            // Función helper para construir URL de imagen
+            function buildImageUrl(imgUrl) {
+                if (!imgUrl || imgUrl.trim() === '') return null;
+
+                const trimmed = imgUrl.trim();
+
+                // Si ya es una URL completa, retornarla
+                if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+                    return trimmed;
                 }
+
+                // Si empieza con /storage/, usar directamente (enlace simbólico)
+                if (trimmed.startsWith('/storage/')) {
+                    return `${window.location.origin}${trimmed}`;
+                }
+
+                // Si empieza con storage/ (sin /), agregar /
+                if (trimmed.startsWith('storage/')) {
+                    return `${window.location.origin}/${trimmed}`;
+                }
+
+                // Por defecto, asumir que está en storage/
+                return `${window.location.origin}/storage/${trimmed}`;
             }
 
-            const imagenPrincipal = imagenes.length > 0 ? buildImageUrl(imagenes[0]) : null;
-            
-            // Formatear fecha
-            const fechaInicio = ev.fecha_inicio ? new Date(ev.fecha_inicio).toLocaleDateString('es-ES', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-            }) : 'Fecha no especificada';
+            data.eventos.forEach(ev => {
+                // Procesar imágenes
+                let imagenes = [];
+                if (Array.isArray(ev.imagenes) && ev.imagenes.length > 0) {
+                    imagenes = ev.imagenes.filter(img => img && typeof img === 'string' && img.trim().length > 0);
+                } else if (typeof ev.imagenes === 'string' && ev.imagenes.trim()) {
+                    try {
+                        const parsed = JSON.parse(ev.imagenes);
+                        if (Array.isArray(parsed)) {
+                            imagenes = parsed.filter(img => img && typeof img === 'string' && img.trim().length > 0);
+                        }
+                    } catch (err) {
+                        console.warn('Error parseando imágenes:', err);
+                    }
+                }
 
-            // Estado badge - usar estado_dinamico si está disponible
-            const estadoParaBadge = ev.estado_dinamico || ev.estado;
-            const estadoBadges = {
-                'borrador': '<span class="badge badge-warning">Borrador</span>',
-                'publicado': '<span class="badge badge-primary">Publicado</span>',
-                'cancelado': '<span class="badge badge-danger">Cancelado</span>',
-                'finalizado': '<span class="badge badge-secondary">Finalizado</span>',
-                'activo': '<span class="badge badge-success">En Curso</span>',
-                'proximo': '<span class="badge badge-info">Próximo</span>'
-            };
-            const estadoBadge = estadoBadges[estadoParaBadge] || '<span class="badge badge-secondary">' + (estadoParaBadge || 'N/A') + '</span>';
+                const imagenPrincipal = imagenes.length > 0 ? buildImageUrl(imagenes[0]) : null;
 
-            // Crear card con diseño minimalista
-            const cardDiv = document.createElement('div');
-            cardDiv.className = 'col-md-4 mb-4';
-            
-            cardDiv.innerHTML = `
+                // Formatear fecha
+                const fechaInicio = ev.fecha_inicio ? new Date(ev.fecha_inicio).toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) : 'Fecha no especificada';
+
+                // Estado badge - usar estado_dinamico si está disponible
+                const estadoParaBadge = ev.estado_dinamico || ev.estado;
+                const estadoBadges = {
+                    'borrador': '<span class="badge badge-warning">Borrador</span>',
+                    'publicado': '<span class="badge badge-primary">Publicado</span>',
+                    'cancelado': '<span class="badge badge-danger">Cancelado</span>',
+                    'finalizado': '<span class="badge badge-secondary">Finalizado</span>',
+                    'activo': '<span class="badge badge-success">En Curso</span>',
+                    'proximo': '<span class="badge badge-info">Próximo</span>'
+                };
+                const estadoBadge = estadoBadges[estadoParaBadge] || '<span class="badge badge-secondary">' + (estadoParaBadge || 'N/A') + '</span>';
+
+                // Crear card con diseño minimalista
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'col-md-4 mb-4';
+
+                cardDiv.innerHTML = `
                 <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;">
-                    ${imagenPrincipal 
+                    ${imagenPrincipal
                         ? `<div class="position-relative" style="height: 200px; overflow: hidden; background: #f8f9fa;">
                             <img src="${imagenPrincipal}" alt="${ev.titulo}" class="w-100 h-100" style="object-fit: cover;" 
                                  onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'200\\'%3E%3Crect fill=\\'%23f8f9fa\\' width=\\'400\\' height=\\'200\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\' fill=\\'%23adb5bd\\' font-family=\\'Arial\\' font-size=\\'14\\'%3EImagen no disponible%3C/text%3E%3C/svg%3E'; this.style.objectFit='contain'; this.style.padding='20px';">
@@ -254,171 +261,171 @@ async function cargarEventos() {
                     </div>
                 </div>
             `;
-            
-            // Agregar efecto hover
-            const card = cardDiv.querySelector('.card');
-            card.onmouseenter = function() {
-                this.style.transform = 'translateY(-4px)';
-                this.style.boxShadow = '0 8px 16px rgba(0,0,0,0.1)';
-            };
-            card.onmouseleave = function() {
-                this.style.transform = 'translateY(0)';
-                this.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-            };
-            
-            cont.appendChild(cardDiv);
+
+                // Agregar efecto hover
+                const card = cardDiv.querySelector('.card');
+                card.onmouseenter = function () {
+                    this.style.transform = 'translateY(-4px)';
+                    this.style.boxShadow = '0 8px 16px rgba(0,0,0,0.1)';
+                };
+                card.onmouseleave = function () {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+                };
+
+                cont.appendChild(cardDiv);
+            });
+
+            // Cargar contadores de reacciones para cada evento
+            await cargarContadoresReacciones(data.eventos);
+
+        } catch (err) {
+            console.error(err);
+            cont.innerHTML = "<p class='text-danger'>Error de conexión.</p>";
+        }
+    }
+
+    // Cargar contadores de reacciones para todos los eventos
+    async function cargarContadoresReacciones(eventos) {
+        const token = localStorage.getItem('token');
+
+        for (const evento of eventos) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/reacciones/verificar/${evento.id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    const contadorEl = document.getElementById(`reacciones-${evento.id}`);
+                    if (contadorEl) {
+                        contadorEl.textContent = data.total_reacciones || 0;
+                    }
+                }
+            } catch (error) {
+                console.warn(`Error cargando reacciones para evento ${evento.id}:`, error);
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Cargar eventos iniciales
+        await cargarEventos();
+
+        // Event listeners para filtros
+        document.getElementById('filtroTipo').addEventListener('change', function () {
+            filtrosActuales.tipo_evento = this.value;
+            cargarEventos();
         });
 
-        // Cargar contadores de reacciones para cada evento
-        await cargarContadoresReacciones(data.eventos);
+        document.getElementById('filtroEstado').addEventListener('change', function () {
+            filtrosActuales.estado = this.value;
+            cargarEventos();
+        });
 
-    } catch (err) {
-        console.error(err);
-        cont.innerHTML = "<p class='text-danger'>Error de conexión.</p>";
-    }
-}
+        // Búsqueda con debounce
+        let searchTimeout;
+        document.getElementById('buscador').addEventListener('input', function () {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                filtrosActuales.buscar = this.value;
+                cargarEventos();
+            }, 500);
+        });
 
-// Cargar contadores de reacciones para todos los eventos
-async function cargarContadoresReacciones(eventos) {
-    const token = localStorage.getItem('token');
-    
-    for (const evento of eventos) {
+        // Botón limpiar
+        document.getElementById('btnLimpiar').addEventListener('click', function () {
+            document.getElementById('buscador').value = '';
+            document.getElementById('filtroTipo').value = 'todos';
+            document.getElementById('filtroEstado').value = 'todos';
+            filtrosActuales = {
+                tipo_evento: 'todos',
+                estado: 'todos',
+                buscar: ''
+            };
+            cargarEventos();
+        });
+    });
+
+    async function eliminar(id) {
+        // Usar SweetAlert2 si está disponible, sino usar confirm nativo
+        let confirmar = false;
+
+        if (typeof Swal !== 'undefined') {
+            const result = await Swal.fire({
+                title: '¿Estás seguro?',
+                text: "Esta acción no se puede deshacer",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            });
+            confirmar = result.isConfirmed;
+        } else {
+            confirmar = confirm("¿Estás seguro de que deseas eliminar este evento? Esta acción no se puede deshacer.");
+        }
+
+        if (!confirmar) return;
+
+        const token = localStorage.getItem('token');
+
         try {
-            const res = await fetch(`${API_BASE_URL}/api/reacciones/verificar/${evento.id}`, {
+            const res = await fetch(`${API_BASE_URL}/api/eventos/${id}`, {
+                method: "DELETE",
                 headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/json'
+                    "Authorization": `Bearer ${token}`,
+                    "Accept": "application/json"
                 }
             });
-            
+
             const data = await res.json();
-            if (data.success) {
-                const contadorEl = document.getElementById(`reacciones-${evento.id}`);
-                if (contadorEl) {
-                    contadorEl.textContent = data.total_reacciones || 0;
+
+            if (!res.ok || !data.success) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.error || data.message || 'Error al eliminar el evento'
+                    });
+                } else {
+                    alert('Error: ' + (data.error || data.message || 'Error al eliminar el evento'));
                 }
+                return;
             }
+
+            // Mostrar mensaje de éxito
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Eliminado!',
+                    text: data.message || 'El evento ha sido eliminado correctamente',
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                alert(data.message || 'Evento eliminado correctamente');
+                location.reload();
+            }
+
         } catch (error) {
-            console.warn(`Error cargando reacciones para evento ${evento.id}:`, error);
-        }
-    }
-}
-
-document.addEventListener('DOMContentLoaded', async () => {
-    // Cargar eventos iniciales
-    await cargarEventos();
-
-    // Event listeners para filtros
-    document.getElementById('filtroTipo').addEventListener('change', function() {
-        filtrosActuales.tipo_evento = this.value;
-        cargarEventos();
-    });
-
-    document.getElementById('filtroEstado').addEventListener('change', function() {
-        filtrosActuales.estado = this.value;
-        cargarEventos();
-    });
-
-    // Búsqueda con debounce
-    let searchTimeout;
-    document.getElementById('buscador').addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            filtrosActuales.buscar = this.value;
-            cargarEventos();
-        }, 500);
-    });
-
-    // Botón limpiar
-    document.getElementById('btnLimpiar').addEventListener('click', function() {
-        document.getElementById('buscador').value = '';
-        document.getElementById('filtroTipo').value = 'todos';
-        document.getElementById('filtroEstado').value = 'todos';
-        filtrosActuales = {
-            tipo_evento: 'todos',
-            estado: 'todos',
-            buscar: ''
-        };
-        cargarEventos();
-    });
-});
-
-async function eliminar(id) {
-    // Usar SweetAlert2 si está disponible, sino usar confirm nativo
-    let confirmar = false;
-    
-    if (typeof Swal !== 'undefined') {
-        const result = await Swal.fire({
-            title: '¿Estás seguro?',
-            text: "Esta acción no se puede deshacer",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#dc3545',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar'
-        });
-        confirmar = result.isConfirmed;
-    } else {
-        confirmar = confirm("¿Estás seguro de que deseas eliminar este evento? Esta acción no se puede deshacer.");
-    }
-
-    if (!confirmar) return;
-
-    const token = localStorage.getItem('token');
-
-    try {
-    const res = await fetch(`${API_BASE_URL}/api/eventos/${id}`, {
-        method: "DELETE",
-        headers: {
-            "Authorization": `Bearer ${token}`,
-            "Accept": "application/json"
-        }
-    });
-
-    const data = await res.json();
-
-        if (!res.ok || !data.success) {
+            console.error('Error al eliminar:', error);
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: data.error || data.message || 'Error al eliminar el evento'
+                    text: 'Error de conexión al eliminar el evento'
                 });
             } else {
-                alert('Error: ' + (data.error || data.message || 'Error al eliminar el evento'));
+                alert('Error de conexión al eliminar el evento');
             }
-            return;
-        }
-
-        // Mostrar mensaje de éxito
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'success',
-                title: '¡Eliminado!',
-                text: data.message || 'El evento ha sido eliminado correctamente',
-                timer: 2000,
-                showConfirmButton: false
-            }).then(() => {
-                location.reload();
-            });
-        } else {
-            alert(data.message || 'Evento eliminado correctamente');
-    location.reload();
-        }
-
-    } catch (error) {
-        console.error('Error al eliminar:', error);
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Error de conexión al eliminar el evento'
-            });
-        } else {
-            alert('Error de conexión al eliminar el evento');
         }
     }
-}
 </script>
 @stop
