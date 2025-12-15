@@ -21,7 +21,7 @@ class EventoEmpresaParticipacionController extends Controller
     {
         try {
             $evento = Evento::find($eventoId);
-            
+
             if (!$evento) {
                 return response()->json([
                     'success' => false,
@@ -122,7 +122,7 @@ class EventoEmpresaParticipacionController extends Controller
     {
         try {
             $evento = Evento::find($eventoId);
-            
+
             if (!$evento) {
                 return response()->json([
                     'success' => false,
@@ -161,7 +161,7 @@ class EventoEmpresaParticipacionController extends Controller
                     $deleted = EventoEmpresaParticipacion::where('evento_id', $eventoId)
                         ->where('empresa_id', $empresaId)
                         ->delete();
-                    
+
                     if ($deleted) {
                         $count++;
                     }
@@ -206,7 +206,7 @@ class EventoEmpresaParticipacionController extends Controller
     {
         try {
             $empresaId = $request->user()->id_usuario;
-            
+
             $evento = Evento::find($eventoId);
             if (!$evento) {
                 return response()->json([
@@ -271,7 +271,7 @@ class EventoEmpresaParticipacionController extends Controller
     {
         try {
             $evento = Evento::find($eventoId);
-            
+
             if (!$evento) {
                 return response()->json([
                     'success' => false,
@@ -297,7 +297,7 @@ class EventoEmpresaParticipacionController extends Controller
                 ->where('activo', true)
                 ->with(['empresa'])
                 ->get()
-                ->map(function($participacion) {
+                ->map(function ($participacion) {
                     $empresa = $participacion->empresa;
                     return [
                         'id' => $participacion->id,
@@ -344,17 +344,19 @@ class EventoEmpresaParticipacionController extends Controller
                 ->with(['evento.ong'])
                 ->orderBy('created_at', 'desc')
                 ->get()
-                ->filter(function($participacion) {
+                ->filter(function ($participacion) {
                     return $participacion->evento !== null;
                 })
-                ->map(function($participacion) {
+                ->map(function ($participacion) {
                     $tipoRelacion = 'colaboradora';
-                    if ($participacion->tipo_colaboracion === 'Patrocinador' || 
-                        stripos($participacion->tipo_colaboracion ?? '', 'patrocinador') !== false) {
+                    if (
+                        $participacion->tipo_colaboracion === 'Patrocinador' ||
+                        stripos($participacion->tipo_colaboracion ?? '', 'patrocinador') !== false
+                    ) {
                         $tipoRelacion = 'patrocinadora';
                     }
                     $evento = $participacion->evento;
-                    
+
                     // Procesar imágenes del evento
                     $imagenes = [];
                     if ($evento->imagenes) {
@@ -398,51 +400,51 @@ class EventoEmpresaParticipacionController extends Controller
             $todosEventos = Evento::with(['ong'])
                 ->orderBy('created_at', 'desc')
                 ->get();
-            
-            $eventosPatrocinador = $todosEventos->filter(function($evento) use ($empresaId) {
-                    $patrocinadores = $evento->patrocinadores;
-                    
-                    if (empty($patrocinadores)) {
-                        return false;
-                    }
-                    
-                    if (is_string($patrocinadores)) {
-                        $decoded = json_decode($patrocinadores, true);
-                        $patrocinadores = is_array($decoded) ? $decoded : [];
-                    }
-                    
-                    if (!is_array($patrocinadores) || empty($patrocinadores)) {
-                        return false;
-                    }
-                    
-                    $esPatrocinador = in_array($empresaId, $patrocinadores, true) || 
-                           in_array((string)$empresaId, $patrocinadores, true) ||
-                           in_array((int)$empresaId, array_map('intval', $patrocinadores), true);
-                    
-                    // Si es patrocinador pero no tiene registro en la tabla, crearlo automáticamente
-                    if ($esPatrocinador) {
-                        $existeEnTabla = EventoEmpresaParticipacion::where('evento_id', $evento->id)
-                            ->where('empresa_id', $empresaId)
-                            ->exists();
-                        
-                        if (!$existeEnTabla) {
-                            try {
-                                EventoEmpresaParticipacion::create([
-                                    'evento_id' => $evento->id,
-                                    'empresa_id' => $empresaId,
-                                    'estado' => 'asignada',
-                                    'activo' => true,
-                                    'tipo_colaboracion' => 'Patrocinador',
-                                ]);
-                            } catch (\Throwable $e) {
-                                // Ignorar error
-                            }
+
+            $eventosPatrocinador = $todosEventos->filter(function ($evento) use ($empresaId) {
+                $patrocinadores = $evento->patrocinadores;
+
+                if (empty($patrocinadores)) {
+                    return false;
+                }
+
+                if (is_string($patrocinadores)) {
+                    $decoded = json_decode($patrocinadores, true);
+                    $patrocinadores = is_array($decoded) ? $decoded : [];
+                }
+
+                if (!is_array($patrocinadores) || empty($patrocinadores)) {
+                    return false;
+                }
+
+                $esPatrocinador = in_array($empresaId, $patrocinadores, true) ||
+                    in_array((string) $empresaId, $patrocinadores, true) ||
+                    in_array((int) $empresaId, array_map('intval', $patrocinadores), true);
+
+                // Si es patrocinador pero no tiene registro en la tabla, crearlo automáticamente
+                if ($esPatrocinador) {
+                    $existeEnTabla = EventoEmpresaParticipacion::where('evento_id', $evento->id)
+                        ->where('empresa_id', $empresaId)
+                        ->exists();
+
+                    if (!$existeEnTabla) {
+                        try {
+                            EventoEmpresaParticipacion::create([
+                                'evento_id' => $evento->id,
+                                'empresa_id' => $empresaId,
+                                'estado' => 'asignada',
+                                'activo' => true,
+                                'tipo_colaboracion' => 'Patrocinador',
+                            ]);
+                        } catch (\Throwable $e) {
+                            // Ignorar error
                         }
                     }
-                    
-                    return $esPatrocinador;
-                })
-                ->map(function($evento) use ($empresaId) {
+                }
+
+                return $esPatrocinador;
+            })
+                ->map(function ($evento) use ($empresaId) {
                     $imagenes = [];
                     if ($evento->imagenes) {
                         if (is_array($evento->imagenes)) {
@@ -485,7 +487,7 @@ class EventoEmpresaParticipacionController extends Controller
             $eventosCombinados = collect($participaciones)
                 ->concat($eventosPatrocinador)
                 ->groupBy('evento_id')
-                ->map(function($grupo) {
+                ->map(function ($grupo) {
                     if ($grupo->count() > 1) {
                         $colaboradora = $grupo->firstWhere('tipo_relacion', 'colaboradora');
                         return $colaboradora ?: $grupo->first();
@@ -493,7 +495,7 @@ class EventoEmpresaParticipacionController extends Controller
                     return $grupo->first();
                 })
                 ->values()
-                ->sortByDesc(function($item) {
+                ->sortByDesc(function ($item) {
                     return $item['fecha_asignacion'] ?? $item['evento']['fecha_inicio'] ?? '';
                 })
                 ->values();
@@ -597,7 +599,8 @@ class EventoEmpresaParticipacionController extends Controller
     {
         try {
             $empresa = Empresa::where('user_id', $empresaId)->first();
-            if (!$empresa) return;
+            if (!$empresa)
+                return;
 
             Notificacion::create([
                 'ong_id' => $evento->ong_id,
@@ -611,6 +614,65 @@ class EventoEmpresaParticipacionController extends Controller
 
         } catch (\Throwable $e) {
             // Ignorar error
+        }
+    }
+
+    /**
+     * Obtener eventos patrocinados con métricas para el dashboard de empresa
+     */
+    public function eventosPatrocinados(Request $request)
+    {
+        try {
+            $empresaId = $request->user()->id_usuario;
+
+            // Obtener eventos donde la empresa participa
+            $participaciones = EventoEmpresaParticipacion::where('empresa_id', $empresaId)
+                ->where('activo', true)
+                ->with(['evento'])
+                ->get()
+                ->filter(function ($participacion) {
+                    return $participacion->evento !== null;
+                });
+
+            $eventosPatrocinados = $participaciones->map(function ($participacion) {
+                $evento = $participacion->evento;
+
+                // Obtener métricas del evento
+                $totalParticipantes = \App\Models\EventoParticipacion::where('evento_id', $evento->id)->count();
+                $totalReacciones = \App\Models\EventoReaccion::where('evento_id', $evento->id)->count();
+                $totalCompartidos = \App\Models\EventoCompartido::where('evento_id', $evento->id)->count();
+
+                return [
+                    'id' => $evento->id,
+                    'titulo' => $evento->titulo,
+                    'descripcion' => $evento->descripcion,
+                    'tipo_evento' => $evento->tipo_evento,
+                    'fecha_inicio' => $evento->fecha_inicio,
+                    'fecha_fin' => $evento->fecha_fin,
+                    'estado' => $evento->estado,
+                    'ciudad' => $evento->ciudad,
+                    'categoria' => $evento->tipo_evento ?? 'Sin categoría',
+                    'total_participantes' => $totalParticipantes,
+                    'total_reacciones' => $totalReacciones,
+                    'total_compartidos' => $totalCompartidos,
+                    'tipo_colaboracion' => $participacion->tipo_colaboracion,
+                    'estado_participacion' => $participacion->estado,
+                ];
+            })->values();
+
+            return response()->json([
+                'success' => true,
+                'eventos_patrocinados' => $eventosPatrocinados,
+                'count' => $eventosPatrocinados->count(),
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al obtener eventos patrocinados: ' . $e->getMessage(),
+                'eventos_patrocinados' => [],
+                'count' => 0,
+            ], 500);
         }
     }
 }

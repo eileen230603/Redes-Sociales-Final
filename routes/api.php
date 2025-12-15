@@ -182,6 +182,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/mis-eventos', [EventoEmpresaParticipacionController::class, 'misEventos']);
     });
 
+    // ----------- EMPRESAS: DASHBOARD -----------
+    Route::prefix('eventos/empresa')->group(function () {
+        Route::get('/patrocinados', [EventoEmpresaParticipacionController::class, 'eventosPatrocinados']);
+    });
+
     // ----------- PARTICIPACIONES NO REGISTRADAS -----------
     Route::prefix('participaciones-no-registradas')->group(function () {
         Route::put('/{participacionId}/aprobar', [EventoParticipacionController::class, 'aprobarNoRegistrado']);

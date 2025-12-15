@@ -3938,7 +3938,7 @@ class ApiService {
         headers: await _getHeaders(includeAuth: true),
       );
 
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final data = _parseJsonSafely(response.body, 'getEventosPatrocinados');
 
       if (response.statusCode == 200 && data['success'] == true) {
         return {
