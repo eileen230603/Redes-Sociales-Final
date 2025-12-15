@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import '../config/design_tokens.dart';
+import '../config/typography_system.dart';
 import '../services/api_service.dart';
+import '../widgets/atoms/app_button.dart';
+import '../widgets/atoms/app_icon.dart';
+import '../widgets/molecules/app_card.dart';
 import 'home_screen.dart';
 
 class RegisterFormScreen extends StatefulWidget {
@@ -80,32 +85,17 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
     if (widget.tipoUsuario == 'Integrante externo') {
       if (_nombresController.text.trim().isEmpty ||
           _apellidosController.text.trim().isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Los campos Nombres y Apellidos son requeridos'),
-            backgroundColor: Colors.orange,
-          ),
-        );
+        _showSnackBar('Los campos Nombres y Apellidos son requeridos', AppColors.warning);
         return;
       }
     } else if (widget.tipoUsuario == 'ONG') {
       if (_nombreOngController.text.trim().isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('El nombre de la ONG es requerido'),
-            backgroundColor: Colors.orange,
-          ),
-        );
+        _showSnackBar('El nombre de la ONG es requerido', AppColors.warning);
         return;
       }
     } else if (widget.tipoUsuario == 'Empresa') {
       if (_nombreEmpresaController.text.trim().isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('El nombre de la Empresa es requerido'),
-            backgroundColor: Colors.orange,
-          ),
-        );
+        _showSnackBar('El nombre de la Empresa es requerido', AppColors.warning);
         return;
       }
     }
@@ -203,13 +193,7 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
       if (!mounted) return;
 
       if (response.success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('¡Registro exitoso!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
+        _showSnackBar('¡Registro exitoso!', AppColors.success);
 
         await Future.delayed(const Duration(milliseconds: 500));
         if (!mounted) return;
@@ -219,28 +203,11 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
           (route) => false,
         );
       } else {
-        final errorMessage = response.error ?? 'Error al registrar';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage, style: const TextStyle(fontSize: 14)),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 5),
-            action: SnackBarAction(
-              label: 'Cerrar',
-              textColor: Colors.white,
-              onPressed: () {},
-            ),
-          ),
-        );
+        _showSnackBar(response.error ?? 'Error al registrar', AppColors.error);
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showSnackBar('Error: ${e.toString()}', AppColors.error);
     } finally {
       if (mounted) {
         setState(() {
@@ -248,6 +215,16 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
         });
       }
     }
+  }
+
+  void _showSnackBar(String message, Color backgroundColor) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: backgroundColor,
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
   String _getTitle() {
@@ -263,87 +240,65 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
     }
   }
 
-  // Gradientes de fondo exactos de Laravel (Tailwind colors)
-  LinearGradient _getBackgroundGradient() {
-    switch (widget.tipoUsuario) {
-      case 'ONG':
-        // from-green-600 via-teal-500 to-cyan-400
-        return const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF16A34A), // green-600
-            Color(0xFF14B8A6), // teal-500
-            Color(0xFF22D3EE), // cyan-400
-          ],
-        );
-      case 'Empresa':
-        // from-blue-600 via-cyan-500 to-green-400
-        return const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF2563EB), // blue-600
-            Color(0xFF06B6D4), // cyan-500
-            Color(0xFF4ADE80), // green-400
-          ],
-        );
-      case 'Integrante externo':
-        // from-cyan-600 via-sky-500 to-blue-400
-        return const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF0891B2), // cyan-600
-            Color(0xFF0EA5E9), // sky-500
-            Color(0xFF60A5FA), // blue-400
-          ],
-        );
-      default:
-        return const LinearGradient(
-          colors: [Color(0xFF2563EB), Color(0xFF06B6D4)],
-        );
-    }
-  }
-
-  // Colores del título y botón (exactos de Laravel)
   Color _getPrimaryColor() {
     switch (widget.tipoUsuario) {
       case 'ONG':
-        return const Color(0xFF15803D); // green-700
+        return AppColors.accent;
       case 'Empresa':
-        return const Color(0xFF1D4ED8); // blue-700
+        return AppColors.info;
       case 'Integrante externo':
-        return const Color(0xFF0E7490); // cyan-700
+        return AppColors.primary;
       default:
-        return Colors.blue;
+        return AppColors.primary;
     }
   }
 
-  Color _getButtonColor() {
+  IconData _getIcon() {
     switch (widget.tipoUsuario) {
       case 'ONG':
-        return const Color(0xFF16A34A); // green-600
+        return Icons.volunteer_activism;
       case 'Empresa':
-        return const Color(0xFF2563EB); // blue-600
+        return Icons.business_center;
       case 'Integrante externo':
-        return const Color(0xFF0891B2); // cyan-600
+        return Icons.person_pin_circle;
       default:
-        return Colors.blue;
+        return Icons.person;
     }
+  }
+
+  Widget _buildFormField({
+    required TextEditingController controller,
+    required String label,
+    String? Function(String?)? validator,
+    TextInputType? keyboardType,
+    bool obscureText = false,
+    Widget? suffixIcon,
+    bool readOnly = false,
+    VoidCallback? onTap,
+    int maxLines = 1,
+  }) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        suffixIcon: suffixIcon,
+      ),
+      validator: validator,
+      keyboardType: keyboardType,
+      obscureText: obscureText,
+      readOnly: readOnly,
+      onTap: onTap,
+      maxLines: maxLines,
+    );
   }
 
   Widget _buildFormIntegranteExterno() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Nombre de usuario (ancho completo)
-        TextFormField(
+        _buildFormField(
           controller: _nombreUsuarioController,
-          decoration: InputDecoration(
-            labelText: 'Nombre de usuario',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          ),
+          label: 'Nombre de usuario',
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
               return 'Campo requerido';
@@ -351,15 +306,11 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
             return null;
           },
         ),
-        const SizedBox(height: 16),
-        // Correo (ancho completo)
-        TextFormField(
+        const SizedBox(height: AppSpacing.md),
+        _buildFormField(
           controller: _emailController,
+          label: 'Correo electrónico',
           keyboardType: TextInputType.emailAddress,
-          decoration: InputDecoration(
-            labelText: 'Correo',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          ),
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
               return 'Campo requerido';
@@ -370,26 +321,22 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
             return null;
           },
         ),
-        const SizedBox(height: 16),
-        // Contraseña (ancho completo)
-        TextFormField(
+        const SizedBox(height: AppSpacing.md),
+        _buildFormField(
           controller: _passwordController,
+          label: 'Contraseña',
           obscureText: _obscurePassword,
-          decoration: InputDecoration(
-            labelText: 'Contraseña',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscurePassword
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined,
-              ),
-              onPressed: () {
-                setState(() {
-                  _obscurePassword = !_obscurePassword;
-                });
-              },
+          suffixIcon: IconButton(
+            icon: AppIcon.sm(
+              _obscurePassword
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off_outlined,
             ),
+            onPressed: () {
+              setState(() {
+                _obscurePassword = !_obscurePassword;
+              });
+            },
           ),
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
@@ -401,19 +348,13 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
             return null;
           },
         ),
-        const SizedBox(height: 16),
-        // Nombres y Apellidos (lado a lado)
+        const SizedBox(height: AppSpacing.md),
         Row(
           children: [
             Expanded(
-              child: TextFormField(
+              child: _buildFormField(
                 controller: _nombresController,
-                decoration: InputDecoration(
-                  labelText: 'Nombres',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
+                label: 'Nombres',
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Requerido';
@@ -422,16 +363,11 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
                 },
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
-              child: TextFormField(
+              child: _buildFormField(
                 controller: _apellidosController,
-                decoration: InputDecoration(
-                  labelText: 'Apellidos',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
+                label: 'Apellidos',
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Requerido';
@@ -442,33 +378,21 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 16),
-        // Teléfono (ancho completo)
-        TextFormField(
+        const SizedBox(height: AppSpacing.md),
+        _buildFormField(
           controller: _telefonoExternoController,
+          label: 'Teléfono',
           keyboardType: TextInputType.phone,
-          decoration: InputDecoration(
-            labelText: 'Teléfono',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          ),
         ),
-        const SizedBox(height: 16),
-        // Dirección (ancho completo)
-        TextFormField(
+        const SizedBox(height: AppSpacing.md),
+        _buildFormField(
           controller: _direccionExternoController,
-          decoration: InputDecoration(
-            labelText: 'Dirección',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          ),
+          label: 'Dirección',
         ),
-        const SizedBox(height: 16),
-        // Fecha de nacimiento (ancho completo)
-        TextFormField(
+        const SizedBox(height: AppSpacing.md),
+        _buildFormField(
           controller: _fechaNacimientoController,
-          decoration: InputDecoration(
-            labelText: 'Fecha de nacimiento',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          ),
+          label: 'Fecha de nacimiento',
           readOnly: true,
           onTap: () async {
             final date = await showDatePicker(
@@ -483,15 +407,11 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
             }
           },
         ),
-        const SizedBox(height: 16),
-        // Descripción (ancho completo)
-        TextFormField(
+        const SizedBox(height: AppSpacing.md),
+        _buildFormField(
           controller: _descripcionExternoController,
-          maxLines: 2,
-          decoration: InputDecoration(
-            labelText: 'Descripción',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          ),
+          label: 'Descripción (opcional)',
+          maxLines: 3,
         ),
       ],
     );
@@ -501,13 +421,9 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Nombre de usuario (ancho completo)
-        TextFormField(
+        _buildFormField(
           controller: _nombreUsuarioController,
-          decoration: InputDecoration(
-            labelText: 'Nombre de usuario',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          ),
+          label: 'Nombre de usuario',
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
               return 'Campo requerido';
@@ -515,15 +431,11 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
             return null;
           },
         ),
-        const SizedBox(height: 16),
-        // Correo (ancho completo)
-        TextFormField(
+        const SizedBox(height: AppSpacing.md),
+        _buildFormField(
           controller: _emailController,
+          label: 'Correo electrónico',
           keyboardType: TextInputType.emailAddress,
-          decoration: InputDecoration(
-            labelText: 'Correo',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          ),
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
               return 'Campo requerido';
@@ -534,26 +446,22 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
             return null;
           },
         ),
-        const SizedBox(height: 16),
-        // Contraseña (ancho completo)
-        TextFormField(
+        const SizedBox(height: AppSpacing.md),
+        _buildFormField(
           controller: _passwordController,
+          label: 'Contraseña',
           obscureText: _obscurePassword,
-          decoration: InputDecoration(
-            labelText: 'Contraseña',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscurePassword
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined,
-              ),
-              onPressed: () {
-                setState(() {
-                  _obscurePassword = !_obscurePassword;
-                });
-              },
+          suffixIcon: IconButton(
+            icon: AppIcon.sm(
+              _obscurePassword
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off_outlined,
             ),
+            onPressed: () {
+              setState(() {
+                _obscurePassword = !_obscurePassword;
+              });
+            },
           ),
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
@@ -565,90 +473,52 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
             return null;
           },
         ),
-        const SizedBox(height: 16),
-        // Nombre de la ONG y NIT (lado a lado)
+        const SizedBox(height: AppSpacing.md),
+        _buildFormField(
+          controller: _nombreOngController,
+          label: 'Nombre de la ONG',
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Campo requerido';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: AppSpacing.md),
         Row(
           children: [
             Expanded(
-              child: TextFormField(
-                controller: _nombreOngController,
-                decoration: InputDecoration(
-                  labelText: 'Nombre de la ONG',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Requerido';
-                  }
-                  return null;
-                },
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: TextFormField(
+              child: _buildFormField(
                 controller: _nitOngController,
-                decoration: InputDecoration(
-                  labelText: 'NIT',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
+                label: 'NIT',
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        // Teléfono y Sitio web (lado a lado)
-        Row(
-          children: [
+            const SizedBox(width: AppSpacing.md),
             Expanded(
-              child: TextFormField(
+              child: _buildFormField(
                 controller: _telefonoOngController,
+                label: 'Teléfono',
                 keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
-                  labelText: 'Teléfono',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: TextFormField(
-                controller: _sitioWebOngController,
-                keyboardType: TextInputType.url,
-                decoration: InputDecoration(
-                  labelText: 'Sitio web',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 16),
-        // Dirección (ancho completo)
-        TextFormField(
+        const SizedBox(height: AppSpacing.md),
+        _buildFormField(
           controller: _direccionOngController,
-          decoration: InputDecoration(
-            labelText: 'Dirección',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          ),
+          label: 'Dirección',
         ),
-        const SizedBox(height: 16),
-        // Descripción (ancho completo)
-        TextFormField(
+        const SizedBox(height: AppSpacing.md),
+        _buildFormField(
+          controller: _sitioWebOngController,
+          label: 'Sitio web (opcional)',
+          keyboardType: TextInputType.url,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _buildFormField(
           controller: _descripcionOngController,
-          maxLines: 2,
-          decoration: InputDecoration(
-            labelText: 'Descripción',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          ),
+          label: 'Descripción (opcional)',
+          maxLines: 3,
         ),
       ],
     );
@@ -658,13 +528,9 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Nombre de usuario (ancho completo)
-        TextFormField(
+        _buildFormField(
           controller: _nombreUsuarioController,
-          decoration: InputDecoration(
-            labelText: 'Nombre de usuario',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          ),
+          label: 'Nombre de usuario',
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
               return 'Campo requerido';
@@ -672,15 +538,11 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
             return null;
           },
         ),
-        const SizedBox(height: 16),
-        // Correo (ancho completo)
-        TextFormField(
+        const SizedBox(height: AppSpacing.md),
+        _buildFormField(
           controller: _emailController,
+          label: 'Correo electrónico',
           keyboardType: TextInputType.emailAddress,
-          decoration: InputDecoration(
-            labelText: 'Correo',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          ),
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
               return 'Campo requerido';
@@ -691,26 +553,22 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
             return null;
           },
         ),
-        const SizedBox(height: 16),
-        // Contraseña (ancho completo)
-        TextFormField(
+        const SizedBox(height: AppSpacing.md),
+        _buildFormField(
           controller: _passwordController,
+          label: 'Contraseña',
           obscureText: _obscurePassword,
-          decoration: InputDecoration(
-            labelText: 'Contraseña',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscurePassword
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined,
-              ),
-              onPressed: () {
-                setState(() {
-                  _obscurePassword = !_obscurePassword;
-                });
-              },
+          suffixIcon: IconButton(
+            icon: AppIcon.sm(
+              _obscurePassword
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off_outlined,
             ),
+            onPressed: () {
+              setState(() {
+                _obscurePassword = !_obscurePassword;
+              });
+            },
           ),
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
@@ -722,14 +580,10 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
             return null;
           },
         ),
-        const SizedBox(height: 16),
-        // Nombre de la Empresa (ancho completo)
-        TextFormField(
+        const SizedBox(height: AppSpacing.md),
+        _buildFormField(
           controller: _nombreEmpresaController,
-          decoration: InputDecoration(
-            labelText: 'Nombre de la Empresa',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          ),
+          label: 'Nombre de la Empresa',
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
               return 'Campo requerido';
@@ -737,76 +591,41 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
             return null;
           },
         ),
-        const SizedBox(height: 16),
-        // NIT y Teléfono (lado a lado)
+        const SizedBox(height: AppSpacing.md),
         Row(
           children: [
             Expanded(
-              child: TextFormField(
+              child: _buildFormField(
                 controller: _nitEmpresaController,
-                decoration: InputDecoration(
-                  labelText: 'NIT',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
+                label: 'NIT',
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
-              child: TextFormField(
+              child: _buildFormField(
                 controller: _telefonoEmpresaController,
+                label: 'Teléfono',
                 keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
-                  labelText: 'Teléfono',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 16),
-        // Dirección (ancho completo)
-        TextFormField(
+        const SizedBox(height: AppSpacing.md),
+        _buildFormField(
           controller: _direccionEmpresaController,
-          decoration: InputDecoration(
-            labelText: 'Dirección',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          ),
+          label: 'Dirección',
         ),
-        const SizedBox(height: 16),
-        // Sitio Web y Descripción (lado a lado)
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: TextFormField(
-                controller: _sitioWebEmpresaController,
-                keyboardType: TextInputType.url,
-                decoration: InputDecoration(
-                  labelText: 'Sitio Web',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: TextFormField(
-                controller: _descripcionEmpresaController,
-                maxLines: 2,
-                decoration: InputDecoration(
-                  labelText: 'Descripción',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-            ),
-          ],
+        const SizedBox(height: AppSpacing.md),
+        _buildFormField(
+          controller: _sitioWebEmpresaController,
+          label: 'Sitio web (opcional)',
+          keyboardType: TextInputType.url,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _buildFormField(
+          controller: _descripcionEmpresaController,
+          label: 'Descripción (opcional)',
+          maxLines: 3,
         ),
       ],
     );
@@ -815,107 +634,102 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(gradient: _getBackgroundGradient()),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 768),
-                padding: const EdgeInsets.all(32.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
+      appBar: AppBar(
+        title: Text(_getTitle()),
+        leading: IconButton(
+          icon: AppIcon.md(Icons.arrow_back_ios_new),
+          onPressed: () => Navigator.of(context).pop(),
+          tooltip: 'Volver',
+        ),
+      ),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Header con icono
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    decoration: BoxDecoration(
+                      color: _getPrimaryColor().withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
                     ),
-                  ],
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Título
-                      Text(
-                        _getTitle(),
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: _getPrimaryColor(),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 24),
-                      // Formulario según tipo
-                      if (widget.tipoUsuario == 'Integrante externo')
-                        _buildFormIntegranteExterno()
-                      else if (widget.tipoUsuario == 'ONG')
-                        _buildFormONG()
-                      else if (widget.tipoUsuario == 'Empresa')
-                        _buildFormEmpresa(),
-                      const SizedBox(height: 24),
-                      // Botón de registro
-                      ElevatedButton(
-                        onPressed: _isLoading ? null : _handleRegister,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _getButtonColor(),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                    child: Column(
+                      children: [
+                        Container(
+                          width: AppSizes.avatarLg,
+                          height: AppSizes.avatarLg,
+                          decoration: BoxDecoration(
+                            color: _getPrimaryColor(),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                          ),
+                          child: Icon(
+                            _getIcon(),
+                            size: AppSizes.iconLg,
+                            color: AppColors.textOnPrimary,
                           ),
                         ),
-                        child:
-                            _isLoading
-                                ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
-                                    ),
-                                  ),
-                                )
-                                : Text(
-                                  widget.tipoUsuario == 'ONG'
-                                      ? 'Registrar ONG'
-                                      : widget.tipoUsuario == 'Empresa'
-                                      ? 'Registrar Empresa'
-                                      : 'Registrar Usuario',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Enlace a login
-                      Center(
-                        child: TextButton(
-                          onPressed: () {
-                            Navigator.of(
-                              context,
-                            ).popUntil((route) => route.isFirst);
-                          },
-                          child: Text(
-                            '¿Ya tienes cuenta? Inicia sesión',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: _getPrimaryColor(),
-                              fontWeight: FontWeight.w500,
-                            ),
+                        const SizedBox(height: AppSpacing.md),
+                        Text(
+                          _getTitle(),
+                          style: AppTypography.headlineSmall.copyWith(
+                            color: _getPrimaryColor(),
                           ),
+                          textAlign: TextAlign.center,
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          'Completa el formulario para unirte a UNI2',
+                          style: AppTypography.bodySecondary,
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                  const SizedBox(height: AppSpacing.lg),
+                  // Form card
+                  AppCard(
+                    elevated: true,
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (widget.tipoUsuario == 'Integrante externo')
+                            _buildFormIntegranteExterno()
+                          else if (widget.tipoUsuario == 'ONG')
+                            _buildFormONG()
+                          else if (widget.tipoUsuario == 'Empresa')
+                            _buildFormEmpresa(),
+                          const SizedBox(height: AppSpacing.lg),
+                          AppButton.primary(
+                            label: widget.tipoUsuario == 'ONG'
+                                ? 'Registrar ONG'
+                                : widget.tipoUsuario == 'Empresa'
+                                    ? 'Registrar Empresa'
+                                    : 'Registrar Usuario',
+                            icon: Icons.app_registration,
+                            onPressed: _isLoading ? null : _handleRegister,
+                            isLoading: _isLoading,
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          AppButton.text(
+                            label: '¿Ya tienes cuenta? Inicia sesión',
+                            icon: Icons.login,
+                            onPressed: () {
+                              Navigator.of(context).popUntil((route) => route.isFirst);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                ],
               ),
             ),
           ),
