@@ -1,0 +1,65 @@
+version: '3'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: redes-sociales-app
+    container_name: redes-sociales-app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    environment:
+      APP_NAME: "Redes Sociales"
+      APP_ENV: production
+      APP_KEY: ${APP_KEY}
+      APP_DEBUG: "false"
+      APP_URL: "http://conectandoeventos.website"
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: redes_sociales
+      DB_USERNAME: redes_user
+      DB_PASSWORD: secure_password
+    depends_on:
+      - db
+
+  web:
+    image: nginx:alpine
+    container_name: redes-sociales-nginx
+    restart: unless-stopped
+    ports:
+      - "8095:80"
+    volumes:
+      - ./:/var/www
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - app
+
+    networks:
+      - default
+      - proxy-network
+
+  db:
+    image: postgres:15-alpine
+    container_name: redes-sociales-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: redes_sociales
+      POSTGRES_USER: redes_user
+      POSTGRES_PASSWORD: secure_password
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    networks:
+      - default
+
+volumes:
+  dbdata:
+
+
+networks:
+  default:
+    driver: bridge
+  proxy-network:
+    external: true

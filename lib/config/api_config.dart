@@ -16,7 +16,7 @@ class ApiConfig {
   // Si deseas sobrescribir la URL automática, cambia este valor
   // Deja como null para usar la detección automática
   // Para desarrollo local, usa null para detección automática
-  static const String? _overrideBaseUrl = null;
+  static const String? _overrideBaseUrl = 'http://conectandoeventos.website/api';
 
   // Para dispositivo físico, cambia esta IP por la IP local de tu máquina
   // Encuentra tu IP local ejecutando: ipconfig (Windows) o ifconfig (Linux/Mac)
