@@ -39,14 +39,14 @@ class StorageController extends Controller
 
             $filePath = null;
 
-            // 1. public/storage
-            $filePath = public_path('storage/' . $path);
+            // 1. storage/app/private/public (donde están las imágenes actualmente)
+            $filePath = storage_path('app/private/public/' . $path);
             if (!file_exists($filePath) || !is_file($filePath) || !is_readable($filePath)) {
-                // 2. storage/app/public
-                $filePath = storage_path('app/public/' . $path);
+                // 2. public/storage
+                $filePath = public_path('storage/' . $path);
                 if (!file_exists($filePath) || !is_file($filePath) || !is_readable($filePath)) {
-                    // 3. storage/app/private/public (compatibilidad)
-                    $filePath = storage_path('app/private/public/' . $path);
+                    // 3. storage/app/public
+                    $filePath = storage_path('app/public/' . $path);
                 }
             }
 
