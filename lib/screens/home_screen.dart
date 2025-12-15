@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../config/design_tokens.dart';
+import '../config/typography_system.dart';
 import '../services/storage_service.dart';
 import '../services/api_service.dart';
 import '../services/auth_helper.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/bottom_nav_bar.dart';
+import '../widgets/atoms/app_badge.dart';
+import '../widgets/atoms/app_button.dart';
+import '../widgets/atoms/app_icon.dart';
+import '../widgets/molecules/app_card.dart';
+import '../widgets/molecules/empty_state.dart';
+import '../widgets/molecules/loading_state.dart';
+import '../widgets/organisms/error_view.dart';
 import '../models/evento.dart';
 import '../models/evento_participacion.dart';
 import 'evento_detail_screen.dart';
@@ -201,7 +210,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Stack(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.notifications),
+                  icon: AppIcon.md(Icons.notifications),
                   onPressed: () async {
                     await Navigator.push(
                       context,
@@ -218,33 +227,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   Positioned(
                     right: 8,
                     top: 8,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 16,
-                        minHeight: 16,
-                      ),
-                      child: Text(
-                        _notificacionesNoLeidas > 99
-                            ? '99+'
-                            : _notificacionesNoLeidas.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
+                    child: AppBadge.error(
+                      label:
+                          _notificacionesNoLeidas > 99
+                              ? '99+'
+                              : _notificacionesNoLeidas.toString(),
                     ),
                   ),
               ],
             ),
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: AppIcon.md(Icons.refresh),
             onPressed: () {
               _loadEventos();
               _loadContadorNotificaciones();
@@ -256,53 +249,41 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body:
           _userData == null
-              ? const Center(child: CircularProgressIndicator())
+              ? LoadingState.detail()
               : RefreshIndicator(
                 onRefresh: _loadEventos,
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(AppSpacing.md),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Saludo y nombre de usuario
-                      Card(
-                        elevation: 2,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.person_outline,
-                                color: Theme.of(context).primaryColor,
-                                size: 32,
+                      AppCard(
+                        elevated: true,
+                        child: Row(
+                          children: [
+                            AppIcon.lg(
+                              Icons.person_outline,
+                              color: AppColors.primary,
+                            ),
+                            const SizedBox(width: AppSpacing.md),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Bienvenido', style: AppTypography.titleLarge),
+                                  const SizedBox(height: AppSpacing.xxs),
+                                  Text(
+                                    _userData!['user_name'] ?? 'Usuario',
+                                    style: AppTypography.bodyLarge,
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Bienvenido',
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.headlineSmall?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      _userData!['user_name'] ?? 'Usuario',
-                                      style:
-                                          Theme.of(context).textTheme.bodyLarge,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppSpacing.lg),
                       // Título de eventos
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -313,98 +294,41 @@ class _HomeScreenState extends State<HomeScreen> {
                                 : _userData?['user_type'] == 'ONG'
                                 ? 'Mis Eventos'
                                 : 'Eventos Disponibles',
-                            style: Theme.of(context).textTheme.titleLarge,
+                            style: AppTypography.titleLarge,
                           ),
-                          if (_isLoadingEventos)
-                            const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.md),
                       // Lista de eventos
                       if (_isLoadingEventos)
-                        const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(32.0),
-                            child: CircularProgressIndicator(),
+                        Column(
+                          children: List.generate(
+                            3,
+                            (index) => LoadingState.card(),
                           ),
                         )
                       else if (_errorEventos != null)
-                        Card(
-                          color: Colors.red[50],
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              children: [
-                                Icon(
-                                  Icons.error_outline,
-                                  color: Colors.red[300],
-                                  size: 48,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  _errorEventos!,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(color: Colors.red[700]),
-                                ),
-                                const SizedBox(height: 12),
-                                FilledButton.tonal(
-                                  onPressed: _loadEventos,
-                                  child: const Text('Reintentar'),
-                                ),
-                              ],
-                            ),
-                          ),
+                        ErrorView.serverError(
+                          onRetry: _loadEventos,
+                          errorDetails: _errorEventos,
                         )
                       else if (_eventos.isEmpty)
-                        Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(32.0),
-                            child: Column(
-                              children: [
-                                Icon(
-                                  Icons.event_busy,
-                                  size: 64,
-                                  color: Colors.grey[400],
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  _userData?['user_type'] == 'Empresa'
-                                      ? 'No tienes eventos patrocinados'
-                                      : _userData?['user_type'] == 'ONG'
-                                      ? 'No tienes eventos creados'
-                                      : 'No hay eventos disponibles',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                                if (_userData?['user_type'] == 'Empresa') ...[
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Explora eventos disponibles para patrocinar',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey[500],
-                                    ),
-                                  ),
-                                ] else if (_userData?['user_type'] ==
-                                    'ONG') ...[
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Crea tu primer evento',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey[500],
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
+                        EmptyState(
+                          icon: Icons.event_busy,
+                          title:
+                              _userData?['user_type'] == 'Empresa'
+                                  ? 'Sin eventos patrocinados'
+                                  : _userData?['user_type'] == 'ONG'
+                                  ? 'Sin eventos creados'
+                                  : 'Sin eventos disponibles',
+                          message:
+                              _userData?['user_type'] == 'Empresa'
+                                  ? 'Explora eventos disponibles para patrocinar.'
+                                  : _userData?['user_type'] == 'ONG'
+                                  ? 'Crea tu primer evento para empezar.'
+                                  : 'Vuelve a intentarlo en unos minutos.',
+                          actionLabel: 'Actualizar',
+                          onAction: _loadEventos,
                         )
                       else
                         ..._eventos.map((evento) => _buildEventoCard(evento)),
@@ -423,151 +347,110 @@ class _HomeScreenState extends State<HomeScreen> {
     // Obtener la primera imagen usando el helper
     final imagenUrl = ImageHelper.getFirstImageUrl(evento.imagenes);
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        onTap: () {
-          final userType = _userData?['user_type'] as String?;
-          // Para integrantes externos, mostrar modal
-          if (userType == 'Integrante externo') {
-            _mostrarDetalleEventoModal(evento);
-          } else {
-            // Para otros tipos de usuario, navegar a la pantalla de detalles
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => EventoDetailScreen(eventoId: evento.id),
-              ),
-            ).then((_) => _loadEventos());
-          }
-        },
+    final isExterno = _userData?['user_type'] == 'Integrante externo';
+    final isEmpresa = _userData?['user_type'] == 'Empresa';
+    final isInscrito = isExterno && _eventosInscritos.contains(evento.id);
+    final reaccionado = _eventosReaccionados[evento.id] == true;
+    final totalReacciones = _totalReaccionesPorEvento[evento.id] ?? 0;
+
+    void openDetail() {
+      final userType = _userData?['user_type'] as String?;
+      if (userType == 'Integrante externo') {
+        _mostrarDetalleEventoModal(evento);
+        return;
+      }
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => EventoDetailScreen(eventoId: evento.id),
+        ),
+      ).then((_) => _loadEventos());
+    }
+
+    Widget imageFallback({required IconData icon}) {
+      return Container(
+        height: AppSizes.cardImageHeight,
+        width: double.infinity,
+        color: AppColors.grey100,
+        child: Center(
+          child: AppIcon.xl(icon, color: AppColors.textTertiary),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: AppCard(
+        elevated: true,
+        padding: EdgeInsets.zero,
+        onTap: openDetail,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Imagen del evento con botón de reacción (solo para integrantes externos)
             Stack(
               children: [
-                if (imagenUrl != null)
-                  CachedNetworkImage(
-                    imageUrl: imagenUrl,
-                    height: 200,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    placeholder:
-                        (context, url) => Container(
-                          height: 200,
-                          width: double.infinity,
-                          color: Colors.grey[200],
-                          child: const Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                        ),
-                    errorWidget:
-                        (context, url, error) => Container(
-                          height: 200,
-                          width: double.infinity,
-                          color: Colors.grey[200],
-                          child: Icon(
-                            Icons.image_not_supported,
-                            size: 64,
-                            color: Colors.grey[400],
-                          ),
-                        ),
-                  )
-                else
-                  Container(
-                    height: 200,
-                    width: double.infinity,
-                    color: Colors.grey[200],
-                    child: Icon(Icons.event, size: 64, color: Colors.grey[400]),
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(AppRadius.card),
                   ),
-                // Botón de reacción (solo para integrantes externos)
-                if (_userData?['user_type'] == 'Integrante externo')
+                  child: SizedBox(
+                    height: AppSizes.cardImageHeight,
+                    width: double.infinity,
+                    child:
+                        imagenUrl != null
+                            ? CachedNetworkImage(
+                              imageUrl: imagenUrl,
+                              height: AppSizes.cardImageHeight,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              placeholder:
+                                  (context, url) => imageFallback(
+                                    icon: Icons.image_outlined,
+                                  ),
+                              errorWidget:
+                                  (context, url, error) => imageFallback(
+                                    icon: Icons.image_not_supported,
+                                  ),
+                            )
+                            : imageFallback(icon: Icons.event),
+                  ),
+                ),
+                if (isExterno)
                   Positioned(
-                    top: 12,
-                    right: 12,
+                    top: AppSpacing.sm,
+                    right: AppSpacing.sm,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
+                        color: AppColors.white,
                         shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                        boxShadow: AppElevation.cardShadow,
                       ),
                       child: IconButton(
-                        icon: Icon(
-                          _eventosReaccionados[evento.id] == true
-                              ? Icons.favorite
-                              : Icons.favorite_border,
+                        icon: AppIcon.md(
+                          reaccionado ? Icons.favorite : Icons.favorite_border,
                           color:
-                              _eventosReaccionados[evento.id] == true
-                                  ? Colors.red
-                                  : Colors.grey[700],
-                          size: 24,
+                              reaccionado
+                                  ? AppColors.error
+                                  : AppColors.textSecondary,
                         ),
                         onPressed: () => _toggleReaccionEnCard(evento.id),
-                        tooltip:
-                            _eventosReaccionados[evento.id] == true
-                                ? 'Quitar reacción'
-                                : 'Reaccionar',
+                        tooltip: reaccionado ? 'Quitar reacción' : 'Reaccionar',
                       ),
                     ),
                   ),
-                // Contador de reacciones (solo para integrantes externos)
-                if (_userData?['user_type'] == 'Integrante externo' &&
-                    (_totalReaccionesPorEvento[evento.id] ?? 0) > 0)
+                if (isExterno && totalReacciones > 0)
                   Positioned(
-                    bottom: 12,
-                    right: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.favorite,
-                            color: Colors.red,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${_totalReaccionesPorEvento[evento.id] ?? 0}',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ],
-                      ),
+                    bottom: AppSpacing.sm,
+                    right: AppSpacing.sm,
+                    child: AppBadge.error(
+                      label: totalReacciones.toString(),
+                      icon: Icons.favorite,
                     ),
                   ),
               ],
             ),
-            // Contenido del card
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(AppSpacing.md),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -576,139 +459,81 @@ class _HomeScreenState extends State<HomeScreen> {
                       Expanded(
                         child: Text(
                           evento.titulo,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: AppTypography.titleMedium,
                         ),
                       ),
-                      if (_userData?['user_type'] == 'Empresa')
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.green[100],
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            'Patrocinado',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.green[800],
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        )
-                      else if (_userData?['user_type'] ==
-                              'Integrante externo' &&
-                          _eventosInscritos.contains(evento.id))
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.blue[100],
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Text(
-                            'INSCRITO',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.blue,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        )
+                      if (isEmpresa)
+                        AppBadge.success(label: 'Patrocinado', icon: Icons.handshake)
+                      else if (isInscrito)
+                        AppBadge.info(label: 'Inscrito', icon: Icons.verified)
                       else if (!evento.puedeInscribirse)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[300],
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Text(
-                            'Cerrado',
-                            style: TextStyle(fontSize: 12),
-                          ),
+                        AppBadge.neutral(label: 'Cerrado', icon: Icons.lock),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Row(
+                    children: [
+                      AppIcon.xs(Icons.category, color: AppColors.textSecondary),
+                      const SizedBox(width: AppSpacing.xs),
+                      Expanded(
+                        child: Text(
+                          evento.tipoEvento,
+                          style: AppTypography.bodySecondary,
                         ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Icon(Icons.category, size: 16, color: Colors.grey[600]),
-                      const SizedBox(width: 4),
-                      Text(
-                        evento.tipoEvento,
-                        style: TextStyle(color: Colors.grey[600]),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.xs),
                   Row(
                     children: [
-                      Icon(
-                        Icons.calendar_today,
-                        size: 16,
-                        color: Colors.grey[600],
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        _formatDate(evento.fechaInicio),
-                        style: TextStyle(color: Colors.grey[600]),
+                      AppIcon.xs(Icons.calendar_today, color: AppColors.textSecondary),
+                      const SizedBox(width: AppSpacing.xs),
+                      Expanded(
+                        child: Text(
+                          _formatDate(evento.fechaInicio),
+                          style: AppTypography.bodySecondary,
+                        ),
                       ),
                     ],
                   ),
                   if (evento.ciudad != null) ...[
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.xs),
                     Row(
                       children: [
-                        Icon(
-                          Icons.location_on,
-                          size: 16,
-                          color: Colors.grey[600],
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          evento.ciudad!,
-                          style: TextStyle(color: Colors.grey[600]),
+                        AppIcon.xs(Icons.location_on, color: AppColors.textSecondary),
+                        const SizedBox(width: AppSpacing.xs),
+                        Expanded(
+                          child: Text(
+                            evento.ciudad!,
+                            style: AppTypography.bodySecondary,
+                          ),
                         ),
                       ],
                     ),
                   ],
                   if (evento.descripcion != null &&
                       evento.descripcion!.isNotEmpty) ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.sm),
                     Text(
                       evento.descripcion!,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: Colors.grey[700]),
+                      style: AppTypography.bodySmall,
                     ),
                   ],
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.sm),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       Text(
                         'Ver detalles',
-                        style: TextStyle(
-                          color: Theme.of(context).primaryColor,
-                          fontWeight: FontWeight.w500,
+                        style: AppTypography.labelLarge.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: Theme.of(context).primaryColor,
-                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      AppIcon.xs(Icons.arrow_forward_ios, color: AppColors.primary),
                     ],
                   ),
                 ],
@@ -783,7 +608,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     content: Text(
                       result['message'] as String? ?? 'Inscripción exitosa',
                     ),
-                    backgroundColor: Colors.green,
+                    backgroundColor: AppColors.success,
                   ),
                 );
                 _loadEventos();
@@ -793,7 +618,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     content: Text(
                       result['error'] as String? ?? 'Error al inscribirse',
                     ),
-                    backgroundColor: Colors.red,
+                    backgroundColor: AppColors.error,
                   ),
                 );
               }
@@ -834,7 +659,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       content: Text(
                         result['message'] as String? ?? 'Inscripción cancelada',
                       ),
-                      backgroundColor: Colors.orange,
+                      backgroundColor: AppColors.warning,
                     ),
                   );
                   _loadEventos();
@@ -844,7 +669,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       content: Text(
                         result['error'] as String? ?? 'Error al cancelar',
                       ),
-                      backgroundColor: Colors.red,
+                      backgroundColor: AppColors.error,
                     ),
                   );
                 }
@@ -896,163 +721,113 @@ class _EventoDetalleModalState extends State<_EventoDetalleModal> {
       }
     }
 
+    Widget imageFallback({required IconData icon}) {
+      return Container(
+        height: AppSizes.cardImageHeight,
+        width: double.infinity,
+        color: AppColors.grey100,
+        child: Center(
+          child: AppIcon.xl(icon, color: AppColors.textTertiary),
+        ),
+      );
+    }
+
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
+      insetPadding: const EdgeInsets.all(AppSpacing.lg),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.modal),
+      ),
+      child: ConstrainedBox(
         constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height * 0.9,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header con botón cerrar
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    'Detalles del Evento',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Detalles del evento',
+                      style: AppTypography.titleLarge,
                     ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
+                  IconButton(
+                    icon: AppIcon.md(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
             ),
+            const Divider(height: 1, color: AppColors.borderLight),
             Flexible(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Imagen
-                    if (imagenUrl != null)
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: CachedNetworkImage(
-                          imageUrl: imagenUrl,
-                          height: 200,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          placeholder:
-                              (context, url) => Container(
-                                height: 200,
-                                width: double.infinity,
-                                color: Colors.grey[200],
-                                child: const Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              ),
-                          errorWidget:
-                              (context, url, error) => Container(
-                                height: 200,
-                                width: double.infinity,
-                                color: Colors.grey[200],
-                                child: Icon(
-                                  Icons.image_not_supported,
-                                  size: 64,
-                                  color: Colors.grey[400],
-                                ),
-                              ),
-                        ),
-                      )
-                    else
-                      Container(
-                        height: 200,
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(AppRadius.card),
+                      child: SizedBox(
+                        height: AppSizes.cardImageHeight,
                         width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.event,
-                          size: 64,
-                          color: Colors.grey[400],
-                        ),
-                      ),
-                    const SizedBox(height: 16),
-
-                    // Título
-                    Text(
-                      widget.evento.titulo,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
+                        child:
+                            imagenUrl != null
+                                ? CachedNetworkImage(
+                                  imageUrl: imagenUrl,
+                                  height: AppSizes.cardImageHeight,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                  placeholder:
+                                      (context, url) => imageFallback(
+                                        icon: Icons.image_outlined,
+                                      ),
+                                  errorWidget:
+                                      (context, url, error) => imageFallback(
+                                        icon: Icons.image_not_supported,
+                                      ),
+                                )
+                                : imageFallback(icon: Icons.event),
                       ),
                     ),
-                    const SizedBox(height: 12),
-
-                    // Estado e inscripción
-                    Row(
+                    const SizedBox(height: AppSpacing.lg),
+                    Text(widget.evento.titulo, style: AppTypography.headlineSmall),
+                    const SizedBox(height: AppSpacing.md),
+                    Wrap(
+                      spacing: AppSpacing.sm,
+                      runSpacing: AppSpacing.sm,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color:
-                                widget.evento.estado == 'publicado'
-                                    ? Colors.green[100]
-                                    : Colors.grey[300],
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Text(
-                            widget.evento.estado.toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color:
-                                  widget.evento.estado == 'publicado'
-                                      ? Colors.green[800]
-                                      : Colors.grey[800],
+                        widget.evento.estado == 'publicado'
+                            ? AppBadge.success(
+                              label: widget.evento.estado.toUpperCase(),
+                              icon: Icons.public,
+                            )
+                            : AppBadge.neutral(
+                              label: widget.evento.estado.toUpperCase(),
+                              icon: Icons.info_outline,
                             ),
-                          ),
-                        ),
-                        if (widget.isInscrito) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.blue[100],
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: const Text(
-                              'INSCRITO',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue,
-                              ),
-                            ),
-                          ),
-                        ],
+                        if (widget.isInscrito)
+                          AppBadge.info(label: 'Inscrito', icon: Icons.verified)
+                        else if (!widget.evento.puedeInscribirse)
+                          AppBadge.neutral(label: 'Cerrado', icon: Icons.lock),
                       ],
                     ),
-                    const SizedBox(height: 16),
-
-                    // Información del evento
+                    const SizedBox(height: AppSpacing.lg),
                     _buildInfoRow(
                       Icons.category,
                       'Tipo',
                       widget.evento.tipoEvento,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
                     _buildInfoRow(
                       Icons.calendar_today,
                       'Fecha',
                       widget.formatDate(widget.evento.fechaInicio),
                     ),
                     if (widget.evento.ciudad != null) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.sm),
                       _buildInfoRow(
                         Icons.location_on,
                         'Ciudad',
@@ -1060,7 +835,7 @@ class _EventoDetalleModalState extends State<_EventoDetalleModal> {
                       ),
                     ],
                     if (widget.evento.direccion != null) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.sm),
                       _buildInfoRow(
                         Icons.place,
                         'Dirección',
@@ -1069,29 +844,18 @@ class _EventoDetalleModalState extends State<_EventoDetalleModal> {
                     ],
                     if (widget.evento.descripcion != null &&
                         widget.evento.descripcion!.isNotEmpty) ...[
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Descripción',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        widget.evento.descripcion!,
-                        style: TextStyle(color: Colors.grey[700]),
-                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      Text('Descripción', style: AppTypography.titleMedium),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(widget.evento.descripcion!, style: AppTypography.bodyMedium),
                     ],
-                    const SizedBox(height: 24),
-
-                    // Botones de acción
+                    const SizedBox(height: AppSpacing.xl),
                     if (widget.isChecking)
-                      const Center(child: CircularProgressIndicator())
+                      LoadingState.card()
                     else if (widget.isInscrito)
                       SizedBox(
                         width: double.infinity,
-                        child: FilledButton.tonalIcon(
+                        child: AppButton.outlined(
                           onPressed:
                               _isProcessing
                                   ? null
@@ -1099,17 +863,18 @@ class _EventoDetalleModalState extends State<_EventoDetalleModal> {
                                     setState(() => _isProcessing = true);
                                     widget.onCancelarInscripcion();
                                   },
-                          icon: const Icon(Icons.cancel),
+                          icon: Icons.cancel,
                           label:
                               _isProcessing
-                                  ? const Text('Cancelando...')
-                                  : const Text('Cancelar Inscripción'),
+                                  ? 'Cancelando...'
+                                  : 'Cancelar inscripción',
+                          isLoading: _isProcessing,
                         ),
                       )
                     else if (widget.evento.puedeInscribirse)
                       SizedBox(
                         width: double.infinity,
-                        child: FilledButton.icon(
+                        child: AppButton.primary(
                           onPressed:
                               _isProcessing
                                   ? null
@@ -1117,22 +882,23 @@ class _EventoDetalleModalState extends State<_EventoDetalleModal> {
                                     setState(() => _isProcessing = true);
                                     widget.onInscribirse();
                                   },
-                          icon: const Icon(Icons.check_circle),
+                          icon: Icons.check_circle,
                           label:
                               _isProcessing
-                                  ? const Text('Inscribiendo...')
-                                  : const Text('Inscribirse al Evento'),
+                                  ? 'Inscribiendo...'
+                                  : 'Inscribirse al evento',
+                          isLoading: _isProcessing,
                         ),
                       )
                     else
                       SizedBox(
                         width: double.infinity,
-                        child: OutlinedButton(
+                        child: AppButton.outlined(
                           onPressed: null,
-                          child: const Text('Inscripciones Cerradas'),
+                          icon: Icons.lock,
+                          label: 'Inscripciones cerradas',
                         ),
                       ),
-                    const SizedBox(height: 16),
                   ],
                 ),
               ),
@@ -1147,27 +913,20 @@ class _EventoDetalleModalState extends State<_EventoDetalleModal> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: Colors.grey[600]),
-        const SizedBox(width: 8),
+        AppIcon.sm(icon, color: AppColors.textSecondary),
+        const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
-                ),
+                style: AppTypography.labelSmall,
               ),
               const SizedBox(height: 2),
               Text(
                 value,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: AppTypography.bodyMedium,
               ),
             ],
           ),

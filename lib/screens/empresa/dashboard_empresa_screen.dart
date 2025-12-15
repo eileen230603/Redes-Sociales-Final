@@ -1,9 +1,20 @@
 import 'package:flutter/material.dart';
+import '../../config/design_tokens.dart';
+import '../../config/typography_system.dart';
 import '../../services/api_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/atoms/app_avatar.dart';
+import '../../widgets/atoms/app_badge.dart';
+import '../../widgets/atoms/app_button.dart';
+import '../../widgets/atoms/app_icon.dart';
 import '../../widgets/metrics/metric_card.dart';
 import '../../widgets/charts/pie_chart_widget.dart';
 import '../../widgets/charts/bar_chart_widget.dart';
+import '../../widgets/molecules/app_card.dart';
+import '../../widgets/molecules/app_list_tile.dart';
+import '../../widgets/molecules/empty_state.dart';
+import '../../widgets/molecules/loading_state.dart';
+import '../../widgets/organisms/error_view.dart';
 
 /// Dashboard Empresa Consolidado
 /// Único dashboard para empresas con todas las métricas y reportes
@@ -57,10 +68,10 @@ class _DashboardEmpresaScreenState extends State<DashboardEmpresaScreen> {
     return Scaffold(
       drawer: const AppDrawer(),
       appBar: AppBar(
-        title: const Text('Dashboard Empresa'),
+        title: const Text('Dashboard empresa'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: AppIcon.md(Icons.refresh),
             onPressed: _loadDatos,
             tooltip: 'Actualizar',
           ),
@@ -68,57 +79,44 @@ class _DashboardEmpresaScreenState extends State<DashboardEmpresaScreen> {
       ),
       body:
           _isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? LoadingState.detail()
               : _error != null
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-                    const SizedBox(height: 16),
-                    Text(
-                      _error!,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.red[700]),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _loadDatos,
-                      child: const Text('Reintentar'),
-                    ),
-                  ],
-                ),
+              ? ErrorView.serverError(
+                onRetry: _loadDatos,
+                errorDetails: _error,
               )
               : _datos == null
-              ? const Center(child: Text('No hay datos disponibles'))
+              ? const EmptyState(
+                icon: Icons.dashboard_outlined,
+                title: 'Sin datos',
+                message: 'No hay información disponible para mostrar.',
+              )
               : SingleChildScrollView(
+                padding: const EdgeInsets.all(AppSpacing.md),
                 child: Column(
                   children: [
-                    // 1. Resumen General
                     _buildCollapsibleSection(
                       key: 'resumen',
-                      title: '📊 Resumen General',
-                      subtitle: 'KPIs principales y métricas de patrocinios',
+                      title: 'Resumen general',
+                      subtitle: 'KPIs y métricas principales',
                       icon: Icons.dashboard,
                       child: _buildResumenSection(),
                     ),
-                    // 2. Impacto Social
                     _buildCollapsibleSection(
                       key: 'impacto',
-                      title: '📈 Impacto Social',
-                      subtitle: 'Análisis de alcance y categorías',
+                      title: 'Impacto',
+                      subtitle: 'Alcance y distribución por categorías',
                       icon: Icons.trending_up,
                       child: _buildImpactoSection(),
                     ),
-                    // 3. Eventos Patrocinados
                     _buildCollapsibleSection(
                       key: 'eventos',
-                      title: '🎯 Eventos Patrocinados',
+                      title: 'Eventos patrocinados',
                       subtitle: 'Listado completo de eventos',
                       icon: Icons.event,
                       child: _buildEventosSection(),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.lg),
                   ],
                 ),
               ),
@@ -134,35 +132,41 @@ class _DashboardEmpresaScreenState extends State<DashboardEmpresaScreen> {
   }) {
     final isExpanded = _expandedSections[key] ?? false;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: ExpansionTile(
-        key: ValueKey(key),
-        initiallyExpanded: isExpanded,
-        onExpansionChanged: (expanded) {
-          setState(() {
-            _expandedSections[key] = expanded;
-          });
-        },
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: AppCard(
+        elevated: true,
+        padding: EdgeInsets.zero,
+        child: ExpansionTile(
+          key: ValueKey(key),
+          initiallyExpanded: isExpanded,
+          onExpansionChanged: (expanded) {
+            setState(() {
+              _expandedSections[key] = expanded;
+            });
+          },
+          tilePadding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
           ),
-          child: Icon(icon, color: Theme.of(context).primaryColor),
+          childrenPadding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            0,
+            AppSpacing.md,
+            AppSpacing.md,
+          ),
+          leading: Container(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            decoration: BoxDecoration(
+              color: AppColors.grey100,
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+            ),
+            child: AppIcon.md(icon, color: AppColors.primary),
+          ),
+          title: Text(title, style: AppTypography.titleMedium),
+          subtitle: Text(subtitle, style: AppTypography.bodySecondary),
+          children: [child],
         ),
-        title: Text(
-          title,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-        ),
-        children: [Padding(padding: const EdgeInsets.all(16), child: child)],
       ),
     );
   }
@@ -192,25 +196,25 @@ class _DashboardEmpresaScreenState extends State<DashboardEmpresaScreen> {
               label: 'Eventos Patrocinados',
               value: totalEventos.toString(),
               icon: Icons.event,
-              color: Colors.blue,
+              color: AppColors.info,
             ),
             MetricCard(
               label: 'Total Participantes',
               value: totalParticipantes.toString(),
               icon: Icons.people,
-              color: Colors.green,
+              color: AppColors.success,
             ),
             MetricCard(
               label: 'Total Reacciones',
               value: totalReacciones.toString(),
               icon: Icons.favorite,
-              color: Colors.red,
+              color: AppColors.error,
             ),
             MetricCard(
               label: 'Total Compartidos',
               value: totalCompartidos.toString(),
               icon: Icons.share,
-              color: Colors.purple,
+              color: AppColors.primary,
             ),
             MetricCard(
               label: 'Promedio Participantes',
@@ -219,7 +223,7 @@ class _DashboardEmpresaScreenState extends State<DashboardEmpresaScreen> {
                       ? (totalParticipantes / totalEventos).toStringAsFixed(1)
                       : '0',
               icon: Icons.analytics,
-              color: Colors.orange,
+              color: AppColors.warning,
             ),
             MetricCard(
               label: 'Alcance Total',
@@ -227,7 +231,7 @@ class _DashboardEmpresaScreenState extends State<DashboardEmpresaScreen> {
                   (totalParticipantes + totalReacciones + totalCompartidos)
                       .toString(),
               icon: Icons.trending_up,
-              color: Colors.teal,
+              color: AppColors.accent,
             ),
           ],
         ),
@@ -239,9 +243,10 @@ class _DashboardEmpresaScreenState extends State<DashboardEmpresaScreen> {
     final eventosPatrocinados = _datos?['eventos_patrocinados'] as List? ?? [];
 
     if (eventosPatrocinados.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(32),
-        child: Center(child: Text('No hay datos de impacto disponibles')),
+      return const EmptyState(
+        icon: Icons.insights_outlined,
+        title: 'Sin impacto para mostrar',
+        message: 'Cuando patrocines eventos, verás aquí el resumen de impacto.',
       );
     }
 
@@ -270,43 +275,30 @@ class _DashboardEmpresaScreenState extends State<DashboardEmpresaScreen> {
           title: 'Participantes por Categoría',
           subtitle: 'Alcance de tus patrocinios',
           data: participantesPorCategoria,
-          barColor: Colors.green,
+          barColor: AppColors.success,
         ),
         const SizedBox(height: 16),
-        Card(
-          elevation: 2,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.stars, color: Colors.amber[700]),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Impacto Social',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Tu empresa ha contribuido al impacto social patrocinando '
-                  '${eventosPatrocinados.length} eventos, llegando a '
-                  '${participantesPorCategoria.values.fold(0, (a, b) => a + b)} '
-                  'participantes en diferentes categorías de eventos.',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                    height: 1.5,
-                  ),
-                ),
-              ],
-            ),
+        AppCard(
+          elevated: true,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  AppIcon.md(Icons.stars, color: AppColors.warningDark),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text('Impacto social', style: AppTypography.titleLarge),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                'Tu empresa ha contribuido al impacto social patrocinando '
+                '${eventosPatrocinados.length} eventos, llegando a '
+                '${participantesPorCategoria.values.fold<int>(0, (a, b) => a + b)} '
+                'participantes en diferentes categorías.',
+                style: AppTypography.bodyMedium,
+              ),
+            ],
           ),
         ),
       ],
@@ -317,55 +309,50 @@ class _DashboardEmpresaScreenState extends State<DashboardEmpresaScreen> {
     final eventosPatrocinados = _datos?['eventos_patrocinados'] as List? ?? [];
 
     if (eventosPatrocinados.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(32),
-        child: Center(child: Text('No has patrocinado ningún evento aún')),
+      return const EmptyState(
+        icon: Icons.event_busy,
+        title: 'Aún sin eventos',
+        message: 'Cuando patrocines eventos, aparecerán listados aquí.',
       );
     }
 
     return Column(
       children:
           eventosPatrocinados.map((evento) {
-            return Card(
-              margin: const EdgeInsets.only(bottom: 12),
-              elevation: 1,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.blue[100],
-                  child: const Icon(Icons.event, color: Colors.blue),
-                ),
-                title: Text(
-                  evento['titulo'] ?? 'Sin título',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text(
-                  '${evento['total_participantes'] ?? 0} participantes • '
-                  '${evento['total_reacciones'] ?? 0} reacciones',
-                ),
-                trailing: Chip(
-                  label: Text(evento['estado'] ?? 'Activo'),
-                  backgroundColor: _getEstadoColor(evento['estado']),
+            final estado = evento['estado']?.toString() ?? 'Activo';
+            final estadoLower = estado.toLowerCase();
+
+            final Widget estadoBadge;
+            if (estadoLower == 'activo' || estadoLower == 'publicado') {
+              estadoBadge = AppBadge.success(label: estado);
+            } else if (estadoLower == 'finalizado') {
+              estadoBadge = AppBadge.info(label: estado);
+            } else if (estadoLower == 'cancelado') {
+              estadoBadge = AppBadge.error(label: estado);
+            } else {
+              estadoBadge = AppBadge.neutral(label: estado);
+            }
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: AppCard(
+                elevated: true,
+                padding: EdgeInsets.zero,
+                child: AppListTile(
+                  leading: AppAvatar.sm(
+                    icon: Icons.event,
+                    backgroundColor: AppColors.primaryLight,
+                    foregroundColor: AppColors.textOnPrimary,
+                  ),
+                  title: evento['titulo']?.toString() ?? 'Sin título',
+                  subtitle:
+                      '${evento['total_participantes'] ?? 0} participantes • '
+                      '${evento['total_reacciones'] ?? 0} reacciones',
+                  trailing: estadoBadge,
                 ),
               ),
             );
           }).toList(),
     );
-  }
-
-  Color _getEstadoColor(String? estado) {
-    switch (estado?.toLowerCase()) {
-      case 'activo':
-      case 'publicado':
-        return Colors.green.withOpacity(0.2);
-      case 'finalizado':
-        return Colors.blue.withOpacity(0.2);
-      case 'cancelado':
-        return Colors.red.withOpacity(0.2);
-      default:
-        return Colors.grey.withOpacity(0.2);
-    }
   }
 }

@@ -31,7 +31,30 @@ class CacheService {
         return null;
       }
 
-      return jsonDecode(cachedData) as Map<String, dynamic>;
+      // Intentar decodificar y validar estructura
+      try {
+        final decoded = jsonDecode(cachedData);
+        if (decoded is Map<String, dynamic>) {
+          // Validación básica: si es un dashboard, debe tener 'success' y 'data'
+          if (key.contains('dashboard') &&
+              (!decoded.containsKey('success') || !decoded.containsKey('data'))) {
+            print('⚠️ Caché corrupto detectado para $key, limpiando...');
+            await _clearCache(key);
+            return null;
+          }
+          return decoded;
+        } else {
+          // Si no es Map, limpiar caché corrupto
+          print('⚠️ Caché con formato inválido para $key, limpiando...');
+          await _clearCache(key);
+          return null;
+        }
+      } catch (decodeError) {
+        // Si falla al decodificar, limpiar caché corrupto
+        print('⚠️ Error decodificando caché para $key: $decodeError');
+        await _clearCache(key);
+        return null;
+      }
     } catch (e) {
       print('❌ Error obteniendo cache: $e');
       return null;

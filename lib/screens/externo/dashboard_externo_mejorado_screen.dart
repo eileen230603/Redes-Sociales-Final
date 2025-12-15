@@ -4,16 +4,26 @@ import 'dart:io';
 import 'package:universal_html/html.dart' as html;
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
+import '../../config/design_tokens.dart';
+import '../../config/typography_system.dart';
 import '../../services/api_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/atoms/app_avatar.dart';
+import '../../widgets/atoms/app_badge.dart';
+import '../../widgets/atoms/app_button.dart';
+import '../../widgets/atoms/app_icon.dart';
 import '../../widgets/metrics/metric_card.dart';
 import '../../widgets/charts/line_chart_widget.dart';
 import '../../widgets/charts/pie_chart_widget.dart';
 import '../../widgets/charts/bar_chart_widget.dart';
 import '../../widgets/charts/multi_line_chart_widget.dart';
+import '../../widgets/molecules/app_card.dart';
+import '../../widgets/molecules/app_list_tile.dart';
+import '../../widgets/molecules/empty_state.dart';
+import '../../widgets/molecules/loading_state.dart';
+import '../../widgets/organisms/error_view.dart';
+import '../../widgets/organisms/skeleton_loader.dart';
 import '../../services/cache_service.dart';
-import '../../models/evento.dart';
-import '../evento_detail_screen.dart';
 
 class DashboardExternoMejoradoScreen extends StatefulWidget {
   const DashboardExternoMejoradoScreen({super.key});
@@ -99,13 +109,14 @@ class _DashboardExternoMejoradoScreenState
               '¿Deseas descargar tu reporte completo de actividad en formato PDF?',
             ),
             actions: [
-              TextButton(
+              AppButton.text(
+                label: 'Cancelar',
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancelar'),
               ),
-              ElevatedButton(
+              AppButton.primary(
+                label: 'Descargar',
+                icon: Icons.picture_as_pdf,
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Descargar'),
               ),
             ],
           ),
@@ -117,7 +128,13 @@ class _DashboardExternoMejoradoScreenState
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
+      builder:
+          (context) => Center(
+            child: SizedBox(
+              width: 320,
+              child: LoadingState.card(),
+            ),
+          ),
     );
 
     try {
@@ -151,7 +168,7 @@ class _DashboardExternoMejoradoScreenState
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('PDF descargado exitosamente'),
-              backgroundColor: Colors.green,
+              backgroundColor: AppColors.success,
             ),
           );
         }
@@ -162,7 +179,7 @@ class _DashboardExternoMejoradoScreenState
             content: Text(
               result['error'] as String? ?? 'Error al descargar PDF',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -172,7 +189,7 @@ class _DashboardExternoMejoradoScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: ${e.toString()}'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -183,15 +200,15 @@ class _DashboardExternoMejoradoScreenState
     return Scaffold(
       drawer: const AppDrawer(),
       appBar: AppBar(
-        title: const Text('Mi Dashboard'),
+        title: const Text('Mi dashboard'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.picture_as_pdf),
+            icon: AppIcon.md(Icons.picture_as_pdf),
             onPressed: _descargarPdf,
             tooltip: 'Descargar PDF',
           ),
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: AppIcon.md(Icons.refresh),
             onPressed: () => _loadData(useCache: false),
             tooltip: 'Actualizar',
           ),
@@ -200,12 +217,18 @@ class _DashboardExternoMejoradoScreenState
             !_isLoading && _error == null
                 ? TabBar(
                   controller: _tabController,
-                  tabs: const [
-                    Tab(text: 'Resumen', icon: Icon(Icons.dashboard, size: 20)),
-                    Tab(text: 'Mis Eventos', icon: Icon(Icons.event, size: 20)),
+                  tabs: [
+                    Tab(
+                      text: 'Resumen',
+                      icon: AppIcon.sm(Icons.dashboard),
+                    ),
+                    Tab(
+                      text: 'Mis eventos',
+                      icon: AppIcon.sm(Icons.event),
+                    ),
                     Tab(
                       text: 'Actividad',
-                      icon: Icon(Icons.timeline, size: 20),
+                      icon: AppIcon.sm(Icons.timeline),
                     ),
                   ],
                 )
@@ -213,27 +236,9 @@ class _DashboardExternoMejoradoScreenState
       ),
       body:
           _isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? SkeletonLoader.dashboard()
               : _error != null
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-                    const SizedBox(height: 16),
-                    Text(
-                      _error!,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.red[700]),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _loadData,
-                      child: const Text('Reintentar'),
-                    ),
-                  ],
-                ),
-              )
+              ? ErrorView.serverError(onRetry: _loadData, errorDetails: _error)
               : TabBarView(
                 controller: _tabController,
                 children: [
@@ -247,7 +252,11 @@ class _DashboardExternoMejoradoScreenState
 
   Widget _buildResumenTab() {
     if (_estadisticas == null) {
-      return const Center(child: Text('No hay estadísticas disponibles'));
+      return const EmptyState(
+        icon: Icons.insights_outlined,
+        title: 'Sin estadísticas',
+        message: 'No hay información disponible para mostrar.',
+      );
     }
 
     final eventosInscritos =
@@ -261,7 +270,7 @@ class _DashboardExternoMejoradoScreenState
         _estadisticas!['total_mega_eventos_inscritos'] as int? ?? 0;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -270,11 +279,8 @@ class _DashboardExternoMejoradoScreenState
           const SizedBox(height: 24),
 
           // Métricas principales
-          const Text(
-            'Mis Estadísticas',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
+          Text('Mis estadísticas', style: AppTypography.titleLarge),
+          const SizedBox(height: AppSpacing.md),
 
           MetricGrid(
             crossAxisCount: 2,
@@ -283,37 +289,37 @@ class _DashboardExternoMejoradoScreenState
                 label: 'Eventos Inscritos',
                 value: eventosInscritos.toString(),
                 icon: Icons.event_available,
-                color: Colors.blue,
+                color: AppColors.info,
               ),
               MetricCard(
                 label: 'Eventos Asistidos',
                 value: eventosAsistidos.toString(),
                 icon: Icons.check_circle,
-                color: Colors.green,
+                color: AppColors.success,
               ),
               MetricCard(
                 label: 'Reacciones',
                 value: reaccionesTotales.toString(),
                 icon: Icons.favorite,
-                color: Colors.red,
+                color: AppColors.error,
               ),
               MetricCard(
                 label: 'Compartidos',
                 value: compartidosTotales.toString(),
                 icon: Icons.share,
-                color: Colors.purple,
+                color: AppColors.primary,
               ),
               MetricCard(
                 label: 'Mega Eventos',
                 value: megaEventosInscritos.toString(),
                 icon: Icons.event_note,
-                color: Colors.purple,
+                color: AppColors.primaryLight,
               ),
               MetricCard(
                 label: 'Horas Acumuladas',
                 value: horasAcumuladas.toString(),
                 icon: Icons.access_time,
-                color: Colors.indigo,
+                color: AppColors.accentDark,
               ),
               MetricCard(
                 label: 'Tasa Asistencia',
@@ -322,7 +328,7 @@ class _DashboardExternoMejoradoScreenState
                         ? '${((eventosAsistidos / eventosInscritos) * 100).toStringAsFixed(0)}%'
                         : '0%',
                 icon: Icons.analytics,
-                color: Colors.teal,
+                color: AppColors.accent,
               ),
             ],
           ),
@@ -330,18 +336,15 @@ class _DashboardExternoMejoradoScreenState
           const SizedBox(height: 24),
 
           // Tasa de asistencia
-          Card(
-            elevation: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  const Text(
-                    'Tasa de Asistencia',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
+          AppCard(
+            elevated: true,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Tasa de asistencia', style: AppTypography.titleLarge),
+                const SizedBox(height: AppSpacing.md),
+                Center(
+                  child: SizedBox(
                     height: 150,
                     width: 150,
                     child: Stack(
@@ -353,9 +356,9 @@ class _DashboardExternoMejoradoScreenState
                                   ? eventosAsistidos / eventosInscritos
                                   : 0,
                           strokeWidth: 12,
-                          backgroundColor: Colors.grey[300],
+                          backgroundColor: AppColors.borderLight,
                           valueColor: const AlwaysStoppedAnimation<Color>(
-                            Colors.green,
+                            AppColors.success,
                           ),
                         ),
                         Column(
@@ -365,31 +368,24 @@ class _DashboardExternoMejoradoScreenState
                               eventosInscritos > 0
                                   ? '${((eventosAsistidos / eventosInscritos) * 100).toStringAsFixed(1)}%'
                                   : '0%',
-                              style: const TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green,
+                              style: AppTypography.headlineSmall.copyWith(
+                                color: AppColors.success,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
-                            const Text(
-                              'Asistencia',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey,
-                              ),
-                            ),
+                            Text('Asistencia', style: AppTypography.bodySecondary),
                           ],
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '$eventosAsistidos de $eventosInscritos eventos asistidos',
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  '$eventosAsistidos de $eventosInscritos eventos asistidos',
+                  style: AppTypography.bodySecondary,
+                ),
+              ],
             ),
           ),
         ],
@@ -399,7 +395,7 @@ class _DashboardExternoMejoradoScreenState
 
   Widget _buildEventosTab() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         children: [
           // Tipo de eventos
@@ -422,7 +418,12 @@ class _DashboardExternoMejoradoScreenState
               title: 'Estado de Mis Participaciones',
               subtitle: 'Distribución según estado actual',
               data: Map<String, int>.from(_graficas!['estado_participaciones']),
-              colors: [Colors.green, Colors.orange, Colors.blue, Colors.grey],
+              colors: const [
+                AppColors.success,
+                AppColors.warning,
+                AppColors.info,
+                AppColors.grey500,
+              ],
             ),
           const SizedBox(height: 16),
 
@@ -448,7 +449,7 @@ class _DashboardExternoMejoradoScreenState
                       ),
                     ),
                   ),
-                  color: Colors.blue,
+                  color: AppColors.info,
                 ),
                 MultiLineData(
                   label: 'Asistidos',
@@ -464,7 +465,7 @@ class _DashboardExternoMejoradoScreenState
                       ),
                     ),
                   ),
-                  color: Colors.green,
+                  color: AppColors.success,
                 ),
               ],
             ),
@@ -477,39 +478,30 @@ class _DashboardExternoMejoradoScreenState
               (_graficas!['eventos_interacciones'] is List &&
                   (_graficas!['eventos_interacciones'] as List)
                       .isNotEmpty)) ...[
-            const Text(
-              'Mis Eventos Favoritos',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text('Mis eventos favoritos', style: AppTypography.titleLarge),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
             ...(_graficas!['eventos_interacciones'] as List).take(5).map((e) {
               final evento = e as Map;
-              return Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                child: ListTile(
-                  leading: const Icon(Icons.favorite, color: Colors.red),
-                  title: Text(evento['titulo'] ?? 'Evento'),
-                  subtitle: Row(
-                    children: [
-                      Chip(
-                        label: Text('${evento['reacciones'] ?? 0} reacciones'),
-                        backgroundColor: Colors.red.withOpacity(0.1),
-                      ),
-                      const SizedBox(width: 4),
-                      Chip(
-                        label: Text(
-                          '${evento['compartidos'] ?? 0} compartidos',
-                        ),
-                        backgroundColor: Colors.green.withOpacity(0.1),
-                      ),
-                    ],
-                  ),
-                  trailing: Text(
-                    '${evento['total'] ?? 0}',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.teal,
+              return Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: AppCard(
+                  elevated: true,
+                  padding: EdgeInsets.zero,
+                  child: AppListTile(
+                    leading: AppAvatar.sm(
+                      icon: Icons.favorite,
+                      backgroundColor: AppColors.errorLight,
+                      foregroundColor: AppColors.error,
+                    ),
+                    title: evento['titulo']?.toString() ?? 'Evento',
+                    subtitle:
+                        '${evento['reacciones'] ?? 0} reacciones • ${evento['compartidos'] ?? 0} compartidos',
+                    trailing: AppBadge.info(
+                      label: '${evento['total'] ?? 0}',
+                      icon: Icons.bolt,
                     ),
                   ),
                 ),
@@ -523,11 +515,15 @@ class _DashboardExternoMejoradoScreenState
 
   Widget _buildActividadTab() {
     if (_graficas == null) {
-      return const Center(child: Text('No hay datos de actividad'));
+      return const EmptyState(
+        icon: Icons.timeline_outlined,
+        title: 'Sin actividad',
+        message: 'No hay datos de actividad para mostrar.',
+      );
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         children: [
           // Reacciones por mes
@@ -537,7 +533,7 @@ class _DashboardExternoMejoradoScreenState
               title: 'Mis Reacciones por Mes',
               subtitle: 'Interacciones mensuales con eventos',
               data: Map<String, int>.from(_graficas!['reacciones_por_mes']),
-              lineColor: Colors.red,
+              lineColor: AppColors.error,
             ),
           const SizedBox(height: 16),
 
@@ -559,7 +555,7 @@ class _DashboardExternoMejoradoScreenState
                   ),
                 ),
               ),
-              barColor: Colors.blue,
+              barColor: AppColors.info,
             ),
             const SizedBox(height: 16),
           ],
@@ -568,21 +564,32 @@ class _DashboardExternoMejoradoScreenState
           if (_graficas!['ubicaciones'] != null &&
               (_graficas!['ubicaciones'] is List &&
                   (_graficas!['ubicaciones'] as List).isNotEmpty)) ...[
-            const Text(
-              'Ciudades donde he Participado',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Ciudades donde he participado',
+                style: AppTypography.titleLarge,
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
             ...(_graficas!['ubicaciones'] as List).map((ubicacion) {
               final u = ubicacion as Map;
-              return Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                child: ListTile(
-                  leading: const Icon(Icons.location_on, color: Colors.red),
-                  title: Text(u['ciudad'] ?? 'Ciudad desconocida'),
-                  trailing: Chip(
-                    label: Text('${u['cantidad'] ?? 0} eventos'),
-                    backgroundColor: Colors.blue.withOpacity(0.1),
+              return Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: AppCard(
+                  elevated: true,
+                  padding: EdgeInsets.zero,
+                  child: AppListTile(
+                    leading: AppAvatar.sm(
+                      icon: Icons.location_on,
+                      backgroundColor: AppColors.infoLight,
+                      foregroundColor: AppColors.infoDark,
+                    ),
+                    title: u['ciudad']?.toString() ?? 'Ciudad desconocida',
+                    trailing: AppBadge.neutral(
+                      label: '${u['cantidad'] ?? 0} eventos',
+                      icon: Icons.event,
+                    ),
                   ),
                 ),
               );
@@ -596,46 +603,32 @@ class _DashboardExternoMejoradoScreenState
   Widget _buildUserInfo() {
     if (_usuario == null) return const SizedBox.shrink();
 
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 30,
-              backgroundColor: Colors.blue[100],
-              child: Text(
-                (_usuario!['nombres']?[0] ?? 'U').toUpperCase(),
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue,
-                ),
-              ),
+    final nombres = _usuario!['nombres']?.toString() ?? '';
+    final apellidos = _usuario!['apellidos']?.toString() ?? '';
+    final correo = _usuario!['correo_electronico']?.toString() ?? '';
+    final initial = (nombres.isNotEmpty ? nombres[0] : 'U').toUpperCase();
+
+    return AppCard(
+      elevated: true,
+      child: Row(
+        children: [
+          AppAvatar.lg(
+            initials: initial,
+            backgroundColor: AppColors.primaryLight,
+            foregroundColor: AppColors.textOnPrimary,
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('$nombres $apellidos'.trim(), style: AppTypography.titleMedium),
+                const SizedBox(height: AppSpacing.xxs),
+                Text(correo, style: AppTypography.bodySecondary),
+              ],
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${_usuario!['nombres'] ?? ''} ${_usuario!['apellidos'] ?? ''}',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _usuario!['correo_electronico'] ?? '',
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

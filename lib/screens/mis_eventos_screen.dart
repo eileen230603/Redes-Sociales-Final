@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import '../config/design_tokens.dart';
+import '../config/typography_system.dart';
+import '../models/evento_participacion.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
-import '../models/evento_participacion.dart';
+import '../utils/navigation_helper.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/bottom_nav_bar.dart';
-import '../utils/navigation_helper.dart';
-import '../widgets/bottom_nav_bar.dart';
-import '../utils/navigation_helper.dart';
+import '../widgets/atoms/app_badge.dart';
+import '../widgets/atoms/app_button.dart';
+import '../widgets/atoms/app_icon.dart';
+import '../widgets/molecules/app_card.dart';
+import '../widgets/molecules/empty_state.dart';
+import '../widgets/molecules/loading_state.dart';
+import '../widgets/organisms/error_view.dart';
 import 'evento_detail_screen.dart';
-import '../widgets/empty_state.dart';
 
 class MisEventosScreen extends StatefulWidget {
   const MisEventosScreen({super.key});
@@ -59,57 +65,69 @@ class _MisEventosScreenState extends State<MisEventosScreen> {
         title: const Text('Mis Eventos'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: AppIcon.md(Icons.refresh),
             onPressed: _loadMisEventos,
             tooltip: 'Actualizar',
           ),
         ],
       ),
-      body:
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _error != null
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-                    const SizedBox(height: 16),
-                    Text(
-                      _error!,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.red[700]),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _loadMisEventos,
-                      child: const Text('Reintentar'),
-                    ),
-                  ],
-                ),
-              )
-              : _participaciones.isEmpty
-              ? const EmptyState(
-                  title: 'No tienes eventos inscritos',
-                  message: 'Explora los eventos disponibles en la lista principal',
-                  icon: Icons.event_available_outlined,
-                )
-              : RefreshIndicator(
-                onRefresh: _loadMisEventos,
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(8),
-                  itemCount: _participaciones.length,
-                  itemBuilder: (context, index) {
-                    final participacion = _participaciones[index];
-                    return _buildParticipacionCard(participacion);
-                  },
-                ),
-              ),
+      body: _responsiveBody(_buildBody()),
       bottomNavigationBar: FutureBuilder<Map<String, dynamic>?>(
         future: StorageService.getUserData(),
         builder: (context, snapshot) {
           final userType = snapshot.data?['user_type'] as String?;
           return BottomNavBar(currentIndex: 2, userType: userType);
+        },
+      ),
+    );
+  }
+
+  Widget _responsiveBody(Widget child) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth =
+            constraints.maxWidth >= AppBreakpoints.desktop ? 900.0 : double.infinity;
+        return Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxWidth),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return LoadingState.list();
+    }
+
+    if (_error != null) {
+      return ErrorView.serverError(
+        onRetry: _loadMisEventos,
+        errorDetails: _error,
+      );
+    }
+
+    if (_participaciones.isEmpty) {
+      return EmptyState(
+        icon: Icons.event_available_outlined,
+        title: 'No tienes eventos inscritos',
+        message: 'Explora los eventos disponibles y únete a uno.',
+        actionLabel: 'Actualizar',
+        onAction: _loadMisEventos,
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadMisEventos,
+      child: ListView.separated(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        itemCount: _participaciones.length,
+        separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.md),
+        itemBuilder: (context, index) {
+          final participacion = _participaciones[index];
+          return _buildParticipacionCard(participacion);
         },
       ),
     );
@@ -121,156 +139,90 @@ class _MisEventosScreenState extends State<MisEventosScreen> {
       return const SizedBox.shrink();
     }
 
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-      elevation: 2,
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            NavigationHelper.slideRightRoute(
-              EventoDetailScreen(eventoId: evento.id),
-            ),
-          ).then((_) => _loadMisEventos());
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
+    return AppCard(
+      elevated: true,
+      onTap: () {
+        Navigator.push(
+          context,
+          NavigationHelper.slideRightRoute(
+            EventoDetailScreen(eventoId: evento.id),
+          ),
+        ).then((_) => _loadMisEventos());
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  evento.titulo,
+                  style: AppTypography.titleLarge,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              participacion.asistio
+                  ? AppBadge.success(label: 'Asistió', icon: Icons.check_circle)
+                  : AppBadge.info(label: 'Inscrito', icon: Icons.how_to_reg),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.xs,
+            children: [
+              _MetaPill(icon: Icons.category, label: evento.tipoEvento),
+              _MetaPill(icon: Icons.calendar_today, label: _formatDate(evento.fechaInicio)),
+              if (evento.ciudad != null && evento.ciudad!.isNotEmpty)
+                _MetaPill(icon: Icons.location_on, label: evento.ciudad!),
+            ],
+          ),
+          if (participacion.puntos > 0) ...[
+            const SizedBox(height: AppSpacing.sm),
+            AppBadge.warning(
+              label: '${participacion.puntos} puntos',
+              icon: Icons.star,
+            ),
+          ],
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
                 children: [
-                  Expanded(
-                    child: Text(
-                      evento.titulo,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                  IconButton(
+                    icon: AppIcon.md(Icons.qr_code, color: AppColors.primary),
+                    onPressed: () => _mostrarTicketQR(context, participacion),
+                    tooltip: 'Ver QR del ticket',
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color:
-                          participacion.asistio
-                              ? Colors.green[100]
-                              : Colors.blue[100],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      participacion.asistio ? 'Asistió' : 'Inscrito',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color:
-                            participacion.asistio
-                                ? Colors.green[800]
-                                : Colors.blue[800],
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                  IconButton(
+                    icon: AppIcon.md(Icons.copy, color: AppColors.primary),
+                    onPressed: () => _copiarTicket(context, participacion),
+                    tooltip: 'Copiar código del ticket',
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
               Row(
                 children: [
-                  Icon(Icons.category, size: 16, color: Colors.grey[600]),
-                  const SizedBox(width: 4),
                   Text(
-                    evento.tipoEvento,
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
-                  const SizedBox(width: 4),
-                  Text(
-                    _formatDate(evento.fechaInicio),
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                ],
-              ),
-              if (evento.ciudad != null) ...[
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
-                    Text(
-                      evento.ciudad!,
-                      style: TextStyle(color: Colors.grey[600]),
+                    'Ver detalles',
+                    style: AppTypography.labelLarge.copyWith(
+                      color: AppColors.primary,
                     ),
-                  ],
-                ),
-              ],
-              if (participacion.puntos > 0) ...[
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(Icons.star, size: 16, color: Colors.amber[700]),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${participacion.puntos} puntos',
-                      style: TextStyle(
-                        color: Colors.amber[700],
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Botones de QR y copiar ticket
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.qr_code),
-                        onPressed:
-                            () => _mostrarTicketQR(context, participacion),
-                        tooltip: 'Ver QR del ticket',
-                        color: Theme.of(context).primaryColor,
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.copy),
-                        onPressed: () => _copiarTicket(context, participacion),
-                        tooltip: 'Copiar código del ticket',
-                        color: Theme.of(context).primaryColor,
-                      ),
-                    ],
                   ),
-                  // Ver detalles
-                  Row(
-                    children: [
-                      Text(
-                        'Ver detalles',
-                        style: TextStyle(
-                          color: Theme.of(context).primaryColor,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: Theme.of(context).primaryColor,
-                      ),
-                    ],
+                  const SizedBox(width: AppSpacing.xxs),
+                  AppIcon.xs(
+                    Icons.arrow_forward_ios,
+                    color: AppColors.primary,
                   ),
                 ],
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }
@@ -294,7 +246,6 @@ class _MisEventosScreenState extends State<MisEventosScreen> {
   }
 
   String _getTicketCode(EventoParticipacion participacion) {
-    // Generar código único basado en el ID de la participación
     return 'EVT-${participacion.id}-${participacion.eventoId}';
   }
 
@@ -307,93 +258,80 @@ class _MisEventosScreenState extends State<MisEventosScreen> {
 
     showDialog(
       context: context,
-      builder:
-          (context) => Dialog(
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 400, maxHeight: 600),
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      builder: (context) {
+        return Dialog(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 400, maxHeight: 600),
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Ticket - ${evento?.titulo ?? "Evento"}',
+                        style: AppTypography.titleLarge,
+                      ),
+                    ),
+                    IconButton(
+                      icon: AppIcon.md(Icons.close),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                AppCard(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: QrImageView(
+                    data: ticketCode,
+                    version: QrVersions.auto,
+                    size: 250.0,
+                    backgroundColor: AppColors.white,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AppCard(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  child: Row(
                     children: [
                       Expanded(
                         child: Text(
-                          'Ticket - ${evento?.titulo ?? "Evento"}',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          'Código: $ticketCode',
+                          style: AppTypography.labelLarge,
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.of(context).pop(),
+                        icon: AppIcon.sm(Icons.copy, color: AppColors.primary),
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: ticketCode));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text('Código copiado al portapapeles'),
+                              backgroundColor: AppColors.success,
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                        tooltip: 'Copiar código',
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey[300]!),
-                    ),
-                    child: QrImageView(
-                      data: ticketCode,
-                      version: QrVersions.auto,
-                      size: 250.0,
-                      backgroundColor: Colors.white,
-                    ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                SizedBox(
+                  width: double.infinity,
+                  child: AppButton.primary(
+                    label: 'Cerrar',
+                    onPressed: () => Navigator.of(context).pop(),
                   ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Código: $ticketCode',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.copy, size: 20),
-                          onPressed: () {
-                            Clipboard.setData(ClipboardData(text: ticketCode));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Código copiado al portapapeles'),
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                          },
-                          tooltip: 'Copiar código',
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Cerrar'),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
+        );
+      },
     );
   }
 
@@ -401,9 +339,44 @@ class _MisEventosScreenState extends State<MisEventosScreen> {
     final ticketCode = _getTicketCode(participacion);
     Clipboard.setData(ClipboardData(text: ticketCode));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Código del ticket copiado al portapapeles'),
-        backgroundColor: Colors.green,
+      SnackBar(
+        content: const Text('Código del ticket copiado al portapapeles'),
+        backgroundColor: AppColors.success,
+      ),
+    );
+  }
+}
+
+class _MetaPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _MetaPill({
+    required this.icon,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.grey100,
+        borderRadius: BorderRadius.circular(AppRadius.full),
+        border: Border.all(color: AppColors.borderLight),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xxs,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppIcon.xs(icon, color: AppColors.textSecondary),
+            const SizedBox(width: AppSpacing.xxs),
+            Text(label, style: AppTypography.labelMedium),
+          ],
+        ),
       ),
     );
   }

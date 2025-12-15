@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
+import '../../config/design_tokens.dart';
+import '../../config/typography_system.dart';
 import '../../services/parametrizacion_service.dart';
 import '../../models/tipo_evento.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/atoms/app_badge.dart';
+import '../../widgets/atoms/app_icon.dart';
+import '../../widgets/molecules/app_card.dart';
+import '../../widgets/molecules/empty_state.dart';
+import '../../widgets/molecules/loading_state.dart';
+import '../../widgets/organisms/error_view.dart';
 
 class TiposEventoScreen extends StatefulWidget {
   const TiposEventoScreen({super.key});
@@ -52,134 +60,126 @@ class _TiposEventoScreenState extends State<TiposEventoScreen> {
       appBar: AppBar(
         title: const Text('Tipos de Evento'),
         actions: [
-          Switch(
-            value: _soloActivos,
-            onChanged: (value) {
-              setState(() {
-                _soloActivos = value;
-              });
-              _cargarTipos();
-            },
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8),
-            child: Center(
-              child: Text('Solo activos', style: TextStyle(fontSize: 12)),
-            ),
+          Row(
+            children: [
+              Text('Solo activos', style: AppTypography.labelSmall),
+              Switch(
+                value: _soloActivos,
+                onChanged: (value) {
+                  setState(() {
+                    _soloActivos = value;
+                  });
+                  _cargarTipos();
+                },
+              ),
+            ],
           ),
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: AppIcon.md(Icons.refresh),
             onPressed: _cargarTipos,
             tooltip: 'Actualizar',
           ),
         ],
       ),
-      body:
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _error != null
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-                    const SizedBox(height: 16),
-                    Text(
-                      _error!,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.red[700]),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _cargarTipos,
-                      child: const Text('Reintentar'),
-                    ),
-                  ],
-                ),
-              )
-              : _tipos.isEmpty
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.event_busy, size: 64, color: Colors.grey[400]),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No hay tipos de evento disponibles',
-                      style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-              )
-              : RefreshIndicator(
-                onRefresh: _cargarTipos,
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(8),
-                  itemCount: _tipos.length,
-                  itemBuilder: (context, index) {
-                    final tipo = _tipos[index];
-                    return _buildTipoCard(tipo);
-                  },
-                ),
-              ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 900),
+          child: _buildBody(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return LoadingState.list();
+    }
+
+    if (_error != null) {
+      return ErrorView.serverError(onRetry: _cargarTipos, errorDetails: _error);
+    }
+
+    if (_tipos.isEmpty) {
+      return EmptyState(
+        icon: Icons.event_busy,
+        title: 'No hay tipos de evento disponibles',
+        message: 'Intenta cambiar el filtro o actualizar la lista.',
+        actionLabel: 'Actualizar',
+        onAction: _cargarTipos,
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _cargarTipos,
+      child: ListView.separated(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        itemCount: _tipos.length,
+        separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.sm),
+        itemBuilder: (context, index) {
+          final tipo = _tipos[index];
+          return _buildTipoCard(tipo);
+        },
+      ),
     );
   }
 
   Widget _buildTipoCard(TipoEvento tipo) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-      elevation: 2,
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor:
-              tipo.color != null
-                  ? _parseColor(tipo.color!)
-                  : Theme.of(context).primaryColor,
-          child: Icon(_getIconFromString(tipo.icono), color: Colors.white),
-        ),
-        title: Text(
-          tipo.nombre,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (tipo.descripcion != null) Text(tipo.descripcion!),
-            Text('Código: ${tipo.codigo}'),
-            Row(
+    final color = _parseColor(tipo.color);
+    return AppCard(
+      elevated: true,
+      onTap: () => _mostrarDetallesTipo(tipo),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: AppSizes.avatarMd,
+            height: AppSizes.avatarMd,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(AppRadius.full),
+              border: Border.all(color: AppColors.borderLight),
+            ),
+            child: Center(
+              child: AppIcon.md(_getIconFromString(tipo.icono), color: color),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: tipo.activo ? Colors.green[100] : Colors.grey[300],
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    tipo.activo ? 'Activo' : 'Inactivo',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: tipo.activo ? Colors.green[800] : Colors.grey[800],
-                      fontWeight: FontWeight.bold,
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        tipo.nombre,
+                        style: AppTypography.titleSmall,
+                      ),
                     ),
-                  ),
+                    tipo.activo
+                        ? AppBadge.success(label: 'Activo', icon: Icons.check_circle)
+                        : AppBadge.neutral(label: 'Inactivo', icon: Icons.pause_circle),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  'Orden: ${tipo.orden}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                const SizedBox(height: AppSpacing.xxs),
+                if (tipo.descripcion != null && tipo.descripcion!.isNotEmpty) ...[
+                  Text(tipo.descripcion!, style: AppTypography.bodySecondary),
+                  const SizedBox(height: AppSpacing.xxs),
+                ],
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.xxs,
+                  children: [
+                    AppBadge.neutral(label: 'Código: ${tipo.codigo}', icon: Icons.code),
+                    AppBadge.neutral(label: 'Orden: ${tipo.orden}', icon: Icons.sort),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-        trailing: Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: () {
-          // Aquí se podría abrir un diálogo para editar
-          _mostrarDetallesTipo(tipo);
-        },
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          AppIcon.sm(Icons.chevron_right),
+        ],
       ),
     );
   }
@@ -217,7 +217,7 @@ class _TiposEventoScreenState extends State<TiposEventoScreen> {
 
   Widget _buildInfoRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -225,40 +225,32 @@ class _TiposEventoScreenState extends State<TiposEventoScreen> {
             width: 100,
             child: Text(
               '$label:',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: AppTypography.labelLarge,
             ),
           ),
-          Expanded(child: Text(value)),
+          Expanded(child: Text(value, style: AppTypography.bodyMedium)),
         ],
       ),
     );
   }
 
-  Color _parseColor(String colorString) {
-    try {
-      // Si es un código hex
-      if (colorString.startsWith('#')) {
-        return Color(
-          int.parse(colorString.substring(1), radix: 16) + 0xFF000000,
-        );
-      }
-      // Si es un nombre de color común
-      switch (colorString.toLowerCase()) {
-        case 'blue':
-          return Colors.blue;
-        case 'green':
-          return Colors.green;
-        case 'red':
-          return Colors.red;
-        case 'orange':
-          return Colors.orange;
-        case 'purple':
-          return Colors.purple;
-        default:
-          return Theme.of(context).primaryColor;
-      }
-    } catch (e) {
-      return Theme.of(context).primaryColor;
+  Color _parseColor(String? colorString) {
+    final value = colorString?.trim().toLowerCase();
+    if (value == null || value.isEmpty) return AppColors.primary;
+
+    switch (value) {
+      case 'blue':
+        return AppColors.info;
+      case 'green':
+        return AppColors.success;
+      case 'red':
+        return AppColors.error;
+      case 'orange':
+        return AppColors.warning;
+      case 'purple':
+        return AppColors.primaryLight;
+      default:
+        return AppColors.primary;
     }
   }
 

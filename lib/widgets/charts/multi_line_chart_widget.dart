@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
+import '../../config/design_tokens.dart';
+import '../../config/typography_system.dart';
+import '../atoms/app_icon.dart';
+import '../molecules/app_card.dart';
 
 /// Datos para una línea en el gráfico múltiple
 class MultiLineData {
@@ -70,13 +74,13 @@ class MultiLineChartWidget extends StatelessWidget {
                   radius: 4,
                   color: lineData.color,
                   strokeWidth: 2,
-                  strokeColor: Colors.white,
+                  strokeColor: AppColors.white,
                 );
               },
             ),
             belowBarData: BarAreaData(
               show: true,
-              color: lineData.color.withOpacity(0.1),
+              color: lineData.color.withOpacity(0.12),
             ),
           );
         }).toList();
@@ -89,150 +93,138 @@ class MultiLineChartWidget extends StatelessWidget {
       }
     }
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            if (subtitle != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                subtitle!,
-                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-              ),
-            ],
-            const SizedBox(height: 24),
-            SizedBox(
-              height: 250,
-              child: LineChart(
-                LineChartData(
-                  gridData: FlGridData(
-                    show: showGrid,
-                    drawVerticalLine: true,
-                    horizontalInterval: 1,
-                    verticalInterval: 1,
-                    getDrawingHorizontalLine: (value) {
-                      return FlLine(color: Colors.grey[300], strokeWidth: 1);
-                    },
-                    getDrawingVerticalLine: (value) {
-                      return FlLine(color: Colors.grey[300], strokeWidth: 1);
-                    },
+    return AppCard(
+      elevated: true,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: AppTypography.titleLarge),
+          if (subtitle != null) ...[
+            const SizedBox(height: AppSpacing.xxs),
+            Text(subtitle!, style: AppTypography.bodySecondary),
+          ],
+          const SizedBox(height: AppSpacing.lg),
+          SizedBox(
+            height: 250,
+            child: LineChart(
+              LineChartData(
+                gridData: FlGridData(
+                  show: showGrid,
+                  drawVerticalLine: true,
+                  horizontalInterval: 1,
+                  verticalInterval: 1,
+                  getDrawingHorizontalLine: (value) {
+                    return const FlLine(
+                      color: AppColors.borderLight,
+                      strokeWidth: 1,
+                    );
+                  },
+                  getDrawingVerticalLine: (value) {
+                    return const FlLine(
+                      color: AppColors.borderLight,
+                      strokeWidth: 1,
+                    );
+                  },
+                ),
+                titlesData: FlTitlesData(
+                  show: true,
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
                   ),
-                  titlesData: FlTitlesData(
-                    show: true,
-                    rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 30,
-                        interval: sortedDates.length > 10 ? 2 : 1,
-                        getTitlesWidget: (value, meta) {
-                          if (value.toInt() >= sortedDates.length)
-                            return const Text('');
-                          final date = sortedDates[value.toInt()];
-                          try {
-                            final parsedDate = DateTime.parse(date);
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 8.0),
-                              child: Text(
-                                DateFormat('MM/dd').format(parsedDate),
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 10,
-                                ),
-                              ),
-                            );
-                          } catch (e) {
-                            return Text(
-                              date.length > 5 ? date.substring(0, 5) : date,
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 10,
-                              ),
-                            );
-                          }
-                        },
-                      ),
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        interval: maxY > 5 ? (maxY / 5) : 1,
-                        reservedSize: 42,
-                        getTitlesWidget: (value, meta) {
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30,
+                      interval: sortedDates.length > 10 ? 2 : 1,
+                      getTitlesWidget: (value, meta) {
+                        if (value.toInt() >= sortedDates.length) {
+                          return const SizedBox.shrink();
+                        }
+                        final date = sortedDates[value.toInt()];
+                        try {
+                          final parsedDate = DateTime.parse(date);
+                          return Padding(
+                            padding: const EdgeInsets.only(top: AppSpacing.xs),
+                            child: Text(
+                              DateFormat('MM/dd').format(parsedDate),
+                              style: AppTypography.labelSmall,
+                            ),
+                          );
+                        } catch (_) {
                           return Text(
-                            value.toInt().toString(),
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 12,
-                            ),
+                            date.length > 5 ? date.substring(0, 5) : date,
+                            style: AppTypography.labelSmall,
                           );
-                        },
-                      ),
+                        }
+                      },
                     ),
                   ),
-                  borderData: FlBorderData(
-                    show: true,
-                    border: Border.all(color: Colors.grey[300]!),
-                  ),
-                  minX: 0,
-                  maxX: (sortedDates.length - 1).toDouble(),
-                  minY: 0,
-                  maxY: maxY * 1.1,
-                  lineBarsData: lineBarsData,
-                  lineTouchData: LineTouchData(
-                    touchTooltipData: LineTouchTooltipData(
-                      getTooltipItems: (touchedSpots) {
-                        return touchedSpots.map((spot) {
-                          final date = sortedDates[spot.x.toInt()];
-                          String formattedDate;
-                          try {
-                            final parsedDate = DateTime.parse(date);
-                            formattedDate = DateFormat(
-                              'MMM dd',
-                            ).format(parsedDate);
-                          } catch (e) {
-                            formattedDate = date;
-                          }
-                          final lineData = data[spot.barIndex];
-                          return LineTooltipItem(
-                            '${lineData.label}\n$formattedDate: ${spot.y.toInt()}',
-                            TextStyle(
-                              color: lineData.color,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          );
-                        }).toList();
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      interval: maxY > 5 ? (maxY / 5) : 1,
+                      reservedSize: 42,
+                      getTitlesWidget: (value, meta) {
+                        return Text(
+                          value.toInt().toString(),
+                          style: AppTypography.labelSmall,
+                        );
                       },
                     ),
                   ),
                 ),
+                borderData: FlBorderData(
+                  show: true,
+                  border: Border.all(color: AppColors.borderLight),
+                ),
+                minX: 0,
+                maxX: (sortedDates.length - 1).toDouble(),
+                minY: 0,
+                maxY: maxY * 1.1,
+                lineBarsData: lineBarsData,
+                lineTouchData: LineTouchData(
+                  touchTooltipData: LineTouchTooltipData(
+                    getTooltipItems: (touchedSpots) {
+                      return touchedSpots.map((spot) {
+                        final date = sortedDates[spot.x.toInt()];
+                        String formattedDate;
+                        try {
+                          final parsedDate = DateTime.parse(date);
+                          formattedDate =
+                              DateFormat('MMM dd').format(parsedDate);
+                        } catch (_) {
+                          formattedDate = date;
+                        }
+                        final lineData = data[spot.barIndex];
+                        return LineTooltipItem(
+                          '${lineData.label}\n$formattedDate: ${spot.y.toInt()}',
+                          AppTypography.labelSmall.copyWith(
+                            color: lineData.color,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        );
+                      }).toList();
+                    },
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: 16),
-            _buildLegend(),
-          ],
-        ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _buildLegend(),
+        ],
       ),
     );
   }
 
   Widget _buildLegend() {
     return Wrap(
-      spacing: 16,
-      runSpacing: 8,
+      spacing: AppSpacing.md,
+      runSpacing: AppSpacing.sm,
       children:
           data.map((lineData) {
             return Row(
@@ -243,13 +235,13 @@ class MultiLineChartWidget extends StatelessWidget {
                   height: 3,
                   decoration: BoxDecoration(
                     color: lineData.color,
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(AppRadius.xs),
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: AppSpacing.xs),
                 Text(
                   lineData.label,
-                  style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                  style: AppTypography.labelSmall,
                 ),
               ],
             );
@@ -258,36 +250,28 @@ class MultiLineChartWidget extends StatelessWidget {
   }
 
   Widget _buildEmptyState() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              height: 250,
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.show_chart, size: 48, color: Colors.grey[400]),
-                    const SizedBox(height: 8),
-                    Text(
-                      'No hay datos disponibles',
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
+    return AppCard(
+      elevated: true,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: AppTypography.titleLarge),
+          const SizedBox(height: AppSpacing.lg),
+          SizedBox(
+            height: 250,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AppIcon.lg(Icons.show_chart, color: AppColors.textTertiary),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text('No hay datos disponibles', style: AppTypography.bodySecondary),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

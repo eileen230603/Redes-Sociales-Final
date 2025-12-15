@@ -16,8 +16,6 @@ import '../screens/ong/historial_eventos_screen.dart';
 import '../screens/ong/mega_eventos_list_screen.dart' as ong;
 import '../screens/ong/voluntarios_ong_screen.dart';
 import '../screens/ong/dashboard_ong_completo_screen.dart';
-import '../screens/ong/dashboard_evento_mejorado_screen.dart';
-import '../screens/externo/dashboard_externo_mejorado_screen.dart';
 import '../screens/empresa/dashboard_empresa_screen.dart';
 import '../screens/perfil_screen.dart';
 import '../screens/reportes_screen.dart';

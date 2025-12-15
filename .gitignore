@@ -43,3 +43,15 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Laravel / PHP
+/.env
+/vendor/
+/bootstrap/cache/
+/storage/framework/
+/storage/logs/
+/storage/app/public/
+/public/storage
+
+# Node
+/node_modules/

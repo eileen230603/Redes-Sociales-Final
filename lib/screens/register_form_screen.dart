@@ -345,7 +345,7 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
           validator: (value) {
-            if (value == null || value.isEmpty) {
+            if (value == null || value.trim().isEmpty) {
               return 'Campo requerido';
             }
             return null;
@@ -361,10 +361,10 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
           validator: (value) {
-            if (value == null || value.isEmpty) {
+            if (value == null || value.trim().isEmpty) {
               return 'Campo requerido';
             }
-            if (!value.contains('@')) {
+            if (!value.trim().contains('@')) {
               return 'Correo inválido';
             }
             return null;
@@ -392,10 +392,10 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
             ),
           ),
           validator: (value) {
-            if (value == null || value.isEmpty) {
+            if (value == null || value.trim().isEmpty) {
               return 'Campo requerido';
             }
-            if (value.length < 6) {
+            if (value.trim().length < 6) {
               return 'Mínimo 6 caracteres';
             }
             return null;
@@ -415,7 +415,7 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
                   ),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
+                  if (value == null || value.trim().isEmpty) {
                     return 'Requerido';
                   }
                   return null;
@@ -433,7 +433,7 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
                   ),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
+                  if (value == null || value.trim().isEmpty) {
                     return 'Requerido';
                   }
                   return null;
@@ -509,7 +509,7 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
           validator: (value) {
-            if (value == null || value.isEmpty) {
+            if (value == null || value.trim().isEmpty) {
               return 'Campo requerido';
             }
             return null;
@@ -525,10 +525,10 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
           validator: (value) {
-            if (value == null || value.isEmpty) {
+            if (value == null || value.trim().isEmpty) {
               return 'Campo requerido';
             }
-            if (!value.contains('@')) {
+            if (!value.trim().contains('@')) {
               return 'Correo inválido';
             }
             return null;
@@ -556,10 +556,10 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
             ),
           ),
           validator: (value) {
-            if (value == null || value.isEmpty) {
+            if (value == null || value.trim().isEmpty) {
               return 'Campo requerido';
             }
-            if (value.length < 6) {
+            if (value.trim().length < 6) {
               return 'Mínimo 6 caracteres';
             }
             return null;
@@ -579,7 +579,7 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
                   ),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
+                  if (value == null || value.trim().isEmpty) {
                     return 'Requerido';
                   }
                   return null;
@@ -666,7 +666,7 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
           validator: (value) {
-            if (value == null || value.isEmpty) {
+            if (value == null || value.trim().isEmpty) {
               return 'Campo requerido';
             }
             return null;
@@ -682,10 +682,10 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
           validator: (value) {
-            if (value == null || value.isEmpty) {
+            if (value == null || value.trim().isEmpty) {
               return 'Campo requerido';
             }
-            if (!value.contains('@')) {
+            if (!value.trim().contains('@')) {
               return 'Correo inválido';
             }
             return null;
@@ -713,10 +713,10 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
             ),
           ),
           validator: (value) {
-            if (value == null || value.isEmpty) {
+            if (value == null || value.trim().isEmpty) {
               return 'Campo requerido';
             }
-            if (value.length < 6) {
+            if (value.trim().length < 6) {
               return 'Mínimo 6 caracteres';
             }
             return null;
@@ -731,7 +731,7 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
           validator: (value) {
-            if (value == null || value.isEmpty) {
+            if (value == null || value.trim().isEmpty) {
               return 'Campo requerido';
             }
             return null;

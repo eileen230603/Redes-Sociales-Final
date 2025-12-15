@@ -9,12 +9,21 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
+import '../../config/design_tokens.dart';
+import '../../config/typography_system.dart';
 import '../../services/api_service.dart';
 import '../../services/storage_service.dart';
 import '../../services/auth_helper.dart';
 import '../../services/parametrizacion_service.dart';
 import '../../models/tipo_evento.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/atoms/app_button.dart';
+import '../../widgets/atoms/app_icon.dart';
+import '../../widgets/molecules/app_card.dart';
+import '../../widgets/molecules/app_list_tile.dart';
+import '../../widgets/molecules/empty_state.dart';
+import '../../widgets/molecules/loading_state.dart';
+import '../../widgets/organisms/error_view.dart';
 
 class CrearEventoScreen extends StatefulWidget {
   const CrearEventoScreen({super.key});
@@ -344,7 +353,7 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Error: No se pudo identificar la ONG'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
       return;
@@ -354,7 +363,7 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Por favor selecciona la fecha de inicio'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
       return;
@@ -365,7 +374,7 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Por favor selecciona un tipo de evento'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
       return;
@@ -377,7 +386,7 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('La descripción debe tener al menos 10 caracteres'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
       return;
@@ -462,7 +471,8 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
           content: Text(
             result['message'] as String? ?? 'Evento creado exitosamente',
           ),
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.success,
+          duration: AppDuration.slow,
         ),
       );
       Navigator.pop(context, true);
@@ -474,12 +484,12 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
       // Mostrar error detallado
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(errorMessage, style: const TextStyle(fontSize: 14)),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 6),
+          content: Text(errorMessage, style: AppTypography.bodyMedium),
+          backgroundColor: AppColors.error,
+          duration: AppDuration.slow,
           action: SnackBarAction(
             label: 'Ver detalles',
-            textColor: Colors.white,
+            textColor: AppColors.textOnPrimary,
             onPressed: () {
               if (errors != null) {
                 showDialog(
@@ -490,7 +500,7 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
                         content: SingleChildScrollView(
                           child: Text(
                             errors.toString(),
-                            style: const TextStyle(fontSize: 12),
+                            style: AppTypography.bodySmall,
                           ),
                         ),
                         actions: [
@@ -532,21 +542,15 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Información Básica',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
+              Text('Información Básica', style: AppTypography.headlineSmall),
+              const SizedBox(height: AppSpacing.md),
               TextFormField(
                 controller: _tituloController,
-                decoration: const InputDecoration(
-                  labelText: 'Título del evento *',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: 'Título del evento *'),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'El título es requerido';
@@ -554,12 +558,11 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.md),
               TextFormField(
                 controller: _descripcionController,
                 decoration: const InputDecoration(
                   labelText: 'Descripción',
-                  border: OutlineInputBorder(),
                   hintText:
                       'Descripción del evento (mínimo 10 caracteres si se completa)',
                 ),
@@ -574,21 +577,18 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.md),
               // Selector de tipo de evento
               if (_isLoadingTiposEvento)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: CircularProgressIndicator(),
-                  ),
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: LoadingState.card(),
                 )
               else
                 DropdownButtonFormField<String>(
                   value: _tipoEventoSeleccionado,
                   decoration: const InputDecoration(
                     labelText: 'Tipo de evento *',
-                    border: OutlineInputBorder(),
                     hintText: 'Selecciona un tipo de evento',
                     prefixIcon: Icon(Icons.category),
                   ),
@@ -617,80 +617,68 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
                     return null;
                   },
                 ),
-              const SizedBox(height: 24),
-              const Text(
-                'Fechas',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                title: const Text('Fecha de inicio *'),
-                subtitle: Text(
-                  _fechaInicio == null
-                      ? 'Seleccionar fecha'
-                      : _formatDateTime(_fechaInicio!),
-                ),
-                trailing: const Icon(Icons.calendar_today),
-                onTap: _selectFechaInicio,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(color: Colors.grey[300]!),
+              const SizedBox(height: AppSpacing.lg),
+              Text('Fechas', style: AppTypography.headlineSmall),
+              const SizedBox(height: AppSpacing.md),
+              AppCard(
+                padding: EdgeInsets.zero,
+                child: AppListTile(
+                  leading: AppIcon.sm(Icons.calendar_today),
+                  title: 'Fecha de inicio *',
+                  subtitle:
+                      _fechaInicio == null
+                          ? 'Seleccionar fecha'
+                          : _formatDateTime(_fechaInicio!),
+                  trailing: AppIcon.sm(Icons.chevron_right),
+                  onTap: _selectFechaInicio,
                 ),
               ),
-              const SizedBox(height: 8),
-              ListTile(
-                title: const Text('Fecha de finalización'),
-                subtitle: Text(
-                  _fechaFin == null
-                      ? 'Seleccionar fecha (opcional)'
-                      : _formatDateTime(_fechaFin!),
-                ),
-                trailing: const Icon(Icons.calendar_today),
-                onTap: _selectFechaFin,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(color: Colors.grey[300]!),
-                ),
-              ),
-              const SizedBox(height: 8),
-              ListTile(
-                title: const Text('Límite para inscribirse'),
-                subtitle: Text(
-                  _fechaLimiteInscripcion == null
-                      ? 'Seleccionar fecha (opcional)'
-                      : _formatDateTime(_fechaLimiteInscripcion!),
-                ),
-                trailing: const Icon(Icons.calendar_today),
-                onTap: _selectFechaLimiteInscripcion,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(color: Colors.grey[300]!),
+              const SizedBox(height: AppSpacing.sm),
+              AppCard(
+                padding: EdgeInsets.zero,
+                child: AppListTile(
+                  leading: AppIcon.sm(Icons.calendar_today),
+                  title: 'Fecha de finalización',
+                  subtitle:
+                      _fechaFin == null
+                          ? 'Seleccionar fecha (opcional)'
+                          : _formatDateTime(_fechaFin!),
+                  trailing: AppIcon.sm(Icons.chevron_right),
+                  onTap: _selectFechaFin,
                 ),
               ),
-              const SizedBox(height: 24),
-              const Text(
-                'Ubicación',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              const SizedBox(height: AppSpacing.sm),
+              AppCard(
+                padding: EdgeInsets.zero,
+                child: AppListTile(
+                  leading: AppIcon.sm(Icons.calendar_today),
+                  title: 'Límite para inscribirse',
+                  subtitle:
+                      _fechaLimiteInscripcion == null
+                          ? 'Seleccionar fecha (opcional)'
+                          : _formatDateTime(_fechaLimiteInscripcion!),
+                  trailing: AppIcon.sm(Icons.chevron_right),
+                  onTap: _selectFechaLimiteInscripcion,
+                ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
+              Text('Ubicación', style: AppTypography.headlineSmall),
+              const SizedBox(height: AppSpacing.md),
               TextFormField(
                 controller: _ciudadController,
-                decoration: const InputDecoration(
-                  labelText: 'Ciudad',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: 'Ciudad'),
                 // Campo editable - se puede llenar manualmente o desde el mapa si está vacío
               ),
-              const SizedBox(height: 16),
-              const Text(
+              const SizedBox(height: AppSpacing.md),
+              Text(
                 'Selecciona la ubicación en el mapa',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                style: AppTypography.titleSmall,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.xs),
               SizedBox(
                 height: 300,
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadius.card),
                   child: FlutterMap(
                     mapController: _mapController,
                     options: MapOptions(
@@ -717,12 +705,11 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
                           markers: [
                             Marker(
                               point: _selectedLocation!,
-                              width: 40,
-                              height: 40,
-                              child: const Icon(
+                              width: 48,
+                              height: 48,
+                              child: AppIcon.xl(
                                 Icons.location_on,
-                                color: Colors.red,
-                                size: 40,
+                                color: AppColors.error,
                               ),
                             ),
                           ],
@@ -731,12 +718,11 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.md),
               TextFormField(
                 controller: _direccionController,
                 decoration: InputDecoration(
                   labelText: 'Dirección seleccionada',
-                  border: const OutlineInputBorder(),
                   hintText:
                       _direccionSeleccionada.isEmpty
                           ? 'Haz clic en el mapa para seleccionar'
@@ -750,29 +736,32 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
                 },
               ),
               if (_selectedLocation != null) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.xs),
                 Text(
                   'Coordenadas: ${_selectedLocation!.latitude.toStringAsFixed(7)}, ${_selectedLocation!.longitude.toStringAsFixed(7)}',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
-              const SizedBox(height: 24),
-              const Text(
+              const SizedBox(height: AppSpacing.lg),
+              Text(
                 'Empresas Colaboradoras (Opcional)',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: AppTypography.headlineSmall,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.xs),
               Text(
                 'Puedes seleccionar empresas que patrocinarán este evento',
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                style: AppTypography.bodySecondary,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.md),
               if (_isLoadingEmpresas)
-                const Center(child: CircularProgressIndicator())
+                SizedBox(height: 180, child: LoadingState.list())
               else if (_empresasDisponibles.isEmpty)
-                const Text(
-                  'No hay empresas disponibles',
-                  style: TextStyle(color: Colors.grey),
+                const EmptyState(
+                  icon: Icons.business_outlined,
+                  title: 'Sin empresas disponibles',
+                  message: 'No se encontraron empresas para seleccionar.',
                 )
               else
                 Wrap(
@@ -800,23 +789,21 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
                         );
                       }).toList(),
                 ),
-              const SizedBox(height: 24),
-              const Text(
-                'Invitados (Opcional)',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.lg),
+              Text('Invitados (Opcional)', style: AppTypography.headlineSmall),
+              const SizedBox(height: AppSpacing.xs),
               Text(
                 'Puedes seleccionar invitados especiales para este evento',
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                style: AppTypography.bodySecondary,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.md),
               if (_isLoadingInvitados)
-                const Center(child: CircularProgressIndicator())
+                SizedBox(height: 180, child: LoadingState.list())
               else if (_invitadosDisponibles.isEmpty)
-                const Text(
-                  'No hay invitados disponibles',
-                  style: TextStyle(color: Colors.grey),
+                const EmptyState(
+                  icon: Icons.person_outline,
+                  title: 'Sin invitados disponibles',
+                  message: 'No se encontraron invitados para seleccionar.',
                 )
               else
                 Wrap(
@@ -845,12 +832,9 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
                         );
                       }).toList(),
                 ),
-              const SizedBox(height: 24),
-              const Text(
-                'Imágenes del Evento',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
+              Text('Imágenes del Evento', style: AppTypography.headlineSmall),
+              const SizedBox(height: AppSpacing.md),
               // Vista previa de imágenes seleccionadas
               if (_imagenesSeleccionadas.isNotEmpty)
                 SizedBox(
@@ -861,51 +845,56 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
                     itemBuilder: (context, index) {
                       return Stack(
                         children: [
-                          Container(
-                            margin: const EdgeInsets.only(right: 8),
-                            width: 120,
-                            height: 120,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.grey[300]!),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: FutureBuilder<Uint8List>(
-                                future:
-                                    _imagenesSeleccionadas[index].readAsBytes(),
-                                builder: (context, snapshot) {
-                                  if (snapshot.hasData) {
-                                    return Image.memory(
-                                      snapshot.data!,
-                                      fit: BoxFit.cover,
-                                    );
-                                  }
-                                  return const Center(
-                                    child: CircularProgressIndicator(),
-                                  );
-                                },
+                          Padding(
+                            padding: const EdgeInsets.only(right: AppSpacing.sm),
+                            child: SizedBox(
+                              width: 120,
+                              height: 120,
+                              child: AppCard(
+                                padding: EdgeInsets.zero,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(AppRadius.card),
+                                  child: FutureBuilder<Uint8List>(
+                                    future: _imagenesSeleccionadas[index].readAsBytes(),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.hasData) {
+                                        return Image.memory(
+                                          snapshot.data!,
+                                          fit: BoxFit.cover,
+                                        );
+                                      }
+                                      return Container(color: AppColors.grey100);
+                                    },
+                                  ),
+                                ),
                               ),
                             ),
                           ),
                           Positioned(
                             top: 4,
                             right: 12,
-                            child: CircleAvatar(
-                              radius: 12,
-                              backgroundColor: Colors.red,
-                              child: IconButton(
-                                padding: EdgeInsets.zero,
-                                iconSize: 16,
-                                icon: const Icon(
-                                  Icons.close,
-                                  color: Colors.white,
+                            child: InkWell(
+                              onTap: () {
+                                setState(() {
+                                  _imagenesSeleccionadas.removeAt(index);
+                                });
+                              },
+                              borderRadius: BorderRadius.circular(AppRadius.full),
+                              child: Container(
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: AppColors.error,
+                                  shape: BoxShape.circle,
+                                  boxShadow: AppElevation.cardShadow,
                                 ),
-                                onPressed: () {
-                                  setState(() {
-                                    _imagenesSeleccionadas.removeAt(index);
-                                  });
-                                },
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.close,
+                                    size: AppSizes.iconXs,
+                                    color: AppColors.white,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -918,46 +907,39 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton.icon(
+                    child: AppButton.outlined(
+                      label: 'Desde Galería',
+                      icon: Icons.photo_library_outlined,
                       onPressed: _seleccionarImagenGaleria,
-                      icon: const Icon(Icons.photo_library),
-                      label: const Text('Desde Galería'),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   Expanded(
-                    child: OutlinedButton.icon(
+                    child: AppButton.outlined(
+                      label: _isDesktop() ? 'Seleccionar Archivo' : 'Tomar Foto',
+                      icon: Icons.camera_alt_outlined,
                       onPressed: _seleccionarImagenCamara,
-                      icon: const Icon(Icons.camera_alt),
-                      label: Text(
-                        _isDesktop() ? 'Seleccionar Archivo' : 'Tomar Foto',
-                      ),
                     ),
                   ),
                 ],
               ),
               if (_imagenesSeleccionadas.isNotEmpty) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.xs),
                 Text(
                   '${_imagenesSeleccionadas.length} imagen(es) seleccionada(s)',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
                     fontStyle: FontStyle.italic,
                   ),
                 ),
               ],
-              const SizedBox(height: 24),
-              const Text(
-                'Configuración',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
+              Text('Configuración', style: AppTypography.headlineSmall),
+              const SizedBox(height: AppSpacing.md),
               TextFormField(
                 controller: _capacidadController,
                 decoration: const InputDecoration(
                   labelText: 'Capacidad máxima',
-                  border: OutlineInputBorder(),
                   hintText: 'Ej: 1,000 o 1000',
                 ),
                 keyboardType: const TextInputType.numberWithOptions(
@@ -989,12 +971,11 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.md),
               DropdownButtonFormField<String>(
                 value: _estado,
                 decoration: const InputDecoration(
                   labelText: 'Estado',
-                  border: OutlineInputBorder(),
                 ),
                 items: const [
                   DropdownMenuItem(value: 'borrador', child: Text('Borrador')),
@@ -1015,7 +996,7 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
                   }
                 },
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.md),
               SwitchListTile(
                 title: const Text('Inscripción abierta'),
                 subtitle: const Text('Permitir que los usuarios se inscriban'),
@@ -1026,22 +1007,14 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
                   });
                 },
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: AppSpacing.xl),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: AppButton.primary(
+                  label: 'Crear Evento',
+                  icon: Icons.check_circle_outline,
                   onPressed: _isLoading ? null : _crearEvento,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child:
-                      _isLoading
-                          ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                          : const Text('Crear Evento'),
+                  isLoading: _isLoading,
                 ),
               ),
             ],
@@ -1091,7 +1064,7 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
               content: Text(
                 'La imagen es muy grande. Por favor selecciona una imagen menor a 5MB',
               ),
-              backgroundColor: Colors.orange,
+              backgroundColor: AppColors.warning,
             ),
           );
           return;
@@ -1106,7 +1079,7 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error al seleccionar imagen: ${e.toString()}'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -1151,7 +1124,7 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
               content: Text(
                 'La imagen es muy grande. Por favor selecciona una imagen menor a 5MB',
               ),
-              backgroundColor: Colors.orange,
+              backgroundColor: AppColors.warning,
             ),
           );
           return;
@@ -1166,7 +1139,7 @@ class _CrearEventoScreenState extends State<CrearEventoScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error al tomar foto: ${e.toString()}'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     }

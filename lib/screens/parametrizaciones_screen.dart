@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import '../config/design_tokens.dart';
+import '../config/typography_system.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/atoms/app_icon.dart';
+import '../widgets/molecules/app_card.dart';
+import '../widgets/molecules/app_list_tile.dart';
 import 'parametrizaciones/tipos_evento_screen.dart';
 import 'parametrizaciones/ciudades_screen.dart';
 import 'parametrizaciones/lugares_screen.dart';
@@ -17,224 +22,207 @@ class ParametrizacionesScreen extends StatelessWidget {
       drawer: const AppDrawer(currentRoute: '/parametrizaciones'),
       appBar: AppBar(
         title: const Text('Parametrizaciones del Sistema'),
-        elevation: 0,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Header
-          Card(
-            color: Theme.of(context).primaryColor,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.settings_applications,
-                        color: Colors.white,
-                        size: 32,
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 900),
+          child: ListView(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            children: [
+              AppCard(
+                elevated: true,
+                backgroundColor: AppColors.primary,
+                child: Row(
+                  children: [
+                    Container(
+                      width: AppSizes.avatarLg,
+                      height: AppSizes.avatarLg,
+                      decoration: BoxDecoration(
+                        color: AppColors.white.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(AppRadius.md),
                       ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Text(
-                          'Gestión de Parametrizaciones',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.settings_applications,
+                          color: AppColors.textOnPrimary,
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Administra los catálogos y datos maestros del sistema',
-                    style: TextStyle(color: Colors.white70, fontSize: 14),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Tipos de Evento
-          _buildParametrizacionCard(
-            context,
-            icon: Icons.event,
-            title: 'Tipos de Evento',
-            description:
-                'Gestiona los tipos de eventos disponibles (conferencia, taller, seminario, etc.)',
-            color: Colors.blue,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const TiposEventoScreen(),
-                ),
-              );
-            },
-          ),
-
-          // Ciudades
-          _buildParametrizacionCard(
-            context,
-            icon: Icons.location_city,
-            title: 'Ciudades',
-            description: 'Administra las ciudades disponibles para los eventos',
-            color: Colors.green,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const CiudadesScreen()),
-              );
-            },
-          ),
-
-          // Lugares
-          _buildParametrizacionCard(
-            context,
-            icon: Icons.place,
-            title: 'Lugares',
-            description:
-                'Gestiona los lugares específicos donde se realizan los eventos',
-            color: Colors.orange,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const LugaresScreen()),
-              );
-            },
-          ),
-
-          // Estados de Participación
-          _buildParametrizacionCard(
-            context,
-            icon: Icons.how_to_reg,
-            title: 'Estados de Participación',
-            description:
-                'Configura los estados posibles de las participaciones (pendiente, aprobado, rechazado, etc.)',
-            color: Colors.purple,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const EstadosParticipacionScreen(),
-                ),
-              );
-            },
-          ),
-
-          // Tipos de Notificación
-          _buildParametrizacionCard(
-            context,
-            icon: Icons.notifications,
-            title: 'Tipos de Notificación',
-            description: 'Gestiona los tipos de notificaciones del sistema',
-            color: Colors.red,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const TiposNotificacionScreen(),
-                ),
-              );
-            },
-          ),
-
-          // Estados de Evento
-          _buildParametrizacionCard(
-            context,
-            icon: Icons.event_available,
-            title: 'Estados de Evento',
-            description:
-                'Configura los estados de los eventos (borrador, publicado, finalizado, etc.)',
-            color: Colors.teal,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const EstadosEventoScreen(),
-                ),
-              );
-            },
-          ),
-
-          // Tipos de Usuario
-          _buildParametrizacionCard(
-            context,
-            icon: Icons.people,
-            title: 'Tipos de Usuario',
-            description: 'Administra los tipos de usuarios del sistema',
-            color: Colors.indigo,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const TiposUsuarioScreen(),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildParametrizacionCard(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String description,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: color, size: 32),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      description,
-                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Gestión de Parametrizaciones',
+                            style: AppTypography.headlineSmall.copyWith(
+                              color: AppColors.textOnPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.xxs),
+                          Text(
+                            'Administra los catálogos y datos maestros del sistema.',
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.textOnPrimary.withOpacity(0.8),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.arrow_forward_ios, color: Colors.grey[400]),
+              const SizedBox(height: AppSpacing.lg),
+              AppCard(
+                child: Column(
+                  children: [
+                    _ParamItem(
+                      icon: Icons.event,
+                      title: 'Tipos de Evento',
+                      subtitle:
+                          'Gestiona los tipos de eventos disponibles (conferencia, taller, seminario, etc.).',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const TiposEventoScreen(),
+                          ),
+                        );
+                      },
+                      showDivider: true,
+                    ),
+                    _ParamItem(
+                      icon: Icons.location_city,
+                      title: 'Ciudades',
+                      subtitle: 'Administra las ciudades disponibles para los eventos.',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const CiudadesScreen(),
+                          ),
+                        );
+                      },
+                      showDivider: true,
+                    ),
+                    _ParamItem(
+                      icon: Icons.place,
+                      title: 'Lugares',
+                      subtitle:
+                          'Gestiona los lugares específicos donde se realizan los eventos.',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LugaresScreen(),
+                          ),
+                        );
+                      },
+                      showDivider: true,
+                    ),
+                    _ParamItem(
+                      icon: Icons.how_to_reg,
+                      title: 'Estados de Participación',
+                      subtitle:
+                          'Configura los estados posibles de las participaciones (pendiente, aprobado, rechazado, etc.).',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const EstadosParticipacionScreen(),
+                          ),
+                        );
+                      },
+                      showDivider: true,
+                    ),
+                    _ParamItem(
+                      icon: Icons.notifications,
+                      title: 'Tipos de Notificación',
+                      subtitle: 'Gestiona los tipos de notificaciones del sistema.',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const TiposNotificacionScreen(),
+                          ),
+                        );
+                      },
+                      showDivider: true,
+                    ),
+                    _ParamItem(
+                      icon: Icons.event_available,
+                      title: 'Estados de Evento',
+                      subtitle:
+                          'Configura los estados de los eventos (borrador, publicado, finalizado, etc.).',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const EstadosEventoScreen(),
+                          ),
+                        );
+                      },
+                      showDivider: true,
+                    ),
+                    _ParamItem(
+                      icon: Icons.people,
+                      title: 'Tipos de Usuario',
+                      subtitle: 'Administra los tipos de usuarios del sistema.',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const TiposUsuarioScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ParamItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  final bool showDivider;
+
+  const _ParamItem({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.showDivider = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AppListTile(
+      leading: Container(
+        width: AppSizes.avatarMd,
+        height: AppSizes.avatarMd,
+        decoration: BoxDecoration(
+          color: AppColors.grey100,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppColors.borderLight),
+        ),
+        child: Center(
+          child: AppIcon.md(icon, color: AppColors.primary),
+        ),
+      ),
+      title: title,
+      subtitle: subtitle,
+      trailing: AppIcon.sm(Icons.chevron_right),
+      onTap: onTap,
+      showDivider: showDivider,
     );
   }
 }

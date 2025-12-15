@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
+import '../config/design_tokens.dart';
+import '../config/typography_system.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/atoms/app_icon.dart';
+import '../widgets/molecules/app_card.dart';
+import '../widgets/molecules/empty_state.dart';
+import '../widgets/molecules/loading_state.dart';
+import '../widgets/organisms/error_view.dart';
 import '../models/evento_participacion.dart';
 
 class ReportesScreen extends StatefulWidget {
@@ -54,7 +61,7 @@ class _ReportesScreenState extends State<ReportesScreen> {
         title: const Text('Reportes'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: AppIcon.md(Icons.refresh),
             onPressed: _loadDatos,
             tooltip: 'Actualizar',
           ),
@@ -62,114 +69,78 @@ class _ReportesScreenState extends State<ReportesScreen> {
       ),
       body:
           _isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? LoadingState.detail()
               : _error != null
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-                    const SizedBox(height: 16),
-                    Text(
-                      _error!,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.red[700]),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _loadDatos,
-                      child: const Text('Reintentar'),
-                    ),
-                  ],
-                ),
-              )
+              ? ErrorView.serverError(onRetry: _loadDatos, errorDetails: _error)
+              : _totalEventos == 0
+              ? EmptyState(
+                  icon: Icons.bar_chart,
+                  title: 'Sin datos para reportes',
+                  message: 'Participa en un evento para ver estadísticas y puntos acumulados.',
+                  actionLabel: 'Actualizar',
+                  onAction: _loadDatos,
+                )
               : SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Estadísticas generales
-                    const Text(
-                      'Estadísticas',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildStatCard(
-                            'Total Eventos',
-                            '$_totalEventos',
-                            Icons.event,
-                            Colors.blue,
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Estadísticas', style: AppTypography.headlineSmall),
+                      const SizedBox(height: AppSpacing.md),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildStatCard(
+                              'Total Eventos',
+                              '$_totalEventos',
+                              Icons.event,
+                              AppColors.info,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildStatCard(
-                            'Asistidos',
-                            '$_eventosAsistidos',
-                            Icons.check_circle,
-                            Colors.green,
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: _buildStatCard(
+                              'Asistidos',
+                              '$_eventosAsistidos',
+                              Icons.check_circle,
+                              AppColors.success,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    _buildStatCard(
-                      'Puntos Totales',
-                      '$_totalPuntos',
-                      Icons.star,
-                      Colors.amber,
-                      fullWidth: true,
-                    ),
-                    const SizedBox(height: 32),
-                    // Gráfico de participación
-                    const Text(
-                      'Resumen de Participación',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
+                      const SizedBox(height: AppSpacing.md),
+                      _buildStatCard(
+                        'Puntos Totales',
+                        '$_totalPuntos',
+                        Icons.star,
+                        AppColors.warning,
+                        fullWidth: true,
+                      ),
+                      const SizedBox(height: AppSpacing.xl),
+                      Text('Resumen de Participación', style: AppTypography.headlineSmall),
+                      const SizedBox(height: AppSpacing.md),
+                      AppCard(
                         child: Column(
                           children: [
-                            if (_totalEventos > 0) ...[
-                              _buildProgressBar(
-                                'Eventos Asistidos',
-                                _eventosAsistidos,
-                                _totalEventos,
-                                Colors.green,
-                              ),
-                              const SizedBox(height: 16),
-                              _buildProgressBar(
-                                'Eventos Pendientes',
-                                _totalEventos - _eventosAsistidos,
-                                _totalEventos,
-                                Colors.orange,
-                              ),
-                            ] else
-                              const Padding(
-                                padding: EdgeInsets.all(24.0),
-                                child: Text(
-                                  'No hay datos para mostrar',
-                                  style: TextStyle(color: Colors.grey),
-                                ),
-                              ),
+                            _buildProgressBar(
+                              'Eventos Asistidos',
+                              _eventosAsistidos,
+                              _totalEventos,
+                              AppColors.success,
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            _buildProgressBar(
+                              'Eventos Pendientes',
+                              _totalEventos - _eventosAsistidos,
+                              _totalEventos,
+                              AppColors.warning,
+                            ),
                           ],
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
     );
   }
 
@@ -180,34 +151,26 @@ class _ReportesScreenState extends State<ReportesScreen> {
     Color color, {
     bool fullWidth = false,
   }) {
-    return Card(
-      elevation: 2,
-      child: Container(
+    return AppCard(
+      elevated: true,
+      child: SizedBox(
         width: fullWidth ? double.infinity : null,
-        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(icon, color: color, size: 24),
-                const SizedBox(width: 8),
+                AppIcon.md(icon, color: color),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                  ),
+                  child: Text(title, style: AppTypography.bodySecondary),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               value,
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
+              style: AppTypography.headlineMedium.copyWith(color: color),
             ),
           ],
         ),
@@ -223,24 +186,25 @@ class _ReportesScreenState extends State<ReportesScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+            Text(label, style: AppTypography.labelLarge),
             Text(
               '$value / $total',
-              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+              style: AppTypography.labelSmall,
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         LinearProgressIndicator(
           value: percentage,
-          backgroundColor: Colors.grey[200],
+          backgroundColor: AppColors.grey200,
           valueColor: AlwaysStoppedAnimation<Color>(color),
           minHeight: 8,
+          borderRadius: BorderRadius.circular(AppRadius.full),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.xxs),
         Text(
           '${(percentage * 100).toStringAsFixed(1)}%',
-          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+          style: AppTypography.labelSmall,
         ),
       ],
     );

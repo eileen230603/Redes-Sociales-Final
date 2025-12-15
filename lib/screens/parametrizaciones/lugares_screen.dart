@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../config/design_tokens.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/molecules/empty_state.dart';
 
 class LugaresScreen extends StatelessWidget {
   const LugaresScreen({super.key});
@@ -9,7 +11,11 @@ class LugaresScreen extends StatelessWidget {
     return Scaffold(
       drawer: const AppDrawer(currentRoute: '/parametrizaciones'),
       appBar: AppBar(title: const Text('Lugares')),
-      body: const Center(child: Text('Pantalla de Lugares - En desarrollo')),
+      body: const EmptyState(
+        icon: Icons.place,
+        title: 'Lugares',
+        message: 'Pantalla en desarrollo.',
+      ),
     );
   }
 }

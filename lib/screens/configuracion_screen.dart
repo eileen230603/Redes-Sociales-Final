@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
+import '../config/design_tokens.dart';
+import '../config/typography_system.dart';
 import '../services/parametrizacion_service.dart';
 import '../models/parametro.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/atoms/app_badge.dart';
+import '../widgets/atoms/app_button.dart';
+import '../widgets/atoms/app_icon.dart';
+import '../widgets/molecules/app_card.dart';
+import '../widgets/molecules/empty_state.dart';
+import '../widgets/molecules/loading_state.dart';
+import '../widgets/organisms/error_view.dart';
 
 class ConfiguracionScreen extends StatefulWidget {
   const ConfiguracionScreen({super.key});
@@ -99,7 +108,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
           content: Text(
             result['message'] as String? ?? 'Parámetro actualizado',
           ),
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.success,
         ),
       );
       await _cargarParametros();
@@ -107,7 +116,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result['error'] as String? ?? 'Error al actualizar'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -126,7 +135,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
           content: Text(
             result['message'] as String? ?? 'Parámetro creado correctamente',
           ),
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.success,
         ),
       );
     }
@@ -148,7 +157,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
             result['message'] as String? ??
                 'Parámetro actualizado correctamente',
           ),
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.success,
         ),
       );
     }
@@ -170,7 +179,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                style: TextButton.styleFrom(foregroundColor: AppColors.error),
                 child: const Text('Eliminar'),
               ),
             ],
@@ -189,7 +198,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
           content: Text(
             result['message'] as String? ?? 'Parámetro eliminado correctamente',
           ),
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.success,
         ),
       );
       await _cargarParametros();
@@ -197,7 +206,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result['error'] as String? ?? 'Error al eliminar'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -247,7 +256,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
             content: Text(
               parametroResult['error'] as String? ?? 'Parámetro no encontrado',
             ),
-            backgroundColor: Colors.orange,
+            backgroundColor: AppColors.warning,
           ),
         );
       }
@@ -260,20 +269,19 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
       drawer: const AppDrawer(currentRoute: '/configuracion'),
       appBar: AppBar(
         title: const Text('Configuración del Sistema'),
-        elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.search),
+            icon: AppIcon.md(Icons.search),
             onPressed: _buscarPorCodigo,
             tooltip: 'Buscar por código',
           ),
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: AppIcon.md(Icons.add),
             onPressed: _crearParametro,
             tooltip: 'Crear parámetro',
           ),
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: AppIcon.md(Icons.refresh),
             onPressed: _cargarDatos,
             tooltip: 'Actualizar',
           ),
@@ -283,19 +291,19 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
         children: [
           // Filtros y búsqueda
           Container(
-            padding: const EdgeInsets.all(16),
-            color: Colors.grey[100],
+            padding: const EdgeInsets.all(AppSpacing.md),
+            color: AppColors.grey100,
             child: Column(
               children: [
                 // Búsqueda
                 TextField(
                   decoration: InputDecoration(
                     hintText: 'Buscar por código, nombre o descripción...',
-                    prefixIcon: const Icon(Icons.search),
+                    prefixIcon: AppIcon.md(Icons.search),
                     suffixIcon:
                         _busqueda.isNotEmpty
                             ? IconButton(
-                              icon: const Icon(Icons.clear),
+                              icon: AppIcon.md(Icons.clear),
                               onPressed: () {
                                 setState(() {
                                   _busqueda = '';
@@ -304,11 +312,8 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
                               },
                             )
                             : null,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: AppColors.white,
                   ),
                   onChanged: (value) {
                     setState(() {
@@ -317,7 +322,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
                   },
                   onSubmitted: (_) => _cargarParametros(),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.sm),
                 // Filtros por categoría y grupo
                 Row(
                   children: [
@@ -326,11 +331,6 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
                         value: _categoriaSeleccionada,
                         decoration: const InputDecoration(
                           labelText: 'Categoría',
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
                         ),
                         hint: const Text('Todas las categorías'),
                         items: [
@@ -353,17 +353,12 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
                         },
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         value: _grupoSeleccionado,
                         decoration: const InputDecoration(
                           labelText: 'Grupo',
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
                         ),
                         hint: const Text('Todos los grupos'),
                         items: [
@@ -393,197 +388,161 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
           ),
           // Lista de parámetros
           Expanded(
-            child:
-                _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _error != null
-                    ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 64,
-                            color: Colors.red[300],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            _error!,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.red[700]),
-                          ),
-                          const SizedBox(height: 16),
-                          FilledButton.tonal(
-                            onPressed: _cargarParametros,
-                            child: const Text('Reintentar'),
-                          ),
-                        ],
-                      ),
-                    )
-                    : _parametros.isEmpty
-                    ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.settings,
-                            size: 64,
-                            color: Colors.grey[400],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No hay parámetros disponibles',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                    : RefreshIndicator(
-                      onRefresh: _cargarParametros,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(8),
-                        itemCount: _parametros.length,
-                        itemBuilder: (context, index) {
-                          final parametro = _parametros[index];
-                          return _buildParametroCard(parametro);
-                        },
-                      ),
-                    ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 900),
+                child: _buildListBody(),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
+  Widget _buildListBody() {
+    if (_isLoading) {
+      return LoadingState.list();
+    }
+
+    if (_error != null) {
+      return ErrorView.serverError(onRetry: _cargarParametros, errorDetails: _error);
+    }
+
+    if (_parametros.isEmpty) {
+      return EmptyState(
+        icon: Icons.settings,
+        title: 'No hay parámetros disponibles',
+        message: 'Ajusta los filtros o vuelve a intentar más tarde.',
+        actionLabel: 'Actualizar',
+        onAction: _cargarParametros,
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _cargarParametros,
+      child: ListView.separated(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        itemCount: _parametros.length,
+        separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.sm),
+        itemBuilder: (context, index) {
+          final parametro = _parametros[index];
+          return _buildParametroCard(parametro);
+        },
+      ),
+    );
+  }
+
   Widget _buildParametroCard(Parametro parametro) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-      elevation: 2,
+    final valorActual = parametro.valor ?? parametro.valorDefecto ?? 'Sin valor';
+    final bool hasValor = parametro.valor != null;
+
+    return AppCard(
+      elevated: true,
+      padding: EdgeInsets.zero,
       child: ExpansionTile(
-        leading: Icon(
+        tilePadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.xs,
+        ),
+        childrenPadding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          0,
+          AppSpacing.md,
+          AppSpacing.md,
+        ),
+        leading: AppIcon.md(
           _getIconForTipo(parametro.tipo),
-          color: Theme.of(context).primaryColor,
+          color: AppColors.primary,
         ),
-        title: Text(
-          parametro.nombre,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Código: ${parametro.codigo}'),
-            if (parametro.categoria.isNotEmpty)
-              Text('Categoría: ${parametro.categoria}'),
-            if (parametro.grupo != null && parametro.grupo!.isNotEmpty)
-              Text('Grupo: ${parametro.grupo}'),
-            if (parametro.descripcion != null)
-              Text(
-                parametro.descripcion!,
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-              ),
-          ],
+        title: Text(parametro.nombre, style: AppTypography.titleSmall),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: AppSpacing.xxs),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Código: ${parametro.codigo}', style: AppTypography.bodySmall),
+              if (parametro.categoria.isNotEmpty)
+                Text('Categoría: ${parametro.categoria}', style: AppTypography.bodySmall),
+              if (parametro.grupo != null && parametro.grupo!.isNotEmpty)
+                Text('Grupo: ${parametro.grupo}', style: AppTypography.bodySmall),
+              if (parametro.descripcion != null && parametro.descripcion!.isNotEmpty)
+                Text(parametro.descripcion!, style: AppTypography.bodySmall),
+            ],
+          ),
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: const Icon(Icons.edit, size: 20),
+              icon: AppIcon.md(Icons.edit),
               onPressed: () => _editarParametro(parametro),
               tooltip: 'Editar',
             ),
             IconButton(
-              icon: const Icon(Icons.delete, size: 20, color: Colors.red),
+              icon: AppIcon.md(Icons.delete, color: AppColors.error),
               onPressed: () => _eliminarParametro(parametro),
               tooltip: 'Eliminar',
             ),
           ],
         ),
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Valor actual
-                Row(
-                  children: [
-                    const Text(
-                      'Valor actual: ',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Expanded(
-                      child: Text(
-                        parametro.valor ??
-                            parametro.valorDefecto ??
-                            'Sin valor',
-                        style: TextStyle(
-                          color:
-                              parametro.valor != null
-                                  ? Colors.green[700]
-                                  : Colors.grey[600],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                // Campo de edición si es editable
-                if (parametro.editable)
-                  _buildEditorCampo(parametro)
-                else
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(Icons.lock, size: 16),
-                        SizedBox(width: 8),
-                        Text(
-                          'Este parámetro no es editable',
-                          style: TextStyle(fontStyle: FontStyle.italic),
-                        ),
-                      ],
-                    ),
+          Row(
+            children: [
+              Text('Valor actual:', style: AppTypography.labelLarge),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  valorActual.toString(),
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: hasValor ? AppColors.successDark : AppColors.textSecondary,
                   ),
-                if (parametro.ayuda != null) ...[
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          size: 16,
-                          color: Colors.blue[700],
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            parametro.ayuda!,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.blue[900],
-                            ),
-                          ),
-                        ),
-                      ],
+                ),
+              ),
+              if (parametro.visible)
+                AppBadge.info(label: 'Visible', icon: Icons.visibility),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          if (parametro.editable)
+            _buildEditorCampo(parametro)
+          else
+            AppCard(
+              backgroundColor: AppColors.grey100,
+              child: Row(
+                children: [
+                  AppIcon.sm(Icons.lock, color: AppColors.textSecondary),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      'Este parámetro no es editable',
+                      style: AppTypography.bodySecondary,
                     ),
                   ),
                 ],
-              ],
+              ),
             ),
-          ),
+          if (parametro.ayuda != null && parametro.ayuda!.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            AppCard(
+              backgroundColor: AppColors.infoLight,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppIcon.sm(Icons.info_outline, color: AppColors.infoDark),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      parametro.ayuda!,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.infoDark,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -597,7 +556,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
         final boolValue =
             valorActual == true || valorActual == '1' || valorActual == 'true';
         return SwitchListTile(
-          title: const Text('Activar/Desactivar'),
+          title: Text('Activar/Desactivar', style: AppTypography.bodyMedium),
           value: boolValue,
           onChanged: (value) {
             _actualizarParametro(parametro, value);
@@ -610,10 +569,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
                 ? valorActual.toDouble()
                 : double.tryParse(valorActual.toString()) ?? 0.0;
         return TextField(
-          decoration: const InputDecoration(
-            labelText: 'Valor numérico',
-            border: OutlineInputBorder(),
-          ),
+          decoration: const InputDecoration(labelText: 'Valor numérico'),
           keyboardType: TextInputType.number,
           controller: TextEditingController(text: numValue.toString()),
           onSubmitted: (value) {
@@ -626,10 +582,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
 
       case 'select':
         return DropdownButtonFormField<String>(
-          decoration: const InputDecoration(
-            labelText: 'Seleccionar opción',
-            border: OutlineInputBorder(),
-          ),
+          decoration: const InputDecoration(labelText: 'Seleccionar opción'),
           value: valorActual?.toString(),
           items:
               (parametro.opciones ?? [])
@@ -649,10 +602,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
 
       default: // texto, json, fecha
         return TextField(
-          decoration: const InputDecoration(
-            labelText: 'Valor',
-            border: OutlineInputBorder(),
-          ),
+          decoration: const InputDecoration(labelText: 'Valor'),
           controller: TextEditingController(
             text: valorActual?.toString() ?? '',
           ),
@@ -827,7 +777,7 @@ class _FormularioParametroScreenState
           content: Text(
             result['error'] as String? ?? 'Error al guardar parámetro',
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     }

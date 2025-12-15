@@ -2,7 +2,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/api_service.dart';
+import '../config/design_tokens.dart';
+import '../config/typography_system.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/atoms/app_avatar.dart';
+import '../widgets/atoms/app_button.dart';
+import '../widgets/atoms/app_icon.dart';
+import '../widgets/molecules/app_card.dart';
+import '../widgets/molecules/loading_state.dart';
+import '../widgets/organisms/error_view.dart';
 import '../utils/image_helper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
@@ -239,7 +247,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
           content: Text(
             result['message'] as String? ?? 'Perfil actualizado exitosamente',
           ),
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.success,
         ),
       );
 
@@ -255,7 +263,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
           content: Text(
             result['error'] as String? ?? 'Error al actualizar perfil',
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -270,7 +278,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
         actions: [
           if (!_isEditing)
             IconButton(
-              icon: const Icon(Icons.edit),
+              icon: AppIcon.md(Icons.edit),
               onPressed: () {
                 setState(() {
                   _isEditing = true;
@@ -280,7 +288,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
             )
           else
             IconButton(
-              icon: const Icon(Icons.close),
+              icon: AppIcon.md(Icons.close),
               onPressed: () {
                 setState(() {
                   _isEditing = false;
@@ -295,77 +303,52 @@ class _PerfilScreenState extends State<PerfilScreen> {
             ),
           if (_isEditing)
             IconButton(
-              icon:
-                  _isSaving
-                      ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                      : const Icon(Icons.save),
+              icon: _isSaving ? AppIcon.md(Icons.hourglass_top) : AppIcon.md(Icons.save),
               onPressed: _isSaving ? null : _guardarPerfil,
               tooltip: 'Guardar',
             ),
         ],
       ),
-      body:
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _error != null
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Colors.grey[400],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      _error!,
-                      style: TextStyle(color: Colors.grey[600]),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _loadPerfil,
-                      child: const Text('Reintentar'),
-                    ),
-                  ],
-                ),
-              )
-              : RefreshIndicator(
-                onRefresh: _loadPerfil,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Foto de perfil
-                        _buildFotoPerfil(),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 900),
+          child: _buildBody(),
+        ),
+      ),
+    );
+  }
 
-                        const SizedBox(height: 24),
+  Widget _buildBody() {
+    if (_isLoading) {
+      return LoadingState.detail();
+    }
 
-                        // Información básica
-                        _buildSeccionBasica(),
+    if (_error != null) {
+      return ErrorView.serverError(onRetry: _loadPerfil, errorDetails: _error);
+    }
 
-                        const SizedBox(height: 24),
-
-                        // Información específica según tipo
-                        _buildSeccionEspecifica(),
-
-                        const SizedBox(height: 24),
-
-                        // Cambio de contraseña
-                        if (_isEditing) _buildSeccionContrasena(),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+    return RefreshIndicator(
+      onRefresh: _loadPerfil,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildFotoPerfil(),
+              const SizedBox(height: AppSpacing.lg),
+              _buildSeccionBasica(),
+              const SizedBox(height: AppSpacing.lg),
+              _buildSeccionEspecifica(),
+              if (_isEditing) ...[
+                const SizedBox(height: AppSpacing.lg),
+                _buildSeccionContrasena(),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -380,33 +363,33 @@ class _PerfilScreenState extends State<PerfilScreen> {
     return Center(
       child: Stack(
         children: [
-          CircleAvatar(
-            radius: 60,
-            backgroundImage:
-                fotoActual != null
-                    ? (_fotoPerfilSeleccionada != null
-                        ? FileImage(File(fotoActual))
-                        : CachedNetworkImageProvider(fotoActual))
-                    : null,
-            child:
-                fotoActual == null
-                    ? const Icon(Icons.person, size: 60, color: Colors.white)
-                    : null,
-            backgroundColor: Colors.blue,
+          SizedBox(
+            width: AppSizes.avatarXl,
+            height: AppSizes.avatarXl,
+            child: ClipOval(
+              child: _fotoPerfilSeleccionada != null
+                  ? Image.file(
+                      File(fotoActual!),
+                      fit: BoxFit.cover,
+                    )
+                  : AppAvatar.xl(
+                      imageUrl: fotoActual,
+                      icon: Icons.person,
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: AppColors.textOnPrimary,
+                    ),
+            ),
           ),
           if (_isEditing)
             Positioned(
               bottom: 0,
               right: 0,
-              child: CircleAvatar(
-                radius: 20,
-                backgroundColor: Colors.blue,
+              child: AppCard(
+                elevated: true,
+                padding: EdgeInsets.zero,
+                backgroundColor: AppColors.primary,
                 child: IconButton(
-                  icon: const Icon(
-                    Icons.camera_alt,
-                    color: Colors.white,
-                    size: 20,
-                  ),
+                  icon: AppIcon.md(Icons.camera_alt, color: AppColors.textOnPrimary),
                   onPressed: _seleccionarFoto,
                 ),
               ),
@@ -417,64 +400,56 @@ class _PerfilScreenState extends State<PerfilScreen> {
   }
 
   Widget _buildSeccionBasica() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Información Básica',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    return AppCard(
+      elevated: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Información Básica', style: AppTypography.titleMedium),
+          const SizedBox(height: AppSpacing.md),
+          TextFormField(
+            controller: _nombreUsuarioController,
+            decoration: const InputDecoration(
+              labelText: 'Nombre de usuario',
+              prefixIcon: Icon(Icons.person),
             ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _nombreUsuarioController,
-              decoration: const InputDecoration(
-                labelText: 'Nombre de usuario',
-                prefixIcon: Icon(Icons.person),
-                border: OutlineInputBorder(),
-              ),
-              enabled: _isEditing,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'El nombre de usuario es requerido';
-                }
-                return null;
-              },
+            enabled: _isEditing,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'El nombre de usuario es requerido';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: AppSpacing.md),
+          TextFormField(
+            controller: _correoController,
+            decoration: const InputDecoration(
+              labelText: 'Correo electrónico',
+              prefixIcon: Icon(Icons.email),
             ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _correoController,
-              decoration: const InputDecoration(
-                labelText: 'Correo electrónico',
-                prefixIcon: Icon(Icons.email),
-                border: OutlineInputBorder(),
-              ),
-              enabled: _isEditing,
-              keyboardType: TextInputType.emailAddress,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'El correo electrónico es requerido';
-                }
-                if (!value.contains('@')) {
-                  return 'Ingresa un correo válido';
-                }
-                return null;
-              },
+            enabled: _isEditing,
+            keyboardType: TextInputType.emailAddress,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'El correo electrónico es requerido';
+              }
+              if (!value.contains('@')) {
+                return 'Ingresa un correo válido';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: AppSpacing.md),
+          TextFormField(
+            initialValue: _perfilData?['tipo_usuario'] ?? '',
+            decoration: const InputDecoration(
+              labelText: 'Tipo de usuario',
+              prefixIcon: Icon(Icons.badge),
             ),
-            const SizedBox(height: 16),
-            TextFormField(
-              initialValue: _perfilData?['tipo_usuario'] ?? '',
-              decoration: const InputDecoration(
-                labelText: 'Tipo de usuario',
-                prefixIcon: Icon(Icons.badge),
-                border: OutlineInputBorder(),
-              ),
-              enabled: false,
-            ),
-          ],
-        ),
+            enabled: false,
+          ),
+        ],
       ),
     );
   }
@@ -500,10 +475,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Información de la ONG',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            Text('Información de la ONG', style: AppTypography.titleMedium),
             const SizedBox(height: 16),
             TextFormField(
               controller: _nombreOngController,
@@ -581,10 +553,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Información de la Empresa',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            Text('Información de la Empresa', style: AppTypography.titleMedium),
             const SizedBox(height: 16),
             TextFormField(
               controller: _nombreEmpresaController,
@@ -662,10 +631,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Información Personal',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            Text('Información Personal', style: AppTypography.titleMedium),
             const SizedBox(height: 16),
             TextFormField(
               controller: _nombresExternoController,
@@ -721,9 +687,9 @@ class _PerfilScreenState extends State<PerfilScreen> {
                   _fechaNacimientoExterno != null
                       ? '${_fechaNacimientoExterno!.day}/${_fechaNacimientoExterno!.month}/${_fechaNacimientoExterno!.year}'
                       : 'Seleccionar fecha',
-                  style: TextStyle(
-                    color: _isEditing ? Colors.black87 : Colors.grey[600],
-                  ),
+                  style: _isEditing
+                      ? AppTypography.bodyMedium
+                      : AppTypography.bodySecondary,
                 ),
               ),
             ),
@@ -745,69 +711,61 @@ class _PerfilScreenState extends State<PerfilScreen> {
   }
 
   Widget _buildSeccionContrasena() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Cambiar Contraseña',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    return AppCard(
+      elevated: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Cambiar Contraseña', style: AppTypography.titleMedium),
+          const SizedBox(height: AppSpacing.md),
+          TextFormField(
+            controller: _contrasenaActualController,
+            decoration: const InputDecoration(
+              labelText: 'Contraseña actual',
+              prefixIcon: Icon(Icons.lock),
             ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _contrasenaActualController,
-              decoration: const InputDecoration(
-                labelText: 'Contraseña actual',
-                prefixIcon: Icon(Icons.lock),
-                border: OutlineInputBorder(),
-              ),
-              obscureText: true,
-              validator: (value) {
-                if (_nuevaContrasenaController.text.isNotEmpty &&
-                    (value == null || value.isEmpty)) {
-                  return 'La contraseña actual es requerida';
-                }
-                return null;
-              },
+            obscureText: true,
+            validator: (value) {
+              if (_nuevaContrasenaController.text.isNotEmpty &&
+                  (value == null || value.isEmpty)) {
+                return 'La contraseña actual es requerida';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: AppSpacing.md),
+          TextFormField(
+            controller: _nuevaContrasenaController,
+            decoration: const InputDecoration(
+              labelText: 'Nueva contraseña',
+              prefixIcon: Icon(Icons.lock_outline),
             ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _nuevaContrasenaController,
-              decoration: const InputDecoration(
-                labelText: 'Nueva contraseña',
-                prefixIcon: Icon(Icons.lock_outline),
-                border: OutlineInputBorder(),
-              ),
-              obscureText: true,
-              validator: (value) {
-                if (_contrasenaActualController.text.isNotEmpty &&
-                    (value == null || value.length < 6)) {
-                  return 'La nueva contraseña debe tener al menos 6 caracteres';
-                }
-                return null;
-              },
+            obscureText: true,
+            validator: (value) {
+              if (_contrasenaActualController.text.isNotEmpty &&
+                  (value == null || value.length < 6)) {
+                return 'La nueva contraseña debe tener al menos 6 caracteres';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: AppSpacing.md),
+          TextFormField(
+            controller: _confirmarContrasenaController,
+            decoration: const InputDecoration(
+              labelText: 'Confirmar nueva contraseña',
+              prefixIcon: Icon(Icons.lock_outline),
             ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _confirmarContrasenaController,
-              decoration: const InputDecoration(
-                labelText: 'Confirmar nueva contraseña',
-                prefixIcon: Icon(Icons.lock_outline),
-                border: OutlineInputBorder(),
-              ),
-              obscureText: true,
-              validator: (value) {
-                if (_nuevaContrasenaController.text.isNotEmpty &&
-                    value != _nuevaContrasenaController.text) {
-                  return 'Las contraseñas no coinciden';
-                }
-                return null;
-              },
-            ),
-          ],
-        ),
+            obscureText: true,
+            validator: (value) {
+              if (_nuevaContrasenaController.text.isNotEmpty &&
+                  value != _nuevaContrasenaController.text) {
+                return 'Las contraseñas no coinciden';
+              }
+              return null;
+            },
+          ),
+        ],
       ),
     );
   }

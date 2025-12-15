@@ -6,10 +6,16 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 import 'package:intl/intl.dart';
+import '../../config/design_tokens.dart';
+import '../../config/typography_system.dart';
 import '../../services/api_service.dart';
 import '../../services/storage_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/breadcrumbs.dart';
+import '../../widgets/atoms/app_avatar.dart';
+import '../../widgets/atoms/app_badge.dart';
+import '../../widgets/atoms/app_button.dart';
+import '../../widgets/atoms/app_icon.dart';
 import '../../models/evento.dart';
 import '../../models/dashboard/dashboard_data.dart';
 import '../../widgets/metrics/metric_card.dart';
@@ -20,6 +26,12 @@ import '../../widgets/charts/area_chart_widget.dart';
 import '../../widgets/charts/grouped_bar_chart_widget.dart';
 import '../../widgets/charts/multi_line_chart_widget.dart';
 import '../../widgets/charts/radar_chart_widget.dart';
+import '../../widgets/molecules/app_card.dart';
+import '../../widgets/molecules/app_list_tile.dart';
+import '../../widgets/molecules/empty_state.dart';
+import '../../widgets/molecules/loading_state.dart';
+import '../../widgets/organisms/error_view.dart';
+import '../../widgets/organisms/skeleton_loader.dart';
 import '../../services/cache_service.dart';
 import '../evento_detail_screen.dart';
 
@@ -126,7 +138,7 @@ class _DashboardEventoMejoradoScreenState
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(
-              primary: Theme.of(context).primaryColor,
+              primary: AppColors.primary,
             ),
           ),
           child: child!,
@@ -153,13 +165,14 @@ class _DashboardEventoMejoradoScreenState
               '¿Deseas descargar el dashboard del evento en formato PDF?',
             ),
             actions: [
-              TextButton(
+              AppButton.text(
+                label: 'Cancelar',
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancelar'),
               ),
-              ElevatedButton(
+              AppButton.primary(
+                label: 'Descargar',
+                icon: Icons.picture_as_pdf,
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Descargar'),
               ),
             ],
           ),
@@ -171,7 +184,13 @@ class _DashboardEventoMejoradoScreenState
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
+      builder:
+          (context) => Center(
+            child: SizedBox(
+              width: 320,
+              child: LoadingState.card(),
+            ),
+          ),
     );
 
     try {
@@ -218,7 +237,7 @@ class _DashboardEventoMejoradoScreenState
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('PDF descargado exitosamente'),
-              backgroundColor: Colors.green,
+              backgroundColor: AppColors.success,
             ),
           );
         }
@@ -229,7 +248,7 @@ class _DashboardEventoMejoradoScreenState
             content: Text(
               result['error'] as String? ?? 'Error al descargar PDF',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -239,7 +258,7 @@ class _DashboardEventoMejoradoScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: ${e.toString()}'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -255,13 +274,14 @@ class _DashboardEventoMejoradoScreenState
               '¿Deseas descargar el dashboard del evento en formato Excel (CSV)?',
             ),
             actions: [
-              TextButton(
+              AppButton.text(
+                label: 'Cancelar',
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancelar'),
               ),
-              ElevatedButton(
+              AppButton.primary(
+                label: 'Descargar',
+                icon: Icons.table_chart,
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Descargar'),
               ),
             ],
           ),
@@ -273,7 +293,13 @@ class _DashboardEventoMejoradoScreenState
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
+      builder:
+          (context) => Center(
+            child: SizedBox(
+              width: 320,
+              child: LoadingState.card(),
+            ),
+          ),
     );
 
     try {
@@ -320,7 +346,7 @@ class _DashboardEventoMejoradoScreenState
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Excel descargado exitosamente'),
-              backgroundColor: Colors.green,
+              backgroundColor: AppColors.success,
             ),
           );
         }
@@ -331,7 +357,7 @@ class _DashboardEventoMejoradoScreenState
             content: Text(
               result['error'] as String? ?? 'Error al descargar Excel',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -341,7 +367,7 @@ class _DashboardEventoMejoradoScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: ${e.toString()}'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -376,25 +402,25 @@ class _DashboardEventoMejoradoScreenState
     return Scaffold(
       drawer: const AppDrawer(),
       appBar: AppBar(
-        title: const Text('Dashboard del Evento'),
+        title: const Text('Dashboard del evento'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.date_range),
+            icon: AppIcon.md(Icons.date_range),
             onPressed: _selectDateRange,
             tooltip: 'Filtrar por fechas',
           ),
           IconButton(
-            icon: const Icon(Icons.picture_as_pdf),
+            icon: AppIcon.md(Icons.picture_as_pdf),
             onPressed: _descargarPdf,
             tooltip: 'Descargar PDF',
           ),
           IconButton(
-            icon: const Icon(Icons.table_chart),
+            icon: AppIcon.md(Icons.table_chart),
             onPressed: _descargarExcel,
             tooltip: 'Descargar Excel',
           ),
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: AppIcon.md(Icons.refresh),
             onPressed: () => _loadDashboard(useCache: false),
             tooltip: 'Actualizar',
           ),
@@ -405,24 +431,12 @@ class _DashboardEventoMejoradoScreenState
                 : TabBar(
                   controller: _tabController,
                   isScrollable: true,
-                  tabs: const [
-                    Tab(text: 'Resumen', icon: Icon(Icons.dashboard, size: 20)),
-                    Tab(
-                      text: 'Tendencias',
-                      icon: Icon(Icons.trending_up, size: 20),
-                    ),
-                    Tab(
-                      text: 'Participantes',
-                      icon: Icon(Icons.people, size: 20),
-                    ),
-                    Tab(
-                      text: 'Asistencia',
-                      icon: Icon(Icons.check_circle, size: 20),
-                    ),
-                    Tab(
-                      text: 'Actividad',
-                      icon: Icon(Icons.timeline, size: 20),
-                    ),
+                  tabs: [
+                    Tab(text: 'Resumen', icon: AppIcon.sm(Icons.dashboard)),
+                    Tab(text: 'Tendencias', icon: AppIcon.sm(Icons.trending_up)),
+                    Tab(text: 'Participantes', icon: AppIcon.sm(Icons.people)),
+                    Tab(text: 'Asistencia', icon: AppIcon.sm(Icons.check_circle)),
+                    Tab(text: 'Actividad', icon: AppIcon.sm(Icons.timeline)),
                   ],
                 ),
       ),
@@ -455,64 +469,54 @@ class _DashboardEventoMejoradoScreenState
             ],
           ),
           if (_fechaInicio != null && _fechaFin != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: Colors.blue.withOpacity(0.1),
-              child: Row(
-                children: [
-                  Icon(Icons.filter_list, size: 16, color: Colors.blue[700]),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Filtrado: ${DateFormat('dd/MM/yyyy').format(_fechaInicio!)} - ${DateFormat('dd/MM/yyyy').format(_fechaFin!)}',
-                    style: TextStyle(
-                      color: Colors.blue[700],
-                      fontWeight: FontWeight.w500,
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
+              ),
+              child: AppCard(
+                backgroundColor: AppColors.infoLight,
+                child: Row(
+                  children: [
+                    AppIcon.sm(Icons.filter_list, color: AppColors.infoDark),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        'Filtrado: ${DateFormat('dd/MM/yyyy').format(_fechaInicio!)} - ${DateFormat('dd/MM/yyyy').format(_fechaFin!)}',
+                        style: AppTypography.labelMedium.copyWith(
+                          color: AppColors.infoDark,
+                        ),
+                      ),
                     ),
-                  ),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _fechaInicio = null;
-                        _fechaFin = null;
-                      });
-                      _loadDashboard();
-                    },
-                    child: const Text('Limpiar'),
-                  ),
-                ],
+                    AppButton.text(
+                      label: 'Limpiar',
+                      onPressed: () {
+                        setState(() {
+                          _fechaInicio = null;
+                          _fechaFin = null;
+                        });
+                        _loadDashboard();
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           Expanded(
             child:
                 _isLoading
-                    ? const Center(child: CircularProgressIndicator())
+                    ? SkeletonLoader.dashboard()
                     : _error != null
-                    ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 64,
-                            color: Colors.red[300],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            _error!,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.red[700]),
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: _loadDashboard,
-                            child: const Text('Reintentar'),
-                          ),
-                        ],
-                      ),
+                    ? ErrorView.serverError(
+                      onRetry: _loadDashboard,
+                      errorDetails: _error,
                     )
                     : _dashboardData == null
-                    ? const Center(child: Text('No hay datos disponibles'))
+                    ? const EmptyState(
+                      icon: Icons.dashboard_outlined,
+                      title: 'Sin datos',
+                      message: 'No hay información disponible para mostrar.',
+                    )
                     : TabBarView(
                       controller: _tabController,
                       children: [
@@ -534,11 +538,15 @@ class _DashboardEventoMejoradoScreenState
     final comparativas = _dashboardData!.comparativas;
 
     if (metricas == null) {
-      return const Center(child: Text('No hay métricas disponibles'));
+      return const EmptyState(
+        icon: Icons.insights_outlined,
+        title: 'Sin métricas',
+        message: 'No hay métricas disponibles para este evento.',
+      );
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -559,15 +567,15 @@ class _DashboardEventoMejoradoScreenState
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 crossAxisCount: crossAxisCount,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
+                crossAxisSpacing: AppSpacing.md,
+                mainAxisSpacing: AppSpacing.md,
                 childAspectRatio: 1.0,
                 children: [
                   _buildMetricCardLaravel(
                     'Total Participantes',
                     metricas.participantesTotal.toString(),
                     Icons.people,
-                    const Color(0xFF0C2B44),
+                    AppColors.primary,
                     comparativas?['participantes_total']?.crecimiento,
                   ),
                   _buildMetricCardLaravel(
@@ -575,7 +583,7 @@ class _DashboardEventoMejoradoScreenState
                     (metricas.participantesPorEstado['aprobada'] ?? 0)
                         .toString(),
                     Icons.check_circle,
-                    const Color(0xFF00A36C),
+                    AppColors.success,
                     null,
                   ),
                   _buildMetricCardLaravel(
@@ -583,7 +591,7 @@ class _DashboardEventoMejoradoScreenState
                     (metricas.participantesPorEstado['pendiente'] ?? 0)
                         .toString(),
                     Icons.schedule,
-                    const Color(0xFF0C2B44),
+                    AppColors.primary,
                     null,
                   ),
                   _buildMetricCardLaravel(
@@ -591,28 +599,28 @@ class _DashboardEventoMejoradoScreenState
                     (metricas.participantesPorEstado['rechazada'] ?? 0)
                         .toString(),
                     Icons.cancel,
-                    const Color(0xFFDC3545),
+                    AppColors.error,
                     null,
                   ),
                   _buildMetricCardLaravel(
                     'Reacciones',
                     metricas.reacciones.toString(),
                     Icons.favorite,
-                    const Color(0xFFDC3545),
+                    AppColors.error,
                     comparativas?['reacciones']?.crecimiento,
                   ),
                   _buildMetricCardLaravel(
                     'Compartidos',
                     metricas.compartidos.toString(),
                     Icons.share,
-                    const Color(0xFF00A36C),
+                    AppColors.accent,
                     comparativas?['compartidos']?.crecimiento,
                   ),
                   _buildMetricCardLaravel(
                     'Voluntarios',
                     metricas.voluntarios.toString(),
                     Icons.volunteer_activism,
-                    const Color(0xFFFFC107),
+                    AppColors.warning,
                     comparativas?['voluntarios']?.crecimiento,
                   ),
                   if (metricas.participantesTotal > 0)
@@ -620,7 +628,7 @@ class _DashboardEventoMejoradoScreenState
                       'Tasa Aprobación',
                       '${((metricas.participantesPorEstado['aprobada'] ?? 0) / metricas.participantesTotal * 100).toStringAsFixed(1)}%',
                       Icons.trending_up,
-                      const Color(0xFF00A36C),
+                      AppColors.success,
                       null,
                     ),
                 ],
@@ -701,7 +709,7 @@ class _DashboardEventoMejoradoScreenState
                 ),
               ],
               seriesNames: ['Actual', 'Anterior'],
-              colors: [Colors.green, Colors.grey],
+              colors: const [AppColors.success, AppColors.grey500],
             ),
             const SizedBox(height: 16),
           ],
@@ -713,7 +721,12 @@ class _DashboardEventoMejoradoScreenState
               title: 'Distribución por Estados',
               subtitle: 'Participantes por estado de inscripción',
               data: _dashboardData!.distribucionEstados!,
-              colors: [Colors.green, Colors.orange, Colors.red, Colors.grey],
+              colors: const [
+                AppColors.success,
+                AppColors.warning,
+                AppColors.error,
+                AppColors.grey500,
+              ],
             ),
           const SizedBox(height: 16),
 
@@ -724,7 +737,7 @@ class _DashboardEventoMejoradoScreenState
               title: 'Métricas Generales',
               subtitle: 'Vista general del rendimiento del evento',
               data: _dashboardData!.metricasRadar!,
-              fillColor: Colors.teal,
+              fillColor: AppColors.accent,
             ),
         ],
       ),
@@ -735,7 +748,11 @@ class _DashboardEventoMejoradoScreenState
     final tendencias = _dashboardData!.tendencias;
 
     if (tendencias == null) {
-      return const Center(child: Text('No hay tendencias disponibles'));
+      return const EmptyState(
+        icon: Icons.trending_up,
+        title: 'Sin tendencias',
+        message: 'No hay datos de tendencias disponibles.',
+      );
     }
 
     final reaccionesPorDia = tendencias['reacciones_por_dia'] as Map? ?? {};
@@ -744,41 +761,29 @@ class _DashboardEventoMejoradoScreenState
         tendencias['inscripciones_por_dia'] as Map? ?? {};
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header estilo Laravel
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF0C2B44), Color(0xFF00A36C)],
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Row(
+          AppCard(
+            backgroundColor: AppColors.primary,
+            elevated: true,
+            child: Row(
               children: [
-                Icon(Icons.trending_up, color: Colors.white, size: 32),
-                SizedBox(width: 16),
+                AppIcon.lg(Icons.trending_up, color: AppColors.textOnPrimary),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Análisis de Tendencias',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                        'Análisis de tendencias',
+                        style: AppTypography.titleOnPrimary,
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: AppSpacing.xxs),
                       Text(
                         'Visualización de datos temporales y comparativas',
-                        style: TextStyle(fontSize: 14, color: Colors.white70),
+                        style: AppTypography.bodyOnPrimary,
                       ),
                     ],
                   ),
@@ -796,8 +801,8 @@ class _DashboardEventoMejoradoScreenState
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 crossAxisCount: crossAxisCount,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
+                crossAxisSpacing: AppSpacing.md,
+                mainAxisSpacing: AppSpacing.md,
                 childAspectRatio: 1.1,
                 children: [
                   // Reacciones por día
@@ -818,12 +823,12 @@ class _DashboardEventoMejoradoScreenState
                     _buildChartCardLaravel(
                       'Compartidos por Día',
                       Icons.share,
-                      const Color(0xFF00A36C),
+                      AppColors.accent,
                       BarChartWidget(
                         title: '',
                         subtitle: '',
                         data: Map<String, int>.from(compartidosPorDia),
-                        barColor: const Color(0xFF00A36C),
+                        barColor: AppColors.accent,
                       ),
                     ),
                   // Inscripciones por día
@@ -831,12 +836,12 @@ class _DashboardEventoMejoradoScreenState
                     _buildChartCardLaravel(
                       'Inscripciones por Día',
                       Icons.calendar_today,
-                      const Color(0xFF17A2B8),
+                      AppColors.info,
                       LineChartWidget(
                         title: '',
                         subtitle: '',
                         data: Map<String, int>.from(inscripcionesPorDia),
-                        lineColor: const Color(0xFF17A2B8),
+                        lineColor: AppColors.info,
                       ),
                     ),
                   // Gráfico múltiple de tendencias
@@ -846,7 +851,7 @@ class _DashboardEventoMejoradoScreenState
                     _buildChartCardLaravel(
                       'Tendencias Temporales',
                       Icons.trending_up,
-                      const Color(0xFF0C2B44),
+                      AppColors.primary,
                       MultiLineChartWidget(
                         title: '',
                         subtitle: '',
@@ -855,13 +860,13 @@ class _DashboardEventoMejoradoScreenState
                             MultiLineData(
                               label: 'Reacciones',
                               values: Map<String, int>.from(reaccionesPorDia),
-                              color: const Color(0xFFDC3545),
+                              color: AppColors.error,
                             ),
                           if (compartidosPorDia.isNotEmpty)
                             MultiLineData(
                               label: 'Compartidos',
                               values: Map<String, int>.from(compartidosPorDia),
-                              color: const Color(0xFF00A36C),
+                              color: AppColors.accent,
                             ),
                           if (inscripcionesPorDia.isNotEmpty)
                             MultiLineData(
@@ -869,7 +874,7 @@ class _DashboardEventoMejoradoScreenState
                               values: Map<String, int>.from(
                                 inscripcionesPorDia,
                               ),
-                              color: const Color(0xFF17A2B8),
+                              color: AppColors.info,
                             ),
                         ],
                       ),
@@ -888,7 +893,7 @@ class _DashboardEventoMejoradoScreenState
     final metricas = _dashboardData!.metricas;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -899,39 +904,35 @@ class _DashboardEventoMejoradoScreenState
               title: 'Participantes por Estado',
               subtitle: 'Distribución de participantes según su estado',
               data: metricas.participantesPorEstado,
-              barColor: Colors.blue,
+              barColor: AppColors.info,
             ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.lg),
 
           // Top participantes
           if (topParticipantes != null && topParticipantes.isNotEmpty) ...[
-            const Text(
-              'Top Participantes',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
+            Text('Top participantes', style: AppTypography.titleLarge),
+            const SizedBox(height: AppSpacing.md),
             ...topParticipantes.asMap().entries.map((entry) {
               final index = entry.key;
               final participante = entry.value;
 
-              return Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: _getTopColor(index),
-                    child: Text(
-                      '${index + 1}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+              return Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: AppCard(
+                  elevated: true,
+                  padding: EdgeInsets.zero,
+                  child: AppListTile(
+                    leading: AppAvatar.sm(
+                      initials: '${index + 1}',
+                      backgroundColor: _getTopColor(index),
+                      foregroundColor: AppColors.textOnPrimary,
                     ),
-                  ),
-                  title: Text(participante.nombre),
-                  trailing: Chip(
-                    label: Text('${participante.totalActividades} actividades'),
-                    backgroundColor: _getTopColor(index).withOpacity(0.2),
+                    title: participante.nombre,
+                    trailing: AppBadge.info(
+                      label: '${participante.totalActividades} actividades',
+                      icon: Icons.bolt,
+                    ),
                   ),
                 ),
               );
@@ -944,7 +945,7 @@ class _DashboardEventoMejoradoScreenState
 
   Widget _buildAsistenciaTab() {
     if (_isLoadingParticipantes) {
-      return const Center(child: CircularProgressIndicator());
+      return LoadingState.list();
     }
 
     // Separar participantes por asistencia
@@ -978,7 +979,7 @@ class _DashboardEventoMejoradoScreenState
                   child: _buildAsistenciaCard(
                     'Asistieron',
                     participantesAsistieron.length,
-                    Colors.green,
+                    AppColors.success,
                     Icons.check_circle,
                   ),
                 ),
@@ -987,7 +988,7 @@ class _DashboardEventoMejoradoScreenState
                   child: _buildAsistenciaCard(
                     'No Asistieron',
                     participantesNoAsistieron.length,
-                    Colors.red,
+                    AppColors.error,
                     Icons.cancel,
                   ),
                 ),
@@ -996,7 +997,7 @@ class _DashboardEventoMejoradoScreenState
                   child: _buildAsistenciaCard(
                     'Sin Registro',
                     participantesSinRegistro.length,
-                    Colors.orange,
+                    AppColors.warning,
                     Icons.help_outline,
                   ),
                 ),
@@ -1017,17 +1018,17 @@ class _DashboardEventoMejoradoScreenState
                 _buildListaParticipantes(
                   participantesAsistieron,
                   'Asistieron',
-                  Colors.green,
+                  AppColors.success,
                 ),
                 _buildListaParticipantes(
                   participantesNoAsistieron,
                   'No Asistieron',
-                  Colors.red,
+                  AppColors.error,
                 ),
                 _buildListaParticipantes(
                   participantesSinRegistro,
                   'Sin Registro de Asistencia',
-                  Colors.orange,
+                  AppColors.warning,
                 ),
               ],
             ),
@@ -1043,43 +1044,22 @@ class _DashboardEventoMejoradoScreenState
     Color color,
     IconData icon,
   ) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [color.withOpacity(0.1), color.withOpacity(0.05)],
+    return AppCard(
+      elevated: true,
+      child: Column(
+        children: [
+          AppIcon.lg(icon, color: color),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            count.toString(),
+            style: AppTypography.headlineSmall.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
           ),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 32),
-            const SizedBox(height: 8),
-            Text(
-              count.toString(),
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[700],
-                fontWeight: FontWeight.w500,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+          const SizedBox(height: AppSpacing.xxxs),
+          Text(label, style: AppTypography.labelSmall, textAlign: TextAlign.center),
+        ],
       ),
     );
   }
@@ -1090,23 +1070,15 @@ class _DashboardEventoMejoradoScreenState
     Color color,
   ) {
     if (participantes.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
-            const SizedBox(height: 16),
-            Text(
-              'No hay participantes en esta categoría',
-              style: TextStyle(color: Colors.grey[600], fontSize: 16),
-            ),
-          ],
-        ),
+      return const EmptyState(
+        icon: Icons.people_outline,
+        title: 'Sin participantes',
+        message: 'No hay participantes en esta categoría.',
       );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       itemCount: participantes.length,
       itemBuilder: (context, index) {
         final participante = participantes[index];
@@ -1131,8 +1103,8 @@ class _DashboardEventoMejoradoScreenState
 
         return TweenAnimationBuilder<double>(
           tween: Tween(begin: 0.0, end: 1.0),
-          duration: Duration(milliseconds: 200 + (index * 30)),
-          curve: Curves.easeOut,
+          duration: AppDuration.fast + Duration(milliseconds: index * 30),
+          curve: AppCurves.decelerate,
           builder: (context, value, child) {
             return Opacity(
               opacity: value,
@@ -1142,118 +1114,75 @@ class _DashboardEventoMejoradoScreenState
               ),
             );
           },
-          child: Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: color.withOpacity(0.3), width: 1),
-            ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
-              leading: CircleAvatar(
-                radius: 28,
-                backgroundColor: color.withOpacity(0.1),
-                backgroundImage:
-                    fotoPerfil != null ? NetworkImage(fotoPerfil) : null,
-                child:
-                    fotoPerfil == null
-                        ? Text(
-                          nombre.isNotEmpty ? nombre[0].toUpperCase() : '?',
-                          style: TextStyle(
-                            color: color,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        )
-                        : null,
-              ),
-              title: Text(
-                nombre,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-              subtitle: Column(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+            child: AppCard(
+              elevated: true,
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 4),
-                  Text(
-                    email,
-                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                  AppAvatar.md(
+                    imageUrl: fotoPerfil?.toString(),
+                    initials: nombre.isNotEmpty ? nombre[0] : '?',
+                    backgroundColor: color.withOpacity(0.12),
+                    foregroundColor: color,
                   ),
-                  if (fechaInscripcion != null) ...[
-                    const SizedBox(height: 4),
-                    Row(
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.calendar_today,
-                          size: 12,
-                          color: Colors.grey[500],
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _formatFechaParticipante(fechaInscripcion),
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey[500],
+                        Text(nombre, style: AppTypography.titleSmall),
+                        const SizedBox(height: AppSpacing.xxs),
+                        Text(email, style: AppTypography.bodySecondary),
+                        if (fechaInscripcion != null) ...[
+                          const SizedBox(height: AppSpacing.xxs),
+                          Row(
+                            children: [
+                              AppIcon.xs(
+                                Icons.calendar_today,
+                                color: AppColors.textTertiary,
+                              ),
+                              const SizedBox(width: AppSpacing.xxs),
+                              Text(
+                                _formatFechaParticipante(fechaInscripcion),
+                                style: AppTypography.labelSmall,
+                              ),
+                            ],
                           ),
-                        ),
+                        ],
+                        if (fechaCheckin != null && asistio) ...[
+                          const SizedBox(height: AppSpacing.xxs),
+                          Row(
+                            children: [
+                              AppIcon.xs(
+                                Icons.access_time,
+                                color: AppColors.successDark,
+                              ),
+                              const SizedBox(width: AppSpacing.xxs),
+                              Text(
+                                'Check-in: ${_formatFechaParticipante(fechaCheckin)}',
+                                style: AppTypography.labelSmall.copyWith(
+                                  color: AppColors.successDark,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
-                  ],
-                  if (fechaCheckin != null && asistio) ...[
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.access_time,
-                          size: 12,
-                          color: Colors.green[600],
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Check-in: ${_formatFechaParticipante(fechaCheckin)}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.green[600],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-              trailing: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _getEstadoColor(estado).withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      estado.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: _getEstadoColor(estado),
-                      ),
-                    ),
                   ),
-                  if (asistio) ...[
-                    const SizedBox(height: 4),
-                    Icon(Icons.check_circle, color: Colors.green, size: 20),
-                  ],
+                  const SizedBox(width: AppSpacing.sm),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      _buildEstadoBadge(estado.toString()),
+                      if (asistio) ...[
+                        const SizedBox(height: AppSpacing.xs),
+                        AppIcon.sm(Icons.check_circle, color: AppColors.success),
+                      ],
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -1263,19 +1192,20 @@ class _DashboardEventoMejoradoScreenState
     );
   }
 
-  Color _getEstadoColor(String estado) {
-    switch (estado.toLowerCase()) {
-      case 'aprobada':
-      case 'aprobado':
-        return Colors.green;
-      case 'rechazada':
-      case 'rechazado':
-        return Colors.red;
-      case 'pendiente':
-        return Colors.orange;
-      default:
-        return Colors.grey;
+  Widget _buildEstadoBadge(String estado) {
+    final normalized = estado.toLowerCase();
+
+    if (normalized == 'aprobada' || normalized == 'aprobado') {
+      return AppBadge.success(label: estado.toUpperCase(), icon: Icons.check_circle);
     }
+    if (normalized == 'rechazada' || normalized == 'rechazado') {
+      return AppBadge.error(label: estado.toUpperCase(), icon: Icons.cancel);
+    }
+    if (normalized == 'pendiente') {
+      return AppBadge.warning(label: estado.toUpperCase(), icon: Icons.schedule);
+    }
+
+    return AppBadge.neutral(label: estado.toUpperCase(), icon: Icons.info_outline);
   }
 
   String _formatFechaParticipante(dynamic fecha) {
@@ -1297,7 +1227,7 @@ class _DashboardEventoMejoradoScreenState
     final actividadReciente = _dashboardData!.actividadReciente;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         children: [
           // Actividad semanal (Area Chart)
@@ -1306,69 +1236,53 @@ class _DashboardEventoMejoradoScreenState
               title: 'Actividad Semanal',
               subtitle: 'Total de interacciones por semana',
               data: actividadSemanal,
-              areaColor: Colors.purple,
-              borderColor: Colors.purple,
+              areaColor: AppColors.primary,
+              borderColor: AppColors.primary,
             ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.lg),
 
           // Actividad reciente (30 días)
           if (actividadReciente != null && actividadReciente.isNotEmpty) ...[
-            const Text(
-              'Actividad Reciente (Últimos 30 días)',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Actividad reciente (últimos 30 días)',
+                style: AppTypography.titleLarge,
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
 
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children:
-                      actividadReciente.entries.take(30).map((entry) {
-                        final fecha = entry.key;
-                        final actividad = entry.value;
+            AppCard(
+              elevated: true,
+              child: Column(
+                children:
+                    actividadReciente.entries.take(30).map((entry) {
+                      final fecha = entry.key;
+                      final actividad = entry.value;
 
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _formatFecha(fecha),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  _buildActividadChip(
-                                    'Reacciones',
-                                    actividad.reacciones,
-                                    Colors.red,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  _buildActividadChip(
-                                    'Compartidos',
-                                    actividad.compartidos,
-                                    Colors.green,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  _buildActividadChip(
-                                    'Inscripciones',
-                                    actividad.inscripciones,
-                                    Colors.blue,
-                                  ),
-                                ],
-                              ),
-                              const Divider(),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                ),
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(_formatFecha(fecha), style: AppTypography.titleSmall),
+                            const SizedBox(height: AppSpacing.xs),
+                            Wrap(
+                              spacing: AppSpacing.sm,
+                              runSpacing: AppSpacing.sm,
+                              children: [
+                                _buildActividadChip('Reacciones', actividad.reacciones),
+                                _buildActividadChip('Compartidos', actividad.compartidos),
+                                _buildActividadChip('Inscripciones', actividad.inscripciones),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            const Divider(height: 1),
+                          ],
+                        ),
+                      );
+                    }).toList(),
               ),
             ),
           ],
@@ -1384,239 +1298,79 @@ class _DashboardEventoMejoradoScreenState
     Color color,
     double? trend,
   ) {
-    // Crear gradiente basado en el color
-    final gradientColors = _getGradientColors(color);
-
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 600),
-      curve: Curves.easeOut,
-      builder: (context, animValue, child) {
-        return Opacity(
-          opacity: animValue,
-          child: Transform.scale(scale: 0.9 + (0.1 * animValue), child: child),
-        );
-      },
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: Card(
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: InkWell(
-            onTap: () {},
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: gradientColors,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: color.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              label.toUpperCase(),
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                                letterSpacing: 0.5,
-                                height: 1.2,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              value,
-                              style: const TextStyle(
-                                fontSize: 36,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                height: 1.0,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Icon(
-                        icon,
-                        size: 48,
-                        color: Colors.white.withOpacity(0.2),
-                      ),
-                    ],
-                  ),
-                  if (trend != null) ...[
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            trend > 0 ? Icons.trending_up : Icons.trending_down,
-                            size: 14,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${trend > 0 ? '+' : ''}${trend.toStringAsFixed(1)}%',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+    return MetricCard(
+      label: label,
+      value: value,
+      icon: icon,
+      color: color,
+      trend: trend,
     );
-  }
-
-  List<Color> _getGradientColors(Color baseColor) {
-    // Colores específicos estilo Laravel
-    if (baseColor.value == const Color(0xFF0C2B44).value) {
-      return [const Color(0xFF0C2B44), const Color(0xFF0A2338)];
-    } else if (baseColor.value == const Color(0xFF00A36C).value) {
-      return [const Color(0xFF00A36C), const Color(0xFF008A5A)];
-    } else if (baseColor.value == const Color(0xFFDC3545).value) {
-      return [const Color(0xFFDC3545), const Color(0xFFC82333)];
-    } else if (baseColor.value == const Color(0xFFFFC107).value) {
-      return [const Color(0xFFFFC107), const Color(0xFFE0A800)];
-    } else {
-      // Gradiente genérico
-      return [
-        baseColor,
-        Color.fromRGBO(
-          (baseColor.red * 0.8).round(),
-          (baseColor.green * 0.8).round(),
-          (baseColor.blue * 0.8).round(),
-          1.0,
-        ),
-      ];
-    }
   }
 
   Widget _buildInfoEventoMejorado() {
     if (_evento == null) return const SizedBox.shrink();
 
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.blue.withOpacity(0.1),
-              Colors.blue.withOpacity(0.05),
+    return AppCard(
+      elevated: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: AppColors.infoLight,
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+                child: AppIcon.lg(Icons.event, color: AppColors.infoDark),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(_evento!.titulo, style: AppTypography.headlineSmall),
+                    if (_evento!.descripcion != null &&
+                        _evento!.descripcion!.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        _evento!.descripcion!,
+                        style: AppTypography.bodySecondary,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ],
           ),
-        ),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.event, size: 32, color: Colors.blue),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _evento!.titulo,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      if (_evento!.descripcion != null) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          _evento!.descripcion!,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 16,
-              runSpacing: 12,
-              children: [
+          const SizedBox(height: AppSpacing.md),
+          Wrap(
+            spacing: AppSpacing.md,
+            runSpacing: AppSpacing.sm,
+            children: [
+              _buildInfoChip(
+                Icons.calendar_today,
+                _formatDate(_evento!.fechaInicio),
+                AppColors.info,
+              ),
+              if (_evento!.ciudad != null)
                 _buildInfoChip(
-                  Icons.calendar_today,
-                  _formatDate(_evento!.fechaInicio),
-                  Colors.blue,
+                  Icons.location_on,
+                  _evento!.ciudad!,
+                  AppColors.success,
                 ),
-                if (_evento!.ciudad != null)
-                  _buildInfoChip(
-                    Icons.location_on,
-                    _evento!.ciudad!,
-                    Colors.green,
-                  ),
-                if (_evento!.estado != null)
-                  _buildInfoChip(
-                    Icons.info_outline,
-                    _evento!.estado!,
-                    Colors.orange,
-                  ),
-              ],
-            ),
-          ],
-        ),
+              if (_evento!.estado != null)
+                _buildInfoChip(
+                  Icons.info_outline,
+                  _evento!.estado!,
+                  AppColors.warning,
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -1627,43 +1381,34 @@ class _DashboardEventoMejoradoScreenState
     Color accentColor,
     Widget chart,
   ) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return AppCard(
+      elevated: true,
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header con gradiente estilo Laravel
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
+              border: Border(
+                bottom: BorderSide(color: accentColor, width: 2),
               ),
-              border: Border(bottom: BorderSide(color: accentColor, width: 2)),
             ),
             child: Row(
               children: [
-                Icon(icon, color: accentColor, size: 20),
-                const SizedBox(width: 8),
+                AppIcon.sm(icon, color: accentColor),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0C2B44),
-                    ),
-                  ),
+                  child: Text(title, style: AppTypography.titleSmall),
                 ),
               ],
             ),
           ),
-          // Contenido del gráfico
           Expanded(
-            child: Padding(padding: const EdgeInsets.all(16), child: chart),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: chart,
+            ),
           ),
         ],
       ),
@@ -1671,111 +1416,83 @@ class _DashboardEventoMejoradoScreenState
   }
 
   Widget _buildInfoChip(IconData icon, String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.3), width: 1),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey[700],
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
+    return AppBadge.custom(
+      label: text,
+      icon: icon,
+      backgroundColor: color.withOpacity(0.12),
+      textColor: color,
     );
   }
 
   Widget _buildInfoEvento() {
     if (_evento == null) return const SizedBox.shrink();
 
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.event, size: 28, color: Colors.blue),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    _evento!.titulo,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
-                const SizedBox(width: 8),
-                Text(
-                  _formatDate(_evento!.fechaInicio),
-                  style: TextStyle(color: Colors.grey[600]),
-                ),
-              ],
-            ),
-            if (_evento!.ciudad != null) ...[
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
-                  const SizedBox(width: 8),
-                  Text(
-                    _evento!.ciudad!,
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                ],
+    return AppCard(
+      elevated: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              AppIcon.md(Icons.event, color: AppColors.info),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Text(_evento!.titulo, style: AppTypography.headlineSmall),
               ),
             ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              AppIcon.xs(Icons.calendar_today, color: AppColors.textSecondary),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  _formatDate(_evento!.fechaInicio),
+                  style: AppTypography.bodySecondary,
+                ),
+              ),
+            ],
+          ),
+          if (_evento!.ciudad != null) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Row(
+              children: [
+                AppIcon.xs(Icons.location_on, color: AppColors.textSecondary),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(_evento!.ciudad!, style: AppTypography.bodySecondary),
+                ),
+              ],
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildActividadChip(String label, int value, Color color) {
-    return Chip(
-      avatar: CircleAvatar(
-        backgroundColor: color,
-        child: Text(
-          value.toString(),
-          style: const TextStyle(color: Colors.white, fontSize: 10),
-        ),
-      ),
-      label: Text(label),
-      backgroundColor: color.withOpacity(0.1),
-      labelStyle: TextStyle(fontSize: 11, color: color),
-    );
+  Widget _buildActividadChip(String label, int value) {
+    final normalized = label.toLowerCase();
+
+    if (normalized.contains('reaccion')) {
+      return AppBadge.error(label: value.toString(), icon: Icons.favorite);
+    }
+    if (normalized.contains('compart')) {
+      return AppBadge.success(label: value.toString(), icon: Icons.share);
+    }
+    return AppBadge.info(label: value.toString(), icon: Icons.person_add);
   }
 
   Color _getTopColor(int index) {
     switch (index) {
       case 0:
-        return Colors.amber;
+        return AppColors.warning;
       case 1:
-        return Colors.grey[600]!;
+        return AppColors.grey600;
       case 2:
-        return Colors.brown;
+        return AppColors.primary;
       default:
-        return Colors.blue;
+        return AppColors.info;
     }
   }
 

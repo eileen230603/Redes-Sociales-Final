@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../config/design_tokens.dart';
 import '../../services/api_service.dart';
 import '../../services/auth_helper.dart';
 import '../../services/storage_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/atoms/app_icon.dart';
+import '../../widgets/molecules/empty_state.dart';
+import '../../widgets/molecules/loading_state.dart';
+import '../../widgets/organisms/error_view.dart';
 import '../../models/evento.dart';
 import '../evento_detail_screen.dart';
 import '../../utils/image_helper.dart';
 import 'editar_evento_screen.dart';
-import '../../widgets/empty_state.dart';
 
 class EventosOngScreen extends StatefulWidget {
   const EventosOngScreen({super.key});
@@ -126,7 +130,7 @@ class _EventosOngScreenState extends State<EventosOngScreen> {
         title: const Text('Mis Eventos'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: AppIcon.md(Icons.refresh),
             onPressed: _loadEventos,
             tooltip: 'Actualizar',
           ),
@@ -134,37 +138,21 @@ class _EventosOngScreenState extends State<EventosOngScreen> {
       ),
       body:
           _isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? LoadingState.list()
               : _error != null
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-                    const SizedBox(height: 16),
-                    Text(
-                      _error!,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.red[700]),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _loadEventos,
-                      child: const Text('Reintentar'),
-                    ),
-                  ],
-                ),
-              )
+              ? ErrorView.serverError(onRetry: _loadEventos, errorDetails: _error)
               : _eventos.isEmpty
-              ? const EmptyState(
-                  title: 'No tienes eventos creados',
-                  message: 'Crea tu primer evento desde el menú "Crear Evento"',
+              ? EmptyState(
                   icon: Icons.event_note_outlined,
+                  title: 'No tienes eventos creados',
+                  message: 'Crea tu primer evento desde el menú "Crear Evento".',
+                  actionLabel: 'Actualizar',
+                  onAction: _loadEventos,
                 )
               : RefreshIndicator(
                 onRefresh: _loadEventos,
                 child: ListView.builder(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(AppSpacing.md),
                   itemCount: _eventos.length,
                   itemBuilder: (context, index) {
                     final evento = _eventos[index];

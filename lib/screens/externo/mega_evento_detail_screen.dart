@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import '../../config/design_tokens.dart';
+import '../../config/typography_system.dart';
 import '../../models/mega_evento.dart';
 import '../../services/api_service.dart';
 import '../../services/auth_helper.dart';
 import '../../utils/image_helper.dart';
 import '../../config/api_config.dart';
+import '../../widgets/atoms/app_badge.dart';
+import '../../widgets/atoms/app_button.dart';
+import '../../widgets/atoms/app_icon.dart';
+import '../../widgets/molecules/app_card.dart';
+import '../../widgets/molecules/loading_state.dart';
+import '../../widgets/organisms/error_view.dart';
+import '../../widgets/organisms/skeleton_loader.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class MegaEventoDetailScreen extends StatefulWidget {
@@ -154,8 +163,8 @@ class _MegaEventoDetailScreenState extends State<MegaEventoDetailScreen> {
             content: Text(
               reaccionado ? '¡Reacción agregada! ❤️' : 'Reacción eliminada',
             ),
-            backgroundColor: reaccionado ? Colors.red : Colors.grey,
-            duration: const Duration(seconds: 2),
+            backgroundColor: reaccionado ? AppColors.error : AppColors.grey600,
+            duration: AppDuration.slow,
           ),
         );
       }
@@ -170,8 +179,8 @@ class _MegaEventoDetailScreenState extends State<MegaEventoDetailScreen> {
             content: Text(
               result['error'] as String? ?? 'Error al procesar reacción',
             ),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
+            backgroundColor: AppColors.error,
+            duration: AppDuration.slow,
           ),
         );
       }
@@ -188,16 +197,16 @@ class _MegaEventoDetailScreenState extends State<MegaEventoDetailScreen> {
           if (totalResult['success'] == true) {
             final total = totalResult['total_reacciones'] as int?;
             _totalReacciones = total ?? 0;
-            print('✅ Total de reacciones cargado: $_totalReacciones');
+            debugPrint('✅ Total de reacciones cargado: $_totalReacciones');
           } else {
-            print(
+            debugPrint(
               '❌ Error al cargar total de reacciones: ${totalResult['error']}',
             );
           }
         });
       }
     } catch (e) {
-      print('❌ Excepción al cargar total de reacciones: $e');
+      debugPrint('❌ Excepción al cargar total de reacciones: $e');
     }
   }
 
@@ -227,8 +236,8 @@ class _MegaEventoDetailScreenState extends State<MegaEventoDetailScreen> {
                 ? '¡Te has inscrito al mega evento!'
                 : 'Inscripción cancelada',
           ),
-          backgroundColor: _participando ? Colors.green : Colors.orange,
-          duration: const Duration(seconds: 2),
+          backgroundColor: _participando ? AppColors.success : AppColors.warning,
+          duration: AppDuration.slow,
         ),
       );
       _checkParticipacion(); // Verificar estado real
@@ -238,7 +247,7 @@ class _MegaEventoDetailScreenState extends State<MegaEventoDetailScreen> {
           content: Text(
             result['error'] as String? ?? 'Error al procesar participación',
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -276,7 +285,7 @@ class _MegaEventoDetailScreenState extends State<MegaEventoDetailScreen> {
           content: Text(
             'Este mega evento fue finalizado. Ya no se puede compartir.',
           ),
-          backgroundColor: Colors.orange,
+          backgroundColor: AppColors.warning,
         ),
       );
       return;
@@ -289,7 +298,7 @@ class _MegaEventoDetailScreenState extends State<MegaEventoDetailScreen> {
   void _mostrarModalCompartir() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.black.withOpacity(0),
       isScrollControlled: true,
       builder:
           (context) => _ModalCompartirMegaEvento(
@@ -308,35 +317,51 @@ class _MegaEventoDetailScreenState extends State<MegaEventoDetailScreen> {
     return '$baseUrl/mega-evento/${widget.megaEventoId}/qr';
   }
 
+  String _getEstadoText(String estado) {
+    switch (estado) {
+      case 'planificacion':
+        return 'Planificación';
+      case 'activo':
+        return 'Activo';
+      case 'en_curso':
+        return 'En Curso';
+      case 'finalizado':
+        return 'Finalizado';
+      case 'cancelado':
+        return 'Cancelado';
+      default:
+        return estado;
+    }
+  }
+
+  Widget _buildEstadoBadge(String estado) {
+    final label = _getEstadoText(estado);
+    switch (estado) {
+      case 'activo':
+        return AppBadge.success(label: label, icon: Icons.check_circle_outline);
+      case 'en_curso':
+        return AppBadge.info(label: label, icon: Icons.timelapse);
+      case 'finalizado':
+        return AppBadge.neutral(label: label, icon: Icons.flag_outlined);
+      case 'cancelado':
+        return AppBadge.error(label: label, icon: Icons.cancel_outlined);
+      case 'planificacion':
+      default:
+        return AppBadge.neutral(label: label, icon: Icons.schedule);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Detalle del Mega Evento')),
       body:
           _isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? SkeletonLoader.eventDetail()
               : _error != null
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-                    const SizedBox(height: 16),
-                    Text(
-                      _error!,
-                      style: const TextStyle(color: Colors.red),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _loadMegaEvento,
-                      child: const Text('Reintentar'),
-                    ),
-                  ],
-                ),
-              )
+              ? ErrorView.serverError(onRetry: _loadMegaEvento, errorDetails: _error)
               : _megaEvento == null
-              ? const Center(child: Text('No se encontró el mega evento'))
+              ? ErrorView.notFound()
               : SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -344,95 +369,88 @@ class _MegaEventoDetailScreenState extends State<MegaEventoDetailScreen> {
                     // Imagen principal
                     if (_megaEvento!.imagenes != null &&
                         _megaEvento!.imagenes!.isNotEmpty)
-                      CachedNetworkImage(
-                        imageUrl:
-                            ImageHelper.buildImageUrl(
-                              _megaEvento!.imagenes!.first.toString(),
-                            ) ??
-                            '',
-                        height: 250,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        placeholder:
-                            (context, url) => Container(
-                              height: 250,
-                              color: Colors.grey[300],
-                              child: const Center(
-                                child: CircularProgressIndicator(),
-                              ),
+                      AppCard(
+                        padding: EdgeInsets.zero,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(AppRadius.card),
+                          child: SizedBox(
+                            height: 250,
+                            width: double.infinity,
+                            child: CachedNetworkImage(
+                              imageUrl:
+                                  ImageHelper.buildImageUrl(
+                                    _megaEvento!.imagenes!.first.toString(),
+                                  ) ??
+                                  '',
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) {
+                                return Container(color: AppColors.grey100);
+                              },
+                              errorWidget: (context, url, error) {
+                                return Container(
+                                  color: AppColors.grey100,
+                                  child: Center(
+                                    child: AppIcon.lg(
+                                      Icons.image_not_supported,
+                                      color: AppColors.textTertiary,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
-                        errorWidget:
-                            (context, url, error) => Container(
-                              height: 250,
-                              color: Colors.grey[300],
-                              child: const Icon(Icons.image_not_supported),
-                            ),
+                          ),
+                        ),
                       ),
 
                     Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppSpacing.md),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Título
                           Text(
                             _megaEvento!.titulo,
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: AppTypography.headlineSmall,
                           ),
 
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppSpacing.xs),
 
                           // Badges
                           Wrap(
-                            spacing: 8,
+                            spacing: AppSpacing.sm,
+                            runSpacing: AppSpacing.xs,
                             children: [
                               if (_megaEvento!.categoria != null)
-                                Chip(
-                                  label: Text(_megaEvento!.categoria!),
-                                  backgroundColor: Colors.blue[100],
+                                AppBadge.neutral(
+                                  label: _megaEvento!.categoria!,
+                                  icon: Icons.category_outlined,
                                 ),
-                              Chip(
-                                label: Text(_megaEvento!.estado),
-                                backgroundColor: Colors.grey[200],
-                              ),
+                              _buildEstadoBadge(_megaEvento!.estado),
                               if (_megaEvento!.esPublico)
-                                const Chip(
-                                  label: Text('Público'),
-                                  backgroundColor: Colors.green,
-                                  labelStyle: TextStyle(color: Colors.white),
+                                AppBadge.primary(
+                                  label: 'Público',
+                                  icon: Icons.public,
                                 ),
                             ],
                           ),
 
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.md),
 
                           // Descripción
                           if (_megaEvento!.descripcion != null &&
                               _megaEvento!.descripcion!.isNotEmpty) ...[
-                            const Text(
-                              'Descripción',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(_megaEvento!.descripcion!),
-                            const SizedBox(height: 16),
+                            Text('Descripción', style: AppTypography.titleMedium),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(_megaEvento!.descripcion!, style: AppTypography.bodyLarge),
+                            const SizedBox(height: AppSpacing.md),
                           ],
 
                           // Información del evento
-                          const Text(
+                          Text(
                             'Información del Mega Evento',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: AppTypography.titleMedium,
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: AppSpacing.sm),
 
                           _buildInfoRow(
                             Icons.calendar_today,
@@ -460,95 +478,67 @@ class _MegaEventoDetailScreenState extends State<MegaEventoDetailScreen> {
                               '${_megaEvento!.capacidadMaxima} personas',
                             ),
 
-                          const SizedBox(height: 24),
+                          const SizedBox(height: AppSpacing.lg),
 
                           // Botones de acción
                           Row(
                             children: [
                               Expanded(
-                                child: ElevatedButton.icon(
+                                child: AppButton.secondary(
+                                  label: '$_totalReacciones',
+                                  icon:
+                                      _reaccionado
+                                          ? Icons.favorite
+                                          : Icons.favorite_border,
                                   onPressed:
                                       _isProcessingReaccion
                                           ? null
                                           : _toggleReaccion,
-                                  icon: Icon(
-                                    _reaccionado
-                                        ? Icons.favorite
-                                        : Icons.favorite_border,
-                                    color: Colors.white,
-                                  ),
-                                  label: Text(
-                                    '$_totalReacciones',
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.red,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 16,
-                                    ),
-                                  ),
+                                  isLoading: _isProcessingReaccion,
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppSpacing.sm),
                               Expanded(
-                                child: ElevatedButton.icon(
+                                child: AppButton.secondary(
                                   onPressed:
                                       _isLoadingCompartidos
                                           ? null
                                           : _compartirMegaEvento,
-                                  icon: const Icon(
-                                    Icons.share,
-                                    color: Colors.white,
-                                  ),
-                                  label: Text(
-                                    _isLoadingCompartidos
-                                        ? '...'
-                                        : '$_totalCompartidos',
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.blue,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 16,
-                                    ),
-                                  ),
+                                  icon: Icons.share_outlined,
+                                  label:
+                                      _isLoadingCompartidos
+                                          ? '...'
+                                          : '$_totalCompartidos',
                                 ),
                               ),
                             ],
                           ),
 
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.md),
 
                           // Botón de participar
                           SizedBox(
                             width: double.infinity,
-                            child: ElevatedButton.icon(
-                              onPressed:
-                                  _isProcessingParticipacion
-                                      ? null
-                                      : _toggleParticipacion,
-                              icon: Icon(
+                            child:
                                 _participando
-                                    ? Icons.check_circle
-                                    : Icons.person_add,
-                                color: Colors.white,
-                              ),
-                              label: Text(
-                                _participando
-                                    ? 'Ya estás participando'
-                                    : 'Participar en este Mega Evento',
-                                style: const TextStyle(color: Colors.white),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    _participando
-                                        ? Colors.green
-                                        : Colors.orange,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                ),
-                              ),
-                            ),
+                                    ? AppButton.outlined(
+                                      label: 'Cancelar participación',
+                                      icon: Icons.cancel_outlined,
+                                      onPressed:
+                                          _isProcessingParticipacion
+                                              ? null
+                                              : _toggleParticipacion,
+                                      isLoading: _isProcessingParticipacion,
+                                    )
+                                    : AppButton.primary(
+                                      label: 'Participar en este Mega Evento',
+                                      icon: Icons.person_add_alt_1,
+                                      onPressed:
+                                          _isProcessingParticipacion
+                                              ? null
+                                              : _toggleParticipacion,
+                                      isLoading: _isProcessingParticipacion,
+                                    ),
                           ),
                         ],
                       ),
@@ -561,31 +551,24 @@ class _MegaEventoDetailScreenState extends State<MegaEventoDetailScreen> {
 
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: Colors.grey[600]),
-          const SizedBox(width: 12),
+          AppIcon.sm(icon, color: AppColors.textSecondary),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: AppTypography.labelMedium,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpacing.xxs),
                 Text(
                   value,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: AppTypography.bodyLarge,
                 ),
               ],
             ),
@@ -663,8 +646,8 @@ class _ModalCompartirMegaEventoState extends State<_ModalCompartirMegaEvento> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('¡Enlace copiado al portapapeles!'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
+          backgroundColor: AppColors.success,
+          duration: AppDuration.slow,
         ),
       );
     } catch (e) {
@@ -672,7 +655,7 @@ class _ModalCompartirMegaEventoState extends State<_ModalCompartirMegaEvento> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error al copiar: ${e.toString()}'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -703,8 +686,8 @@ class _ModalCompartirMegaEventoState extends State<_ModalCompartirMegaEvento> {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        color: AppColors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.modal)),
       ),
       child: Padding(
         padding: EdgeInsets.only(
@@ -715,25 +698,18 @@ class _ModalCompartirMegaEventoState extends State<_ModalCompartirMegaEvento> {
           children: [
             // Header
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: const BoxDecoration(
                 border: Border(
-                  bottom: BorderSide(color: Color(0xFFF5F5F5), width: 1),
+                  bottom: BorderSide(color: AppColors.borderLight, width: 1),
                 ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Compartir',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0C2B44),
-                    ),
-                  ),
+                  Text('Compartir', style: AppTypography.titleLarge),
                   IconButton(
-                    icon: const Icon(Icons.close),
+                    icon: AppIcon.md(Icons.close),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -742,7 +718,7 @@ class _ModalCompartirMegaEventoState extends State<_ModalCompartirMegaEvento> {
 
             // Contenido
             Padding(
-              padding: const EdgeInsets.all(32),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               child: Column(
                 children: [
                   // Opciones de compartir
@@ -754,8 +730,8 @@ class _ModalCompartirMegaEventoState extends State<_ModalCompartirMegaEvento> {
                         child: _buildOpcionCompartir(
                           icon: Icons.link,
                           label: 'Copiar enlace',
-                          color: const Color(0xFFF5F5F5),
-                          iconColor: const Color(0xFF0C2B44),
+                          backgroundColor: AppColors.grey100,
+                          foregroundColor: AppColors.textPrimary,
                           onTap: _copiarEnlace,
                         ),
                       ),
@@ -765,8 +741,8 @@ class _ModalCompartirMegaEventoState extends State<_ModalCompartirMegaEvento> {
                         child: _buildOpcionCompartir(
                           icon: Icons.qr_code,
                           label: 'Código QR',
-                          color: const Color(0xFF0C2B44),
-                          iconColor: Colors.white,
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: AppColors.textOnPrimary,
                           onTap: _mostrarCodigoQR,
                         ),
                       ),
@@ -776,32 +752,22 @@ class _ModalCompartirMegaEventoState extends State<_ModalCompartirMegaEvento> {
                   // Contenedor para el QR
                   if (_mostrarQR) ...[
                     const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
+                    AppCard(
+                      elevated: true,
+                      padding: const EdgeInsets.all(AppSpacing.md),
                       child: Column(
                         children: [
                           QrImageView(
                             data: widget.megaEventoUrl,
                             version: QrVersions.auto,
                             size: 250.0,
-                            backgroundColor: Colors.white,
+                            backgroundColor: AppColors.white,
                           ),
                           const SizedBox(height: 12),
-                          const Text(
+                          Text(
                             'Escanea este código para acceder al mega evento',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 14, color: Colors.grey),
+                            style: AppTypography.bodySecondary,
                           ),
                         ],
                       ),
@@ -819,8 +785,8 @@ class _ModalCompartirMegaEventoState extends State<_ModalCompartirMegaEvento> {
   Widget _buildOpcionCompartir({
     required IconData icon,
     required String label,
-    required Color color,
-    required Color iconColor,
+    required Color backgroundColor,
+    required Color foregroundColor,
     required VoidCallback onTap,
   }) {
     return InkWell(
@@ -832,26 +798,16 @@ class _ModalCompartirMegaEventoState extends State<_ModalCompartirMegaEvento> {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: color,
+              color: backgroundColor,
               borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              boxShadow: AppElevation.cardShadow,
             ),
-            child: Icon(icon, size: 32, color: iconColor),
+            child: Icon(icon, size: 32, color: foregroundColor),
           ),
           const SizedBox(height: 12),
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF333333),
-            ),
+            style: AppTypography.labelLarge,
             textAlign: TextAlign.center,
           ),
         ],

@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../models/notificacion.dart';
+import '../config/design_tokens.dart';
+import '../config/typography_system.dart';
+import '../widgets/atoms/app_badge.dart';
+import '../widgets/atoms/app_button.dart';
+import '../widgets/atoms/app_icon.dart';
+import '../widgets/molecules/empty_state.dart';
+import '../widgets/molecules/loading_state.dart';
+import '../widgets/organisms/error_view.dart';
 import 'evento_detail_screen.dart';
 
 class NotificacionesScreen extends StatefulWidget {
@@ -70,7 +78,7 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
             content: Text(
               result['error'] as String? ?? 'Error al marcar notificación',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -95,7 +103,7 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Todas las notificaciones marcadas como leídas'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppColors.success,
           ),
         );
       }
@@ -106,7 +114,7 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
             content: Text(
               result['error'] as String? ?? 'Error al marcar notificaciones',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -146,14 +154,14 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
     switch (tipo.toLowerCase()) {
       case 'reaccion':
       case 'reaccion_evento':
-        return Colors.red;
+        return AppColors.error;
       case 'nueva_participacion':
       case 'participacion':
-        return Colors.blue;
+        return AppColors.info;
       case 'evento':
-        return Colors.green;
+        return AppColors.success;
       default:
-        return Colors.grey;
+        return AppColors.textSecondary;
     }
   }
 
@@ -162,102 +170,70 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            const Flexible(
+            const Expanded(
               child: Text('Notificaciones', overflow: TextOverflow.ellipsis),
             ),
-            if (_noLeidas > 0) ...[
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  _noLeidas.toString(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+            if (_noLeidas > 0)
+              AppBadge.error(
+                label: _noLeidas > 99 ? '99+' : _noLeidas.toString(),
+                icon: Icons.notifications_active,
               ),
-            ],
           ],
         ),
         actions: [
           if (_noLeidas > 0)
-            TextButton.icon(
-              onPressed: _marcarTodasLeidas,
-              icon: const Icon(Icons.done_all, size: 18),
-              label: const Text('Marcar todas', style: TextStyle(fontSize: 12)),
-              style: TextButton.styleFrom(foregroundColor: Colors.white),
+            Padding(
+              padding: const EdgeInsets.only(right: AppSpacing.xs),
+              child: AppButton.text(
+                label: 'Marcar todas',
+                icon: Icons.done_all,
+                onPressed: _marcarTodasLeidas,
+                minimumSize: const Size(0, AppSizes.buttonHeightSm),
+              ),
             ),
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: AppIcon.md(Icons.refresh),
             onPressed: _loadNotificaciones,
             tooltip: 'Actualizar',
           ),
         ],
       ),
-      body:
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _error != null
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Colors.grey[400],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      _error!,
-                      style: TextStyle(color: Colors.grey[600]),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _loadNotificaciones,
-                      child: const Text('Reintentar'),
-                    ),
-                  ],
-                ),
-              )
-              : _notificaciones.isEmpty
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.notifications_none,
-                      size: 64,
-                      color: Colors.grey[400],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No tienes notificaciones',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 16),
-                    ),
-                  ],
-                ),
-              )
-              : RefreshIndicator(
-                onRefresh: _loadNotificaciones,
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  itemCount: _notificaciones.length,
-                  itemBuilder: (context, index) {
-                    final notificacion = _notificaciones[index];
-                    return _buildNotificacionItem(notificacion);
-                  },
-                ),
-              ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return LoadingState.list();
+    }
+
+    if (_error != null) {
+      return ErrorView.serverError(
+        onRetry: _loadNotificaciones,
+        errorDetails: _error,
+      );
+    }
+
+    if (_notificaciones.isEmpty) {
+      return const EmptyState(
+        icon: Icons.notifications_none,
+        title: 'No tienes notificaciones',
+        message: 'Cuando ocurra algo relevante, aparecerá aquí.',
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadNotificaciones,
+      child: ListView.separated(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        itemCount: _notificaciones.length,
+        separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.sm),
+        itemBuilder: (context, index) {
+          final notificacion = _notificaciones[index];
+          return _buildNotificacionItem(notificacion);
+        },
+      ),
     );
   }
 
@@ -265,64 +241,61 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
     final colorTipo = _getColorTipo(notificacion.tipo);
     final iconoTipo = _getIconoTipo(notificacion.tipo);
 
-    return InkWell(
-      onTap: () {
-        _marcarComoLeida(notificacion);
-        if (notificacion.eventoId != null) {
-          _navegarAEvento(notificacion.eventoId);
-        }
-      },
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color:
-              notificacion.leida ? Colors.white : colorTipo.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color:
-                notificacion.leida
-                    ? Colors.grey[200]!
-                    : colorTipo.withOpacity(0.3),
-            width: 1,
+    final bool isUnread = !notificacion.leida;
+
+    return Material(
+      color: AppColors.black.withOpacity(0),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        onTap: () {
+          _marcarComoLeida(notificacion);
+          if (notificacion.eventoId != null) {
+            _navegarAEvento(notificacion.eventoId);
+          }
+        },
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: isUnread ? AppColors.grey50 : AppColors.white,
+            borderRadius: BorderRadius.circular(AppRadius.card),
+            border: Border.all(
+              color: isUnread ? colorTipo.withOpacity(0.35) : AppColors.borderLight,
+            ),
           ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Icono
               Container(
-                width: 48,
-                height: 48,
+                width: AppSizes.avatarLg,
+                height: AppSizes.avatarLg,
                 decoration: BoxDecoration(
-                  color: colorTipo.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(24),
+                  color: colorTipo.withOpacity(0.12),
+                  shape: BoxShape.circle,
                 ),
-                child: Icon(iconoTipo, color: colorTipo, size: 24),
+                child: Center(
+                  child: AppIcon.md(iconoTipo, color: colorTipo),
+                ),
               ),
-              const SizedBox(width: 12),
-              // Contenido
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
                           child: Text(
                             notificacion.titulo,
-                            style: TextStyle(
-                              fontWeight:
-                                  notificacion.leida
-                                      ? FontWeight.normal
-                                      : FontWeight.bold,
-                              fontSize: 15,
-                              color: Colors.grey[800],
-                            ),
+                            style: isUnread
+                                ? AppTypography.titleSmall.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  )
+                                : AppTypography.titleSmall,
                           ),
                         ),
-                        if (!notificacion.leida)
+                        if (isUnread) ...[
+                          const SizedBox(width: AppSpacing.sm),
                           Container(
                             width: 8,
                             height: 8,
@@ -331,29 +304,27 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
                               shape: BoxShape.circle,
                             ),
                           ),
+                        ],
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
                       notificacion.mensaje,
-                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      style: AppTypography.bodySecondary,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    if (notificacion.eventoTitulo != null) ...[
-                      const SizedBox(height: 6),
+                    if (notificacion.eventoTitulo != null &&
+                        notificacion.eventoTitulo!.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.xs),
                       Row(
                         children: [
-                          Icon(Icons.event, size: 14, color: Colors.grey[500]),
-                          const SizedBox(width: 4),
+                          AppIcon.xs(Icons.event, color: AppColors.textTertiary),
+                          const SizedBox(width: AppSpacing.xxs),
                           Expanded(
                             child: Text(
                               notificacion.eventoTitulo!,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[500],
-                                fontStyle: FontStyle.italic,
-                              ),
+                              style: AppTypography.bodySmall,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -361,10 +332,10 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
                         ],
                       ),
                     ],
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
                     Text(
                       _formatFecha(notificacion.fecha),
-                      style: TextStyle(fontSize: 12, color: Colors.grey[400]),
+                      style: AppTypography.labelSmall,
                     ),
                   ],
                 ),

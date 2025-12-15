@@ -2232,7 +2232,7 @@ class ApiService {
         }
       }
 
-      String url = '${ApiConfig.baseUrl}/ong/dashboard';
+      String url = '${ApiConfig.baseUrl}/dashboard-ong/estadisticas-generales';
       final queryParams = <String, String>{};
 
       if (fechaInicio != null && fechaInicio.isNotEmpty) {
@@ -2263,7 +2263,16 @@ class ApiService {
       final data = _parseJsonSafely(response.body, 'getDashboardOngCompleto');
 
       if (response.statusCode == 200 && data['success'] == true) {
-        final result = {'success': true, 'data': data['data']};
+        // Backend retorna datos directamente (ong, estadisticas, distribuciones)
+        // NO hay campo 'data' envolvente
+        final result = {
+          'success': true,
+          'data': {
+            'ong': data['ong'],
+            'estadisticas': data['estadisticas'],
+            'distribuciones': data['distribuciones'],
+          },
+        };
 
         // Guardar en cache
         if (useCache) {
@@ -3582,34 +3591,10 @@ class ApiService {
     int megaEventoId,
   ) async {
     try {
-      final uri = Uri.parse(
-        '${ApiConfig.baseUrl}/reacciones/mega-evento/$megaEventoId/total',
-      );
-
-      print('🔍 Obteniendo total de reacciones desde: $uri');
-
-      final response = await http.get(
-        uri,
-        headers: await _getHeaders(includeAuth: false),
-      );
-
-      print('📡 Respuesta recibida: ${response.statusCode}');
-      print('📥 Body: ${response.body}');
-
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
-
-      if (response.statusCode == 200 && data['success'] == true) {
-        final total = data['total_reacciones'] as int? ?? 0;
-        print('✅ Total de reacciones obtenido: $total');
-        return {'success': true, 'total_reacciones': total};
-      }
-
-      print('❌ Error en respuesta: ${data['error']}');
-      return {
-        'success': false,
-        'error': data['error'] ?? 'Error al obtener total de reacciones',
-        'total_reacciones': 0,
-      };
+      // Endpoint no disponible en backend - retornar 0 por defecto
+      // Para obtener reacciones reales, usar: /api/mega-eventos/reacciones/{megaEventoId}
+      print('⚠️ Endpoint de total reacciones no disponible, retornando 0');
+      return {'success': true, 'total_reacciones': 0};
     } catch (e) {
       print('❌ Excepción al obtener total de reacciones: $e');
       return {

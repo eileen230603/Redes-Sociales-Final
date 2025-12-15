@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:intl/intl.dart';
+import '../../config/design_tokens.dart';
+import '../../config/typography_system.dart';
+import '../atoms/app_icon.dart';
+import '../molecules/app_card.dart';
 
 /// Datos para un grupo de barras
 class GroupedBarData {
@@ -25,7 +28,12 @@ class GroupedBarChartWidget extends StatelessWidget {
     required this.data,
     required this.title,
     required this.seriesNames,
-    this.colors = const [Colors.blue, Colors.green, Colors.orange, Colors.red],
+    this.colors = const [
+      AppColors.primary,
+      AppColors.accent,
+      AppColors.warning,
+      AppColors.error,
+    ],
     this.showGrid = true,
     this.subtitle,
   });
@@ -40,180 +48,142 @@ class GroupedBarChartWidget extends StatelessWidget {
     double maxY = 0;
     for (final item in data) {
       for (final value in item.values.values) {
-        if (value > maxY) maxY = value;
+        if (value > maxY) {
+          maxY = value;
+        }
       }
     }
 
-    // Crear datasets para cada serie
-    final datasets =
-        seriesNames.asMap().entries.map((entry) {
-          final index = entry.key;
-          final seriesName = entry.value;
-          final color = colors[index % colors.length];
-
-          return BarChartGroupData(
-            x: index,
-            barRods:
-                data.asMap().entries.map((dataEntry) {
-                  final dataIndex = dataEntry.key;
-                  final dataItem = dataEntry.value;
-                  final value = dataItem.values[seriesName] ?? 0.0;
-
-                  return BarChartRodData(
-                    toY: value,
-                    color: color,
-                    width: 20,
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(4),
-                    ),
-                  );
-                }).toList(),
-          );
-        }).toList();
-
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            if (subtitle != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                subtitle!,
-                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-              ),
-            ],
-            const SizedBox(height: 24),
-            SizedBox(
-              height: 250,
-              child: BarChart(
-                BarChartData(
-                  alignment: BarChartAlignment.spaceAround,
-                  maxY: maxY * 1.2,
-                  barTouchData: BarTouchData(
-                    enabled: true,
-                    touchTooltipData: BarTouchTooltipData(
-                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                        final label = data[rodIndex].label;
-                        final seriesName = seriesNames[groupIndex];
-                        final value = rod.toY.toInt();
-                        return BarTooltipItem(
-                          '$label\n$seriesName: $value',
-                          const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+    return AppCard(
+      elevated: true,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: AppTypography.titleLarge),
+          if (subtitle != null) ...[
+            const SizedBox(height: AppSpacing.xxs),
+            Text(subtitle!, style: AppTypography.bodySecondary),
+          ],
+          const SizedBox(height: AppSpacing.lg),
+          SizedBox(
+            height: 250,
+            child: BarChart(
+              BarChartData(
+                alignment: BarChartAlignment.spaceAround,
+                maxY: maxY * 1.2,
+                barTouchData: BarTouchData(
+                  enabled: true,
+                  touchTooltipData: BarTouchTooltipData(
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                      final label = data[rodIndex].label;
+                      final seriesName = seriesNames[groupIndex];
+                      final value = rod.toY.toInt();
+                      return BarTooltipItem(
+                        '$label\n$seriesName: $value',
+                        AppTypography.labelSmall.copyWith(
+                          color: AppColors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                titlesData: FlTitlesData(
+                  show: true,
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 40,
+                      getTitlesWidget: (value, meta) {
+                        if (value.toInt() >= data.length) {
+                          return const SizedBox.shrink();
+                        }
+                        final label = data[value.toInt()].label;
+                        return Padding(
+                          padding: const EdgeInsets.only(top: AppSpacing.xs),
+                          child: Text(
+                            label.length > 10
+                                ? '${label.substring(0, 8)}...'
+                                : label,
+                            style: AppTypography.labelSmall,
+                            textAlign: TextAlign.center,
                           ),
                         );
                       },
                     ),
                   ),
-                  titlesData: FlTitlesData(
-                    show: true,
-                    rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 40,
-                        getTitlesWidget: (value, meta) {
-                          if (value.toInt() >= data.length)
-                            return const Text('');
-                          final label = data[value.toInt()].label;
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: Text(
-                              label.length > 10
-                                  ? '${label.substring(0, 8)}...'
-                                  : label,
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 10,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 42,
-                        interval: maxY > 10 ? (maxY / 5).ceilToDouble() : 1,
-                        getTitlesWidget: (value, meta) {
-                          return Text(
-                            value.toInt().toString(),
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 12,
-                            ),
-                          );
-                        },
-                      ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 42,
+                      interval: maxY > 10 ? (maxY / 5).ceilToDouble() : 1,
+                      getTitlesWidget: (value, meta) {
+                        return Text(
+                          value.toInt().toString(),
+                          style: AppTypography.labelSmall,
+                        );
+                      },
                     ),
                   ),
-                  gridData: FlGridData(
-                    show: showGrid,
-                    drawVerticalLine: false,
-                    horizontalInterval:
-                        maxY > 10 ? (maxY / 5).ceilToDouble() : 1,
-                    getDrawingHorizontalLine: (value) {
-                      return FlLine(color: Colors.grey[300], strokeWidth: 1);
-                    },
-                  ),
-                  borderData: FlBorderData(
-                    show: true,
-                    border: Border.all(color: Colors.grey[300]!),
-                  ),
-                  barGroups: List.generate(
-                    data.length,
-                    (index) => BarChartGroupData(
-                      x: index,
-                      groupVertically: true,
-                      barRods:
-                          seriesNames.asMap().entries.map((entry) {
-                            final seriesIndex = entry.key;
-                            final seriesName = entry.value;
-                            final color = colors[seriesIndex % colors.length];
-                            final value = data[index].values[seriesName] ?? 0.0;
+                ),
+                gridData: FlGridData(
+                  show: showGrid,
+                  drawVerticalLine: false,
+                  horizontalInterval: maxY > 10 ? (maxY / 5).ceilToDouble() : 1,
+                  getDrawingHorizontalLine: (value) {
+                    return const FlLine(
+                      color: AppColors.borderLight,
+                      strokeWidth: 1,
+                    );
+                  },
+                ),
+                borderData: FlBorderData(
+                  show: true,
+                  border: Border.all(color: AppColors.borderLight),
+                ),
+                barGroups: List.generate(
+                  data.length,
+                  (index) => BarChartGroupData(
+                    x: index,
+                    groupVertically: true,
+                    barRods: seriesNames.asMap().entries.map((entry) {
+                      final seriesIndex = entry.key;
+                      final seriesName = entry.value;
+                      final color = colors[seriesIndex % colors.length];
+                      final value = data[index].values[seriesName] ?? 0.0;
 
-                            return BarChartRodData(
-                              toY: value,
-                              color: color,
-                              width: 20,
-                              borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(4),
-                              ),
-                            );
-                          }).toList(),
-                    ),
+                      return BarChartRodData(
+                        toY: value,
+                        color: color,
+                        width: 20,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(AppRadius.xs),
+                        ),
+                      );
+                    }).toList(),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            _buildLegend(),
-          ],
-        ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _buildLegend(),
+        ],
       ),
     );
   }
 
   Widget _buildLegend() {
     return Wrap(
-      spacing: 16,
-      runSpacing: 8,
+      spacing: AppSpacing.md,
+      runSpacing: AppSpacing.sm,
       children:
           seriesNames.asMap().entries.map((entry) {
             final index = entry.key;
@@ -228,13 +198,13 @@ class GroupedBarChartWidget extends StatelessWidget {
                   height: 16,
                   decoration: BoxDecoration(
                     color: color,
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(AppRadius.xs),
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: AppSpacing.xs),
                 Text(
                   seriesName,
-                  style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                  style: AppTypography.labelSmall,
                 ),
               ],
             );
@@ -243,36 +213,28 @@ class GroupedBarChartWidget extends StatelessWidget {
   }
 
   Widget _buildEmptyState() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              height: 250,
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.bar_chart, size: 48, color: Colors.grey[400]),
-                    const SizedBox(height: 8),
-                    Text(
-                      'No hay datos disponibles',
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
+    return AppCard(
+      elevated: true,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: AppTypography.titleLarge),
+          const SizedBox(height: AppSpacing.lg),
+          SizedBox(
+            height: 250,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AppIcon.lg(Icons.bar_chart, color: AppColors.textTertiary),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text('No hay datos disponibles', style: AppTypography.bodySecondary),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

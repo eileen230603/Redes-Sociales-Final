@@ -4,6 +4,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:image_picker/image_picker.dart';
+import '../config/design_tokens.dart';
+import '../config/typography_system.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
 import '../models/evento.dart';
@@ -11,6 +13,15 @@ import '../models/evento_participacion.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../widgets/breadcrumbs.dart';
+import '../widgets/atoms/app_avatar.dart';
+import '../widgets/atoms/app_badge.dart';
+import '../widgets/atoms/app_button.dart';
+import '../widgets/atoms/app_icon.dart';
+import '../widgets/molecules/app_card.dart';
+import '../widgets/molecules/empty_state.dart';
+import '../widgets/molecules/loading_state.dart';
+import '../widgets/organisms/error_view.dart';
+import '../widgets/organisms/skeleton_loader.dart';
 import '../utils/image_helper.dart';
 import '../utils/navigation_helper.dart';
 import '../config/api_config.dart';
@@ -148,8 +159,8 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
           content: Text(
             _reaccionado ? '¡Reacción agregada! ❤️' : 'Reacción eliminada',
           ),
-          backgroundColor: _reaccionado ? Colors.red : Colors.grey,
-          duration: const Duration(seconds: 2),
+          backgroundColor: _reaccionado ? AppColors.error : AppColors.grey600,
+          duration: AppDuration.slow,
         ),
       );
     } else {
@@ -158,7 +169,7 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
           content: Text(
             result['error'] as String? ?? 'Error al procesar reacción',
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -197,7 +208,7 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
           content: Text(
             'Este evento fue finalizado. Ya no se puede compartir.',
           ),
-          backgroundColor: Colors.orange,
+          backgroundColor: AppColors.warning,
         ),
       );
       return;
@@ -210,7 +221,7 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
   void _mostrarModalCompartir() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.black.withOpacity(0),
       isScrollControlled: true,
       builder:
           (context) => _ModalCompartir(
@@ -257,7 +268,7 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
     return AlertDialog(
       title: Row(
         children: [
-          const Icon(Icons.favorite, color: Colors.red),
+          AppIcon.md(Icons.favorite, color: AppColors.error),
           const SizedBox(width: 8),
           Text('${_usuariosQueReaccionaron.length} Reacciones'),
         ],
@@ -266,7 +277,7 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
         width: double.maxFinite,
         child:
             _isLoadingUsuariosReaccion
-                ? const Center(child: CircularProgressIndicator())
+                ? LoadingState.list()
                 : _usuariosQueReaccionaron.isEmpty
                 ? const Center(child: Text('No hay reacciones aún'))
                 : ListView.builder(
@@ -280,31 +291,18 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
                     final fotoPerfil = reaccion['foto_perfil'] as String?;
 
                     return ListTile(
-                      leading: CircleAvatar(
-                        backgroundImage:
+                      leading: AppAvatar.sm(
+                        imageUrl:
                             fotoPerfil != null
-                                ? CachedNetworkImageProvider(
-                                  ImageHelper.buildImageUrl(fotoPerfil) ?? '',
-                                )
+                                ? (ImageHelper.buildImageUrl(fotoPerfil) ?? '')
                                 : null,
-                        child:
-                            fotoPerfil == null
-                                ? Text(
-                                  nombre.isNotEmpty
-                                      ? nombre[0].toUpperCase()
-                                      : '?',
-                                  style: const TextStyle(color: Colors.white),
-                                )
-                                : null,
-                        backgroundColor: Colors.red,
+                        initials: nombre.isNotEmpty ? nombre[0] : '?',
+                        backgroundColor: AppColors.errorLight,
+                        foregroundColor: AppColors.error,
                       ),
                       title: Text(nombre),
                       subtitle: correo.isNotEmpty ? Text(correo) : null,
-                      trailing: const Icon(
-                        Icons.favorite,
-                        color: Colors.red,
-                        size: 20,
-                      ),
+                      trailing: AppIcon.sm(Icons.favorite, color: AppColors.error),
                     );
                   },
                 ),
@@ -340,14 +338,14 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result['message'] as String? ?? 'Inscripción exitosa'),
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.success,
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result['error'] as String? ?? 'Error al inscribirse'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -400,14 +398,14 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
           content: Text(
             result['message'] as String? ?? 'Inscripción cancelada',
           ),
-          backgroundColor: Colors.orange,
+          backgroundColor: AppColors.warning,
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result['error'] as String? ?? 'Error al cancelar'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -422,7 +420,7 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
         actions: [
           if (_userType == 'ONG')
             IconButton(
-              icon: const Icon(Icons.edit),
+              icon: AppIcon.md(Icons.edit),
               onPressed: () async {
                 final result = await Navigator.push(
                   context,
@@ -458,49 +456,21 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
           Expanded(
             child:
                 _isLoading
-                    ? const Center(child: CircularProgressIndicator())
+                    ? SkeletonLoader.eventDetail()
                     : _error != null
-                    ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 64,
-                            color: Colors.red[300],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            _error!,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.red[700]),
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: _loadEvento,
-                            child: const Text('Reintentar'),
-                          ),
-                        ],
-                      ),
-                    )
+                    ? ErrorView.serverError(onRetry: _loadEvento, errorDetails: _error)
                     : _evento == null
-                    ? const Center(child: Text('Evento no encontrado'))
+                    ? ErrorView.notFound()
                     : SingleChildScrollView(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppSpacing.md),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Galería de imágenes
                           if (_evento!.imagenes != null &&
                               _evento!.imagenes!.isNotEmpty) ...[
-                            const Text(
-                              'Imágenes del Evento',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
+                            Text('Imágenes del Evento', style: AppTypography.headlineSmall),
+                            const SizedBox(height: AppSpacing.sm),
                             SizedBox(
                               height: 200,
                               child: ListView.builder(
@@ -520,41 +490,37 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
                                   if (imageUrl == null)
                                     return const SizedBox.shrink();
 
-                                  return Container(
-                                    width: 300,
-                                    margin: const EdgeInsets.only(right: 12),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.1),
-                                          blurRadius: 4,
-                                          offset: const Offset(0, 2),
+                                  return Padding(
+                                    padding: const EdgeInsets.only(right: AppSpacing.sm),
+                                    child: SizedBox(
+                                      width: 300,
+                                      child: AppCard(
+                                        elevated: true,
+                                        padding: EdgeInsets.zero,
+                                        child: ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(AppRadius.card),
+                                          child: CachedNetworkImage(
+                                            imageUrl: imageUrl,
+                                            fit: BoxFit.cover,
+                                            placeholder: (context, url) {
+                                              return Container(
+                                                color: AppColors.grey100,
+                                              );
+                                            },
+                                            errorWidget: (context, url, error) {
+                                              return Container(
+                                                color: AppColors.grey100,
+                                                child: Center(
+                                                  child: AppIcon.lg(
+                                                    Icons.image_not_supported,
+                                                    color: AppColors.textTertiary,
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          ),
                                         ),
-                                      ],
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: CachedNetworkImage(
-                                        imageUrl: imageUrl,
-                                        fit: BoxFit.cover,
-                                        placeholder:
-                                            (context, url) => Container(
-                                              color: Colors.grey[200],
-                                              child: const Center(
-                                                child:
-                                                    CircularProgressIndicator(),
-                                              ),
-                                            ),
-                                        errorWidget:
-                                            (context, url, error) => Container(
-                                              color: Colors.grey[200],
-                                              child: const Icon(
-                                                Icons.image_not_supported,
-                                                size: 48,
-                                                color: Colors.grey,
-                                              ),
-                                            ),
                                       ),
                                     ),
                                   );
@@ -571,10 +537,7 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
                               Expanded(
                                 child: Text(
                                   _evento!.titulo,
-                                  style: const TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  style: AppTypography.headlineSmall,
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -582,15 +545,14 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
                               Column(
                                 children: [
                                   IconButton(
-                                    icon: Icon(
+                                    icon: AppIcon.lg(
                                       _reaccionado
                                           ? Icons.favorite
                                           : Icons.favorite_border,
                                       color:
                                           _reaccionado
-                                              ? Colors.red
-                                              : Colors.grey[600],
-                                      size: 32,
+                                              ? AppColors.error
+                                              : AppColors.textSecondary,
                                     ),
                                     onPressed:
                                         _isProcessingReaccion
@@ -604,20 +566,15 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
                                   if (_totalReacciones > 0)
                                     Text(
                                       _totalReacciones.toString(),
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey[600],
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      style: AppTypography.labelSmall,
                                     ),
                                   if (_userType == 'ONG' &&
                                       _totalReacciones > 0)
-                                    TextButton(
+                                    AppButton.text(
+                                      label: 'Ver quién reaccionó',
+                                      icon: Icons.people,
                                       onPressed: _cargarUsuariosQueReaccionaron,
-                                      child: const Text(
-                                        'Ver quién reaccionó',
-                                        style: TextStyle(fontSize: 11),
-                                      ),
+                                      minimumSize: const Size(0, AppSizes.buttonHeightSm),
                                     ),
                                 ],
                               ),
@@ -628,49 +585,20 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
                           // Estado e inscripción
                           Row(
                             children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color:
-                                      _evento!.estado == 'publicado'
-                                          ? Colors.green[100]
-                                          : Colors.grey[300],
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Text(
-                                  _evento!.estado.toUpperCase(),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color:
-                                        _evento!.estado == 'publicado'
-                                            ? Colors.green[800]
-                                            : Colors.grey[800],
-                                  ),
-                                ),
-                              ),
+                              _evento!.estado == 'publicado'
+                                  ? AppBadge.success(
+                                      label: _evento!.estado.toUpperCase(),
+                                      icon: Icons.public,
+                                    )
+                                  : AppBadge.neutral(
+                                      label: _evento!.estado.toUpperCase(),
+                                      icon: Icons.info_outline,
+                                    ),
                               if (_isInscrito) ...[
                                 const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue[100],
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: const Text(
-                                    'INSCRITO',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.blue,
-                                    ),
-                                  ),
+                                AppBadge.info(
+                                  label: 'INSCRITO',
+                                  icon: Icons.verified,
                                 ),
                               ],
                             ],
@@ -734,20 +662,12 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
                           if (_evento!.descripcion != null &&
                               _evento!.descripcion!.isNotEmpty) ...[
                             const SizedBox(height: 24),
-                            const Text(
-                              'Descripción',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
+                            Text('Descripción', style: AppTypography.titleLarge),
+                            const SizedBox(height: AppSpacing.xs),
                             Text(
                               _evento!.descripcion!,
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey[700],
-                                height: 1.5,
+                              style: AppTypography.bodyMedium.copyWith(
+                                color: AppColors.textSecondary,
                               ),
                             ),
                           ],
@@ -755,51 +675,32 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
                           // Botones de acción
                           const SizedBox(height: 32),
                           if (_isCheckingInscripcion)
-                            const Center(child: CircularProgressIndicator())
+                            LoadingState.card()
                           else if (_isInscrito) ...[
                             // Botón de registrar asistencia para inscritos (si aún no asistieron)
                             if (_evento != null && !_asistio)
                               SizedBox(
                                 width: double.infinity,
-                                child: ElevatedButton.icon(
+                                child: AppButton.primary(
                                   onPressed: _mostrarModalRegistrarAsistencia,
-                                  icon: const Icon(Icons.check_circle),
-                                  label: const Text('Registrar Asistencia'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.green,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 16,
-                                    ),
-                                  ),
+                                  icon: Icons.check_circle,
+                                  label: 'Registrar Asistencia',
                                 ),
                               ),
                             // Mostrar estado de asistencia si ya asistió
                             if (_asistio) ...[
                               const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.green[50],
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.green[200]!),
-                                ),
+                              AppCard(
+                                backgroundColor: AppColors.successLight,
                                 child: Row(
                                   children: [
-                                    Icon(
+                                    AppIcon.md(
                                       Icons.check_circle,
-                                      color: Colors.green[700],
+                                      color: AppColors.successDark,
                                     ),
-                                    const SizedBox(width: 12),
+                                    const SizedBox(width: AppSpacing.md),
                                     Expanded(
-                                      child: Text(
-                                        'Asistencia registrada',
-                                        style: TextStyle(
-                                          color: Colors.green[700],
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                      ),
+                                      child: Text('Asistencia registrada', style: AppTypography.titleSmall),
                                     ),
                                   ],
                                 ),
@@ -808,21 +709,11 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
                             const SizedBox(height: 16),
                             SizedBox(
                               width: double.infinity,
-                              child: ElevatedButton.icon(
-                                onPressed:
-                                    _isProcessing ? null : _cancelarInscripcion,
-                                icon: const Icon(Icons.cancel),
-                                label:
-                                    _isProcessing
-                                        ? const Text('Cancelando...')
-                                        : const Text('Cancelar Inscripción'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.orange,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                  ),
-                                ),
+                              child: AppButton.outlined(
+                                onPressed: _isProcessing ? null : _cancelarInscripcion,
+                                icon: Icons.cancel,
+                                label: _isProcessing ? 'Cancelando...' : 'Cancelar Inscripción',
+                                isLoading: _isProcessing,
                               ),
                             ),
                           ] else if (_userType != 'ONG' &&
@@ -830,30 +721,20 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
                             if (_evento!.puedeInscribirse)
                               SizedBox(
                                 width: double.infinity,
-                                child: ElevatedButton.icon(
-                                  onPressed:
-                                      _isProcessing ? null : _inscribirse,
-                                  icon: const Icon(Icons.check_circle),
-                                  label:
-                                      _isProcessing
-                                          ? const Text('Inscribiendo...')
-                                          : const Text('Inscribirse al Evento'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor:
-                                        Theme.of(context).primaryColor,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 16,
-                                    ),
-                                  ),
+                                child: AppButton.primary(
+                                  onPressed: _isProcessing ? null : _inscribirse,
+                                  icon: Icons.check_circle,
+                                  label: _isProcessing ? 'Inscribiendo...' : 'Inscribirse al Evento',
+                                  isLoading: _isProcessing,
                                 ),
                               )
                             else
                               SizedBox(
                                 width: double.infinity,
-                                child: OutlinedButton(
+                                child: AppButton.outlined(
                                   onPressed: null,
-                                  child: const Text('Inscripciones Cerradas'),
+                                  label: 'Inscripciones Cerradas',
+                                  icon: Icons.lock_outline,
                                 ),
                               ),
                           ],
@@ -862,21 +743,14 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
                           const SizedBox(height: 16),
                           SizedBox(
                             width: double.infinity,
-                            child: ElevatedButton.icon(
+                            child: AppButton.secondary(
                               onPressed: _compartirEvento,
-                              icon: const Icon(Icons.share),
-                              label: Text(
-                                _isLoadingCompartidos
-                                    ? 'Cargando...'
-                                    : 'Compartir${_totalCompartidos > 0 ? ' ($_totalCompartidos)' : ''}',
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                ),
-                              ),
+                              icon: Icons.share,
+                              label:
+                                  _isLoadingCompartidos
+                                      ? 'Cargando...'
+                                      : 'Compartir${_totalCompartidos > 0 ? ' ($_totalCompartidos)' : ''}',
+                              isLoading: _isLoadingCompartidos,
                             ),
                           ),
 
@@ -886,7 +760,7 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
                             Row(
                               children: [
                                 Expanded(
-                                  child: ElevatedButton.icon(
+                                  child: AppButton.secondary(
                                     onPressed: () {
                                       Navigator.push(
                                         context,
@@ -898,20 +772,13 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
                                         ),
                                       );
                                     },
-                                    icon: const Icon(Icons.dashboard),
-                                    label: const Text('Dashboard'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.blue,
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 16,
-                                      ),
-                                    ),
+                                    icon: Icons.dashboard,
+                                    label: 'Dashboard',
                                   ),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
-                                  child: OutlinedButton.icon(
+                                  child: AppButton.outlined(
                                     onPressed: () {
                                       Navigator.push(
                                         context,
@@ -923,18 +790,8 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
                                         ),
                                       );
                                     },
-                                    icon: const Icon(Icons.people),
-                                    label: const Text('Participantes'),
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor:
-                                          Theme.of(context).primaryColor,
-                                      side: BorderSide(
-                                        color: Theme.of(context).primaryColor,
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 16,
-                                      ),
-                                    ),
+                                    icon: Icons.people,
+                                    label: 'Participantes',
                                   ),
                                 ),
                               ],
@@ -954,23 +811,20 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: Colors.grey[600]),
-        const SizedBox(width: 12),
+        AppIcon.sm(icon, color: AppColors.textSecondary),
+        const SizedBox(width: AppSpacing.md),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 label,
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                style: AppTypography.labelSmall,
               ),
               const SizedBox(height: 2),
               Text(
                 value,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: AppTypography.bodyLarge,
               ),
             ],
           ),
@@ -1003,7 +857,7 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('No se encontró la participación'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
       return;
@@ -1012,7 +866,7 @@ class _EventoDetailScreenState extends State<EventoDetailScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.black.withOpacity(0),
       builder:
           (context) => _ModalRegistrarAsistencia(
             eventoId: widget.eventoId,
@@ -1083,8 +937,8 @@ class _ModalCompartirState extends State<_ModalCompartir> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('¡Enlace copiado al portapapeles!'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
+          backgroundColor: AppColors.success,
+          duration: AppDuration.slow,
         ),
       );
     } catch (e) {
@@ -1092,7 +946,7 @@ class _ModalCompartirState extends State<_ModalCompartir> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error al copiar: ${e.toString()}'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -1121,8 +975,8 @@ class _ModalCompartirState extends State<_ModalCompartir> {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        color: AppColors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.modal)),
       ),
       child: Padding(
         padding: EdgeInsets.only(
@@ -1133,25 +987,21 @@ class _ModalCompartirState extends State<_ModalCompartir> {
           children: [
             // Header
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: const BoxDecoration(
                 border: Border(
-                  bottom: BorderSide(color: Color(0xFFF5F5F5), width: 1),
+                  bottom: BorderSide(color: AppColors.borderLight, width: 1),
                 ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Compartir',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2c3e50),
-                    ),
+                    style: AppTypography.titleLarge,
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close),
+                    icon: AppIcon.md(Icons.close),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -1160,7 +1010,7 @@ class _ModalCompartirState extends State<_ModalCompartir> {
 
             // Contenido
             Padding(
-              padding: const EdgeInsets.all(32),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               child: Column(
                 children: [
                   // Opciones de compartir
@@ -1172,8 +1022,8 @@ class _ModalCompartirState extends State<_ModalCompartir> {
                         child: _buildOpcionCompartir(
                           icon: Icons.link,
                           label: 'Copiar enlace',
-                          color: const Color(0xFFF5F5F5),
-                          iconColor: const Color(0xFF2c3e50),
+                          backgroundColor: AppColors.grey100,
+                          foregroundColor: AppColors.textPrimary,
                           onTap: _copiarEnlace,
                         ),
                       ),
@@ -1183,8 +1033,8 @@ class _ModalCompartirState extends State<_ModalCompartir> {
                         child: _buildOpcionCompartir(
                           icon: Icons.qr_code,
                           label: 'Código QR',
-                          color: const Color(0xFF667eea),
-                          iconColor: Colors.white,
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: AppColors.textOnPrimary,
                           onTap: _mostrarCodigoQR,
                         ),
                       ),
@@ -1194,32 +1044,22 @@ class _ModalCompartirState extends State<_ModalCompartir> {
                   // Contenedor para el QR
                   if (_mostrarQR) ...[
                     const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
+                    AppCard(
+                      elevated: true,
+                      padding: const EdgeInsets.all(AppSpacing.md),
                       child: Column(
                         children: [
                           QrImageView(
                             data: widget.eventoUrl,
                             version: QrVersions.auto,
                             size: 250.0,
-                            backgroundColor: Colors.white,
+                            backgroundColor: AppColors.white,
                           ),
                           const SizedBox(height: 12),
-                          const Text(
+                          Text(
                             'Escanea este código para acceder al evento',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 14, color: Colors.grey),
+                            style: AppTypography.bodySecondary,
                           ),
                         ],
                       ),
@@ -1237,8 +1077,8 @@ class _ModalCompartirState extends State<_ModalCompartir> {
   Widget _buildOpcionCompartir({
     required IconData icon,
     required String label,
-    required Color color,
-    required Color iconColor,
+    required Color backgroundColor,
+    required Color foregroundColor,
     required VoidCallback onTap,
   }) {
     return InkWell(
@@ -1250,26 +1090,16 @@ class _ModalCompartirState extends State<_ModalCompartir> {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: color,
+              color: backgroundColor,
               borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              boxShadow: AppElevation.cardShadow,
             ),
-            child: Icon(icon, size: 32, color: iconColor),
+            child: Icon(icon, size: 32, color: foregroundColor),
           ),
           const SizedBox(height: 12),
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF333333),
-            ),
+            style: AppTypography.labelLarge,
             textAlign: TextAlign.center,
           ),
         ],
@@ -1416,31 +1246,26 @@ class _ModalRegistrarAsistenciaState extends State<_ModalRegistrarAsistencia> {
               (context) => AlertDialog(
                 title: Row(
                   children: [
-                    Icon(
-                      Icons.check_circle,
-                      color: Colors.green[700],
-                      size: 32,
-                    ),
-                    const SizedBox(width: 12),
-                    const Expanded(
+                    AppIcon.md(Icons.check_circle, color: AppColors.successDark),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
                       child: Text(
-                        'Asistencia Completada',
-                        style: TextStyle(fontSize: 20),
+                        'Asistencia completada',
+                        style: AppTypography.titleLarge,
                       ),
                     ),
                   ],
                 ),
-                content: const Text(
+                content: Text(
                   'Tu asistencia ha sido registrada exitosamente. ¡Gracias por participar!',
+                  style: AppTypography.bodyMedium,
                 ),
                 actions: [
-                  ElevatedButton(
+                  AppButton.primary(
+                    label: 'Aceptar',
+                    icon: Icons.check,
+                    minimumSize: const Size(0, AppSizes.buttonHeightSm),
                     onPressed: () => Navigator.of(context).pop(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text('Aceptar'),
                   ),
                 ],
               ),
@@ -1457,14 +1282,16 @@ class _ModalRegistrarAsistenciaState extends State<_ModalRegistrarAsistencia> {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        color: AppColors.white,
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppRadius.modal),
+        ),
       ),
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1473,12 +1300,12 @@ class _ModalRegistrarAsistenciaState extends State<_ModalRegistrarAsistencia> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Registrar Asistencia',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                Text(
+                  'Registrar asistencia',
+                  style: AppTypography.titleLarge,
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close),
+                  icon: AppIcon.md(Icons.close),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
@@ -1486,42 +1313,36 @@ class _ModalRegistrarAsistenciaState extends State<_ModalRegistrarAsistencia> {
             const SizedBox(height: 8),
             Text(
               widget.eventoTitulo,
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              style: AppTypography.bodySecondary,
             ),
             const SizedBox(height: 24),
 
             // Instrucciones
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue[200]!),
-              ),
+            AppCard(
+              backgroundColor: AppColors.infoLight,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(
-                        Icons.info_outline,
-                        color: Colors.blue[700],
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Ingresa el código de tu ticket',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue[700],
+                      AppIcon.sm(Icons.info_outline, color: AppColors.infoDark),
+                      const SizedBox(width: AppSpacing.xs),
+                      Expanded(
+                        child: Text(
+                          'Ingresa el código de tu ticket',
+                          style: AppTypography.titleSmall.copyWith(
+                            color: AppColors.infoDark,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.xs),
                   Text(
                     'Puedes encontrar el código en tu ticket o escanear el código QR desde la pantalla de tus participaciones.',
-                    style: TextStyle(fontSize: 12, color: Colors.blue[700]),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.infoDark,
+                    ),
                   ),
                 ],
               ),
@@ -1529,46 +1350,37 @@ class _ModalRegistrarAsistenciaState extends State<_ModalRegistrarAsistencia> {
             const SizedBox(height: 24),
 
             // Opciones: Escanear QR, subir imagen o pegar código
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isNarrow = constraints.maxWidth < AppBreakpoints.mobile;
+
+                final scanQrButton = SizedBox(
+                  width: isNarrow ? double.infinity : null,
+                  child: AppButton.outlined(
                     onPressed: () {
                       setState(() {
                         _mostrarScanner = true;
                         _scannerController = MobileScannerController();
                       });
                     },
-                    icon: const Icon(Icons.qr_code_scanner),
-                    label: const Text('Escanear QR'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
+                    icon: Icons.qr_code_scanner,
+                    label: 'Escanear QR',
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton.icon(
+                );
+
+                final scanImageButton = SizedBox(
+                  width: isNarrow ? double.infinity : null,
+                  child: AppButton.outlined(
                     onPressed: _isScanningImage ? null : _escanearDesdeGaleria,
-                    icon:
-                        _isScanningImage
-                            ? const SizedBox(
-                              height: 16,
-                              width: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                            : const Icon(Icons.image_search),
-                    label: Text(
-                      _isScanningImage ? 'Leyendo...' : 'Desde galería',
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
+                    icon: Icons.image_search,
+                    label: _isScanningImage ? 'Leyendo...' : 'Desde galería',
+                    isLoading: _isScanningImage,
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton.icon(
+                );
+
+                final pasteCodeButton = SizedBox(
+                  width: isNarrow ? double.infinity : null,
+                  child: AppButton.outlined(
                     onPressed: () {
                       setState(() {
                         _mostrarScanner = false;
@@ -1576,14 +1388,33 @@ class _ModalRegistrarAsistenciaState extends State<_ModalRegistrarAsistencia> {
                         _scannerController = null;
                       });
                     },
-                    icon: const Icon(Icons.edit),
-                    label: const Text('Pegar código'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
+                    icon: Icons.edit,
+                    label: 'Pegar código',
                   ),
-                ),
-              ],
+                );
+
+                if (isNarrow) {
+                  return Column(
+                    children: [
+                      scanQrButton,
+                      const SizedBox(height: AppSpacing.sm),
+                      scanImageButton,
+                      const SizedBox(height: AppSpacing.sm),
+                      pasteCodeButton,
+                    ],
+                  );
+                }
+
+                return Row(
+                  children: [
+                    Expanded(child: scanQrButton),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(child: scanImageButton),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(child: pasteCodeButton),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 16),
 
@@ -1592,11 +1423,11 @@ class _ModalRegistrarAsistenciaState extends State<_ModalRegistrarAsistencia> {
               Container(
                 height: 300,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[300]!),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  border: Border.all(color: AppColors.borderLight),
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
                   child: Stack(
                     children: [
                       MobileScanner(
@@ -1615,7 +1446,7 @@ class _ModalRegistrarAsistenciaState extends State<_ModalRegistrarAsistencia> {
                               });
                               // Validar automáticamente después de escanear
                               Future.delayed(
-                                const Duration(milliseconds: 500),
+                                AppDuration.slow,
                                 () {
                                   _validarYRegistrarAsistencia();
                                 },
@@ -1629,7 +1460,7 @@ class _ModalRegistrarAsistenciaState extends State<_ModalRegistrarAsistencia> {
                         top: 16,
                         right: 16,
                         child: IconButton(
-                          icon: const Icon(Icons.close, color: Colors.white),
+                          icon: AppIcon.md(Icons.close, color: AppColors.white),
                           onPressed: () {
                             setState(() {
                               _mostrarScanner = false;
@@ -1638,7 +1469,7 @@ class _ModalRegistrarAsistenciaState extends State<_ModalRegistrarAsistencia> {
                             });
                           },
                           style: IconButton.styleFrom(
-                            backgroundColor: Colors.black54,
+                            backgroundColor: AppColors.scrim,
                           ),
                         ),
                       ),
@@ -1653,11 +1484,11 @@ class _ModalRegistrarAsistenciaState extends State<_ModalRegistrarAsistencia> {
                 decoration: InputDecoration(
                   labelText: 'Código del ticket',
                   hintText: 'Ej: EVT-123-456',
-                  prefixIcon: const Icon(Icons.qr_code),
+                  prefixIcon: AppIcon.md(Icons.qr_code),
                   suffixIcon:
                       _codigoController.text.isNotEmpty
                           ? IconButton(
-                            icon: const Icon(Icons.clear),
+                            icon: AppIcon.sm(Icons.clear),
                             onPressed: () {
                               _codigoController.clear();
                               setState(() {
@@ -1666,9 +1497,6 @@ class _ModalRegistrarAsistenciaState extends State<_ModalRegistrarAsistencia> {
                             },
                           )
                           : null,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
                   errorText: _error,
                 ),
                 textInputAction: TextInputAction.done,
@@ -1681,35 +1509,11 @@ class _ModalRegistrarAsistenciaState extends State<_ModalRegistrarAsistencia> {
             // Botón de validar
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: AppButton.primary(
                 onPressed: _isValidating ? null : _validarYRegistrarAsistencia,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child:
-                    _isValidating
-                        ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
-                            ),
-                          ),
-                        )
-                        : const Text(
-                          'Validar y Registrar Asistencia',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                icon: Icons.check_circle,
+                label: 'Validar y registrar asistencia',
+                isLoading: _isValidating,
               ),
             ),
             const SizedBox(height: 16),

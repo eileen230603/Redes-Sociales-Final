@@ -1,9 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../config/design_tokens.dart';
+import '../../config/typography_system.dart';
 import '../../services/api_service.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/breadcrumbs.dart';
 import '../../models/evento.dart';
+import '../../widgets/atoms/app_avatar.dart';
+import '../../widgets/atoms/app_badge.dart';
+import '../../widgets/atoms/app_button.dart';
+import '../../widgets/atoms/app_icon.dart';
+import '../../widgets/molecules/app_card.dart';
+import '../../widgets/molecules/app_list_tile.dart';
+import '../../widgets/molecules/empty_state.dart';
+import '../../widgets/organisms/error_view.dart';
+import '../../widgets/organisms/skeleton_loader.dart';
 import '../../utils/image_helper.dart';
 
 class GestionParticipantesScreen extends StatefulWidget {
@@ -115,7 +126,7 @@ class _GestionParticipantesScreenState
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                style: TextButton.styleFrom(foregroundColor: Colors.green),
+                style: TextButton.styleFrom(foregroundColor: AppColors.success),
                 child: const Text('Aprobar'),
               ),
             ],
@@ -138,7 +149,8 @@ class _GestionParticipantesScreenState
             result['message'] as String? ??
                 'Participación aprobada exitosamente',
           ),
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.success,
+          duration: AppDuration.slow,
         ),
       );
       _loadParticipantes();
@@ -148,7 +160,7 @@ class _GestionParticipantesScreenState
           content: Text(
             result['error'] as String? ?? 'Error al aprobar participación',
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -174,7 +186,7 @@ class _GestionParticipantesScreenState
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                style: TextButton.styleFrom(foregroundColor: AppColors.error),
                 child: const Text('Rechazar'),
               ),
             ],
@@ -199,7 +211,8 @@ class _GestionParticipantesScreenState
             result['message'] as String? ??
                 'Participación rechazada exitosamente',
           ),
-          backgroundColor: Colors.orange,
+          backgroundColor: AppColors.warning,
+          duration: AppDuration.slow,
         ),
       );
       _loadParticipantes();
@@ -209,7 +222,7 @@ class _GestionParticipantesScreenState
           content: Text(
             result['error'] as String? ?? 'Error al rechazar participación',
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -236,7 +249,7 @@ class _GestionParticipantesScreenState
             content: Text(
               'Solo puedes registrar asistencia de participantes aprobados.',
             ),
-            backgroundColor: Colors.orange,
+            backgroundColor: AppColors.warning,
           ),
         );
         return;
@@ -290,7 +303,8 @@ class _GestionParticipantesScreenState
             result['message'] as String? ??
                 'Asistencia actualizada correctamente',
           ),
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.success,
+          duration: AppDuration.slow,
         ),
       );
       _loadParticipantes();
@@ -300,7 +314,7 @@ class _GestionParticipantesScreenState
           content: Text(
             result['error'] as String? ?? 'Error al actualizar asistencia',
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -309,12 +323,12 @@ class _GestionParticipantesScreenState
   Color _getColorEstado(String estado) {
     switch (estado.toLowerCase()) {
       case 'aprobada':
-        return Colors.green;
+        return AppColors.success;
       case 'rechazada':
-        return Colors.red;
+        return AppColors.error;
       case 'pendiente':
       default:
-        return Colors.orange;
+        return AppColors.warning;
     }
   }
 
@@ -365,151 +379,104 @@ class _GestionParticipantesScreenState
           Expanded(
             child:
                 _isLoading
-                    ? const Center(child: CircularProgressIndicator())
+                    ? SkeletonLoader.cardList()
                     : _error != null
-                    ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 64,
-                            color: Colors.red[300],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            _error!,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.red[700]),
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: _loadParticipantes,
-                            child: const Text('Reintentar'),
-                          ),
-                        ],
-                      ),
+                    ? ErrorView.serverError(
+                      onRetry: _loadParticipantes,
+                      errorDetails: _error,
                     )
                     : Column(
                       children: [
                         // Información del evento
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(16),
-                          color: Theme.of(
-                            context,
-                          ).primaryColor.withOpacity(0.1),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  const Icon(Icons.event, color: Colors.blue),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      eventoTitulo,
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
+                        Padding(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          child: AppCard(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    AppIcon.md(Icons.event),
+                                    const SizedBox(width: AppSpacing.sm),
+                                    Expanded(
+                                      child: Text(
+                                        eventoTitulo,
+                                        style: AppTypography.titleLarge,
                                       ),
                                     ),
+                                  ],
+                                ),
+                                if (_evento != null) ...[
+                                  const SizedBox(height: AppSpacing.xs),
+                                  Text(
+                                    'Total de participantes: ${_participantes.length}',
+                                    style: AppTypography.bodySecondary,
                                   ),
                                 ],
-                              ),
-                              if (_evento != null) ...[
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Total de participantes: ${_participantes.length}',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey[700],
-                                  ),
-                                ),
                               ],
-                            ],
+                            ),
                           ),
                         ),
 
                         // Filtros
-                        Container(
+                        Padding(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
+                            horizontal: AppSpacing.md,
                           ),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[100],
-                            border: Border(
-                              bottom: BorderSide(color: Colors.grey[300]!),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.filter_list, size: 20),
-                              const SizedBox(width: 8),
-                              const Text(
-                                'Filtrar por estado:',
-                                style: TextStyle(fontWeight: FontWeight.w500),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  child: Row(
-                                    children: [
-                                      _buildChipFiltro(null, 'Todos'),
-                                      const SizedBox(width: 8),
-                                      ..._estados.entries.map(
-                                        (entry) => Padding(
-                                          padding: const EdgeInsets.only(
-                                            right: 8,
-                                          ),
-                                          child: _buildChipFiltro(
-                                            entry.key,
-                                            entry.value,
+                          child: AppCard(
+                            child: Row(
+                              children: [
+                                AppIcon.sm(Icons.filter_list),
+                                const SizedBox(width: AppSpacing.sm),
+                                Text(
+                                  'Filtrar por estado:',
+                                  style: AppTypography.titleSmall,
+                                ),
+                                const SizedBox(width: AppSpacing.sm),
+                                Expanded(
+                                  child: SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      children: [
+                                        _buildChipFiltro(null, 'Todos'),
+                                        const SizedBox(width: AppSpacing.sm),
+                                        ..._estados.entries.map(
+                                          (entry) => Padding(
+                                            padding: const EdgeInsets.only(
+                                              right: AppSpacing.sm,
+                                            ),
+                                            child: _buildChipFiltro(
+                                              entry.key,
+                                              entry.value,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
+                        const SizedBox(height: AppSpacing.sm),
 
                         // Lista de participantes
                         Expanded(
                           child:
                               _participantesFiltrados.isEmpty
-                                  ? Center(
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.people_outline,
-                                          size: 64,
-                                          color: Colors.grey[400],
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Text(
-                                          _filtroEstado == null
-                                              ? 'No hay participantes registrados'
-                                              : 'No hay participantes con estado "${_estados[_filtroEstado] ?? _filtroEstado}"',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            color: Colors.grey[600],
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ],
-                                    ),
+                                  ? EmptyState(
+                                    icon: Icons.people_outline,
+                                    title: 'Sin participantes',
+                                    message:
+                                        _filtroEstado == null
+                                            ? 'No hay participantes registrados.'
+                                            : 'No hay participantes con estado "${_estados[_filtroEstado] ?? _filtroEstado}".',
                                   )
                                   : RefreshIndicator(
                                     onRefresh: _loadParticipantes,
                                     child: ListView.builder(
-                                      padding: const EdgeInsets.all(16),
+                                      padding: const EdgeInsets.all(AppSpacing.md),
                                       itemCount: _participantesFiltrados.length,
                                       itemBuilder: (context, index) {
                                         final participante =
@@ -542,8 +509,8 @@ class _GestionParticipantesScreenState
           _cambiarFiltro(null);
         }
       },
-      selectedColor: Theme.of(context).primaryColor.withOpacity(0.2),
-      checkmarkColor: Theme.of(context).primaryColor,
+      selectedColor: AppColors.primary.withOpacity(0.12),
+      checkmarkColor: AppColors.primary,
     );
   }
 
@@ -564,139 +531,69 @@ class _GestionParticipantesScreenState
         participante['no_registrado'] == true ||
         participante['tipo']?.toString().toLowerCase() == 'no_registrado';
 
-    final estadoColor = _getColorEstado(estado);
-    final estadoIcon = _getIconEstado(estado);
     final estadoLabel = _estados[estado.toLowerCase()] ?? estado;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+    final avatarUrl =
+        (fotoPerfil == null || fotoPerfil.trim().isEmpty)
+            ? null
+            : ImageHelper.buildImageUrl(fotoPerfil);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: AppCard(
+        elevated: true,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header con foto y nombre
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundImage:
-                      fotoPerfil != null
-                          ? CachedNetworkImageProvider(
-                            ImageHelper.buildImageUrl(fotoPerfil) ?? '',
-                          )
-                          : null,
-                  backgroundColor: Colors.blue[100],
-                  child:
-                      fotoPerfil == null
-                          ? Text(
-                            nombre.isNotEmpty ? nombre[0].toUpperCase() : '?',
-                            style: TextStyle(
-                              color: Colors.blue[800],
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          )
-                          : null,
+                AppAvatar.lg(
+                  imageUrl: avatarUrl,
+                  initials: _initialsFromName(nombre),
+                  backgroundColor: AppColors.grey200,
+                  foregroundColor: AppColors.textSecondary,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        nombre,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      Text(nombre, style: AppTypography.titleMedium),
                       if (correo.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          correo,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                          ),
-                        ),
+                        const SizedBox(height: AppSpacing.xxs),
+                        Text(correo, style: AppTypography.bodySecondary),
                       ],
-                    ],
-                  ),
-                ),
-                // Badge de estado
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: estadoColor.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: estadoColor, width: 1.5),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                      const SizedBox(height: AppSpacing.sm),
+                      Wrap(
+                        spacing: AppSpacing.sm,
+                        runSpacing: AppSpacing.xs,
                         children: [
-                          Icon(estadoIcon, size: 16, color: estadoColor),
-                          const SizedBox(width: 4),
-                          Text(
-                            estadoLabel,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: estadoColor,
+                          _badgeForEstado(estado.toLowerCase(), estadoLabel),
+                          if (esNoRegistrado)
+                            AppBadge.warning(
+                              label: 'No registrado',
+                              icon: Icons.person_off_outlined,
                             ),
-                          ),
                         ],
                       ),
-                    ),
-                    if (esNoRegistrado) ...[
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.orange, width: 1),
-                        ),
-                        child: const Text(
-                          'NO REGISTRADO',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.orange,
-                          ),
-                        ),
-                      ),
                     ],
-                  ],
+                  ),
                 ),
               ],
             ),
 
-            // Información adicional
-            if (telefono != null ||
-                direccion != null ||
-                fechaInscripcion != null) ...[
-              const SizedBox(height: 16),
-              const Divider(),
-              const SizedBox(height: 8),
-              if (telefono != null)
-                _buildInfoRow(Icons.phone, 'Teléfono', telefono),
+            if (telefono != null || direccion != null || fechaInscripcion != null) ...[
+              const SizedBox(height: AppSpacing.md),
+              const Divider(height: 1),
+              const SizedBox(height: AppSpacing.md),
+              if (telefono != null) _buildInfoRow(Icons.phone, 'Teléfono', telefono),
               if (direccion != null) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 _buildInfoRow(Icons.location_on, 'Dirección', direccion),
               ],
               if (fechaInscripcion != null) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 _buildInfoRow(
                   Icons.calendar_today,
                   'Fecha de inscripción',
@@ -705,18 +602,15 @@ class _GestionParticipantesScreenState
               ],
             ],
 
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.how_to_reg, size: 18),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Asistencia',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
+                    AppIcon.sm(Icons.how_to_reg),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text('Asistencia', style: AppTypography.titleSmall),
                   ],
                 ),
                 Switch(
@@ -733,45 +627,32 @@ class _GestionParticipantesScreenState
               ],
             ),
 
-            // Botones de acción (solo para pendientes)
             if (estado.toLowerCase() == 'pendiente') ...[
-              const SizedBox(height: 16),
-              const Divider(),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.md),
+              const Divider(height: 1),
+              const SizedBox(height: AppSpacing.md),
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed:
-                          () => _rechazarParticipacion(
-                            participacionId,
-                            nombre,
-                            esNoRegistrado: esNoRegistrado,
-                          ),
-                      icon: const Icon(Icons.cancel, size: 18),
-                      label: const Text('Rechazar'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red,
-                        side: const BorderSide(color: Colors.red),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: AppButton.outlined(
+                      label: 'Rechazar',
+                      icon: Icons.cancel_outlined,
+                      onPressed: () => _rechazarParticipacion(
+                        participacionId,
+                        nombre,
+                        esNoRegistrado: esNoRegistrado,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.sm),
                   Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed:
-                          () => _aprobarParticipacion(
-                            participacionId,
-                            nombre,
-                            esNoRegistrado: esNoRegistrado,
-                          ),
-                      icon: const Icon(Icons.check_circle, size: 18),
-                      label: const Text('Aprobar'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: AppButton.primary(
+                      label: 'Aprobar',
+                      icon: Icons.check_circle_outline,
+                      onPressed: () => _aprobarParticipacion(
+                        participacionId,
+                        nombre,
+                        esNoRegistrado: esNoRegistrado,
                       ),
                     ),
                   ),
@@ -784,27 +665,44 @@ class _GestionParticipantesScreenState
     );
   }
 
+  AppBadge _badgeForEstado(String estadoKey, String estadoLabel) {
+    switch (estadoKey) {
+      case 'aprobada':
+        return AppBadge.success(label: estadoLabel, icon: Icons.check_circle_outline);
+      case 'rechazada':
+        return AppBadge.error(label: estadoLabel, icon: Icons.cancel_outlined);
+      case 'pendiente':
+      default:
+        return AppBadge.warning(label: estadoLabel, icon: Icons.pending_outlined);
+    }
+  }
+
+  String _initialsFromName(String name) {
+    final parts =
+        name
+            .trim()
+            .split(RegExp(r'\s+'))
+            .where((p) => p.isNotEmpty)
+            .toList();
+    if (parts.isEmpty) return '?';
+    final first = parts[0].substring(0, 1);
+    if (parts.length > 1) return (first + parts[1].substring(0, 1)).toUpperCase();
+    if (parts[0].length > 1) return (first + parts[0].substring(1, 2)).toUpperCase();
+    return first.toUpperCase();
+  }
+
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: Colors.grey[600]),
-        const SizedBox(width: 8),
+        AppIcon.xs(icon, color: AppColors.textSecondary),
+        const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                label,
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              Text(label, style: AppTypography.labelMedium),
+              const SizedBox(height: AppSpacing.xxs),
+              Text(value, style: AppTypography.bodyLarge),
             ],
           ),
         ),

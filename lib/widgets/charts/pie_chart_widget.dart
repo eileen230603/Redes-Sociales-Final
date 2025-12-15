@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../config/design_tokens.dart';
+import '../../config/typography_system.dart';
+import '../atoms/app_icon.dart';
+import '../molecules/app_card.dart';
 
 class PieChartWidget extends StatefulWidget {
   final Map<String, int> data;
@@ -35,83 +39,69 @@ class _PieChartWidgetState extends State<PieChartWidget> {
     final total = widget.data.values.reduce((a, b) => a + b);
     final colorList = widget.colors ??
         [
-          Colors.blue,
-          Colors.green,
-          Colors.orange,
-          Colors.purple,
-          Colors.red,
-          Colors.teal,
-          Colors.pink,
-          Colors.indigo,
+          AppColors.primary,
+          AppColors.accent,
+          AppColors.warning,
+          AppColors.info,
+          AppColors.error,
+          AppColors.primaryLight,
+          AppColors.accentLight,
+          AppColors.grey600,
         ];
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              widget.title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            if (widget.subtitle != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                widget.subtitle!,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
-            const SizedBox(height: 24),
-            SizedBox(
-              height: 200,
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: PieChart(
-                      PieChartData(
-                        pieTouchData: PieTouchData(
-                          touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                            setState(() {
-                              if (!event.isInterestedForInteractions ||
-                                  pieTouchResponse == null ||
-                                  pieTouchResponse.touchedSection == null) {
-                                touchedIndex = -1;
-                                return;
-                              }
-                              touchedIndex =
-                                  pieTouchResponse.touchedSection!.touchedSectionIndex;
-                            });
-                          },
-                        ),
-                        borderData: FlBorderData(show: false),
-                        sectionsSpace: 2,
-                        centerSpaceRadius: 40,
-                        sections: _buildSections(total, colorList),
+    return AppCard(
+      elevated: true,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(widget.title, style: AppTypography.titleLarge),
+          if (widget.subtitle != null) ...[
+            const SizedBox(height: AppSpacing.xxs),
+            Text(widget.subtitle!, style: AppTypography.bodySecondary),
+          ],
+          const SizedBox(height: AppSpacing.lg),
+          SizedBox(
+            height: 200,
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: PieChart(
+                    PieChartData(
+                      pieTouchData: PieTouchData(
+                        touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                          setState(() {
+                            if (!event.isInterestedForInteractions ||
+                                pieTouchResponse == null ||
+                                pieTouchResponse.touchedSection == null) {
+                              touchedIndex = -1;
+                              return;
+                            }
+                            touchedIndex = pieTouchResponse
+                                .touchedSection!
+                                .touchedSectionIndex;
+                          });
+                        },
                       ),
+                      borderData: FlBorderData(show: false),
+                      sectionsSpace: 2,
+                      centerSpaceRadius: 40,
+                      sections: _buildSections(total, colorList),
                     ),
                   ),
-                  if (widget.showLegend) ...[
-                    const SizedBox(width: 16),
-                    Expanded(
-                      flex: 2,
-                      child: _buildLegend(colorList),
-                    ),
-                  ],
+                ),
+                if (widget.showLegend) ...[
+                  const SizedBox(width: AppSpacing.lg),
+                  Expanded(
+                    flex: 2,
+                    child: _buildLegend(colorList),
+                  ),
                 ],
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -134,12 +124,15 @@ class _PieChartWidgetState extends State<PieChartWidget> {
         value: data.value.toDouble(),
         title: widget.showPercentage ? '${percentage.toStringAsFixed(1)}%' : '',
         radius: radius,
-        titleStyle: TextStyle(
+        titleStyle: AppTypography.labelSmall.copyWith(
           fontSize: fontSize,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-          shadows: const [
-            Shadow(color: Colors.black45, blurRadius: 2),
+          fontWeight: FontWeight.w700,
+          color: AppColors.white,
+          shadows: [
+            Shadow(
+              color: AppColors.black.withOpacity(0.45),
+              blurRadius: 2,
+            ),
           ],
         ),
       );
@@ -181,18 +174,14 @@ class _PieChartWidgetState extends State<PieChartWidget> {
                       data.key.length > 15
                           ? '${data.key.substring(0, 12)}...'
                           : data.key,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
+                      style: AppTypography.labelSmall.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       '${data.value} (${percentage.toStringAsFixed(1)}%)',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.grey[600],
-                      ),
+                      style: AppTypography.labelSmall,
                     ),
                   ],
                 ),
@@ -205,39 +194,28 @@ class _PieChartWidgetState extends State<PieChartWidget> {
   }
 
   Widget _buildEmptyState() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Text(
-              widget.title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+    return AppCard(
+      elevated: true,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(widget.title, style: AppTypography.titleLarge),
+          const SizedBox(height: AppSpacing.lg),
+          SizedBox(
+            height: 200,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AppIcon.lg(Icons.pie_chart, color: AppColors.textTertiary),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text('No hay datos disponibles', style: AppTypography.bodySecondary),
+                ],
               ),
             ),
-            const SizedBox(height: 24),
-            SizedBox(
-              height: 200,
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.pie_chart, size: 48, color: Colors.grey[400]),
-                    const SizedBox(height: 8),
-                    Text(
-                      'No hay datos disponibles',
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

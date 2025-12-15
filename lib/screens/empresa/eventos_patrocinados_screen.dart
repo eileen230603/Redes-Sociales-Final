@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../config/design_tokens.dart';
 import '../../services/api_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/atoms/app_icon.dart';
+import '../../widgets/molecules/empty_state.dart';
+import '../../widgets/molecules/loading_state.dart';
+import '../../widgets/organisms/error_view.dart';
 import '../evento_detail_screen.dart';
 import '../../utils/image_helper.dart';
-import '../../widgets/empty_state.dart';
 
 class EventosPatrocinadosScreen extends StatefulWidget {
   const EventosPatrocinadosScreen({super.key});
@@ -54,7 +58,7 @@ class _EventosPatrocinadosScreenState extends State<EventosPatrocinadosScreen> {
         title: const Text('Eventos Patrocinados'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: AppIcon.md(Icons.refresh),
             onPressed: _loadEventos,
             tooltip: 'Actualizar',
           ),
@@ -62,37 +66,22 @@ class _EventosPatrocinadosScreenState extends State<EventosPatrocinadosScreen> {
       ),
       body:
           _isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? LoadingState.list()
               : _error != null
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-                    const SizedBox(height: 16),
-                    Text(
-                      _error!,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.red[700]),
-                    ),
-                    const SizedBox(height: 16),
-                    FilledButton.tonal(
-                      onPressed: _loadEventos,
-                      child: const Text('Reintentar'),
-                    ),
-                  ],
-                ),
-              )
+              ? ErrorView.serverError(onRetry: _loadEventos, errorDetails: _error)
               : _eventos.isEmpty
-              ? const EmptyState(
-                  title: 'No tienes eventos patrocinados',
-                  message: 'Visita la sección "Ayuda a Eventos" para iniciar un nuevo patrocinio',
+              ? EmptyState(
                   icon: Icons.volunteer_activism,
+                  title: 'No tienes eventos patrocinados',
+                  message:
+                      'Visita la sección "Ayuda a Eventos" para iniciar un nuevo patrocinio.',
+                  actionLabel: 'Actualizar',
+                  onAction: _loadEventos,
                 )
               : RefreshIndicator(
                 onRefresh: _loadEventos,
                 child: ListView.builder(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(AppSpacing.md),
                   itemCount: _eventos.length,
                   itemBuilder: (context, index) {
                     final eventoData = _eventos[index] as Map<String, dynamic>;

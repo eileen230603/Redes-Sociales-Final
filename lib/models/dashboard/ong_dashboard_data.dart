@@ -34,12 +34,34 @@ class OngDashboardData {
     this.alertas,
   });
 
-  factory OngDashboardData.fromJson(Map<String, dynamic> json) {
+  /// Constructor vacío para cuando no hay datos
+  factory OngDashboardData.empty() {
     return OngDashboardData(
-      metricas:
-          json['metricas'] != null
-              ? MetricasOng.fromJson(json['metricas'])
-              : null,
+      metricas: null,
+      tendenciasMensuales: null,
+      distribucionEstados: null,
+      actividadSemanal: null,
+      comparativaEventos: null,
+      topEventos: null,
+      topVoluntarios: null,
+      distribucionParticipantes: null,
+      listadoEventos: null,
+      actividadReciente: null,
+      comparativas: null,
+      metricasRadar: null,
+      alertas: null,
+    );
+  }
+
+  factory OngDashboardData.fromJson(Map<String, dynamic> json) {
+    // Adaptador para estructura del backend:
+    // Backend retorna: { ong: {...}, estadisticas: {...}, distribuciones: {...} }
+    // Modelo espera: { metricas: {...}, tendencias_mensuales: {...}, etc. }
+
+    // Si viene la estructura antigua (metricas), usar esa
+    if (json['metricas'] != null) {
+      return OngDashboardData(
+        metricas: MetricasOng.fromJson(json['metricas']),
       tendenciasMensuales:
           json['tendencias_mensuales'] != null
               ? Map<String, int>.from(
@@ -143,7 +165,74 @@ class OngDashboardData {
                   .map((e) => Alerta.fromJson(e))
                   .toList()
               : null,
-    );
+      );
+    }
+
+    // Si viene la estructura nueva del backend (estadisticas, distribuciones)
+    // Adaptar a la estructura esperada
+    final estadisticas = json['estadisticas'];
+    final distribuciones = json['distribuciones'];
+
+    if (estadisticas != null) {
+      return OngDashboardData(
+        metricas: _buildMetricasFromEstadisticas(estadisticas),
+        tendenciasMensuales: null,
+        distribucionEstados: null,
+        actividadSemanal: null,
+        comparativaEventos: null,
+        topEventos: null,
+        topVoluntarios: null,
+        distribucionParticipantes: distribuciones != null
+            ? _convertToIntMap(distribuciones['participantes_por_estado'])
+            : null,
+        listadoEventos: null,
+        actividadReciente: null,
+        comparativas: null,
+        metricasRadar: null,
+        alertas: null,
+      );
+    }
+
+    // Si no hay datos reconocibles, retornar vacío
+    return OngDashboardData.empty();
+  }
+
+  /// Convertir estadisticas del backend a MetricasOng
+  static MetricasOng? _buildMetricasFromEstadisticas(Map<String, dynamic> est) {
+    try {
+      final eventos = est['eventos'] as Map<String, dynamic>?;
+      final voluntarios = est['voluntarios'] as Map<String, dynamic>?;
+      final reacciones = est['reacciones'] as Map<String, dynamic>?;
+
+      return MetricasOng(
+        eventosActivos: eventos?['activos'] ?? 0,
+        eventosInactivos: 0, // No viene del backend
+        eventosFinalizados: eventos?['finalizados'] ?? 0,
+        totalReacciones: reacciones?['total'] ?? 0,
+        totalCompartidos: 0, // No viene del backend
+        totalVoluntarios: voluntarios?['total_unicos'] ?? 0,
+        totalParticipantes: voluntarios?['total_inscripciones'] ?? 0,
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Convertir Map dinámico a Map<String, int>
+  static Map<String, int>? _convertToIntMap(dynamic data) {
+    if (data == null) return null;
+    try {
+      return Map<String, int>.from(
+        (data as Map).map(
+          (k, v) => MapEntry(
+            k.toString(),
+            v is int ? v : int.tryParse(v.toString()) ?? 0,
+          ),
+        ),
+      );
+    } catch (e) {
+      return null;
+    }
   }
 }
 

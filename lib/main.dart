@@ -2,10 +2,23 @@ import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/storage_service.dart';
+import 'services/cache_service.dart';
 import 'config/app_theme.dart';
+import 'config/design_tokens.dart';
+import 'config/typography_system.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Limpiar caché corrupto de versiones anteriores al iniciar
+  // Esto asegura que datos antiguos no causen problemas
+  try {
+    await CacheService.clearAllCache();
+    print('✅ Caché de dashboard limpiado al iniciar app');
+  } catch (e) {
+    print('⚠️ Error limpiando caché al iniciar: $e');
+  }
+
   runApp(const MyApp());
 }
 
@@ -56,9 +69,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
   @override
   Widget build(BuildContext context) {
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 1000),
-      switchInCurve: Curves.easeInOut,
-      switchOutCurve: Curves.easeInOut,
+      duration: AppDuration.slow,
+      switchInCurve: AppCurves.standard,
+      switchOutCurve: AppCurves.standard,
       transitionBuilder: (Widget child, Animation<double> animation) {
         return FadeTransition(opacity: animation, child: child);
       },
@@ -79,8 +92,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
             // Logo simple con icono
             TweenAnimationBuilder<double>(
               tween: Tween(begin: 0.0, end: 1.0),
-              duration: const Duration(milliseconds: 800),
-              curve: Curves.easeOutBack,
+              duration: AppDuration.slow,
+              curve: AppCurves.emphasizedDecelerate,
               builder: (context, value, child) {
                 return Transform.scale(
                   scale: value,
@@ -90,7 +103,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: AppColors.white.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -103,8 +116,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
             const SizedBox(height: 24),
             TweenAnimationBuilder<double>(
               tween: Tween(begin: 0.0, end: 1.0),
-              duration: const Duration(milliseconds: 800),
-              curve: Curves.easeOut,
+              duration: AppDuration.slow,
+              curve: AppCurves.decelerate,
               builder: (context, value, child) {
                 return Opacity(
                   opacity: value,
@@ -116,21 +129,17 @@ class _AuthWrapperState extends State<AuthWrapper> {
               },
               child: Column(
                 children: [
-                  const Text(
+                  Text(
                     'Redes Sociales',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 1.2,
+                    style: AppTypography.headlineMedium.copyWith(
+                      color: AppColors.textOnPrimary,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Conectando causas',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white.withOpacity(0.7),
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: AppColors.textOnPrimary.withOpacity(0.7),
                     ),
                   ),
                 ],

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../config/design_tokens.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/molecules/empty_state.dart';
 
 class EstadosEventoScreen extends StatelessWidget {
   const EstadosEventoScreen({super.key});
@@ -9,8 +11,10 @@ class EstadosEventoScreen extends StatelessWidget {
     return Scaffold(
       drawer: const AppDrawer(currentRoute: '/parametrizaciones'),
       appBar: AppBar(title: const Text('Estados de Evento')),
-      body: const Center(
-        child: Text('Pantalla de Estados de Evento - En desarrollo'),
+      body: const EmptyState(
+        icon: Icons.tune,
+        title: 'Estados de Evento',
+        message: 'Pantalla en desarrollo.',
       ),
     );
   }
