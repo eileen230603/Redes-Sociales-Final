@@ -488,7 +488,16 @@ class _DashboardOngCompletoScreenState
   }
 
   Widget _buildKPIsSection() {
-    final metricas = _dashboardData!.metricas!;
+    final metricas = _dashboardData!.metricas;
+    
+    // Si no hay métricas, mostrar con valores en 0
+    final eventosActivos = metricas?.eventosActivos ?? 0;
+    final totalParticipantes = metricas?.totalParticipantes ?? 0;
+    final totalReacciones = metricas?.totalReacciones ?? 0;
+    final totalVoluntarios = metricas?.totalVoluntarios ?? 0;
+    
+    final hasData = eventosActivos > 0 || totalParticipantes > 0 || 
+                    totalReacciones > 0 || totalVoluntarios > 0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -507,6 +516,54 @@ class _DashboardOngCompletoScreenState
           ],
         ),
         const SizedBox(height: AppSpacing.md),
+        
+        // Mensaje cuando no hay datos
+        if (!hasData) ...[
+          AppCard(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      color: AppColors.info.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                    ),
+                    child: Icon(
+                      Icons.info_outline,
+                      color: AppColors.info,
+                      size: 32,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '¡Comienza tu primer evento!',
+                          style: AppTypography.titleMedium.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          'Crea eventos para ver tus métricas y estadísticas aquí',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
+        
         LayoutBuilder(
           builder: (context, constraints) {
             // Responsive breakpoints mejorados
@@ -537,28 +594,28 @@ class _DashboardOngCompletoScreenState
               children: [
                 _buildEnhancedMetricCard(
                   'Activos',
-                  metricas.eventosActivos.toString(),
+                  eventosActivos.toString(),
                   Icons.event_available,
                   AppColors.success,
                   _getComparativa('eventosActivos'),
                 ),
                 _buildEnhancedMetricCard(
                   'Participantes',
-                  metricas.totalParticipantes.toString(),
+                  totalParticipantes.toString(),
                   Icons.people,
                   AppColors.info,
                   _getComparativa('participantes'),
                 ),
                 _buildEnhancedMetricCard(
                   'Reacciones',
-                  metricas.totalReacciones.toString(),
+                  totalReacciones.toString(),
                   Icons.favorite,
                   AppColors.error,
                   _getComparativa('reacciones'),
                 ),
                 _buildEnhancedMetricCard(
                   'Voluntarios',
-                  metricas.totalVoluntarios.toString(),
+                  totalVoluntarios.toString(),
                   Icons.volunteer_activism,
                   AppColors.accent,
                   _getComparativa('voluntarios'),
