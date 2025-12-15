@@ -205,11 +205,9 @@ class _DashboardOngCompletoScreenState
           _buildExecutiveHeader(),
           const SizedBox(height: AppSpacing.lg),
 
-          // KPIs principales
-          if (_dashboardData!.metricas != null) ...[
-            _buildKPIsSection(),
-            const SizedBox(height: AppSpacing.lg),
-          ],
+          // KPIs principales - SIEMPRE mostrar
+          _buildKPIsSection(),
+          const SizedBox(height: AppSpacing.lg),
 
           // Gráficos y análisis
           _buildAnalyticsSection(),
@@ -516,25 +514,25 @@ class _DashboardOngCompletoScreenState
             final double childAspectRatio;
 
             if (constraints.maxWidth > 900) {
-              // Desktop: 4 columnas
-              crossAxisCount = 4;
-              childAspectRatio = 1.4;
-            } else if (constraints.maxWidth > 600) {
-              // Tablet: 2 columnas
+              // Desktop: 2 columnas (2x2)
               crossAxisCount = 2;
-              childAspectRatio = 1.6;
+              childAspectRatio = 1.3;
+            } else if (constraints.maxWidth > 600) {
+              // Tablet: 2 columnas (2x2)
+              crossAxisCount = 2;
+              childAspectRatio = 1.2;
             } else {
-              // Mobile: 1 columna para máxima legibilidad
-              crossAxisCount = 1;
-              childAspectRatio = 2.8;
+              // Mobile: 2 columnas (2x2) - más compacto
+              crossAxisCount = 2;
+              childAspectRatio = 0.9;
             }
 
             return GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               crossAxisCount: crossAxisCount,
-              crossAxisSpacing: AppSpacing.md,
-              mainAxisSpacing: AppSpacing.md,
+              crossAxisSpacing: AppSpacing.lg,
+              mainAxisSpacing: AppSpacing.lg,
               childAspectRatio: childAspectRatio,
               children: [
                 _buildEnhancedMetricCard(
@@ -598,62 +596,130 @@ class _DashboardOngCompletoScreenState
         child: AnimatedContainer(
           duration: AppDuration.fast,
           curve: AppCurves.decelerate,
-          child: AppCard(
-            elevated: true,
-            child: InkWell(
-              onTap: () {
-                // Futura funcionalidad: mostrar detalles del KPI
-              },
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(AppSpacing.sm),
-                      decoration: BoxDecoration(
-                        color: color.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                      ),
-                      child: Icon(icon, size: AppSizes.iconMd, color: color),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Flexible(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          value,
-                          style: AppTypography.headlineMedium.copyWith(
-                            color: color,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: -0.5,
-                          ),
-                          maxLines: 1,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Flexible(
-                      child: Text(
-                        label,
-                        style: AppTypography.labelMedium.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (comparativa != null) ...[
-                      const SizedBox(height: AppSpacing.sm),
-                      _buildTrendIndicator(comparativa),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // Calcular tamaños dinámicos basados en el espacio disponible
+              final cardWidth = constraints.maxWidth;
+              final cardHeight = constraints.maxHeight;
+              
+              // Tamaños responsivos
+              final iconSize = (cardWidth * 0.15).clamp(24.0, 40.0);
+              final iconPadding = (cardWidth * 0.03).clamp(8.0, 12.0);
+              final contentPadding = (cardWidth * 0.05).clamp(12.0, 20.0);
+              final valueFontSize = (cardWidth * 0.15).clamp(24.0, 48.0);
+              final labelFontSize = (cardWidth * 0.045).clamp(12.0, 16.0);
+              
+              return Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      color.withOpacity(0.08),
+                      color.withOpacity(0.03),
                     ],
+                  ),
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                  border: Border.all(
+                    color: color.withOpacity(0.2),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withOpacity(0.1),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
                   ],
                 ),
-              ),
-            ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      // Futura funcionalidad: mostrar detalles del KPI
+                    },
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    child: Padding(
+                      padding: EdgeInsets.all(contentPadding),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          // Icon
+                          Container(
+                            padding: EdgeInsets.all(iconPadding),
+                            decoration: BoxDecoration(
+                              color: color.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: color.withOpacity(0.2),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              icon,
+                              size: iconSize,
+                              color: color,
+                            ),
+                          ),
+                          
+                          // Spacer flexible
+                          SizedBox(height: cardHeight * 0.05),
+                          
+                          // Value - con FittedBox para evitar overflow
+                          Flexible(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                value,
+                                style: TextStyle(
+                                  fontSize: valueFontSize,
+                                  color: color,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: -1,
+                                  height: 1.1,
+                                ),
+                                maxLines: 1,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                          
+                          SizedBox(height: cardHeight * 0.02),
+                          
+                          // Label - con FittedBox para evitar overflow
+                          Flexible(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                label,
+                                style: TextStyle(
+                                  fontSize: labelFontSize,
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.3,
+                                ),
+                                maxLines: 1,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                          
+                          // Trend indicator at bottom if exists
+                          if (comparativa != null) ...[
+                            SizedBox(height: cardHeight * 0.03),
+                            _buildTrendIndicator(comparativa),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),

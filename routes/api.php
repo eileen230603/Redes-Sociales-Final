@@ -36,7 +36,7 @@ Route::get('/storage/{path}', [StorageController::class, 'serve'])
 
 // ----------- AUTH -----------
 Route::post('/auth/register', [AuthController::class, 'register']);
-Route::post('/auth/login',    [AuthController::class, 'login']);
+Route::post('/auth/login', [AuthController::class, 'login']);
 
 // ----------- MEGA EVENTOS PÚBLICOS (SIN AUTENTICACIÓN) -----------
 Route::get('/mega-eventos/publicos', [MegaEventoController::class, 'publicos']);
@@ -51,33 +51,38 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('eventos')->group(function () {
 
         // ONG
-        Route::get('/ong/{ongId}',       [EventController::class, 'indexByOng']);
+        Route::get('/ong/{ongId}', [EventController::class, 'indexByOng']);
         Route::get('/ong/{ongId}/dashboard', [EventController::class, 'dashboardPorEstado']);
-        Route::post('/',                 [EventController::class, 'store']);
-        Route::put('/{id}',              [EventController::class, 'update']);
-        Route::delete('/{id}',           [EventController::class, 'destroy']);
+        Route::post('/', [EventController::class, 'store']);
+        Route::put('/{id}', [EventController::class, 'update']);
+        Route::delete('/{id}', [EventController::class, 'destroy']);
 
         // TODOS LOS PUBLICADOS
-        Route::get('/',                  [EventController::class, 'indexAll']);
+        Route::get('/', [EventController::class, 'indexAll']);
 
         // DETALLE
-        Route::get('/detalle/{id}',      [EventController::class, 'show']);
+        Route::get('/detalle/{id}', [EventController::class, 'show']);
 
         // DASHBOARD DEL EVENTO (ruta específica con restricción numérica)
         Route::get('/{id}/dashboard', [EventController::class, 'dashboard'])->where('id', '[0-9]+');
         Route::get('/{id}/dashboard/pdf', [EventController::class, 'dashboardPdf'])->where('id', '[0-9]+');
 
+        // DASHBOARD COMPLETO DEL EVENTO (endpoints que Flutter está llamando)
+        Route::get('/{id}/dashboard-completo', [EventController::class, 'dashboard'])->where('id', '[0-9]+');
+        Route::get('/{id}/dashboard-completo/pdf', [EventController::class, 'dashboardPdf'])->where('id', '[0-9]+');
+        Route::get('/{id}/dashboard-completo/excel', [EventController::class, 'dashboardPdf'])->where('id', '[0-9]+');
+
         // EMPRESAS E INVITADOS
         Route::get('/empresas/disponibles', [EventController::class, 'empresasDisponibles']);
-        Route::get('/invitados',         [EventController::class, 'invitadosDisponibles']);
-        
+        Route::get('/invitados', [EventController::class, 'invitadosDisponibles']);
+
         // PATROCINADORES
         Route::post('/{id}/patrocinar', [EventController::class, 'agregarPatrocinador'])->where('id', '[0-9]+');
     });
 
     // ----------- PARTICIPACIÓN -----------
     Route::post('/participaciones/inscribir', [EventoParticipacionController::class, 'inscribir']);
-    Route::post('/participaciones/cancelar',  [EventoParticipacionController::class, 'cancelar']);
+    Route::post('/participaciones/cancelar', [EventoParticipacionController::class, 'cancelar']);
     Route::get('/participaciones/mis-eventos', [EventoParticipacionController::class, 'misEventos']);
     Route::get('/participaciones/evento/{eventoId}', [EventoParticipacionController::class, 'participantesEvento']);
     Route::put('/participaciones/{participacionId}/aprobar', [EventoParticipacionController::class, 'aprobar']);
