@@ -1,12 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\StorageController;
-
-// ---------------- STORAGE (para servir imágenes) ----------------
-Route::get('/storage/{path}', [StorageController::class, 'serve'])->where('path', '.*');
-Route::options('/storage/{path}', [StorageController::class, 'options'])->where('path', '.*');
-
 
 // ---------------- AUTH ----------------
 Route::view('/', 'auth.login')->name('inicio');
