@@ -82,6 +82,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/participaciones/evento/{eventoId}', [EventoParticipacionController::class, 'participantesEvento']);
     Route::put('/participaciones/{participacionId}/aprobar', [EventoParticipacionController::class, 'aprobar']);
     Route::put('/participaciones/{participacionId}/rechazar', [EventoParticipacionController::class, 'rechazar']);
+    Route::put('/participaciones/{participacionId}/asistencia', [EventoParticipacionController::class, 'marcarAsistencia']);
+    Route::post('/participaciones/{participacionId}/registrar-asistencia', [EventoParticipacionController::class, 'registrarAsistencia']);
 
     // ----------- REACCIONES (Favoritos) -----------
     Route::post('/reacciones/toggle', [EventoReaccionController::class, 'toggle']);

@@ -315,7 +315,7 @@ class EventoParticipacionController extends Controller
     {
         try {
             $participacion = EventoParticipanteNoRegistrado::find($participacionId);
-            
+
             if (!$participacion) {
                 return response()->json([
                     "success" => false,
@@ -346,6 +346,148 @@ class EventoParticipacionController extends Controller
             return response()->json([
                 "success" => false,
                 "error" => "Error al rechazar participación: " . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Registrar asistencia mediante código QR
+     */
+    public function registrarAsistencia(Request $request, $participacionId)
+    {
+        try {
+            $request->validate([
+                'codigo' => 'required|string',
+            ]);
+
+            $participacion = EventoParticipacion::find($participacionId);
+
+            if (!$participacion) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Participación no encontrada"
+                ], 404);
+            }
+
+            $evento = Evento::find($participacion->evento_id);
+
+            if (!$evento) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Evento no encontrado"
+                ], 404);
+            }
+
+            // Verificar que el usuario autenticado es la ONG propietaria del evento
+            $ongId = $request->user()->id_usuario;
+            if ($evento->ong_id != $ongId) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "No tienes permiso para registrar asistencias en este evento"
+                ], 403);
+            }
+
+            // Verificar que la participación está aprobada
+            if ($participacion->estado !== 'aprobada') {
+                return response()->json([
+                    "success" => false,
+                    "error" => "La participación debe estar aprobada para registrar asistencia"
+                ], 400);
+            }
+
+            // Validar código QR (el código debería ser el ID de la participación + algún hash)
+            // Por ahora validamos que el código no esté vacío
+            $codigoValido = !empty($request->codigo);
+
+            if (!$codigoValido) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Código QR inválido"
+                ], 400);
+            }
+
+            // Marcar asistencia
+            $participacion->asistio = true;
+            $participacion->save();
+
+            return response()->json([
+                "success" => true,
+                "message" => "Asistencia registrada correctamente"
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                "success" => false,
+                "error" => "Código requerido"
+            ], 422);
+        } catch (\Throwable $e) {
+            return response()->json([
+                "success" => false,
+                "error" => "Error al registrar asistencia: " . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Marcar o desmarcar asistencia manualmente (sin QR)
+     */
+    public function marcarAsistencia(Request $request, $participacionId)
+    {
+        try {
+            $request->validate([
+                'asistio' => 'required|boolean',
+            ]);
+
+            $participacion = EventoParticipacion::find($participacionId);
+
+            if (!$participacion) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Participación no encontrada"
+                ], 404);
+            }
+
+            $evento = Evento::find($participacion->evento_id);
+
+            if (!$evento) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "Evento no encontrado"
+                ], 404);
+            }
+
+            // Verificar que el usuario autenticado es la ONG propietaria del evento
+            $ongId = $request->user()->id_usuario;
+            if ($evento->ong_id != $ongId) {
+                return response()->json([
+                    "success" => false,
+                    "error" => "No tienes permiso para marcar asistencias en este evento"
+                ], 403);
+            }
+
+            // Actualizar asistencia
+            $participacion->asistio = $request->asistio;
+            $participacion->save();
+
+            $mensaje = $request->asistio
+                ? 'Asistencia marcada correctamente'
+                : 'Asistencia desmarcada correctamente';
+
+            return response()->json([
+                "success" => true,
+                "message" => $mensaje,
+                "participacion" => $participacion
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                "success" => false,
+                "error" => "El campo 'asistio' es requerido y debe ser booleano"
+            ], 422);
+        } catch (\Throwable $e) {
+            return response()->json([
+                "success" => false,
+                "error" => "Error al marcar asistencia: " . $e->getMessage()
             ], 500);
         }
     }
